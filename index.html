@@ -241,12 +241,13 @@ const other = k => k === 'yasu' ? 'shu' : 'yasu';
 const NUT = [['pro', 'たんぱく質', '#ff8a6a', '攻撃', '肉'], ['fat', '脂質', '#ffd166', '防御', 'チーズ'], ['vit', 'ビタミン', '#8fe08a', '最大HP', '草・ベリー'], ['min', 'ミネラル', '#9fd4ff', '器用さ', 'ゼリー・塩・ホネ'], ['carb', '炭水化物', '#d0a8ff', '素早さ', 'イモ・パン・キノコ']];
 const NN = Object.fromEntries(NUT.map(n => [n[0], n[1]]));
 const STAT = { mhp: '最大HP', atk: '攻撃', def: '防御', dex: '器用さ', spd: '素早さ' };
-const NUTSUM = 30;
+const NUTSUM = 30, NUTFULL = 15, NUT_DIGEST = .01;   // cap; what counts as well fed; how fast meals are digested per point of hunger
 const need = L => Math.round(10 * Math.pow(L, 1.25));
 const xpBase = F => 3 + 2.4 * (F - 1);
 function share(nut) {
   const keys = NUT.map(n => n[0]), v = keys.map(k => Math.max(0, nut[k] || 0)), sum = v.reduce((a, b) => a + b, 0) || 1;
-  const raw = v.map(x => 10 * x / sum), pts = raw.map(Math.floor); let left = 10 - pts.reduce((a, b) => a + b, 0);
+  const tot = Math.max(3, Math.round(10 * Math.min(1, sum / NUTFULL)));   // underfed: fewer points to share
+  const raw = v.map(x => tot * x / sum), pts = raw.map(Math.floor); let left = tot - pts.reduce((a, b) => a + b, 0);
   raw.map((r, i) => [r - pts[i], i]).sort((a, b) => b[0] - a[0]).forEach(([, i]) => { if (left > 0 && v[i] > 0) { pts[i]++; left--; } });
   return { mhp: 5 + pts[2] * 2, atk: pts[0], def: pts[1], dex: pts[3], spd: pts[4] };
 }
@@ -527,7 +528,7 @@ const ITEM = {
   anti: { n: '毒消し草', ic: '🌾', d: '毒を治す（HPは回復しない）', bt: 1, cure: 1 },
   bomb: { n: '爆弾', ic: '💣', d: '戦闘では敵全体に大ダメージ。ひび割れた壁の前で使うと壁が崩れる', bt: 1 },
   whet: { n: '砥石', ic: '🪨', d: '武器の耐久を半分戻す（壊れた武器も直せる）' },
-  smoke: { n: 'けむり玉', ic: '💨', d: '戦闘から必ず逃げられる（ボスには効かない）', bt: 1 },
+  smoke: { n: 'けむり玉', ic: '💨', d: '戦闘では必ず逃げられる（ボスには効かない）。ダンジョンで使うと12秒間、魔物に見つからない', bt: 1 },
   cheese: { n: '鉱山チーズ', ic: '🧀', food: 40, nu: { fat: 2 } },
   meat: { n: 'ネズミの肉', ic: '🍖', food: 35, nu: { pro: 2 } },
   imo: { n: '地底イモ', ic: '🍠', food: 45, nu: { carb: 2 } },
@@ -756,6 +757,7 @@ function restStep(G) {
 const REST_HUNGER = .36;
 function bodyTick(G, meters, dt, still) {
   const h = actH(G), st = stats(h), D = DIFF[G.diff], ev = [];
+  const full0 = G.full;
   G.full = Math.max(0, G.full - (meters * .075 + dt * .02) * D.hunger * (1 - st.full / 100));
   if (G.full <= 0) { G.hAcc = (G.hAcc || 0) + dt; if (G.hAcc >= 1.2) { G.hAcc = 0; h.hp = Math.max(0, h.hp - 1); } G.hungryT = (G.hungryT || 0) - dt; if (G.hungryT <= 0) { G.hungryT = 10; ev.push('おなかが空いて倒れそうだ…（HPが減っていく）'); } }
   if (h.poison) { G.pAcc = (G.pAcc || 0) + meters + dt * .5; while (G.pAcc >= 3) { G.pAcc -= 3; h.hp = Math.max(0, h.hp - 1); } h.poisonT = (h.poisonT == null ? 60 : h.poisonT) - dt; if (h.poisonT <= 0) { h.poison = 0; h.poisonT = 60; ev.push('毒が抜けた。'); } }
@@ -764,6 +766,8 @@ function bodyTick(G, meters, dt, still) {
     G.stillT = (G.stillT || 0) + dt;
     if (G.stillT > 1.5 && !h.poison && G.full > 0 && h.hp < st.mhp) { G.restAcc = (G.restAcc || 0) + dt * st.mhp / 90 * D.rest; const n = Math.floor(G.restAcc); if (n) { G.restAcc -= n; h.hp = Math.min(st.mhp, h.hp + n); } G.full = Math.max(0, G.full - dt * REST_HUNGER * D.rest * D.hunger); }
   } else G.stillT = 0;
+  // what was eaten is digested as the hunger bar goes down
+  const used = full0 - G.full; if (used > 0) { const k = Math.exp(-used * NUT_DIGEST); for (const n in h.nut) h.nut[n] *= k; }
   return ev;
 }
 /* resting in a tent (half) or a cottage (all): the same hunger as standing still until healed that much */
@@ -3104,7 +3108,7 @@ function bagMenu(tab) {
     el.innerHTML = `<p class="sline">食べた物の栄養は${HEROES[G.act].n}の体になる。HPを回復する薬はない（休むか、泉で）。</p><div class="ggrid">${list.map(k => `<button class="gc ${BAG.sel === k ? 'sel' : ''}" data-k="${k}"><span class="gi big">${ITEM[k].ic}</span><b>${ITEM[k].n}</b><small>${ITEM[k].food ? `満腹+${ITEM[k].food}・${nuText(k)}` : esc(ITEM[k].d)}</small><em class="cnt">×${G.inv[k]}</em></button>`).join('') || '<p class="dim">なにも持っていない</p>'}</div>`;
     el.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { BAG.sel = BAG.sel === b.dataset.k ? null : b.dataset.k; sfx('blip'); bagMenu(); });
     const k = BAG.sel; if (k && invN(G, k)) {
-      const X = ITEM[k], can = X.food ? 'eat' : X.cure ? 'use' : null;
+      const X = ITEM[k], can = X.food ? 'eat' : X.cure || k === 'smoke' ? 'use' : null;
       showDet(`<b class="dn2">${X.ic} ${X.n} ×${G.inv[k]}</b><p>${X.d || ''}${X.food ? ` 満腹+${X.food}・${nuText(k)}` : ''}</p><div class="acts2">${can ? `<button class="pb pri" id="iUse">${can === 'eat' ? '食べる' : '使う'}</button>` : '<span class="dim" style="font-size:.8rem;align-self:center">戦闘中や壁の前で使う</span>'}<button class="pb warn" id="iDrop">1つ捨てる</button></div>`);
       const u = $('#iUse'); if (u) u.onclick = () => { useOnMap(k); bagMenu(); };
       $('#iDrop').onclick = () => { G.inv[k]--; sfx('drop'); toast(`${X.n}を捨てた`, 1000); bagMenu(); };
@@ -3130,17 +3134,21 @@ function useOnMap(k) {
   const X = ITEM[k], h = actH(G), st = stats(h);
   if (X.food) { if (G.full >= G.fullMax - 2) { toast('おなかがいっぱいで食べられない'); return; } G.inv[k]--; G.full = Math.min(G.fullMax, G.full + X.food); eat(h, X.nu); sfx('blip'); msg(`${HEROES[h.k].n}は${X.n}を食べた。${nuText(k)}`); return; }
   if (k === 'potion' && h.hp >= st.mhp) { G.inv[k]--; h.gr.mhp += 2; G.fullMax += 5; sfx('lvl'); msg('ポーションを飲んだ。体の器が大きくなった！（最大HP+2・胃+5）'); return; }
-  G.inv[k]--; const b = h.hp; h.hp = Math.min(st.mhp, h.hp + (X.heal ? Math.round(st.mhp * X.heal) : X.flat || 10)); if (X.cure) h.poison = 0; sfx('blip'); msg(`${X.n}を使った。HPが${h.hp - b}回復した。${X.cure ? '毒が消えた。' : ''}`);
+  if (k === 'smoke') {   // a cloud of smoke: the monsters lose sight of you for a while
+    G.inv[k]--; QD.grace = 12; QD.smokeT = 12; const P = QD.P; for (const m of G.map.mons) if (!m.dead && !m.boss) { if (m.state === 'chase') { m.state = 'wander'; m.tgt = null; } m.hunt = 0; if (Math.hypot(m.wx - P.x, m.wz - P.z) < 10) m.stun = Math.max(m.stun || 0, 3); }
+    sfx('stairs'); flash(); msg('💨 けむり玉を投げた。煙にまぎれて、12秒のあいだ魔物に見つからない。'); return;
+  }
+  if (X.cure) { if (!h.poison) { toast('毒にかかっていない'); return; } G.inv[k]--; h.poison = 0; sfx('blip'); msg(`${X.n}を使った。毒が消えた。`); return; }
 }
 function bodyHTML(h) {
-  const st = stats(h), g = share(h.nut), N5 = NUT.map(n => n[0]), mx = Math.max(4, ...N5.map(k => h.nut[k] || 0));
+  const st = stats(h), g = share(h.nut), N5 = NUT.map(n => n[0]), mx = Math.max(10, ...N5.map(k => h.nut[k] || 0));
   const pt = (i, r) => { const a = -Math.PI / 2 + i * Math.PI * 2 / 5; return [100 + Math.cos(a) * r, 100 + Math.sin(a) * r]; };
   const poly = N5.map((k, i) => pt(i, 18 + 70 * (h.nut[k] || 0) / mx).join(',')).join(' ');
   const grid = [1, .66, .33].map(f => `<polygon points="${N5.map((k, i) => pt(i, 88 * f).join(',')).join(' ')}" fill="none" stroke="rgba(255,255,255,.18)"/>`).join('');
   const labels = NUT.map((n, i) => { const [x, y] = pt(i, 100); return `<text x="${x}" y="${y}" fill="${n[2]}" font-size="12" text-anchor="middle" dominant-baseline="middle">${n[1]}</text>`; }).join('');
   const bl = Object.entries(st.bl).map(([k, v]) => bText([k, v]));
   return `<div class="bodyg"><div><svg class="pent" viewBox="-20 -10 240 220" aria-label="栄養のバランス">${grid}<polygon points="${poly}" fill="rgba(237,187,82,.35)" stroke="#edbb52" stroke-width="2"/>${labels}</svg>
-  <p class="dim" style="font-size:.78rem;margin:0 0 6px">最近の食事のバランス。レベルが上がると、多く摂った栄養の能力が伸びる（0の栄養は上がらない）。</p>
+  <p class="dim" style="font-size:.78rem;margin:0 0 6px">最近の食事のバランス。食べた物はお腹が減るにつれて消化され、少しずつ減っていく。レベルが上がると、多く摂った栄養の能力が伸びる（0の栄養は上がらない）。栄養が足りないと伸びる量そのものが減る。</p>
   </div><dl class="kv"><dt>レベル</dt><dd>${h.lv}（次まで${need(h.lv) - h.xp}）</dd><dd></dd>${Object.keys(STAT).map(k => `<dt>${STAT[k]}</dt><dd>${st[k]}</dd><dd class="nx">${g[k] ? '次 +' + g[k] : '<span style="color:var(--red)">次 上がらない</span>'}</dd>`).join('')}</dl>
   <div class="det"><b>神の加護</b>${bl.length ? `<ul>${bl.map(t => `<li class="bl">✦ ${t}</li>`).join('')}</ul>` : '<p class="dim">装備に加護がない</p>'}<p class="dim" style="font-size:.74rem">同じ加護は装備どうしで足し算（Lv10まで）。祭壇はない。</p></div></div>`;
 }
@@ -3339,8 +3347,10 @@ function heroDown(cause, killer) {
   const oh = G.heroes[o]; oh.hp = stats(oh).mhp; oh.poison = 0;
   G.act = o; G.full = Math.max(G.full, 30); G.streak = 0;
   for (const m of G.map.mons) if (m.boss && !m.dead) { m.stun = 2; m.state = 'wander'; }
-  ov(`<h2>${HEROES[dead].n}は倒れた…</h2><p>${cause === 'hunger' ? '飢えに力尽きた。' : cause === 'poison' ? '毒に力尽きた。' : '魔物に倒された。'}</p><p>その場に、青白い<b style="color:var(--soul)">魂</b>が残った。<b>${G.soul.gName}</b>が魂のそばに居座っている（残りHP ${killer.hpLeft}）。</p><p>知らせを受けた<b>${HEROES[o].n}</b>が、地下1階から助けに向かう！ 地下${G.floor}階の魂を守る${G.soul.gName}を倒せば、${HEROES[dead].n}が復活する。${HEROES[dead].n}が与えたダメージはそのまま残っている。</p><p class="dim" style="font-size:.8rem">${HEROES[o].n}まで倒れたら、冒険は終わり。</p><div class="choices"><button class="pb pri" id="sOk">${HEROES[o].n}で向かう</button></div>`, { mid: true });
-  $('#sOk').onclick = () => { ovClose(); enterFloor(1, false, `地下1階。${HEROES[o].n}は坑道の入口から駆け下りていく。${HEROES[dead].n}の魂は地下${G.soul.F}階。`); };
+  ov(`<h2>${HEROES[dead].n}は倒れた…</h2><p>${cause === 'hunger' ? '飢えに力尽きた。' : cause === 'poison' ? '毒に力尽きた。' : '魔物に倒された。'}</p><p>その場に、青白い<b style="color:var(--soul)">魂</b>が残った。<b>${G.soul.gName}</b>が魂のそばに居座っている（残りHP ${killer.hpLeft}）。</p><p>知らせを受けた<b>${HEROES[o].n}</b>が、地下1階から助けに向かう！ 倒した魔物は全ての階に戻ってくる。 地下${G.floor}階の魂を守る${G.soul.gName}を倒せば、${HEROES[dead].n}が復活する。${HEROES[dead].n}が与えたダメージはそのまま残っている。</p><p class="dim" style="font-size:.8rem">${HEROES[o].n}まで倒れたら、冒険は終わり。</p><div class="choices"><button class="pb pri" id="sOk">${HEROES[o].n}で向かう</button></div>`, { mid: true });
+  // the mine fills up again: every beaten monster on every floor is back (bosses and the lords stay beaten)
+  let back = 0; for (const M2 of Object.values(G.floors || {})) for (const m of M2.mons) if (m.dead && !m.boss && !m.lord) { m.dead = false; m.dying = null; m.wx = null; m.wz = null; m.state = 'wander'; m.tgt = null; m.stun = 0; back++; }
+  $('#sOk').onclick = () => { ovClose(); enterFloor(1, false, `地下1階。${HEROES[o].n}は坑道の入口から駆け下りていく。${HEROES[dead].n}の魂は地下${G.soul.F}階。${back ? `倒したはずの魔物たちが坑道に戻ってきている…（${back}匹）` : ''}`); };
 }
 function freeSoul() {
   const who = G.soul.who, me = G.act, h = G.heroes[who];
