@@ -423,7 +423,7 @@ function simPath(v0,noFence){
 }
 const OF_POS="左中右";
 function fielderOf(pl){
-  return{pl,x:POS[pl.pos][0],z:POS[pl.pos][1],speed:OF_POS.includes(pl.pos)?5.1+pl.s*0.012+pl.d*0.016:(4.6+pl.s*0.012+pl.d*0.016)*0.85,reach:0.7+pl.d*0.008,react:0.7-pl.d*0.0015,   // 打球への反応・内野の守備範囲は高校生向けに調整（打球の安打率 約.33）
+  return{pl,x:POS[pl.pos][0],z:POS[pl.pos][1],speed:OF_POS.includes(pl.pos)?5.1+pl.s*0.012+pl.d*0.016:(4.6+pl.s*0.012+pl.d*0.016),reach:0.7+pl.d*0.008,react:0.7-pl.d*0.0015,   // 打球への反応・内野の守備範囲は高校生向けに調整（打球の安打率 約.33）
    
     thr:20+pl.a*0.14,xfer:0.55-pl.d*0.0025,dive:0.8+pl.d*0.016};
 }
@@ -1198,7 +1198,9 @@ function makeHit(b,h){
   let theta=12-h.dy*34+gauss()*6;
   if(q<0.45)theta+=(Math.random()<0.5?28:-18)*(0.45-q)*2.2;
   theta=clamp(theta,-18,70);
-  const phi=(h.dtN*55+gauss()*7)*(G.bs==='L'?-1:1);
+  // こすった当たりはバックネット方向へのファウルになりやすい
+  if(Math.random()<0.06+0.3*(1-q)){const back=Math.random()<0.6;return{v:v*rnd(0.5,0.8),theta:back?rnd(25,70):rnd(-30,-14),phi:back?(Math.random()<.5?-1:1)*rnd(120,178):(Math.random()<.5?-1:1)*rnd(20,60),foul:true};}
+  const phi=(h.dtN*62+gauss()*8)*(G.bs==='L'?-1:1);
   return{v,theta,phi,foul:Math.abs(phi)>45||theta<-12};
 }
 function userSwing(){
@@ -1356,32 +1358,79 @@ function resolvePlay(plan,s,b,pc,h){
   P.labelT=P.hr?s.hrT+0.2:end;P.endT=P.hr?end:end+1.6;
   return P;
 }
+/* ---------- フェア・ファウルの判定：打球が落ちた場所（塁より手前なら塁を通過した場所・止まった場所）で決める ---------- */
+const angOf=(x,z)=>Math.atan2(x,-z)*180/Math.PI;
+function judgeFair(s){
+  const pts=s.pts,fairAt=q=>Math.abs(angOf(q.x,q.z))<=45&&q.z<0.3;
+  if(s.hr){const q=pts.find(p=>p.t>=s.hrT)||pts[pts.length-1];return fairAt(q);}
+  const i0=pts.findIndex(p=>!p.air);if(i0<0)return fairAt(pts[pts.length-1]);
+  const L=pts[i0];if(Math.hypot(L.x,L.z)>=27.4)return fairAt(L);
+  for(let i=i0;i<pts.length;i++){const q=pts[i];if(Math.hypot(q.x,q.z)>=27.4)return fairAt(q);}
+  return fairAt(pts[pts.length-1]);
+}
+// ファウルゾーンで野手が捕れる範囲（フェンス・スタンドの手前）
+function foulCatchable(q){const a=Math.abs(angOf(q.x,q.z)),d=Math.hypot(q.x,q.z);if(q.z>14)return false;if(a>90)return d<14;return d*Math.sin((a-45)*Math.PI/180)<11&&d<fenceR(0.785);}
 function startPlay(h){
   const b=curBatter(),pc=G.pitch;
   let hit;
-  if(h.bunt){const phi=(Math.random()<.5?-1:1)*rnd(10,30);hit={v:rnd(6,9.5),theta:rnd(-8,3),phi,foul:false};}
+  if(h.bunt){const phi=(Math.random()<.5?-1:1)*rnd(8,40);hit={v:rnd(6,9.5),theta:rnd(-8,3),phi,foul:false};}
   else hit=makeHit(b,h);
   const v0=launch(hit.v,hit.theta,hit.phi);
   cursor.visible=false;zoneLine.visible=false;trailReset();
   SND.crack(h.bunt?0.2:clamp(hit.v/38,0.3,1));
-  if(hit.foul){
-    const s=simPath(v0,true),def=teamIdx(defense());
-    const fs=fieldOf(def).filter(p=>'捕一三'.includes(p.pos)).map(fielderOf);
-    const land=s.pts.find(q=>!q.air)||s.pts[s.pts.length-1];
-    let catchP=null;if(hit.theta>28&&Math.hypot(land.x,land.z)<34&&land.z<16){const n=intercept(s.pts,fs);if(n.air&&Math.random()<0.75)catchP=n;}
-    if(catchP){const P=resolvePlay(Object.assign({mode:'catch'},catchP),s,b,pc,h);P.label='ファウルフライ';G.play=P;batRig.visible=false;P.moves.forEach(m=>{m.mesh=m.who.model;m.mesh.visible=true;});G.phase='play';setCam('follow');return;}
-    G.play={foul:true,pts:s.pts,t:0,endT:Math.min(1.6,s.pts[s.pts.length-1].t)};G.phase='play';setCam('follow');
-    SND.crowd(0.18,0.8);return;
+  const s=simPath(v0,false),def=teamIdx(defense());
+  if(hit.theta<-12||!judgeFair(s)){
+    const sf=simPath(v0,true),fs=fieldOf(def).map(fielderOf);
+    // ファウルフライ：ファウルゾーンで落ちてくる打球はだれでも追う
+    const zone=sf.pts.filter(q=>q.air&&foulCatchable(q)&&Math.abs(angOf(q.x,q.z))>44);
+    let catchP=null;if(zone.length>8){const n=intercept(zone,fs);if(n.air&&Math.random()<0.85)catchP=n;}
+    if(catchP){const P=resolvePlay(Object.assign({mode:'catch'},catchP),sf,b,pc,h);P.label=FNAME[catchP.f.pl.pos]+'ファウルフライ';P.goals=assignGoals(P.plan,sf,P);
+      G.play=P;batRig.visible=false;P.moves.forEach(m=>{m.mesh=m.who.model;m.mesh.visible=true;});G.phase='play';setCam('follow');return;}
+    // 捕れないファウル：スタンドに入るか、転がって止まるまで見せる。近い野手が追いかける
+    let endT=Math.min(3.2,sf.pts[sf.pts.length-1].t);
+    const out=sf.pts.find(q=>q.t>0.5&&!foulCatchable(q));if(out)endT=Math.min(endT,out.t+0.5);
+    const last=(out?sf.pts[Math.max(0,sf.pts.indexOf(out)-1)]:sf.pts[sf.pts.length-1]);
+    let near=null,nd=1e9;for(const f of fs){const d=Math.hypot(f.x-last.x,f.z-last.z);if(d<nd){nd=d;near=f;}}
+    G.play={foul:true,pts:sf.pts,t:0,endT:Math.max(1.2,endT),chase:near&&nd<45?{pos:near.pl.pos,x:last.x,z:last.z,sp:near.speed,react:near.react}:null};
+    G.phase='play';setCam('follow');SND.crowd(0.18,0.8);return;
   }
-  const s=simPath(v0,false);
-  const def=teamIdx(defense()),fs=fieldOf(def).map(fielderOf);
+  const fs=fieldOf(def).map(fielderOf);
   const plan=planCatch(s,fs);
   const P=resolvePlay(plan,s,b,pc,h);
+  P.goals=assignGoals(plan,s,P);
   G.play=P;batRig.visible=false;
   P.moves.forEach(m=>{m.mesh=m.who.model;m.mesh.visible=true;});
   const far=Math.hypot(hit.v*Math.cos(hit.theta*Math.PI/180),0)>30&&hit.theta>18;
   if(far){SND.say('打ったー！大きい！',1.25);SND.crowd(0.55,2.5);}else if(hit.theta<8&&!h.bunt){SND.say('打った！',1.2);SND.crowd(0.35,1.2);}
   G.phase='play';setCam('follow');
+}
+/* ---------- 打球に対する全員の動き：ベースカバー・中継・バックアップ ---------- */
+function assignGoals(plan,s,P){
+  const g=[],F=plan.f?plan.f.pl.pos:'',bx=plan.x||0,bz=plan.z||0,B=BASES;
+  const far=plan.mode==='hr'||Math.hypot(bx,bz)>42,ground=!plan.air&&!far;
+  const add=(pos,x,z,delay,sp)=>{if(pos!==F&&!g.some(o=>o.pos===pos))g.push({pos,x,z,delay:delay==null?0.35:delay,sp:sp||6});};
+  if(plan.mode==='hr'){const q=s.pts[s.pts.length-1];for(const p of '左中右')add(p,POS[p][0]+(q.x-POS[p][0])*0.12,POS[p][1]+(q.z-POS[p][1])*0.12,0.4,4);return g;}
+  if(plan.air&&!far){   // 内野フライ・ライナー：近くの野手が寄って声をかける
+    for(const p of '一二遊三投'){const d=Math.hypot(POS[p][0]-bx,POS[p][1]-bz);if(d<18)add(p,bx+(POS[p][0]-bx)*0.4,bz+(POS[p][1]-bz)*0.4,0.3,5.5);}
+    return g;}
+  add('一',B[1][0]-0.5,B[1][1]+0.3,0.25,6.5);
+  add('三',B[3][0]+0.5,B[3][1]+0.3,0.35,6);
+  if(ground){
+    if('一二'.includes(F)){add('投',B[1][0]-0.8,B[1][1]+0.8,0.25,6.5);add('遊',B[2][0]-0.5,B[2][1]+0.5,0.3,6.5);}
+    else{add('二',B[2][0]+0.5,B[2][1]+0.5,0.3,6.5);if(F!=='遊')add('遊',(POS['遊'][0]+bx)/2,(POS['遊'][1]+bz)/2,0.3,5.5);
+      add('投',bx*0.3,POS['投'][1]+(bz-POS['投'][1])*0.3,0.25,4.5);}
+    add('右',B[1][0]+7,B[1][1]-7,0.4,6.5);add('左',B[3][0]-7,B[3][1]-7,0.4,6.5);add('中',0,-55,0.4,6.5);
+    add('捕',B[1][0]-5,B[1][1]+10,0.45,5.5);
+  }else{
+    // 外野への打球：二遊間の一方が中継に入り、もう一方が二塁へ。投手は本塁・三塁の後ろへ
+    const relay=bx<0?'遊':'二',other=relay==='遊'?'二':'遊',tx=B[2][0],tz=B[2][1];
+    add(relay,tx+(bx-tx)*0.42,tz+(bz-tz)*0.42,0.3,6.5);
+    add(other,tx+(bx>0?-0.6:0.6),tz+0.4,0.35,6.5);
+    add('投',bx<-15?B[3][0]-4:0,bx<-15?B[3][1]+4:5,0.45,5.5);
+    add('捕',0,0.7,0.2,3);
+    for(const p of '左中右'){if(p===F)continue;const d=Math.hypot(POS[p][0]-bx,POS[p][1]-bz);if(d<50)add(p,bx+(POS[p][0]-bx)*0.3,bz+(POS[p][1]-bz)*0.3-5,0.35,6.5);}
+  }
+  return g;
 }
 function pathPos(s){s=clamp(s,0,4*SEG);const i=Math.min(3,Math.floor(s/SEG)),f=s/SEG-i,a=BASES[i],b=BASES[i+1];return[a[0]+(b[0]-a[0])*f,a[1]+(b[1]-a[1])*f,b[0]-a[0],b[1]-a[1]];}
 function setOnPath(mesh,s){const p=pathPos(s);mesh.position.set(p[0],0,p[1]);face(mesh,p[2],p[3]);}
@@ -1391,6 +1440,11 @@ function updatePlay(dt){
   const P=G.play;P.t+=dt;const t=P.t;
   const at=tt=>{const pts=P.pts;if(tt<=pts[0].t)return pts[0];const i=Math.min(pts.length-1,Math.floor(tt*60)-1);return pts[Math.max(0,i)];};
   if(P.foul){const q=at(t);ball.position.set(q.x,q.y,q.z);ballAt(q);trailPush(true);
+    if(Math.hypot(q.x,q.z)>fenceR(Math.atan2(q.x,-q.z))+25||q.z>23)ball.visible=false;
+    const c=P.chase,m=c&&fielders[c.pos];
+    if(m&&t>c.react){const dx=c.x-m.position.x,dz=c.z-m.position.z,d=Math.hypot(dx,dz);
+      if(d>0.6){const st=Math.min(d,c.sp*dt);m.position.x+=dx/d*st;m.position.z+=dz/d*st;face(m,dx,dz);pose(m,t,0.8);}
+      else{face(m,q.x-m.position.x,q.z-m.position.z);stance(m,'field');}}
     if(t>=P.endT&&G.phase==='play'){if(G.strikes<2)G.strikes++;G.phase='msg';SND.say('ファウルボール',1.1);msg('ファウル',0.9,()=>resetAtBat());}
     return;}
   const plan=P.plan,F=plan.f?fielders[plan.f.pl.pos]:null;
@@ -1413,6 +1467,7 @@ function updatePlay(dt){
       else stance(F,'field');
       if((plan.mode==='dive'||plan.mode==='divestop')&&plan.t-t<0.38){diveBody(F,clamp(1-(plan.t-t)/0.38,0,1));}
       if(plan.mode==='wall'&&plan.t-t<0.45){const k=1-(plan.t-t)/0.45;F.position.y=Math.sin(k*Math.PI*0.5)*0.9;}
+      if(!plan.air&&t>plan.t-0.4&&!(plan.mode==='dive'||plan.mode==='divestop')){const k=clamp(1-(plan.t-t)/0.4,0,1);f.pelvis.position.y=f.hip0-0.12-0.2*k;f.torso.rotation.z=-0.32-0.5*k;}
       if(t>plan.t-0.45){const q=at(Math.min(t+0.05,plan.t));_w1.set(q.x,Math.max(0.15,q.y),q.z);armTo(F,gArm(F),_w1,new THREE.Vector3(0,1,0));}
     }else{
       if(!P.caught){P.caught=true;SND.mitt();if(plan.fine){SND.say(plan.robHR?'ホームランキャッチ！':'ファインプレー！',1.3);SND.crowd(0.75,2.4);}}
@@ -1427,10 +1482,15 @@ function updatePlay(dt){
       else stance(F,'field');
     }
   }
+  // 全員の動き（ベースカバー・中継・バックアップ）
+  if(P.goals)for(const g of P.goals){const m=fielders[g.pos];if(!m||P.covers.some(c=>c.pos===g.pos))continue;
+    if(t<g.delay)continue;const dx=g.x-m.position.x,dz=g.z-m.position.z,d=Math.hypot(dx,dz);
+    if(d>0.35){const st=Math.min(d,g.sp*dt);m.position.x+=dx/d*st;m.position.z+=dz/d*st;m.position.y=0;face(m,dx,dz);pose(m,t*g.sp/6,Math.min(0.8,0.3+d*0.2));}
+    else{face(m,ball.position.x-m.position.x,ball.position.z-m.position.z);stance(m,'field');}}
   // ベースカバーと中継
   for(const c of P.covers){const m=fielders[c.pos];if(!m||(plan.f&&c.pos===plan.f.pl.pos&&t<plan.t+0.8))continue;
     const B=BASES[c.j],tx=B[0]+(c.j===4?0:0),tz=B[1]+(c.j===4?0.6:0),dx=tx-m.position.x,dz=tz-m.position.z,d=Math.hypot(dx,dz);
-    if(d>0.3&&t>0.3){const st=Math.min(d,6.5*dt);m.position.x+=dx/d*st;m.position.z+=dz/d*st;face(m,dx,dz);pose(m,t,0.7);m.scale.y=1;}
+    if(d>0.3&&t>0.25){const st=Math.min(d,7*dt);m.position.x+=dx/d*st;m.position.z+=dz/d*st;face(m,dx,dz);pose(m,t,0.7);m.scale.y=1;}
     else{const fr=F?F.position:{x:0,z:0};face(m,fr.x-m.position.x,fr.z-m.position.z);stance(m,'field');
       const inc=P.throws.find(th=>th.to===c.pos&&t>th.t0-0.4&&t<th.t0+th.dur+0.1);if(inc){_w1.set(B[0],1.3,B[1]);armTo(m,gArm(m),toWorld(m,[0.15,1.35,0.6],_w2));}}}
   for(const th of P.throws){if(!th.sent&&t>=th.t0){th.sent=true;}if(!th.rec&&t>=th.t0+th.dur){th.rec=true;SND.mitt();}}
