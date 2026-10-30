@@ -368,6 +368,7 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 
 /* ---------- 物理 ---------- */
 const DRAG=0.0013, SEG=27.43;
+let FENCE_H=3.0;   // 外野フェンスの高さ（球場ごとに変わる）
 const fenceR=phi=>92+20*Math.cos(2*phi);
 const BASES=[[0,0],[19.4,-19.4],[0,-38.8],[-19.4,-19.4],[0,0]];
 const POS={'投':[0,-18.4],'捕':[0,1.1],'一':[16,-23],'二':[7,-33],'遊':[-7.5,-32],'三':[-16,-23],'左':[-29,-62],'中':[0,-74],'右':[29,-62]};
@@ -381,7 +382,7 @@ function simPath(v0,noFence){
     p.x+=v.x*dt;p.y+=v.y*dt;p.z+=v.z*dt;
     const d=Math.hypot(p.x,p.z),R=fenceR(Math.atan2(p.x,-p.z));
     if(!noFence&&!hr&&d>=R){
-      if(!landed&&p.y>3.2){hr=true;hrT=t;hrY=p.y;}
+      if(!landed&&p.y>FENCE_H+0.2){hr=true;hrT=t;hrY=p.y;}
       else{if(!landed&&!wallT){wallT=t;wallY=p.y;}const nx=p.x/d,nz=p.z/d,vn=v.x*nx+v.z*nz;if(vn>0){v.x-=1.6*vn*nx;v.z-=1.6*vn*nz;}p.x=nx*(R-0.15);p.z=nz*(R-0.15);landed=true;}
     }
     if(p.y<0.05){p.y=0.05;
@@ -460,6 +461,19 @@ key.shadow.bias=-0.0005;key.shadow.normalBias=0.03;scene.add(key);scene.add(key.
 const fill=new THREE.DirectionalLight(0x9db4ff,0.32);fill.position.set(-70,50,-90);scene.add(fill);
 const rim=new THREE.DirectionalLight(0xffe0b0,0.25);rim.position.set(80,40,60);scene.add(rim);
 function aimLight(x,z){key.target.position.set(x,0,z);key.position.set(x+28,72,z+44);}
+/* 球場：同じ球場を使い回し、色味とフェンスの高さを変える（高知 < 愛媛 < 香川 < 徳島 の順にフェンスが高い） */
+const STADIUMS={
+  koc:{name:'高知 南国スタジアム',h:2.4,wall:['#1d7a96','#0f4c66'],cap:0xf2c14e,seat:[0x13607a,0x6a8a98,0x4a6a78,0x1f4a5a,0x2c5a6a],grass:0xfff4e0,track:0x9a6a40},
+  ehi:{name:'愛媛 みかん球場',h:3.0,wall:['#d0721e','#8e420c'],cap:0xfff2c8,seat:[0xb85a14,0x8a7a6a,0x6a5a4c,0x4a3424,0x5a4434],grass:0xfffaea,track:0xa8703e},
+  kag:{name:'香川 讃岐スタジアム',h:3.6,wall:['#2f8050','#17552f'],cap:0xece6cc,seat:[0x1f5a34,0x6a7a68,0x4a5a48,0x23382a,0x2e4636],grass:0xf0fff0,track:0x8c5b3a},
+  tok:{name:'徳島 藍の森球場',h:4.4,wall:['#2a3c80','#121c4c'],cap:0xd8dcf4,seat:[0x1a2660,0x666c90,0x464c70,0x1c2240,0x282e50],grass:0xf2f6ff,track:0x86583a},
+  koshien:{name:'甲子園',h:3.4,wall:['#2c5a24','#173a12'],cap:0xd8b040,seat:[0x2a4a28,0x8a8a80,0x5a5a54,0x2a2a30,0x3a3a40],grass:0xffffff,track:0x9a6236},
+};
+let curStadium='';
+function setStadium(k,visual){const S=STADIUMS[k]||STADIUMS.koshien;FENCE_H=S.h;if(!visual||curStadium===k)return;curStadium=k;
+  adCols=S.wall;drawAds();buildFence(S.h);capMat.color.set(S.cap);
+  if(STAND_MATS)[0,1,2,4,5].forEach((i,j)=>STAND_MATS[i].color.set(S.seat[j]));
+  grassM.color.set(S.grass);grassM2.color.set(S.grass);}
 // 昼（夏の日差し）と夜（ナイター）を切り替える
 let isNight=false;
 function setSky(night){isNight=!!night;skyMat.map=night?skyTex:daySkyTex;skyMat.needsUpdate=true;NIGHT_ONLY.forEach(o=>o.visible=isNight);
@@ -513,27 +527,37 @@ function ribbon(A,B,uA,vA,vB,mat){
   const o=new THREE.Mesh(g,mat);o.receiveShadow=true;scene.add(o);return o;
 }
 const V3=(x,y,z)=>new THREE.Vector3(x,y,z);
-// 外野フェンス（ラバー＋応援の横断幕）・ウォーニングトラック
-let adTex=null;
-function drawAds(ws){const c=adTex.image,g=c.getContext('2d'),w=c.width,h=c.height;const gr=g.createLinearGradient(0,0,0,h);gr.addColorStop(0,'#1f6a3a');gr.addColorStop(1,'#124a26');g.fillStyle=gr;g.fillRect(0,0,w,h);
+// 外野フェンス（ラバー＋応援の横断幕）・ウォーニングトラック。高さと色は球場ごとに作り直す
+let adTex=null,adCols=['#1f6a3a','#124a26'];
+function drawAds(ws){if(ws)drawAds.ws=ws;ws=drawAds.ws;const c=adTex.image,g=c.getContext('2d'),w=c.width,h=c.height;const gr=g.createLinearGradient(0,0,0,h);gr.addColorStop(0,adCols[0]);gr.addColorStop(1,adCols[1]);g.fillStyle=gr;g.fillRect(0,0,w,h);
   g.font='800 50px "M PLUS 1p","Hiragino Kaku Gothic ProN",sans-serif';g.textBaseline='middle';let x=16,i=0;
   while(x<w-40){const t=ws[i%ws.length];g.fillStyle=i%2?'#f2c14e':'#ffffff';g.fillText(t,x,h/2+3);x+=g.measureText(t).width+44;i++;}adTex.needsUpdate=true;}
-{
-  const n=96,a0=-0.83,a1=0.83,In=[],Out=[],Bot=[],Top=[],Cap=[],u=[];
+const fenceParts=[],capMat=ML(0xf2c14e,{side:THREE.DoubleSide,emissive:0x3a2a00}),poleMat=ML(0xf2d03a,{emissive:0x4a3a00});
+const trackMesh={};
+function buildFence(H){
+  fenceParts.forEach(m=>{scene.remove(m);m.geometry.dispose();});fenceParts.length=0;
+  const n=96,a0=-0.83,a1=0.83,Bot=[],Top=[],Cap=[],u=[];
   for(let i=0;i<=n;i++){const a=a0+(a1-a0)*i/n,s=Math.sin(a),c=-Math.cos(a),R=fenceR(a);
-    In.push(V3((R-4.5)*s,0.016,(R-4.5)*c));Out.push(V3((R+0.2)*s,0.016,(R+0.2)*c));
-    Bot.push(V3(R*s,0,R*c));Top.push(V3(R*s,3.0,R*c));Cap.push(V3(R*s,3.25,R*c));u.push(i/n*14);}
-  ribbon(In,Out,u,0,1,ML(0xffffff,{map:trackTex,side:THREE.DoubleSide}));
-  adTex=canvasTex(1024,96,(g,w,h)=>{});drawAds(['白球ナイン','全力疾走','一球入魂','四国','夏']);
-  ribbon(Bot,Top,u,0,1,ML(0xffffff,{map:adTex,side:THREE.DoubleSide}));
-  ribbon(Top,Cap,u,0,1,ML(0xf2c14e,{side:THREE.DoubleSide,emissive:0x3a2a00}));
+    Bot.push(V3(R*s,0,R*c));Top.push(V3(R*s,H,R*c));Cap.push(V3(R*s,H+0.25,R*c));u.push(i/n*14);}
+  fenceParts.push(ribbon(Bot,Top,u,0,1,adMat),ribbon(Top,Cap,u,0,1,capMat));
   for(const deg of [-45,-22.5,0,22.5,45]){const a=deg*Math.PI/180,R=fenceR(a)-0.06;
     const t=canvasTex(256,128,(g,w,h)=>{g.fillStyle='#ffffff';g.font='800 92px "M PLUS 1p",sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(Math.round(fenceR(a)),w/2,h/2+4);});
     t.wrapS=t.wrapT=THREE.ClampToEdgeWrapping;
-    const m=addMesh(new THREE.PlaneGeometry(2.6,1.3),new THREE.MeshBasicMaterial({map:t,transparent:true}),R*Math.sin(a),1.6,-R*Math.cos(a));m.rotation.y=Math.atan2(-Math.sin(a),Math.cos(a));}
-  for(const s of [-1,1]){const a=s*Math.PI/4,R=fenceR(a);const p=addMesh(new THREE.CylinderGeometry(0.22,0.22,20,10),ML(0xf2d03a,{emissive:0x4a3a00}),R*Math.sin(a),10,-R*Math.cos(a));p.castShadow=true;}
+    const m=addMesh(new THREE.PlaneGeometry(2.6,1.3),new THREE.MeshBasicMaterial({map:t,transparent:true}),R*Math.sin(a),H*0.55,-R*Math.cos(a));m.rotation.y=Math.atan2(-Math.sin(a),Math.cos(a));fenceParts.push(m);}
+}
+let adMat;
+{
+  const n=96,a0=-0.83,a1=0.83,In=[],Out=[],u=[];
+  for(let i=0;i<=n;i++){const a=a0+(a1-a0)*i/n,s=Math.sin(a),c=-Math.cos(a),R=fenceR(a);
+    In.push(V3((R-4.5)*s,0.016,(R-4.5)*c));Out.push(V3((R+0.2)*s,0.016,(R+0.2)*c));u.push(i/n*14);}
+  ribbon(In,Out,u,0,1,ML(0xffffff,{map:trackTex,side:THREE.DoubleSide}));
+  adTex=canvasTex(1024,96,(g,w,h)=>{});drawAds(['白球ナイン','全力疾走','一球入魂','四国','夏']);
+  adMat=ML(0xffffff,{map:adTex,side:THREE.DoubleSide});
+  buildFence(FENCE_H);
+  for(const s of [-1,1]){const a=s*Math.PI/4,R=fenceR(a);const p=addMesh(new THREE.CylinderGeometry(0.22,0.22,20,10),poleMat,R*Math.sin(a),10,-R*Math.cos(a));p.castShadow=true;}
 }
 // 観客席（ボウル状）
+let STAND_MATS=null;
 const crowdTex=canvasTex(512,512,(g,w,h)=>{
   g.fillStyle='#1d2338';g.fillRect(0,0,w,h);
   const shirt=['#f2f2f2','#c83a2c','#2f5bd0','#2e9a47','#8a45b8','#f2c14e','#3a3f55','#e88a3a','#5a6a8a','#d9d0c0'],skin=['#e8c09a','#d8a47a','#c48a62','#f0d0b0'];
@@ -555,7 +579,7 @@ const crowdTex=canvasTex(512,512,(g,w,h)=>{
     const cx=pts[i].x,cz=pts[i].z+35;if(nx*cx+nz*cz<0){nx=-nx;nz=-nz;}nrm.push([nx,nz]);}
   const u=[0];for(let i=1;i<N;i++)u.push(u[i-1]+pts[i].distanceTo(pts[i-1])/12);
   const prof=[[0,0],[0,1.6],[2.6,1.6],[2.6,3.4],[46,28],[46,33],[49,33]];
-  const mats=[ML(0x123a6a,{side:THREE.DoubleSide}),ML(0x6a7088,{side:THREE.DoubleSide}),ML(0x4a5068,{side:THREE.DoubleSide}),
+  const mats=STAND_MATS=[ML(0x123a6a,{side:THREE.DoubleSide}),ML(0x6a7088,{side:THREE.DoubleSide}),ML(0x4a5068,{side:THREE.DoubleSide}),
     ML(0xffffff,{map:crowdTex,side:THREE.DoubleSide}),ML(0x2a3048,{side:THREE.DoubleSide}),ML(0x3a4058,{side:THREE.DoubleSide})];
   const at=(i,p)=>V3(pts[i].x+nrm[i][0]*p[0],p[1],pts[i].z+nrm[i][1]*p[0]);
   for(let k=0;k<prof.length-1;k++){const A=[],B=[];for(let i=0;i<N;i++){A.push(at(i,prof[k]));B.push(at(i,prof[k+1]));}
@@ -896,7 +920,7 @@ const box=(p)=>p.box||(p.box={ab:0,h:0,hr:0,rbi:0,bb:0,k:0,sb:0,pk:0,po:0,pr:0,p
 
 /* M = {away, home, us(0/1, 観戦しないときは-1), title, night, ads, sim, onEnd} */
 function startGame(M){
-  G.M=M;G.away=M.away;G.home=M.home;G.us=M.us;G.innings=9;G.sim=!!M.sim;
+  G.M=M;setStadium(M.stadium,!M.sim);G.away=M.away;G.home=M.home;G.us=M.us;G.innings=9;G.sim=!!M.sim;
   [G.away,G.home].forEach(t=>{t.out=t.out||[];[...t.players,...t.bench].forEach(p=>{p.pcount=0;p.box=null;});});
   G.inning=1;G.top=true;G.outs=0;G.balls=0;G.strikes=0;G.score=[0,0];G.line=[[],[]];G.hits=[0,0];G.err=[0,0];
   G.bases=[null,null,null];G.order=[0,0];G.lastPitch=null;G.ord={off:'auto',def:'auto'};G.cpuOrd={off:'auto',def:'auto'};G.annFor=null;G.lastBatter=null;G.result=null;
@@ -905,7 +929,7 @@ function startGame(M){
   setSky(M.night);drawAds(M.ads||['白球ナイン','全力疾走','一球入魂']);
   $('over').hidden=true;
   SND.init();SND.siren();setTimeout(()=>{SND.organ([67,72,76,79,0,76,79],0.17);SND.say('プレイボール！',1.1,true);},2200);SND.crowd(0.5,2);
-  setupHalf();
+  setupHalf();G.readyT=-1.6;msg((STADIUMS[M.stadium]||STADIUMS.koshien).name,2,null,'フェンスの高さ '+FENCE_H.toFixed(1)+'m');
 }
 function setupHalf(){
   const def=teamIdx(defense()),off=teamIdx(offense());
@@ -1016,7 +1040,7 @@ function simPA(){
   const pHit=clamp(0.272+diff*0.4-dd*0.15+(b.s-50)*0.0012,0.14,0.45);
   if(rand()<pHit){
     bx.h++;G.hits[o]++;
-    const hs=clamp(0.025+(b.p-50)*0.004,0.004,0.22),ts=0.02*(b.s/50),ds=clamp(0.17+(b.p-50)*0.002,0.08,0.3),q=rand();
+    const hs=clamp(0.025+(b.p-50)*0.004,0.004,0.22)*3.2/(FENCE_H+0.2),ts=0.02*(b.s/50),ds=clamp(0.17+(b.p-50)*0.002,0.08,0.3),q=rand();
     const [B1,B2,B3]=G.bases,sp=x=>x?(x.s-50)*0.005:0;
     if(q<hs){bx.hr++;runs(1+[B1,B2,B3].filter(Boolean).length);G.bases=[null,null,null];return;}
     if(q<hs+ts){runs([B1,B2,B3].filter(Boolean).length);G.bases=[null,null,b];return;}
@@ -1138,14 +1162,14 @@ const bDist=(x,z,j)=>Math.hypot(x-BASES[j][0],z-BASES[j][1]);
 function planCatch(s,fs){
   if(s.hr){
     const q=s.pts.find(p=>p.t>=s.hrT)||s.pts[s.pts.length-1];
-    if(s.hrY<4.4){for(const f of fs){if(!OF.includes(f.pl.pos))continue;const need=Math.hypot(q.x-f.x,q.z-f.z)-f.reach;
-      if(need<=f.speed*(s.hrT-f.react)&&Math.random()<clamp(0.2+f.pl.d*0.005-(s.hrY-3.2)*0.3,0.05,0.7))
+    if(s.hrY<FENCE_H+1.4){for(const f of fs){if(!OF.includes(f.pl.pos))continue;const need=Math.hypot(q.x-f.x,q.z-f.z)-f.reach;
+      if(need<=f.speed*(s.hrT-f.react)&&Math.random()<clamp(0.2+f.pl.d*0.005-(s.hrY-FENCE_H-0.2)*0.3,0.05,0.7))
         return{mode:'wall',f,t:s.hrT,x:q.x*0.985,z:q.z*0.985,y:s.hrY,air:true,fine:true,robHR:true};}}
     return{mode:'hr'};
   }
   const n=intercept(s.pts,fs);
   if(n.air)return Object.assign({mode:'catch'},n);
-  if(s.wallT&&s.wallY>2.2){const q=s.pts.find(p=>p.t>=s.wallT);
+  if(s.wallT&&s.wallY>FENCE_H-0.8){const q=s.pts.find(p=>p.t>=s.wallT);
     for(const f of fs){if(!OF.includes(f.pl.pos))continue;const need=Math.hypot(q.x-f.x,q.z-f.z)-f.reach;
       if(need<=f.speed*(s.wallT-f.react)&&Math.random()<0.25+f.pl.d*0.004)return{mode:'wall',f,t:s.wallT,x:q.x,z:q.z,y:s.wallY,air:true,fine:true};}}
   let dv=null;
@@ -1711,7 +1735,7 @@ function makeRookies(t,rank,count){
 const SAVE_KEY='hakkyu-nine-v1';
 let S=null;
 function save(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(S));}catch(e){}}
-function load(){try{const j=JSON.parse(localStorage.getItem(SAVE_KEY));if(j&&j.ver===1){(j.yomi||[]).forEach(([k,v])=>YOMI[k]=v);refreshYomi();return j;}}catch(e){}return null;}
+function load(){try{const j=JSON.parse(localStorage.getItem(SAVE_KEY));if(j&&j.ver===1){if(j.tour&&!j.tour.stadium)j.tour.stadium=j.tour.kind==='koshien'||j.tour.kind==='senbatsu'?'koshien':j.my;(j.yomi||[]).forEach(([k,v])=>YOMI[k]=v);refreshYomi();return j;}}catch(e){}return null;}
 function saveYomi(){refreshYomi();const all=[];const add=p=>{if(p.yomi)all.push([p.name,p.yomi]);};Object.values(S.teams).forEach(t=>t.players.forEach(add));if(S.tour)S.tour.teams.forEach(t=>{if(t.players)t.players.forEach(add);if(t.name&&YOMI[t.name])all.push([t.name,YOMI[t.name]]);});S.yomi=all;}
 
 function newSave(my){
@@ -1792,7 +1816,7 @@ function growP(d,k,v){if(!d.pit)return;if(k==='kmh')d.pit.kmh=Math.min(158,d.pit
 /* ---------- 1試合（観戦しない） ---------- */
 function simMatch(ta,tb){
   const A=matchTeam(ta),B=matchTeam(tb);
-  const res=startGame({away:A,home:B,us:-1,sim:true});
+  const res=startGame({away:A,home:B,us:-1,sim:true,stadium:S.tour?S.tour.stadium:PREF_KEY[ta.pref]||'koshien'});
   applyMatch(A,res,0);applyMatch(B,res,1);
   return{res,A,B};
 }
@@ -1892,7 +1916,8 @@ function makeTour(kind){
   }
   // 抽選
   const teams=list.slice(0,T.size);shuffle(teams);
-  S.tour={kind,name:T.name(),board:T.board(),teams,alive:teams.map((_,i)=>i),round:0,log:[],out:false,place:null,gap:T.gap,end:T.end,night:!!T.night};
+  const stadium=kind==='koshien'||kind==='senbatsu'?'koshien':kind==='shikoku'?['koc','ehi','kag','tok'][(S.year-1)%4]:S.my;
+  S.tour={kind,stadium,name:T.name(),board:T.board(),teams,alive:teams.map((_,i)=>i),round:0,log:[],out:false,place:null,gap:T.gap,end:T.end,night:!!T.night};
   refreshYomi();
 }
 const tTeam=e=>e.ref?S.teams[e.ref]:e;
@@ -1970,10 +1995,11 @@ function playMatch(watch){
   const A=matchTeam(meHome?opp:my),B=matchTeam(meHome?my:opp),us=meHome?1:0;
   const title=S.tour?S.tour.board:'練 習 試 合';
   const done=res=>afterMatch(res,A,B,us,ctx,opp);
-  if(!watch){const res=startGame({away:A,home:B,us:-1,sim:true});done(res);return;}
+  const stadium=S.tour?S.tour.stadium:S.my;
+  if(!watch){const res=startGame({away:A,home:B,us:-1,sim:true,stadium});done(res);return;}
   LIVE={A,B};showView('match');
   const night=!!(S.tour&&S.tour.night&&Math.random()<0.3);
-  startGame({away:A,home:B,us,title,night,ads:[my.name,opp.name,'全力疾走','一球入魂',S.tour?S.tour.name:'練習試合'],onEnd:res=>{clearModels(A);clearModels(B);LIVE=null;showView('hub');done(res);}});
+  startGame({away:A,home:B,us,title,night,stadium,ads:[my.name,opp.name,'全力疾走','一球入魂',S.tour?S.tour.name:'練習試合'],onEnd:res=>{clearModels(A);clearModels(B);LIVE=null;showView('hub');done(res);}});
 }
 function afterMatch(res,A,B,us,ctx,opp){
   const mySide=us,mt=us===0?A:B,ot=us===0?B:A;
@@ -2036,7 +2062,7 @@ function nextCard(){
   if(S.tour){const tr=S.tour,up=userPair();
     if(up){const a=tr.alive,opp=tTeam(tr.teams[a[up[0]+(1-up[1])]]),pw=teamPower(opp).all,mp=teamPower(myTeam()).all;
       return '<div class="card next tour"><p class="kick">'+esc(tr.name)+'　'+roundName(a.length)+'</p><h2>vs '+esc(opp.name)+'<small>'+esc(opp.pref)+(opp.rival?'・県内のライバル':'')+'</small></h2>'+
-        '<p class="muted">相手の戦力：'+strengthWord(pw,mp)+'　先発予定：'+esc(chooseStarter(myTeam(),myTeam().players.filter(p=>!p.hurt)).name)+'</p>'+
+        '<p class="muted">会場：'+STADIUMS[tr.stadium].name+'（フェンス'+STADIUMS[tr.stadium].h.toFixed(1)+'m）<br>相手の戦力：'+strengthWord(pw,mp)+'　先発予定：'+esc(chooseStarter(myTeam(),myTeam().players.filter(p=>!p.hurt)).name)+'</p>'+
         '<div class="btns"><button class="btn big" id="watch">球場で観戦する</button><button class="btn ghost" id="quick">結果だけ見る</button></div></div>';}
     return '';}
   if(S.pending){const o=S.pending.opp;return '<div class="card next"><p class="kick">練習試合</p><h2>vs '+esc(o.name)+'<small>'+esc(o.pref)+'</small></h2><p class="muted">相手の戦力：'+strengthWord(teamPower(o).all,teamPower(myTeam()).all)+'。試合で選手が少し伸びる。</p><div class="btns"><button class="btn big" id="watch">観戦する</button><button class="btn ghost" id="quick">結果だけ見る</button><button class="btn ghost" id="skipP">見送る</button></div></div>';}
