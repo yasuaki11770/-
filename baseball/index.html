@@ -395,7 +395,7 @@ function simPath(v0,noFence){
   const pts=[],dt=1/60;
   for(let i=0;i<720;i++){
     const t=(i+1)*dt,sp=Math.hypot(v.x,v.y,v.z);
-    if(v0.back!=null&&sp>0.5){
+    if(v0.back!=null&&sp>0.5&&!landed){   // 回転の力は空中だけ（転がる打球は曲がらない）
       // 回転軸：バックスピンは打球方向と鉛直の外積、サイドスピンは鉛直軸
       const rpm=Math.hypot(v0.back,v0.side)*Math.exp(-t/25),w=rpm*Math.PI/30,S=0.0366*w/sp;
       const cd=0.3008+0.0292*rpm/1000,cl=1.12*S/(0.583+2.333*S);
@@ -1391,13 +1391,18 @@ function resolvePlay(plan,s,b,pc,h){
 }
 /* ---------- フェア・ファウルの判定：打球が落ちた場所（塁より手前なら塁を通過した場所・止まった場所）で決める ---------- */
 const angOf=(x,z)=>Math.atan2(x,-z)*180/Math.PI;
-function judgeFair(s){
-  const pts=s.pts,fairAt=q=>Math.abs(angOf(q.x,q.z))<=45&&q.z<0.3;
-  if(s.hr){const q=pts.find(p=>p.t>=s.hrT)||pts[pts.length-1];return fairAt(q);}
-  const i0=pts.findIndex(p=>!p.air);if(i0<0)return fairAt(pts[pts.length-1]);
-  const L=pts[i0];if(Math.hypot(L.x,L.z)>=27.4)return fairAt(L);
-  for(let i=i0;i<pts.length;i++){const q=pts[i];if(Math.hypot(q.x,q.z)>=27.4)return fairAt(q);}
-  return fairAt(pts[pts.length-1]);
+// ルールどおり：塁より先に落ちた打球は落ちた場所、塁より手前は「野手が触れた場所・塁を通過した場所・止まった場所」のうち先のもの
+const fairPt=q=>Math.abs(angOf(q.x,q.z))<=45.4&&q.z<0.6;
+function judgeFair(s,plan){
+  const pts=s.pts;
+  if(s.hr){const q=pts.find(p=>p.t>=s.hrT)||pts[pts.length-1];return fairPt(q);}
+  const i0=pts.findIndex(p=>!p.air);if(i0<0)return fairPt(pts[pts.length-1]);
+  const L=pts[i0];if(Math.hypot(L.x,L.z)>=27.4)return fairPt(L);
+  const touch=plan&&!plan.air&&plan.f&&plan.t!=null?plan.t:1e9;
+  for(let i=i0;i<pts.length;i++){const q=pts[i];
+    if(q.t>=touch)return fairPt({x:plan.x,z:plan.z});
+    if(Math.hypot(q.x,q.z)>=27.4)return fairPt(q);}
+  return fairPt(pts[pts.length-1]);
 }
 // ファウルゾーンで野手が捕れる範囲（フェンス・スタンドの手前）
 function foulCatchable(q){if(q.stands||q.net)return false;const a=Math.abs(angOf(q.x,q.z)),d=Math.hypot(q.x,q.z);if(q.z>22)return false;if(a>100)return true;return d*Math.sin((a-45)*Math.PI/180)<20.5&&d<fenceR(0.785);}
@@ -1409,14 +1414,16 @@ function startPlay(h){
   const v0=launch(hit.v,hit.theta,hit.phi);
   cursor.visible=false;zoneLine.visible=false;trailReset();
   SND.crack(h.bunt?0.2:clamp(hit.v/38,0.3,1));
-  const s=simPath(v0,false),def=teamIdx(defense());
-  if(hit.theta<-12||!judgeFair(s)){
-    const sf=simPath(v0,true),fs=fieldOf(def).map(fielderOf);
-    // ファウルフライ：ファウルゾーンで落ちてくる打球はだれでも追う
-    const zone=sf.pts.filter(q=>q.air&&foulCatchable(q)&&Math.abs(angOf(q.x,q.z))>44);
-    let catchP=null;if(zone.length>8){const n=intercept(zone,fs);if(n.air&&Math.random()<0.85)catchP=n;}
-    if(catchP){const P=resolvePlay(Object.assign({mode:'catch'},catchP),sf,b,pc,h);P.label=FNAME[catchP.f.pl.pos]+'ファウルフライ';P.goals=assignGoals(P.plan,sf,P);
-      G.play=P;batRig.visible=false;P.moves.forEach(m=>{m.mesh=m.who.model;m.mesh.visible=true;});G.phase='play';setCam('follow');return;}
+  const s=simPath(v0,false),def=teamIdx(defense()),fs0=fieldOf(def).map(fielderOf);
+  const plan0=hit.theta<-12?null:planCatch(s,fs0);
+  // 空中で捕れる打球：フェアならそのまま、ファウルゾーンでも客席の手前ならファウルフライのアウト
+  const caught=plan0&&plan0.air&&plan0.mode!=='hr';
+  const fair=plan0&&(caught?fairPt({x:plan0.x,z:plan0.z}):judgeFair(s,plan0));
+  if(caught&&!fair&&foulCatchable({x:plan0.x,z:plan0.z,y:1})&&Math.random()<0.9){
+    const P=resolvePlay(plan0,s,b,pc,h);P.label=FNAME[plan0.f.pl.pos]+'ファウルフライ';P.goals=assignGoals(plan0,s,P);
+    G.play=P;batRig.visible=false;P.moves.forEach(m=>{m.mesh=m.who.model;m.mesh.visible=true;});G.phase='play';setCam('follow');return;}
+  if(!fair){
+    const sf=simPath(v0,true),fs=fs0;
     // 捕れないファウル：スタンドに入るか、転がって止まるまで見せる。近い野手が追いかける
     const lastP=sf.pts[sf.pts.length-1];let endT=Math.min(3.6,lastP.t+0.7);
     const out=sf.pts.find(q=>q.t>0.4&&!foulCatchable(q));
@@ -1425,8 +1432,7 @@ function startPlay(h){
     G.play={foul:true,pts:sf.pts,t:0,endT:Math.max(1.2,endT),chase:near&&nd<45?{pos:near.pl.pos,x:last.x,z:last.z,sp:near.speed,react:near.react}:null};
     G.phase='play';setCam('follow');SND.crowd(0.18,0.8);return;
   }
-  const fs=fieldOf(def).map(fielderOf);
-  const plan=planCatch(s,fs);
+  const plan=plan0;
   const P=resolvePlay(plan,s,b,pc,h);
   P.goals=assignGoals(plan,s,P);
   G.play=P;batRig.visible=false;
