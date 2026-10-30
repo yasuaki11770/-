@@ -463,17 +463,17 @@ const rim=new THREE.DirectionalLight(0xffe0b0,0.25);rim.position.set(80,40,60);s
 function aimLight(x,z){key.target.position.set(x,0,z);key.position.set(x+28,72,z+44);}
 /* 球場：同じ球場を使い回し、色味とフェンスの高さを変える（高知 < 愛媛 < 香川 < 徳島 の順にフェンスが高い） */
 const STADIUMS={
-  koc:{name:'高知 南国スタジアム',h:2.4,wall:['#1d7a96','#0f4c66'],cap:0xf2c14e,seat:[0x13607a,0x6a8a98,0x4a6a78,0x1f4a5a,0x2c5a6a],grass:0xfff4e0,track:0x9a6a40},
-  ehi:{name:'愛媛 みかん球場',h:3.0,wall:['#d0721e','#8e420c'],cap:0xfff2c8,seat:[0xb85a14,0x8a7a6a,0x6a5a4c,0x4a3424,0x5a4434],grass:0xfffaea,track:0xa8703e},
-  kag:{name:'香川 讃岐スタジアム',h:3.6,wall:['#2f8050','#17552f'],cap:0xece6cc,seat:[0x1f5a34,0x6a7a68,0x4a5a48,0x23382a,0x2e4636],grass:0xf0fff0,track:0x8c5b3a},
-  tok:{name:'徳島 藍の森球場',h:4.4,wall:['#2a3c80','#121c4c'],cap:0xd8dcf4,seat:[0x1a2660,0x666c90,0x464c70,0x1c2240,0x282e50],grass:0xf2f6ff,track:0x86583a},
-  koshien:{name:'甲子園',h:3.4,wall:['#2c5a24','#173a12'],cap:0xd8b040,seat:[0x2a4a28,0x8a8a80,0x5a5a54,0x2a2a30,0x3a3a40],grass:0xffffff,track:0x9a6236},
+  koc:{name:'高知 南国スタジアム',pat:'vstripe',h:2.4,wall:['#1d7a96','#0f4c66'],cap:0xf2c14e,seat:[0x13607a,0x6a8a98,0x4a6a78,0x1f4a5a,0x2c5a6a],grass:0xfff4e0,track:0x9a6a40},
+  ehi:{name:'愛媛 みかん球場',pat:'check',h:3.0,wall:['#d0721e','#8e420c'],cap:0xfff2c8,seat:[0xb85a14,0x8a7a6a,0x6a5a4c,0x4a3424,0x5a4434],grass:0xfffaea,track:0xa8703e},
+  kag:{name:'香川 讃岐スタジアム',pat:'grid',h:3.6,wall:['#2f8050','#17552f'],cap:0xece6cc,seat:[0x1f5a34,0x6a7a68,0x4a5a48,0x23382a,0x2e4636],grass:0xf0fff0,track:0x8c5b3a},
+  tok:{name:'徳島 藍の森球場',pat:'thin',h:4.4,wall:['#2a3c80','#121c4c'],cap:0xd8dcf4,seat:[0x1a2660,0x666c90,0x464c70,0x1c2240,0x282e50],grass:0xf2f6ff,track:0x86583a},
+  koshien:{name:'甲子園',pat:'hstripe',h:3.4,wall:['#2c5a24','#173a12'],cap:0xd8b040,seat:[0x2a4a28,0x8a8a80,0x5a5a54,0x2a2a30,0x3a3a40],grass:0xffffff,track:0x9a6236},
 };
 let curStadium='';
 function setStadium(k,visual){const S=STADIUMS[k]||STADIUMS.koshien;FENCE_H=S.h;if(!visual||curStadium===k)return;curStadium=k;
   adCols=S.wall;drawAds();buildFence(S.h);capMat.color.set(S.cap);
   if(STAND_MATS)[0,1,2,4,5].forEach((i,j)=>STAND_MATS[i].color.set(S.seat[j]));
-  grassM.color.set(S.grass);grassM2.color.set(S.grass);}
+  grassM.color.set(S.grass);drawGrass(S.pat);}
 // 昼（夏の日差し）と夜（ナイター）を切り替える
 let isNight=false;
 function setSky(night){isNight=!!night;skyMat.map=night?skyTex:daySkyTex;skyMat.needsUpdate=true;NIGHT_ONLY.forEach(o=>o.visible=isNight);
@@ -487,24 +487,31 @@ const grassTex=canvasTex(512,512,(g,w,h)=>{g.fillStyle='#347a33';g.fillRect(0,0,
 grassTex.center.set(.5,.5);grassTex.rotation=Math.PI/4;grassTex.repeat.set(27,27);
 const grassM=new THREE.MeshPhongMaterial({color:0xffffff,map:grassTex,shininess:6,specular:0x111111});
 const grassM2=new THREE.MeshPhongMaterial({color:0xffffff,shininess:6,specular:0x111111,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-4});
-// three.js examples の芝写真テクスチャと法線マップ（MIT）を刈り込み模様と合成
-(function(){const img=new Image();img.onload=()=>{
-  for(const [tex,rep] of [[grassTex,true],[grassTex2,false]]){const c=tex.image,g=c.getContext('2d'),w=c.width,h=c.height;
-    g.drawImage(img,0,0,w/2,h/2);g.drawImage(img,w/2,0,w/2,h/2);g.drawImage(img,0,h/2,w/2,h/2);g.drawImage(img,w/2,h/2,w/2,h/2);
-    g.globalCompositeOperation='multiply';g.fillStyle='rgba(120,200,110,1)';g.fillRect(0,0,w,h);g.globalCompositeOperation='source-over';
-    g.fillStyle='rgba(255,255,255,.10)';g.fillRect(0,0,w/2,h/2);g.fillRect(w/2,h/2,w/2,h/2);g.fillStyle='rgba(0,30,0,.10)';g.fillRect(w/2,0,w/2,h/2);g.fillRect(0,h/2,w/2,h/2);
-    tex.needsUpdate=true;}};img.src=ASSET.grass;
+// three.js examples の芝写真テクスチャと法線マップ（MIT）に、球場ごとの刈り込み模様を重ねる
+let grassImg=null,grassPat='check';
+const GRASS_PAT={check:Math.PI/4,vstripe:0,hstripe:0,grid:0,thin:Math.PI/4};
+function drawGrass(pat){if(pat)grassPat=pat;pat=grassPat;const c=grassTex.image,g=c.getContext('2d'),w=c.width,h=c.height;
+  if(grassImg){for(const [x,y] of [[0,0],[w/2,0],[0,h/2],[w/2,h/2]])g.drawImage(grassImg,x,y,w/2,h/2);
+    g.globalCompositeOperation='multiply';g.fillStyle='rgba(120,200,110,1)';g.fillRect(0,0,w,h);g.globalCompositeOperation='source-over';}
+  else{g.fillStyle='#3a8238';g.fillRect(0,0,w,h);}
+  const L='rgba(255,255,255,.11)',D='rgba(0,30,0,.12)',R=(f,x,y,ww,hh)=>{g.fillStyle=f;g.fillRect(x,y,ww,hh);};
+  if(pat==='check'||pat==='grid'){R(L,0,0,w/2,h/2);R(L,w/2,h/2,w/2,h/2);R(D,w/2,0,w/2,h/2);R(D,0,h/2,w/2,h/2);}
+  else if(pat==='vstripe'){R(L,0,0,w/2,h);R(D,w/2,0,w/2,h);}
+  else if(pat==='hstripe'){R(L,0,0,w,h/2);R(D,0,h/2,w,h/2);}
+  else if(pat==='thin'){for(let i=0;i<4;i++)R(i%2?D:L,i*w/4,0,w/4,h);}
+  grassTex.rotation=GRASS_PAT[pat]||0;grassTex.needsUpdate=true;}
+(function(){const img=new Image();img.onload=()=>{grassImg=img;drawGrass();};img.src=ASSET.grass;
   const nl=new THREE.TextureLoader().load(ASSET.grassN);nl.wrapS=nl.wrapT=THREE.RepeatWrapping;nl.repeat.set(54,54);
-  grassM.normalMap=nl;grassM.normalScale.set(0.6,0.6);grassM.needsUpdate=true;
-  const nl2=new THREE.TextureLoader().load(ASSET.grassN);nl2.wrapS=nl2.wrapT=THREE.RepeatWrapping;nl2.repeat.set(2.6,2.6);grassM2.normalMap=nl2;grassM2.normalScale.set(0.6,0.6);grassM2.needsUpdate=true;})();
-const grassTex2=canvasTex(512,512,(g,w,h)=>{g.drawImage(grassTex.image,0,0);});grassTex2.repeat.set(1.3,1.3);grassM2.map=grassTex2;
-const dirtTex=canvasTex(256,256,(g,w,h)=>{g.fillStyle='#b27a4b';g.fillRect(0,0,w,h);speckle(g,w,h,.14,7000);},[9,9]);
+  grassM.normalMap=nl;grassM.normalScale.set(0.6,0.6);grassM.needsUpdate=true;})();
+// 内野は甲子園のような黒土（外野だけ芝）
+const dirtTex=canvasTex(256,256,(g,w,h)=>{g.fillStyle='#33261d';g.fillRect(0,0,w,h);speckle(g,w,h,.12,9000);},[9,9]);
 const dirtM=ML(0xffffff,{map:dirtTex,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-2});
 const trackTex=canvasTex(256,64,(g,w,h)=>{g.fillStyle='#8c5b3a';g.fillRect(0,0,w,h);speckle(g,w,h,.16,3000);});
 const flat=(geo,m,x,y,z,rz)=>{const o=addMesh(geo,m,x,y,z);o.rotation.x=-Math.PI/2;if(rz)o.rotation.z=rz;o.receiveShadow=true;return o;};
 flat(new THREE.CircleGeometry(300,72),grassM,0,0,-40);
 flat(new THREE.CircleGeometry(29,72),dirtM,0,0.03,-18.4);
-flat(new THREE.PlaneGeometry(25.4,25.4),grassM2,0,0.07,-19.4,Math.PI/4);
+// 外野の芝との境目（内野の黒土の外周）
+{const r=addMesh(new THREE.RingGeometry(28.6,29.05,96),ML(0x3a2c22,{polygonOffset:true,polygonOffsetFactor:-1}),0,0.035,-18.4);r.rotation.x=-Math.PI/2;}
 flat(new THREE.CircleGeometry(4.1,48),dirtM,0,0.1,0);
 for(const i of [1,3])flat(new THREE.CircleGeometry(2.6,32),dirtM,BASES[i][0],0.1,BASES[i][1]);
 {const m=addMesh(new THREE.CylinderGeometry(2.74,3.05,0.25,48),dirtM,0,0.125,-18.4);m.receiveShadow=true;}
@@ -784,8 +791,8 @@ const PLAYER3D=(function(){
 })();
 // 試合に出る選手のモデルを作る（試合が終わったら片付ける）
 function modelFor(t,p){if(!p.model){p.model=PLAYER3D.build(p.name,t.kit,p.num);p.model.userData.lefty=p.th==='L';p.model.visible=false;scene.add(p.model);}return p.model;}
-function teamModels(t){t.players.forEach(p=>modelFor(t,p));}
-function clearModels(t){[...t.players,...(t.bench||[]),...(t.out||[])].forEach(p=>{if(p.model){PLAYER3D.dispose(p.model);p.model=null;}});}
+function teamModels(t){fieldOf(t).forEach(p=>modelFor(t,p));}
+function clearModels(t){[...t.players,...(t.bench||[]),...(t.out||[]),...(t.pitcher?[t.pitcher]:[])].forEach(p=>{if(p.model){PLAYER3D.dispose(p.model);p.model=null;}});}
 /* ---------- IK（腕を目標点へ） ---------- */
 const IK=(function(){
   const _a=new THREE.Vector3(),_p=new THREE.Vector3(),_d=new THREE.Vector3(),_S=new THREE.Vector3(),_E=new THREE.Vector3(),_H=new THREE.Vector3(),dn=new THREE.Vector3(0,-1,0);
@@ -902,26 +909,28 @@ function armTo(w,arm,world,pole){w.updateMatrixWorld(true);IK.limb(w.userData.f[
 
 /* ---------- 試合の状態 ---------- */
 let fielders={},batter=null;
-const G={phase:'idle',speed:1,ord:{off:'auto',def:'auto'},cpuOrd:{off:'auto',def:'auto'},us:0,autoRelief:true};
+const G={bigSkip:(()=>{try{const v=localStorage.getItem('hakkyu-bigskip');return v==null?7:+v;}catch(e){return 7;}})(),phase:'idle',speed:1,ord:{off:'auto',def:'auto'},cpuOrd:{off:'auto',def:'auto'},us:0,autoRelief:true};
 const $=id=>document.getElementById(id);
 const teamIdx=h=>h===0?G.away:G.home;          // 0=先攻 1=後攻
 const offense=()=>G.top?0:1, defense=()=>G.top?1:0;
 const manual=()=>false;
 const userBatting=()=>false, userPitching=()=>false;
 const curBatter=()=>teamIdx(offense()).players[G.order[offense()]];
-const curPitcher=()=>teamIdx(defense()).players.find(p=>p.pos==='投');
+const curPitcher=()=>{const t=teamIdx(defense());return t.pitcher||t.players.find(p=>p.pos==='投');};
+// DH制：守るのは打順の8人（DHを除く）と投手
+const fieldOf=t=>t.players.filter(p=>p.pos!=='DH').concat(t.pitcher&&!t.players.includes(t.pitcher)?[t.pitcher]:[]);
 const usOff=()=>offense()===G.us, usDef=()=>defense()===G.us;
 const offOrd=()=>usOff()?G.ord.off:G.cpuOrd.off;
 const defOrd=()=>usDef()?G.ord.def:G.cpuOrd.def;
 const tscale=()=>G.sim?1:G.speed;
-const PN={'投':'ピッチャー','捕':'キャッチャー','一':'ファースト','二':'セカンド','三':'サード','遊':'ショート','左':'レフト','中':'センター','右':'ライト'};
-const POSNAME={'投':'投手','捕':'捕手','一':'一塁手','二':'二塁手','三':'三塁手','遊':'遊撃手','左':'左翼手','中':'中堅手','右':'右翼手'};
+const PN={'DH':'指名打者','投':'ピッチャー','捕':'キャッチャー','一':'ファースト','二':'セカンド','三':'サード','遊':'ショート','左':'レフト','中':'センター','右':'ライト'};
+const POSNAME={'DH':'指名打者','投':'投手','捕':'捕手','一':'一塁手','二':'二塁手','三':'三塁手','遊':'遊撃手','左':'左翼手','中':'中堅手','右':'右翼手'};
 const box=(p)=>p.box||(p.box={ab:0,h:0,hr:0,rbi:0,bb:0,k:0,sb:0,pk:0,po:0,pr:0,ph:0,pbb:0});
 
 /* M = {away, home, us(0/1, 観戦しないときは-1), title, night, ads, sim, onEnd} */
 function startGame(M){
   G.M=M;setStadium(M.stadium,!M.sim);G.away=M.away;G.home=M.home;G.us=M.us;G.innings=9;G.sim=!!M.sim;
-  [G.away,G.home].forEach(t=>{t.out=t.out||[];[...t.players,...t.bench].forEach(p=>{p.pcount=0;p.box=null;});});
+  [G.away,G.home].forEach(t=>{t.out=t.out||[];[...t.players,...t.bench,...(t.pitcher?[t.pitcher]:[])].forEach(p=>{p.pcount=0;p.box=null;});});G.trail=[0,0];
   G.inning=1;G.top=true;G.outs=0;G.balls=0;G.strikes=0;G.score=[0,0];G.line=[[],[]];G.hits=[0,0];G.err=[0,0];
   G.bases=[null,null,null];G.order=[0,0];G.lastPitch=null;G.ord={off:'auto',def:'auto'};G.cpuOrd={off:'auto',def:'auto'};G.annFor=null;G.lastBatter=null;G.result=null;
   if(G.sim){G.phase='sim';G.line[0][0]=0;return simRest();}
@@ -931,10 +940,19 @@ function startGame(M){
   SND.init();SND.siren();setTimeout(()=>{SND.organ([67,72,76,79,0,76,79],0.17);SND.say('プレイボール！',1.1,true);},2200);SND.crowd(0.5,2);
   setupHalf();G.readyT=-1.6;msg((STADIUMS[M.stadium]||STADIUMS.koshien).name,2,null,'フェンスの高さ '+FENCE_H.toFixed(1)+'m');
 }
+// 試合内容の見出し（快勝・辛勝・逆転など）
+function noteTrail(){if(!G.trail)G.trail=[0,0];for(const s of [0,1])G.trail[s]=Math.max(G.trail[s],G.score[1-s]-G.score[s]);}
+function winLabel(r,s){const d=r.score[s]-r.score[1-s],tr=r.trail||[0,0];
+  if(r.winSide<0)return'引き分け';
+  if(d>0){if(r.extra==='サヨナラ'&&s===1)return'サヨナラ勝ち';if(r.score[1-s]===0)return'完封勝ち';if(tr[s]>0)return'逆転勝ち';if(d>=7)return'圧勝';if(d>=4)return'快勝';if(d===1)return'辛勝';return'勝利';}
+  if(r.extra==='サヨナラ'&&s===0)return'サヨナラ負け';if(r.score[s]===0)return'完封負け';if(tr[1-s]>0)return'逆転負け';if(-d>=7)return'大敗';if(-d===1)return'惜敗';return'敗戦';}
 function setupHalf(){
+  noteTrail();
+  const gap=Math.abs(G.score[0]-G.score[1]);
+  if(!G.sim&&G.bigSkip&&gap>=G.bigSkip&&!(G.inning===1&&G.top)){G.phase='msg';refreshHUD();msg('高速試合へ',1.4,()=>skipToEnd(),gap+'点差がついたので一気に進めます');return;}
   const def=teamIdx(defense()),off=teamIdx(offense());
-  def.players.forEach(p=>{modelFor(def,p);showGlove(p.model,true);});
-  [...off.players,...off.bench,...off.out,...def.bench,...def.out].forEach(p=>{if(p.model){p.model.visible=false;showGlove(p.model,false);}});
+  fieldOf(def).forEach(p=>{modelFor(def,p);showGlove(p.model,true);});
+  [...off.players,...off.bench,...off.out,...(off.pitcher?[off.pitcher]:[]),...def.bench,...def.out,...def.players.filter(p=>p.pos==='DH')].forEach(p=>{if(p.model){p.model.visible=false;showGlove(p.model,false);}});
   G.line[offense()][G.inning-1]=G.line[offense()][G.inning-1]||0;
   tiebreak();
   if(G.inning>=10&&!G.sim){G.phase='msg';refreshHUD();msg('タイブレーク',1.4,()=>resetAtBat(),'無死一・二塁から');return;}
@@ -959,11 +977,12 @@ function cpuManager(){
 const pitScore=p=>p.pit?p.pit.vel*0.35+p.pit.ctl*0.35+p.pit.brk*0.3:0;
 function relievers(t){return t.bench.filter(p=>p.pit&&!p.hurt).sort((a,b)=>pitScore(b)*(1-(b.tired||0)/160)-pitScore(a)*(1-(a.tired||0)/160));}
 function changePitcher(side,np){
-  const t=teamIdx(side),old=t.players.find(p=>p.pos==='投'),i=t.players.indexOf(old);
-  np.pos='投';np.pcount=0;t.players[i]=np;t.bench.splice(t.bench.indexOf(np),1);old.pos='済';t.out.push(old);
+  const t=teamIdx(side),old=curPitcherOf(t),i=t.players.indexOf(old);
+  np.pos='投';np.pcount=0;if(t.pitcher===old)t.pitcher=np;if(i>=0)t.players[i]=np;t.bench.splice(t.bench.indexOf(np),1);old.pos='済';t.out.push(old);
   if(!G.sim){modelFor(t,np);if(old.model)old.model.visible=false;SND.say(t.name+'、ピッチャーの交代をお知らせします。'+np.name,1.1,true);}
   return np;
 }
+function curPitcherOf(t){return t.pitcher||t.players.find(p=>p.pos==='投');}
 function needRelief(){
   const p=curPitcher(),f=fatigue(),rn=G.bases.filter(Boolean).length;
   return f>8||(f>2&&rn>=2)||(p.box&&p.box.pr>=5&&G.inning<=6);
@@ -984,11 +1003,12 @@ function resetAtBat(){
   cpuManager();
   const def=teamIdx(defense());
   fielders={};
-  for(const p of def.players){const f=modelFor(def,p),[x,z]=POS[p.pos];fielders[p.pos]=f;f.visible=true;showGlove(f,true);
+  for(const p of fieldOf(def)){const f=modelFor(def,p),[x,z]=POS[p.pos];fielders[p.pos]=f;f.visible=true;showGlove(f,true);
     if(p.pos==='捕'){f.position.set(0,0,0.95);f.rotation.y=Math.PI;stance(f,'crouch');}
     else if(p.pos==='投'){f.position.set(x,0.25,z);face(f,0,1);posePitcher(f,0);}
     else{f.position.set(x,0,z);face(f,-x,-z);stance(f,'field');}}
-  const off=teamIdx(offense());off.players.forEach(p=>{if(p.model)p.model.visible=false;});
+  const off=teamIdx(offense());[...off.players,...(off.pitcher?[off.pitcher]:[])].forEach(p=>{if(p.model)p.model.visible=false;});
+  def.players.forEach(p=>{if(p.pos==='DH'&&p.model)p.model.visible=false;});
   G.bs=batSide(curBatter());
   batter=modelFor(off,curBatter());batter.add(batRig);batRig.visible=true;showGlove(batter,false);
   batter.visible=true;batter.position.set(G.bs==='L'?0.95:-0.95,0,0.05);batter.rotation.y=G.bs==='L'?-Math.PI/2:Math.PI/2;
@@ -1013,7 +1033,7 @@ const rand=Math.random;
 function simPA(){
   autoRelief();
   const b=curBatter(),pt=curPitcher(),pit=pt.pit,def=teamIdx(defense()),o=offense();
-  const cat=def.players.find(p=>p.pos==='捕');
+  const cat=fieldOf(def).find(p=>p.pos==='捕');
   // 盗塁
   const r1=G.bases[0];
   if(r1&&!G.bases[1]&&r1.s>=62&&G.outs<2&&rand()<0.1){
@@ -1030,7 +1050,7 @@ function simPA(){
   pt.pcount+=3+Math.floor(rand()*3);
   const B=b.m*0.55+b.p*0.45,Pq=pit.vel*0.36+pit.ctl*0.32+pit.brk*0.32-fat*0.45;
   const diff=(B-Pq)/100;
-  const dd=(def.players.reduce((a,p)=>a+p.d,0)/9-50)/100;
+  const dd=(fieldOf(def).reduce((a,p)=>a+p.d,0)/9-50)/100;
   const pBB=clamp(0.08-(pit.ctl-50)*0.0012+fat*0.0012,0.03,0.17),pK=clamp(0.18-diff*0.4,0.05,0.4);
   const r=rand(),bx=box(b),px=box(pt);
   const runs=n=>{if(!n)return;G.score[o]+=n;G.line[o][G.inning-1]=(G.line[o][G.inning-1]||0)+n;bx.rbi+=n;px.pr+=n;};
@@ -1072,7 +1092,7 @@ function simRest(){
       G.outs=0;G.bases=[null,null,null];
       if(G.top){if(G.inning>=G.innings&&G.score[1]>G.score[0])return gameOver();G.top=false;}
       else{if(G.inning>=G.innings&&G.score[0]!==G.score[1])return gameOver();if(G.inning>=25)return gameOver('引き分け');G.top=true;G.inning++;}
-      G.line[offense()][G.inning-1]=G.line[offense()][G.inning-1]||0;tiebreak();
+      G.line[offense()][G.inning-1]=G.line[offense()][G.inning-1]||0;tiebreak();noteTrail();
     }
   }
   return gameOver();
@@ -1246,7 +1266,7 @@ function resolvePlay(plan,s,b,pc,h){
     if(infield&&r1&&outs0<2&&!(h&&h.bunt)&&A(r1,2)-T(2)>-0.08){
       const t2=throwTo(tf,[plan.x,plan.z],2,F),j2=judge(A(r1,2)-t2);
       if(j2.out){r1.outAt=t2;outs.push({t:t2,force:true});addCall(t2,2,true,j2.close,r1.who);
-        const rl=fielderOf(teamIdx(defense()).players.find(p=>p.pos===coverOf(2,F.pl.pos)));
+        const rl=fielderOf(fieldOf(teamIdx(defense())).find(p=>p.pos===coverOf(2,F.pl.pos)));
         if(outs0+1<3){const t1=throwTo(t2+rl.xfer*0.7,[BASES[2][0],BASES[2][1]],1,rl),j1=judge(A(bat,1)-t1);
           if(j1.out){bat.outAt=t1;outs.push({t:t1,force:true});addCall(t1,1,true,j1.close,b);P.dp=true;}else addCall(A(bat,1),1,false,j1.close,b);}
         done=true;}
@@ -1302,7 +1322,7 @@ function startPlay(h){
   SND.crack(h.bunt?0.2:clamp(hit.v/38,0.3,1));
   if(hit.foul){
     const s=simPath(v0,true),def=teamIdx(defense());
-    const fs=def.players.filter(p=>'捕一三'.includes(p.pos)).map(fielderOf);
+    const fs=fieldOf(def).filter(p=>'捕一三'.includes(p.pos)).map(fielderOf);
     const land=s.pts.find(q=>!q.air)||s.pts[s.pts.length-1];
     let catchP=null;if(hit.theta>28&&Math.hypot(land.x,land.z)<34&&land.z<16){const n=intercept(s.pts,fs);if(n.air&&Math.random()<0.75)catchP=n;}
     if(catchP){const P=resolvePlay(Object.assign({mode:'catch'},catchP),s,b,pc,h);P.label='ファウルフライ';G.play=P;batRig.visible=false;P.moves.forEach(m=>{m.mesh=m.who.model;m.mesh.visible=true;});G.phase='play';setCam('follow');return;}
@@ -1310,7 +1330,7 @@ function startPlay(h){
     SND.crowd(0.18,0.8);return;
   }
   const s=simPath(v0,false);
-  const def=teamIdx(defense()),fs=def.players.map(fielderOf);
+  const def=teamIdx(defense()),fs=fieldOf(def).map(fielderOf);
   const plan=planCatch(s,fs);
   const P=resolvePlay(plan,s,b,pc,h);
   G.play=P;batRig.visible=false;
@@ -1435,7 +1455,7 @@ function resolveNoContact(){
   if(G.ord.off==='wait'&&usOff())G.ord.off='auto';
   let st='';
   if(pc.steal){
-    const r=pc.steal.r,cat=teamIdx(defense()).players.find(p=>p.pos==='捕');
+    const r=pc.steal.r,cat=fieldOf(teamIdx(defense())).find(p=>p.pos==='捕');
     const p=clamp(0.42+(r.s-60)*0.013-(cat.a-60)*0.008,0.12,0.92);
     if(usOff()&&G.ord.off==='steal')G.ord.off='auto';
     if(Math.random()<p){G.bases[1]=r;G.bases[0]=null;st=r.name+' 盗塁成功';box(r).sb++;}
@@ -1468,7 +1488,7 @@ function say(t,st){G.phase='msg';refreshHUD();msg(t,0.8,()=>resetAtBat(),st||'')
 function gameOver(extra){
   const a=G.away,h=G.home,n=Math.max(G.inning,G.innings);
   const winSide=G.score[0]>G.score[1]?0:G.score[1]>G.score[0]?1:-1;
-  const res={score:[...G.score],line:[G.line[0].slice(),G.line[1].slice()],hits:[...G.hits],innings:n,winSide,extra:extra||'',teams:[a,h]};
+  noteTrail();const res={score:[...G.score],line:[G.line[0].slice(),G.line[1].slice()],hits:[...G.hits],innings:n,winSide,extra:extra||'',teams:[a,h],trail:[...G.trail]};
   G.result=res;G.phase='over';
   if(G.M&&G.M.sim&&!G.skipped)return res;
   G.sim=false;
@@ -1477,7 +1497,7 @@ function gameOver(extra){
   let head='<tr><th></th>';for(let i=1;i<=n;i++)head+='<th>'+i+'</th>';head+='<th>計</th><th>安</th></tr>';
   const row=(t,i)=>{let r='<tr><th style="color:'+t.color+'">'+t.short+'</th>';for(let k=0;k<n;k++){const v=G.line[i][k];r+='<td>'+(v==null?(i===1&&k===n-1&&winSide===1?'x':'-'):v)+'</td>';}return r+'<td>'+G.score[i]+'</td><td>'+G.hits[i]+'</td></tr>';};
   const win=winSide===0?a:winSide===1?h:null,usWin=winSide===G.us;
-  const o=$('over');o.innerHTML='<h1>'+(usWin?'勝利！':win?'ゲームセット':'引き分け')+'</h1><div class="sub">'+(extra?extra+'　':'')+(win?win.name+'の勝利':'引き分け')+'</div><div style="overflow-x:auto;max-width:100%"><table>'+head+row(a,0)+row(h,1)+'</table></div><button class="go" id="again">結果へ</button>';
+  const o=$('over');o.innerHTML='<h1>'+(G.us>=0?winLabel(res,G.us):win?'ゲームセット':'引き分け')+'</h1><div class="sub">'+(extra?extra+'　':'')+(win?win.name+'の勝利':'引き分け')+'</div><div style="overflow-x:auto;max-width:100%"><table>'+head+row(a,0)+row(h,1)+'</table></div><button class="go" id="again">結果へ</button>';
   o.hidden=false;$('again').onclick=()=>{o.hidden=true;const cb=G.M&&G.M.onEnd;G.phase='idle';if(cb)cb(res);};
   return res;
 }
@@ -1531,7 +1551,7 @@ function refreshMgr(){
   $('orders').innerHTML=extra+list.map(([k,n,d])=>{let dis=false;
     if(k==='steal')dis=!(G.bases[0]&&!G.bases[1]);if(k==='bunt')dis=!(G.bases[0]||G.bases[1])||G.strikes===2;if(k==='walk')dis=G.phase!=='ready'&&G.phase!=='msg';
     return '<button class="ob'+(cur===k?' on':'')+'" data-o="'+k+'"'+(dis?' disabled':'')+'>'+n+'<small>'+d+'</small></button>';}).join('');
-  $('spd').innerHTML='<button class="ob'+(G.autoRelief?' on':'')+'" data-ar="1">継投<small>'+(G.autoRelief?'おまかせ':'自分で')+'</small></button><button class="ob'+(SND.on?' on':'')+'" data-snd="1">音<small>'+(SND.on?'ON':'OFF')+'</small></button>'+[1,2,4].map(s=>'<button class="ob'+(G.speed===s?' on':'')+'" data-s="'+s+'">×'+s+'</button>').join('')+'<button class="ob" data-skip="1">結果まで<small>飛ばす</small></button>';
+  $('spd').innerHTML='<button class="ob'+(G.autoRelief?' on':'')+'" data-ar="1">継投<small>'+(G.autoRelief?'おまかせ':'自分で')+'</small></button><button class="ob'+(SND.on?' on':'')+'" data-snd="1">音<small>'+(SND.on?'ON':'OFF')+'</small></button>'+[1,2,4].map(s=>'<button class="ob'+(G.speed===s?' on':'')+'" data-s="'+s+'">×'+s+'</button>').join('')+'<button class="ob'+(G.bigSkip?' on':'')+'" data-big="1">大差<small>'+(G.bigSkip?G.bigSkip+'点で高速':'高速なし')+'</small></button><button class="ob" data-skip="1">結果まで<small>飛ばす</small></button>';
 }
 $('orders').addEventListener('click',e=>{
   const rv=e.target.closest('[data-rv]');if(rv&&!rv.disabled){G.mgrView=rv.dataset.rv==='open'?'relief':'';refreshMgr();return;}
@@ -1541,7 +1561,7 @@ $('orders').addEventListener('click',e=>{
   if(usOff())G.ord.off=k;else G.ord.def=k;
   if(k==='bunt'&&G.phase==='ready')poseBatter(BUNT);
   refreshHUD();});
-$('spd').addEventListener('click',e=>{if(e.target.closest('[data-snd]')){SND.init();SND.toggle();refreshMgr();return;}if(e.target.closest('[data-ar]')){G.autoRelief=!G.autoRelief;refreshMgr();return;}if(e.target.closest('[data-skip]')){skipToEnd();return;}const b=e.target.closest('[data-s]');if(!b)return;G.speed=+b.dataset.s;refreshMgr();});
+$('spd').addEventListener('click',e=>{if(e.target.closest('[data-snd]')){SND.init();SND.toggle();refreshMgr();return;}if(e.target.closest('[data-ar]')){G.autoRelief=!G.autoRelief;refreshMgr();return;}if(e.target.closest('[data-skip]')){skipToEnd();return;}if(e.target.closest('[data-big]')){const o=[0,5,7,10];G.bigSkip=o[(o.indexOf(G.bigSkip)+1)%o.length];try{localStorage.setItem('hakkyu-bigskip',G.bigSkip);}catch(_){}refreshMgr();return;}const b=e.target.closest('[data-s]');if(!b)return;G.speed=+b.dataset.s;refreshMgr();});
 function drawBoard(){
   const g=boardCv.getContext('2d'),W=boardCv.width,H=boardCv.height;
   g.fillStyle='#0a0f17';g.fillRect(0,0,W,H);
@@ -1668,8 +1688,12 @@ const pick=a=>a[Math.floor(Math.random()*a.length)];
 const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
 const hashN=(s,n)=>{let x=7;for(const ch of String(s))x=(x*131+ch.charCodeAt(0))>>>0;return x%n;};
 const r1=v=>Math.round(v);
-const REP=['弱小','そこそこ','中堅','強豪','名門'],REP_PTS=[0,12,30,55,90];
-const repRank=()=>{let r=0;REP_PTS.forEach((v,i)=>{if(S.repPts>=v)r=i;});return r;};
+const REP=['弱小','そこそこ','中堅','強豪','名門','超名門'],REP_PTS=[0,12,30,55,90,140];
+// 評判は「ポイント」と「解放条件」の両方を満たすと上がる
+const REP_COND=['','公式戦で1勝する','夏の県大会でベスト8に入る／秋の県大会で2勝する','甲子園（春・夏）で1勝する','甲子園（春・夏）で優勝する','甲子園で3大会続けて優勝する'];
+const repRank=()=>{let r=0;REP_PTS.forEach((v,i)=>{if(S.repPts>=v&&i<=(S.repOpen||0))r=i;});return r;};
+function unlock(n){if((S.repOpen||0)>=n)return null;const before=repRank();S.repOpen=n;const after=repRank();
+  return after>before?'評判が「'+REP[after]+'」に上がった！':'評判「'+REP[n]+'」の条件を満たした（あとはポイント）';}
 
 /* ---------- 選手 ---------- */
 const FIT={'捕':p=>p.d*.45+p.a*.45+p.m*.1,'遊':p=>p.d*.5+p.a*.3+p.s*.2,'二':p=>p.d*.5+p.s*.3+p.a*.2,'中':p=>p.s*.45+p.d*.35+p.a*.2,'三':p=>p.d*.4+p.a*.4+p.p*.2,'右':p=>p.a*.45+p.d*.3+p.s*.25,'左':p=>p.d*.4+p.s*.3+p.a*.3,'一':p=>p.d*.6+p.a*.1+p.s*.3};
@@ -1735,11 +1759,11 @@ function makeRookies(t,rank,count){
 const SAVE_KEY='hakkyu-nine-v1';
 let S=null;
 function save(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(S));}catch(e){}}
-function load(){try{const j=JSON.parse(localStorage.getItem(SAVE_KEY));if(j&&j.ver===1){if(j.tour&&!j.tour.stadium)j.tour.stadium=j.tour.kind==='koshien'||j.tour.kind==='senbatsu'?'koshien':j.my;(j.yomi||[]).forEach(([k,v])=>YOMI[k]=v);refreshYomi();return j;}}catch(e){}return null;}
+function load(){try{const j=JSON.parse(localStorage.getItem(SAVE_KEY));if(j&&j.ver===1){if(j.repOpen==null)j.repOpen=j.record&&j.record.w?1:0;if(j.kStreak==null)j.kStreak=0;if(j.tour&&!j.tour.stadium)j.tour.stadium=j.tour.kind==='koshien'||j.tour.kind==='senbatsu'?'koshien':j.my;(j.yomi||[]).forEach(([k,v])=>YOMI[k]=v);refreshYomi();return j;}}catch(e){}return null;}
 function saveYomi(){refreshYomi();const all=[];const add=p=>{if(p.yomi)all.push([p.name,p.yomi]);};Object.values(S.teams).forEach(t=>t.players.forEach(add));if(S.tour)S.tour.teams.forEach(t=>{if(t.players)t.players.forEach(add);if(t.name&&YOMI[t.name])all.push([t.name,YOMI[t.name]]);});S.yomi=all;}
 
 function newSave(my){
-  S={ver:1,nextId:1,year:1,week:0,my,repPts:0,policy:'bal',fat:10,teams:{},tour:null,pending:null,report:null,flags:{},hist:[],ob:[],ace:null,last:null,record:{w:0,l:0,d:0}};
+  S={ver:1,nextId:1,year:1,week:0,my,repPts:0,repOpen:0,kStreak:0,policy:'bal',fat:10,teams:{},tour:null,pending:null,report:null,flags:{},hist:[],ob:[],ace:null,last:null,record:{w:0,l:0,d:0}};
   for(const k in SCHOOLS){const d=TEAM_DATA.find(t=>t.key===k),sc=SCHOOLS[k];
     S.teams[k]={key:k,name:sc.name,short:sc.short,pref:sc.pref,hex:sc.hex,color:sc.color,kit:kitOf(sc.hex,sc.mark),players:fromCalcio(d)};}
   // 県内のライバル校（毎年強い）
@@ -1766,15 +1790,18 @@ function autoLineup(t){
       if(v>bv){bv=v;b=p;}}
     if(b){used.add(b);lu.push({p:b,pos});}
   }
+  // DH：守備につかない打撃専門（投手は打席に立たない）
+  {let b=null,bv=-1e9;for(const p of av){if(used.has(p))continue;const v=batV(p)-(p.pit?20:0);if(v>bv){bv=v;b=p;}}if(b){used.add(b);lu.push({p:b,pos:'DH'});}}
+  lu.shift();
   // 打順：4番は長打、1番は出塁と足、3番・5番は打力
   const rest=lu.slice(),take=f=>{let bi=0;rest.forEach((x,i)=>{if(f(x.p)>f(rest[bi].p))bi=i;});return rest.splice(bi,1)[0];};
   const top5=new Set(lu.slice().sort((a,b)=>batV(b.p)-batV(a.p)).slice(0,5).map(x=>x.p));
   const o4=take(p=>(top5.has(p)?100:0)+p.p),o3=take(batV),o1=take(p=>p.m*.5+p.s*.5),o5=take(batV),o2=take(p=>p.m);
   rest.sort((a,b)=>batV(b.p)-batV(a.p));
   const order=[o1,o2,o3,o4,o5,...rest];
-  return{order,bench:t.players.filter(p=>!used.has(p)&&!p.hurt)};
+  return{order,pitcher:sp,bench:t.players.filter(p=>!used.has(p)&&!p.hurt)};
 }
-const NUMOF={'投':1,'捕':2,'一':3,'二':4,'三':5,'遊':6,'左':7,'中':8,'右':9};
+const NUMOF={'DH':10,'投':1,'捕':2,'一':3,'二':4,'三':5,'遊':6,'左':7,'中':8,'右':9};
 function engineP(dp,pos,num){
   const c=(dp.cond||0)*2.5,cl=v=>clamp(v+c,1,99);
   const e={ref:dp,id:dp.id,name:dp.name,grade:dp.grade,pos,num,th:dp.th,bt:dp.bt,m:cl(dp.m),p:cl(dp.p),s:cl(dp.s),a:cl(dp.a),d:cl(dp.d),tired:dp.tired||0,hurt:dp.hurt,kmh:dp.pit?Math.round(dp.pit.kmh):0,pit:null};
@@ -1783,16 +1810,16 @@ function engineP(dp,pos,num){
 }
 function matchTeam(t){
   const lu=autoLineup(t);let n=10;
-  const players=lu.order.map(x=>engineP(x.p,x.pos,NUMOF[x.pos]));
-  if(!players.find(p=>p.pos==='投').pit)players.find(p=>p.pos==='投').pit={vel:20,ctl:30,brk:20,sta:30,gut:50};
-  return{key:t.key,name:t.name,short:t.short,color:t.color,kit:t.kit,players,bench:lu.bench.map(p=>engineP(p,'控',n++)),out:[]};
+  const players=lu.order.map(x=>engineP(x.p,x.pos,NUMOF[x.pos])),pitcher=engineP(lu.pitcher,'投',1);
+  if(!pitcher.pit)pitcher.pit={vel:20,ctl:30,brk:20,sta:30,gut:50};n=11;
+  return{key:t.key,name:t.name,short:t.short,color:t.color,kit:t.kit,players,pitcher,starter:pitcher,bench:lu.bench.map(p=>engineP(p,'控',n++)),out:[]};
 }
 
 /* ---------- 試合の後始末：成績・疲れ・成長 ---------- */
 function applyMatch(mt,res,side){
   const t=teamByKey(mt.key);if(!t||t.gen)return null;
   const won=res.winSide===side,lost=res.winSide===1-side,notes=[];
-  const all=[...mt.players,...mt.bench,...mt.out];
+  const all=[...mt.players,mt.pitcher,...mt.bench,...mt.out].filter((e,i,a)=>e&&a.indexOf(e)===i);
   let mvp=null,mv=-1;
   for(const e of all){const d=e.ref,b=e.box;if(!b)continue;
     const c=d.car;c.g++;c.ab+=b.ab;c.h+=b.h;c.hr+=b.hr;c.rbi+=b.rbi;c.sb+=b.sb;c.po+=b.po;c.pk+=b.pk;c.pr+=b.pr;
@@ -1803,7 +1830,7 @@ function applyMatch(mt,res,side){
     if(d.pit&&e.pcount){growP(d,'ctl',b.po*0.03*xp);growP(d,'sta',e.pcount*0.006*xp);growP(d,'brk',b.pk*0.06*xp);growP(d,'kmh',b.po*0.012*xp);}
     const v=b.h*2+b.hr*4+b.rbi*1.5+b.sb+(e.pcount?b.po*0.35+b.pk*0.4-b.pr*1.2:0);if(v>mv){mv=v;mvp=e;}
   }
-  const sp=mt.out.length?mt.out[0]:mt.players.find(p=>p.pos==='投');
+  const sp=mt.starter;
   if(sp&&sp.ref){if(won)sp.ref.car.w++;if(lost)sp.ref.car.l++;}
   if(won)all.forEach(e=>{if(e.box&&e.ref.cond<2&&Math.random()<0.25)e.ref.cond++;});
   return mvp;
@@ -1864,7 +1891,7 @@ function onWeekStart(w,first){
     // 新年度：進級と新入生
     S.year++;S.flags={};
     for(const k in S.teams){const t=S.teams[k];t.players.forEach(p=>p.grade++);
-      const mine=k===S.my,rank=mine?repRank():2,n=mine?5+rank:6;
+      const mine=k===S.my,rank=mine?repRank():2,n=mine?(rank===0?7:5+rank):6;
       const rk=makeRookies(t,rank,n);t.players.push(...rk);
       if(mine)lines.push('新入部員 '+rk.length+'人が入部した：'+rk.map(p=>p.name+'（'+POSNAME[p.pos]+(p.ep?'・'+p.ep:'')+'）').join('、'));}
     S.repPts=Math.max(0,S.repPts-4);
@@ -1885,9 +1912,9 @@ function onWeekStart(w,first){
     if(sel)S.repPts+=4;
   }
   for(const kind in TOUR_DEF){const T=TOUR_DEF[kind];if(T.w!==w)continue;
-    if(kind==='koshien'&&!S.flags.summerChamp)continue;
+    if(kind==='koshien'&&!S.flags.summerChamp){S.kStreak=0;continue;}
     if(kind==='shikoku'&&!S.flags.fallTop2)continue;
-    if(kind==='senbatsu'&&!S.flags.senbatsu)continue;
+    if(kind==='senbatsu'&&!S.flags.senbatsu){S.kStreak=0;continue;}
     makeTour(kind);}
 }
 function teamPower(t){const fs=t.players.filter(p=>!p.pit),ps=t.players.filter(p=>p.pit);
@@ -1946,6 +1973,7 @@ function endTour(){
   if(mine){lines.push('あなたのチームが頂点に立った！');}else lines.push('あなたのチームは'+place+'。');
   const k=tr.kind,r=place==='優勝'?1:place==='準優勝'?2:place.startsWith('ベスト')?+place.slice(3):99;
   if(k==='summer'&&mine)S.flags.summerChamp=true;
+  if(k==='koshien'||k==='senbatsu'){S.kStreak=mine?(S.kStreak||0)+1:0;if(mine){const u=unlock(4);if(u)lines.push(u);}if(S.kStreak>=3){const u=unlock(5);if(u)lines.push(u);}}
   if(k==='fall'&&r<=2)S.flags.fallTop2=true;
   if(k==='shikoku')S.flags.shikoku=r;
   const bonus={summer:[8,4,2],fall:[5,3,1],shikoku:[8,5,2],koshien:[25,14,8],senbatsu:[20,12,6]}[k];
@@ -2008,14 +2036,16 @@ function afterMatch(res,A,B,us,ctx,opp){
   if(draw&&ctx.tour){win=Math.random()<0.5;}
   S.record[win?'w':draw?'d':'l']++;
   const line=res.score[us]+' - '+res.score[1-us];
-  const lines=[(win?'○ 勝利':draw?'△ 引き分け':'● 敗戦')+'　'+line+'　vs '+opp.name+(res.extra?'（'+res.extra+'）':'')];
+  const lab=winLabel(res,us);
+  const lines=[(win?'○ ':draw?'△ ':'● ')+lab+'　'+line+'　vs '+opp.name+(res.innings>9?'（延長'+res.innings+'回）':'')];
   if(mvp&&mvp.box){const b=mvp.box;lines.push('殊勲：'+mvp.name+'（'+(mvp.pcount?(Math.floor(b.po/3)+'回'+(b.po%3?b.po%3+'/3':'')+' 失点'+b.pr+' 奪三振'+b.pk):b.ab+'打数'+b.h+'安打'+(b.hr?' '+b.hr+'本塁打':'')+(b.rbi?' '+b.rbi+'打点':''))+'）');}
   S.last={line:res.line,score:res.score,teams:[A.short,B.short],colors:[A.color,B.color],innings:res.innings,us};
   if(ctx.tour){
     const tr=S.tour;tr.log.push({r:ctx.round,a:A.name,b:B.name,s:res.score,w:res.winSide===1?1:0,mine:true});
     const myWin=win?ctx.side:1-ctx.side;
     if(!win){tr.out=true;tr.place=tr.alive.length===2?'準優勝':(tr.alive.length===16?'1回戦敗退':'ベスト'+tr.alive.length);}
-    else S.repPts+=({summer:1,fall:1,shikoku:2,koshien:3,senbatsu:3})[tr.kind];
+    else{S.repPts+=({summer:1,fall:1,shikoku:2,koshien:3,senbatsu:3})[tr.kind];tr.wins=(tr.wins||0)+1;
+      const u=[unlock(1),tr.kind==='summer'&&tr.alive.length===16||tr.kind==='fall'&&tr.wins>=2?unlock(2):null,tr.kind==='koshien'||tr.kind==='senbatsu'?unlock(3):null].filter(Boolean);lines.push(...u);}
     S.report={title:tr.name+'　'+ctx.round,lines};
     finishRound({i:ctx.i,win:myWin});
     if(S.tour)S.report.lines.push(win?'次は'+roundName(S.tour.alive.length)+'！':'');
@@ -2084,21 +2114,24 @@ function renderHub(){
   $('v-hub').innerHTML=nextCard()+
     (rep?'<div class="card report"><h3>'+esc(rep.title)+'</h3>'+(S.last&&rep.title.match(/練習試合|回戦|決勝|準|閉幕/)?lineScoreHTML(S.last):'')+'<ul>'+rep.lines.filter(Boolean).map(l=>'<li>'+esc(l)+'</li>').join('')+'</ul></div>':'')+
     '<div class="card"><h3>チーム力</h3><p class="muted small">'+goal+'</p><div class="pw">'+[['打撃',pw.bat],['守備',pw.def],['走力',pw.run],['投手',pw.pit]].map(([n,v])=>'<div><span>'+n+'</span><b class="g-'+grade(v)+'">'+grade(v)+'</b><div class="bar"><i style="width:'+clamp(v,0,100)+'%"></i></div></div>').join('')+'</div>'+
-    '<p class="muted small">部員 '+t.players.length+'人（1年'+t.players.filter(p=>p.grade===1).length+'・2年'+t.players.filter(p=>p.grade===2).length+'・3年'+t.players.filter(p=>p.grade===3).length+'）'+(t.players.some(p=>p.hurt)?'　けが：'+t.players.filter(p=>p.hurt).map(p=>p.name).join('、'):'')+'</p></div>';
+    repHint()+'<p class="muted small">部員 '+t.players.length+'人（1年'+t.players.filter(p=>p.grade===1).length+'・2年'+t.players.filter(p=>p.grade===2).length+'・3年'+t.players.filter(p=>p.grade===3).length+'）'+(t.players.some(p=>p.hurt)?'　けが：'+t.players.filter(p=>p.hurt).map(p=>p.name).join('、'):'')+'</p></div>';
   document.querySelectorAll('.pol').forEach(b=>b.onclick=()=>{S.policy=b.dataset.p;save();renderHub();});
   const on=(id,f)=>{const e=$(id);if(e)e.onclick=f;};
   on('adv',advanceWeek);on('watch',()=>{SND.init();playMatch(true);});on('quick',()=>playMatch(false));
   on('skipP',()=>{S.pending=null;S.report={title:'練習試合を見送った',lines:['この週は休んで体を休めた。']};S.fat=Math.max(0,S.fat-20);S.week++;onWeekStart(S.week);save();render();});
 }
+function repHint(){const r=repRank(),nx=r+1;if(nx>=REP.length)return '<p class="muted small">評判：最高の「超名門」</p>';
+  const need=(S.repOpen||0)<nx?'条件：'+REP_COND[nx]:'あと '+Math.max(0,REP_PTS[nx]-S.repPts)+'ポイント（勝つほど増える）';
+  return '<p class="muted small">次の評判「'+REP[nx]+'」　'+need+'</p>';}
 function renderTeam(){
-  const t=myTeam(),lu=autoLineup(t),ord=new Map(lu.order.map((x,i)=>[x.p,{i,pos:x.pos}]));
+  const t=myTeam(),lu=autoLineup(t),ord=new Map(lu.order.map((x,i)=>[x.p,{i,pos:x.pos}]));ord.set(lu.pitcher,{i:9,pos:'投'});
   const key=p=>ord.has(p)?ord.get(p).i:10+(3-p.grade)+(1-batV(p)/100);
   const list=t.players.slice().sort((a,b)=>key(a)-key(b));
-  const fieldRows=list.map(p=>{const o=ord.get(p);return '<tr data-id="'+p.id+'"'+(selPlayer===p.id?' class="sel"':'')+'><td class="num">'+(o?o.i+1:'')+'</td><td>'+(o?o.pos:'<span class="muted">控</span>')+'</td><td class="l"><b>'+esc(p.name)+'</b>'+(p.hurt?' <span class="hurt">けが</span>':'')+'<small class="gr">'+p.grade+'年・'+(POSNAME[p.pos]||'')+'</small></td><td><span class="cond '+condCls(p.cond)+'">'+condTxt(p.cond)+'</span></td>'+['m','p','s','a','d'].map(k=>'<td>'+gl(p[k])+'</td>').join('')+'</tr>';}).join('');
+  const fieldRows=list.map(p=>{const o=ord.get(p);return '<tr data-id="'+p.id+'"'+(selPlayer===p.id?' class="sel"':'')+'><td class="num">'+(o?(o.i<9?o.i+1:'P'):'')+'</td><td>'+(o?o.pos:'<span class="muted">控</span>')+'</td><td class="l"><b>'+esc(p.name)+'</b>'+(p.hurt?' <span class="hurt">けが</span>':'')+'<small class="gr">'+p.grade+'年・'+(POSNAME[p.pos]||'')+'</small></td><td><span class="cond '+condCls(p.cond)+'">'+condTxt(p.cond)+'</span></td>'+['m','p','s','a','d'].map(k=>'<td>'+gl(p[k])+'</td>').join('')+'</tr>';}).join('');
   const ps=t.players.filter(p=>p.pit).sort((a,b)=>pitV(b)-pitV(a));
   const ace=chooseStarter(t,t.players.filter(p=>!p.hurt));
   const pitRows=ps.map(p=>'<tr data-id="'+p.id+'"'+(selPlayer===p.id?' class="sel"':'')+'><td class="l"><b>'+esc(p.name)+'</b>'+(p===ace?' <span class="ace">先発</span>':'')+'<small class="gr">'+p.grade+'年・'+(p.th==='L'?'左':'右')+'投</small></td><td class="num">'+r1(p.pit.kmh)+'<small>km</small></td>'+['ctl','brk','sta'].map(k=>'<td>'+gl(p.pit[k])+'</td>').join('')+'<td><div class="bar sm"><i style="width:'+p.tired+'%;background:'+(p.tired>50?'#d2473f':'#e07f22')+'"></i></div></td></tr>').join('');
-  $('v-team').innerHTML='<div class="card"><h3>打順と守備（おまかせで組みます）</h3><div class="tablewrap"><table class="roster"><thead><tr><th>打順</th><th>守</th><th class="l">名前</th><th>調子</th><th>ミート</th><th>パワー</th><th>走力</th><th>肩</th><th>守備</th></tr></thead><tbody>'+fieldRows+'</tbody></table></div></div>'+
+  $('v-team').innerHTML='<div class="card"><h3>打順と守備（おまかせ・DH制）</h3><p class="muted small">投手は打席に立たず、DH（指名打者）が打ちます。</p><div class="tablewrap"><table class="roster"><thead><tr><th>打順</th><th>守</th><th class="l">名前</th><th>調子</th><th>ミート</th><th>パワー</th><th>走力</th><th>肩</th><th>守備</th></tr></thead><tbody>'+fieldRows+'</tbody></table></div></div>'+
     '<div class="card"><h3>投手陣</h3><p class="muted small">選手をタップすると、次の試合の先発に指名できます。疲れが残っている投手は打たれやすくなります。</p><div class="tablewrap"><table class="roster"><thead><tr><th class="l">名前</th><th>球速</th><th>制球</th><th>変化球</th><th>スタミナ</th><th>疲れ</th></tr></thead><tbody>'+pitRows+'</tbody></table></div></div>'+
     '<div class="card" id="pdetail">'+detailHTML(t.players.find(p=>p.id===selPlayer))+'</div>';
   document.querySelectorAll('#v-team tr[data-id]').forEach(r=>r.onclick=()=>{selPlayer=+r.dataset.id;renderTeam();$('pdetail').scrollIntoView({block:'nearest'});});
