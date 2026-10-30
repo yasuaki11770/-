@@ -1082,13 +1082,13 @@ function simPA(){
   const B=b.m*0.55+b.p*0.45,Pq=pit.vel*0.36+pit.ctl*0.32+pit.brk*0.32-fat*0.45;
   const diff=(B-Pq)/100;
   const dd=(fieldOf(def).reduce((a,p)=>a+p.d,0)/9-50)/100;
-  const pBB=clamp(0.08-(pit.ctl-50)*0.0012+fat*0.0012,0.03,0.17),pK=clamp(0.18-diff*0.4,0.05,0.4);
+  const pBB=clamp(0.09-(pit.ctl-50)*0.0012+fat*0.0012,0.03,0.17),pK=clamp(0.18-diff*0.4,0.05,0.4);
   const r=rand(),bx=box(b),px=box(pt);
   const runs=n=>{if(!n)return;G.score[o]+=n;G.line[o][G.inning-1]=(G.line[o][G.inning-1]||0)+n;bx.rbi+=n;px.pr+=n;};
   if(r<pBB){bx.bb++;px.pbb++;const nb=[...G.bases];let n=0;if(nb[0]){if(nb[1]){if(nb[2])n++;nb[2]=nb[1];}nb[1]=nb[0];}nb[0]=b;G.bases=nb;runs(n);return;}
   bx.ab++;
   if(r<pBB+pK){bx.k++;px.pk++;G.outs++;px.po++;return;}
-  const pHit=clamp(0.272+diff*0.4-dd*0.15+(b.s-50)*0.0012,0.14,0.45);
+  const pHit=clamp(0.29+diff*0.4-dd*0.15+(b.s-50)*0.0012,0.14,0.45);
   if(rand()<pHit){
     bx.h++;G.hits[o]++;
     const hs=clamp(0.025+(b.p-50)*0.004,0.004,0.22)*3.2/(FENCE_H+0.2),ts=0.02*(b.s/50),ds=clamp(0.17+(b.p-50)*0.002,0.08,0.3),q=rand();
