@@ -407,6 +407,12 @@ function simPath(v0,noFence){
     }else{v.y-=9.8*dt;const k=DRAG*sp*dt;v.x-=v.x*k;v.y-=v.y*k;v.z-=v.z*k;}
     p.x+=v.x*dt;p.y+=v.y*dt;p.z+=v.z*dt;
     const d=Math.hypot(p.x,p.z),R=fenceR(Math.atan2(p.x,-p.z));
+    // ファウルゾーンの客席とバックネット：当たったらそこで止まる
+    if(noFence){const a=Math.abs(Math.atan2(p.x,-p.z))*180/Math.PI;
+      const lat=a>45&&a<=100?d*Math.sin((a-45)*Math.PI/180):0,e=lat-21;
+      if(e>0&&p.y<(e<2.6?1.6:3.4+(e-2.6)*0.567)){pts.push({t,x:p.x,y:p.y,z:p.z,air:false,stands:true});break;}
+      if(p.z>23.4&&Math.abs(p.x)<13&&p.y<9.5){pts.push({t,x:p.x,y:p.y,z:23.3,air:false,net:true});for(let k=1;k<=24;k++)pts.push({t:t+k/60,x:p.x,y:Math.max(0.05,p.y-k*k*0.0014*9.8),z:23.2,air:true,net:true});break;}
+      if(p.z>25||d>fenceR(Math.atan2(p.x,-p.z))+3&&p.y<4){pts.push({t,x:p.x,y:p.y,z:p.z,air:false,stands:true});break;}}
     if(!noFence&&!hr&&d>=R){
       if(!landed&&p.y>FENCE_H+0.2){hr=true;hrT=t;hrY=p.y;}
       else{if(!landed&&!wallT){wallT=t;wallY=p.y;}const nx=p.x/d,nz=p.z/d,vn=v.x*nx+v.z*nz;if(vn>0){v.x-=1.6*vn*nx;v.z-=1.6*vn*nz;}p.x=nx*(R-0.15);p.z=nz*(R-0.15);landed=true;}
@@ -817,7 +823,7 @@ const PLAYER3D=(function(){
   return{build,dispose};
 })();
 // 試合に出る選手のモデルを作る（試合が終わったら片付ける）
-function modelFor(t,p){if(!p.model){p.model=PLAYER3D.build(p.name,t.kit,p.num);p.model.userData.lefty=p.th==='L';p.model.visible=false;scene.add(p.model);}return p.model;}
+function modelFor(t,p){if(!p.model){p.model=PLAYER3D.build(p.name,t.kit,p.num);p.model.userData.lefty=p.th==='L';p.model.userData.bf=bStyle(p);if(p.pit)p.model.userData.pf=pStyle(p);p.model.visible=false;scene.add(p.model);}return p.model;}
 function teamModels(t){fieldOf(t).forEach(p=>modelFor(t,p));}
 function clearModels(t){[...t.players,...(t.bench||[]),...(t.out||[]),...(t.pitcher?[t.pitcher]:[])].forEach(p=>{if(p.model){PLAYER3D.dispose(p.model);p.model=null;}});}
 /* ---------- IK（腕を目標点へ） ---------- */
@@ -899,10 +905,16 @@ const SWK=[
   {k:1,   h:[0.24,1.48,0.02],  d:[-0.15,0.55,-0.8],tw:1.15, pv:0.85, st:1,  lf:0}];
 const BUNT={k:0,h:[0.08,1.1,0.3],d:[0.12,0.1,1],tw:0.55,pv:0.4,st:0.4,lf:0};
 const SWING_DUR=0.3,SWC=0.15;
-function poseBatter(S){
+function poseBatter(S0){
   const w=batter,f=w.userData.f,s=G.bs==='L'?-1:1;resetBody(w);
+  // 構えの個性：インパクトに近づくほど標準の形に戻る
+  let S=S0,cr=0;const st=BST[w.userData.bf||'std'];
+  if(S0!==BUNT&&st){const k=S0.k||0,wt=1-clamp((k-0.18)/0.3,0,1);S=Object.assign({},S0);
+    if(st.h)S.h=[S0.h[0]+st.h[0]*wt,S0.h[1]+st.h[1]*wt,S0.h[2]+st.h[2]*wt];
+    if(st.d)S.d=[S0.d[0]+(st.d[0]-S0.d[0])*wt*0.8,S0.d[1]+(st.d[1]-S0.d[1])*wt*0.8,S0.d[2]+(st.d[2]-S0.d[2])*wt*0.8];
+    if(st.pv)S.pv=S0.pv+st.pv*wt;if(st.tw)S.tw=S0.tw+st.tw*wt;if(st.lf!=null)S.lf=S0.lf*st.lf;cr=(st.cr||0)*wt;}
   const fr=s>0?f.legF:f.legB,bk=s>0?f.legB:f.legF;
-  f.pelvis.position.y=f.hip0-0.06;f.pelvis.rotation.y=S.pv*s;f.torso.rotation.y=(S.tw-S.pv)*s;f.torso.rotation.z=-0.18;
+  f.pelvis.position.y=f.hip0-0.06-cr;f.pelvis.rotation.y=S.pv*s;f.torso.rotation.y=(S.tw-S.pv)*s;f.torso.rotation.z=-0.18-cr*1.6;
   fr.hp.rotation.set(s*(0.32+S.st*0.12),0,0.12+S.lf*0.55);fr.kn.rotation.z=-0.35-S.lf*0.7;
   bk.hp.rotation.set(-s*0.3,0,0.18);bk.kn.rotation.z=-0.45+S.st*0.15;
   _w1.set(S.d[0]*s,S.d[1],S.d[2]).normalize();
@@ -921,8 +933,27 @@ const PWK=[
   {u:1,   R:[-0.24,1.82,0.82], L:[0.3,1.02,0.22], tw:0.62, lift:0,  str:1,  lean:0.42},
   {u:1.45,R:[0.34,0.92,0.52],  L:[0.34,1.02,0.02],tw:0.95, lift:0,  str:1,  lean:0.55}];
 const POLE_PR=new THREE.Vector3(-1,-0.6,0),POLE_PL=new THREE.Vector3(1,-0.6,0);
+/* ---------- フォームの個性：投手は腕の振りと足の上げ方、打者は構え。名前から決まる ---------- */
+const ARM={over:{n:'オーバースロー',R:[[-0.48,1.92,-0.22],[-0.24,1.82,0.82],[0.34,0.92,0.52]],lean:[0.18,0.42,0.55]},
+  three:{n:'スリークォーター',R:[[-0.66,1.62,-0.24],[-0.5,1.56,0.76],[0.3,0.95,0.5]],lean:[0.15,0.35,0.48]},
+  side:{n:'サイドスロー',R:[[-0.92,1.18,-0.15],[-0.76,1.12,0.62],[0.38,0.92,0.42]],lean:[0.06,0.16,0.28]},
+  under:{n:'アンダースロー',R:[[-0.62,0.66,-0.3],[-0.44,0.46,0.72],[0.3,1.05,0.42]],lean:[0.32,0.66,0.72],str:1.3}};
+const KICK={std:{n:'',lift:1},high:{n:'ハイキック',lift:1.3},tornado:{n:'トルネード',lift:1.05,tw:[-1.35,-1.15]},quick:{n:'すり足クイック',lift:0.35}};
+const BST={std:{n:'スタンダード'},kami:{n:'神主打法',h:[0.06,0.16,-0.04],d:[0.08,1,-0.02]},flat:{n:'バット寝かせ',h:[-0.02,-0.05,0],d:[-0.8,0.4,-0.35]},
+  open:{n:'オープンスタンス',pv:-0.38,tw:-0.22},crouch:{n:'クラウチング',cr:0.15,h:[0.02,-0.13,0.04]},ippon:{n:'一本足打法',lf:2.1},
+  suri:{n:'すり足',lf:0.12},high:{n:'ハイグリップ',h:[-0.04,0.2,0.02],d:[-0.35,1,-0.65]}};
+function hpick(seed,table){let x=17;for(const ch of String(seed))x=(x*131+ch.charCodeAt(0))>>>0;x=(x*1103515245+12345)>>>0;let r=(x>>>8)%1000/1000;for(const [k,w] of table){if((r-=w)<0)return k;}return table[0][0];}
+function pStyle(p){return p.pf||(p.pf={arm:hpick(p.name+'a'+p.id,[['over',.45],['three',.3],['side',.17],['under',.08]]),kick:hpick(p.name+'k'+p.id,[['std',.6],['high',.18],['tornado',.08],['quick',.14]])});}
+function bStyle(p){return p.bf||(p.bf=hpick(p.name+'b'+p.id,[['std',.42],['open',.1],['crouch',.1],['kami',.08],['flat',.08],['ippon',.07],['suri',.1],['high',.05]]));}
+const styleName=p=>{const s=pStyle(p);return ARM[s.arm].n+(KICK[s.kick].n?'・'+KICK[s.kick].n:'');};
+const _pwk={};
+function pwkOf(pf){const key=pf?pf.arm+pf.kick:'overstd';if(_pwk[key])return _pwk[key];
+  const A=ARM[pf?pf.arm:'over'],K=KICK[pf?pf.kick:'std'],out=PWK.map(o=>JSON.parse(JSON.stringify(o)));
+  [3,4,5].forEach((i,j)=>{out[i].R=A.R[j].slice();out[i].lean=A.lean[j];if(A.str)out[i].str=A.str;});
+  out[1].lift=K.lift;out[2].lift=0.35*K.lift;if(K.tw){out[1].tw=K.tw[0];out[2].tw=K.tw[1];}
+  return _pwk[key]=out;}
 function posePitcher(w,u){
-  const f=w.userData.f,S=sampleKeys(PWK,u,'u'),s=w.userData.lefty?-1:1;resetBody(w);
+  const f=w.userData.f,S=sampleKeys(pwkOf(w.userData.pf),u,'u'),s=w.userData.lefty?-1:1;resetBody(w);
   const st=s>0?f.legF:f.legB,bk=s>0?f.legB:f.legF;
   f.pelvis.rotation.y=S.tw*0.45*s;f.torso.rotation.y=S.tw*0.55*s;f.torso.rotation.z=-S.lean;f.pelvis.position.y=f.hip0-S.str*0.12;
   st.hp.rotation.z=S.lift*1.55+S.str*0.75;st.kn.rotation.z=-S.lift*1.9-S.str*0.25;
@@ -1137,7 +1168,7 @@ function startPitch(type,tx,ty){
   const sigma=0.015+(100-pit.ctl)*0.0016+over*0.0015;
   const xt=tx+gauss()*sigma,yt=ty+gauss()*sigma;
   let bx=0,by=0;
-  bx=P.bx*f;by=P.by*f;
+  bx=P.bx*f;by=P.by*f;{const ps=pStyle(curPitcher());if(ps.arm==='side'){bx*=1.3;by*=0.8;}if(ps.arm==='under'){by+=0.07;bx*=1.15;}}
   if(curPitcher().th==='L')bx=-bx;
   const T=(1.12-(pit.vel-30)*0.0058)/Math.pow(P.f,0.9)*(1+over*0.004);
   const kmh=Math.round((112+pit.vel*0.48)*P.f-over*0.3);
@@ -1269,7 +1300,7 @@ function resolvePlay(plan,s,b,pc,h){
   const judge=(m)=>{const d=m+gauss()*0.07;return{out:d>0,close:Math.abs(d)<0.2};};
   if(plan.mode==='hr'){
     P.hr=true;P.big=true;P.resT=s.hrT;
-    RN.forEach(r=>{r.to=4;r.speed=Math.min(r.speed,8.2);r.start=r.batter?0.8:0.4;});
+    RN.forEach(r=>{r.to=4;r.speed=r.batter?6.2:6.8;r.start=r.batter?1.1:0.6;r.trot=true;});
     P.label=RN.length===4?'満塁ホームラン':'ホームラン';P.sub=dirName(s.pts[s.pts.length-1].x,s.pts[s.pts.length-1].z).replace('線','ポール際')+'スタンドへ';
   }else if(plan.air){
     const F=plan.f,tc=plan.t;
@@ -1354,7 +1385,7 @@ function resolvePlay(plan,s,b,pc,h){
   let end=(plan.t||P.resT||0)+1.0;
   P.moves.forEach(m=>{if(m.to>m.from){const arr=m.start+(m.to-m.from)*SEG/m.speed;end=Math.max(end,(m.outAt!=null?m.outAt:arr)+0.3);}});
   P.throws.forEach(t=>{end=Math.max(end,t.t0+t.dur+0.3);});
-  if(P.hr)end=Math.max(s.hrT+3.2,Math.min(end,s.hrT+9));
+  if(P.hr)end=Math.max(s.hrT+3.2,end+0.6);
   P.labelT=P.hr?s.hrT+0.2:end;P.endT=P.hr?end:end+1.6;
   return P;
 }
@@ -1369,7 +1400,7 @@ function judgeFair(s){
   return fairAt(pts[pts.length-1]);
 }
 // ファウルゾーンで野手が捕れる範囲（フェンス・スタンドの手前）
-function foulCatchable(q){const a=Math.abs(angOf(q.x,q.z)),d=Math.hypot(q.x,q.z);if(q.z>14)return false;if(a>90)return d<14;return d*Math.sin((a-45)*Math.PI/180)<11&&d<fenceR(0.785);}
+function foulCatchable(q){if(q.stands||q.net)return false;const a=Math.abs(angOf(q.x,q.z)),d=Math.hypot(q.x,q.z);if(q.z>22)return false;if(a>100)return true;return d*Math.sin((a-45)*Math.PI/180)<20.5&&d<fenceR(0.785);}
 function startPlay(h){
   const b=curBatter(),pc=G.pitch;
   let hit;
@@ -1387,9 +1418,9 @@ function startPlay(h){
     if(catchP){const P=resolvePlay(Object.assign({mode:'catch'},catchP),sf,b,pc,h);P.label=FNAME[catchP.f.pl.pos]+'ファウルフライ';P.goals=assignGoals(P.plan,sf,P);
       G.play=P;batRig.visible=false;P.moves.forEach(m=>{m.mesh=m.who.model;m.mesh.visible=true;});G.phase='play';setCam('follow');return;}
     // 捕れないファウル：スタンドに入るか、転がって止まるまで見せる。近い野手が追いかける
-    let endT=Math.min(3.2,sf.pts[sf.pts.length-1].t);
-    const out=sf.pts.find(q=>q.t>0.5&&!foulCatchable(q));if(out)endT=Math.min(endT,out.t+0.5);
-    const last=(out?sf.pts[Math.max(0,sf.pts.indexOf(out)-1)]:sf.pts[sf.pts.length-1]);
+    const lastP=sf.pts[sf.pts.length-1];let endT=Math.min(3.6,lastP.t+0.7);
+    const out=sf.pts.find(q=>q.t>0.4&&!foulCatchable(q));
+    const last=(out?sf.pts[Math.max(0,sf.pts.indexOf(out)-1)]:lastP);
     let near=null,nd=1e9;for(const f of fs){const d=Math.hypot(f.x-last.x,f.z-last.z);if(d<nd){nd=d;near=f;}}
     G.play={foul:true,pts:sf.pts,t:0,endT:Math.max(1.2,endT),chase:near&&nd<45?{pos:near.pl.pos,x:last.x,z:last.z,sp:near.speed,react:near.react}:null};
     G.phase='play';setCam('follow');SND.crowd(0.18,0.8);return;
@@ -1440,7 +1471,7 @@ function updatePlay(dt){
   const P=G.play;P.t+=dt;const t=P.t;
   const at=tt=>{const pts=P.pts;if(tt<=pts[0].t)return pts[0];const i=Math.min(pts.length-1,Math.floor(tt*60)-1);return pts[Math.max(0,i)];};
   if(P.foul){const q=at(t);ball.position.set(q.x,q.y,q.z);ballAt(q);trailPush(true);
-    if(Math.hypot(q.x,q.z)>fenceR(Math.atan2(q.x,-q.z))+25||q.z>23)ball.visible=false;
+    if((q.stands)&&t>q.t+0.25)ball.visible=false;
     const c=P.chase,m=c&&fielders[c.pos];
     if(m&&t>c.react){const dx=c.x-m.position.x,dz=c.z-m.position.z,d=Math.hypot(dx,dz);
       if(d>0.6){const st=Math.min(d,c.sp*dt);m.position.x+=dx/d*st;m.position.z+=dz/d*st;face(m,dx,dz);pose(m,t,0.8);}
@@ -1503,7 +1534,7 @@ function updatePlay(dt){
     if(s<sEnd){setOnPath(m.mesh,s);const left=(sEnd-s)/m.speed;
       if(m.slide&&left<0.4){stance(m.mesh,'');m.mesh.userData.f.root.rotation.z=1.05*(1-left/0.4);m.mesh.userData.f.root.position.y=0.05;}
       else{pose(m.mesh,t*m.speed/8,0.8);m.mesh.userData.f.root.rotation.z=0;}}
-    else{setOnPath(m.mesh,sEnd);if(!m.slide||t>m.start+(m.to-m.from)*SEG/m.speed+0.7){stance(m.mesh,'lead');m.mesh.userData.f.root.rotation.z=0;}if(m.to===4&&!m.scored){m.scored=true;m.hideAt=t+0.8;}}
+    else{setOnPath(m.mesh,sEnd);if(!m.slide||t>m.start+(m.to-m.from)*SEG/m.speed+0.7){stance(m.mesh,'lead');m.mesh.userData.f.root.rotation.z=0;}if(m.to===4&&!m.scored){m.scored=true;m.hideAt=t+0.8;if(P.runs.includes(m.who)){P.liveRuns=(P.liveRuns||0)+1;scoreRuns(1);refreshHUD();SND.crowd(0.45,1.2);}}}
     if(m.hideAt&&t>=m.hideAt)m.mesh.visible=false;
   }
   // コール
@@ -1526,7 +1557,7 @@ function finishPlay(){
   G.outs+=P.outAdd;
   {const b=curBatter(),bx=box(b),px=box(curPitcher()),sac=P.label==='送りバント成功'||(P.sub||'').indexOf('犠牲フライ')>=0;
    if(!sac)bx.ab++;if(P.hitK||P.hr)bx.h++;if(P.hr)bx.hr++;if(!P.dp)bx.rbi+=P.runs.length;px.po+=P.outAdd;px.pr+=P.runs.length;}
-  scoreRuns(P.runs.length);
+  scoreRuns(P.runs.length-(P.liveRuns||0));
   if(P.err)G.err[defense()]++;
   const d0=(P.sub||'').split('　')[0];logPlay(curBatter().name+'：'+(P.hr?d0.replace('スタンドへ','')+'へ'+P.label:P.hitK?d0+P.label.replace('タイムリー','タイムリー'):P.label+(P.label==='エラー'?'（'+P.sub+'）':''))+(P.runs.length?'　'+P.runs.length+'点':''));
   if(P.hitK||P.hr)G.hits[off]++;
@@ -1645,9 +1676,9 @@ function refreshHUD(){
     '<svg id="dia" viewBox="0 0 40 40"><rect x="15" y="3" width="10" height="10" transform="rotate(45 20 8)" fill="'+on(1)+'" stroke="#0a0f1e" stroke-width="1.5"/><rect x="27" y="15" width="10" height="10" transform="rotate(45 32 20)" fill="'+on(0)+'" stroke="#0a0f1e" stroke-width="1.5"/><rect x="3" y="15" width="10" height="10" transform="rotate(45 8 20)" fill="'+on(2)+'" stroke="#0a0f1e" stroke-width="1.5"/></svg></div>';
   const b=curBatter(),p=curPitcher(),off=teamIdx(o);if(!b||!p)return;
   const gr=arr=>'<div class="gr">'+arr.map(([l,v])=>'<span><i>'+l+'</i><b class="g-'+grade(v)+'">'+grade(v)+'</b></span>').join('')+'</div>';
-  $('lower').innerHTML='<div class="no" style="--c:'+off.color+'">'+(G.order[o]+1)+'</div><div class="bd"><div class="ps">'+off.name+'　'+(b.grade||'')+'年　'+POSNAME[b.pos]+'　'+HANDTXT(b)+'</div><div class="nm">'+b.name+todayTxt(b)+'</div>'+gr([['ミート',b.m],['パワー',b.p],['走力',b.s],['肩',b.a],['守備',b.d]])+'</div>';
+  $('lower').innerHTML='<div class="no" style="--c:'+off.color+'">'+(G.order[o]+1)+'</div><div class="bd"><div class="ps">'+off.name+'　'+(b.grade||'')+'年　'+POSNAME[b.pos]+'　'+HANDTXT(b)+'　'+BST[bStyle(b)].n+'</div><div class="nm">'+b.name+todayTxt(b)+'</div>'+gr([['ミート',b.m],['パワー',b.p],['走力',b.s],['肩',b.a],['守備',b.d]])+'</div>';
   const pf=fatigue();
-  $('pinfo').innerHTML='<div class="pc"><small>'+(p.th==='L'?'左腕':'右腕')+(p.grade||'')+'年　球数 '+(p.pcount||0)+(pf>0?'　<span style="color:#ff8a6a">疲労</span>':'')+'</small><b>'+p.name+'</b><i class="stb"><i style="width:'+Math.round(clamp(1-(p.pcount||0)/(58+p.pit.sta*0.9),0,1)*100)+'%"></i></i></div>'+(G.lastPitch?'<div class="sp">'+G.lastPitch.kmh+'<small>km/h　'+G.lastPitch.k+'</small></div>':'');
+  $('pinfo').innerHTML='<div class="pc"><small>'+(p.th==='L'?'左腕':'右腕')+'　'+styleName(p)+'　'+(p.grade||'')+'年　球数 '+(p.pcount||0)+(pf>0?'　<span style="color:#ff8a6a">疲労</span>':'')+'</small><b>'+p.name+'</b><i class="stb"><i style="width:'+Math.round(clamp(1-(p.pcount||0)/(58+p.pit.sta*0.9),0,1)*100)+'%"></i></i></div>'+(G.lastPitch?'<div class="sp">'+G.lastPitch.kmh+'<small>km/h　'+G.lastPitch.k+'</small></div>':'');
   const ot=offOrd()!=='auto'?ORD_NAME[offOrd()]:defOrd()!=='auto'?ORD_NAME[defOrd()]:'';
   const who=(offOrd()!=='auto'?teamIdx(offense()):teamIdx(defense())).short;
   $('otag').hidden=!ot;if(ot)$('otag').textContent='采配 '+who+'：'+ot;
@@ -1700,11 +1731,40 @@ function drawBoard(){
 function refreshPad(){}
 
 /* ---------- カメラ ---------- */
+/* 中継カメラ：本塁後方の高い位置から、打球と追う野手（送球中は送球先）をまとめて映す。
+   真後ろのファウルは内野側から、ホームランの後はダイヤモンドを回る打者を追う */
+const _cf=new THREE.Vector3(),_cp=new THREE.Vector3(),_cl=new THREE.Vector3();
+let camFov=40;
+function directCam(P,dt){
+  const b=ball.position,k=1-Math.pow(0.04,dt),kl=1-Math.pow(0.01,dt);
+  let fov=40;
+  // ホームランの後：打者の一周
+  const trot=P&&P.hr&&P.t>P.resT+1.3&&P.moves&&P.moves.find(m=>m.from===0);
+  if(trot&&trot.mesh){const m=trot.mesh.position,a=P.t*0.25;
+    _cp.set(m.x+Math.cos(a)*7,3.2,m.z+Math.sin(a)*7+3);_cl.set(m.x,1.1,m.z);fov=36;}
+  else if(b.z>3&&P&&P.foul){   // バックネット方向のファウル：内野から本塁方向を見る
+    _cp.set(b.x*0.4,5,-14);_cl.set(b.x,Math.max(1,b.y*0.8),b.z);fov=48;}
+  else{
+    // 見どころ：打球と、捕球前は追う野手・送球中は受ける野手
+    _cf.copy(b);let span=8;
+    if(P&&P.plan&&P.plan.f&&!P.foul){
+      const F=fielders[P.plan.f.pl.pos],th=P.throws&&P.throws.find(x=>P.t>=x.t0-0.2&&P.t<x.t0+x.dur+0.3);
+      const tgt=th?{x:BASES[th.j][0],z:BASES[th.j][1]}:(F&&P.t<P.plan.t+0.4?F.position:null);
+      if(tgt){_cf.x=b.x*0.6+tgt.x*0.4;_cf.z=b.z*0.6+tgt.z*0.4;span+=Math.hypot(b.x-tgt.x,b.z-tgt.z)*1.15;}}
+    _cf.y=Math.max(0.8,b.y*0.55);span+=b.y*0.5;
+    const d=Math.hypot(_cf.x,_cf.z);
+    _cp.set(_cf.x*0.28,8+d*0.1+b.y*0.15,24-Math.min(10,d*0.05));_cl.copy(_cf);
+    const D=_cp.distanceTo(_cl);fov=clamp(2*Math.atan(span/2/D)*180/Math.PI*1.25,16,52);
+  }
+  camPos.lerp(_cp,k);camLook.lerp(_cl,kl);camFov+=(fov-camFov)*k;
+  camera.fov=camFov;camera.updateProjectionMatrix();camera.position.copy(camPos);camera.lookAt(camLook);
+  aimLight(camLook.x*0.8,camLook.z*0.8);
+}
 let camMode='tv';const camPos=new THREE.Vector3(),camLook=new THREE.Vector3();
 function setCam(m){camMode=m;if(fielders['捕'])fielders['捕'].visible=m!=='plate';
   if(m==='plate'){camera.fov=24;camPos.set(0,2.1,7.2);camLook.set(0,0.85,-18.4);}
   else if(m==='tv'){camera.fov=10;camPos.set(3.6,6.0,-52);camLook.set(-0.45,1.0,0);}
-  else if(m==='follow'){camera.fov=40;camPos.set(0,9,17);camLook.set(0,1.5,-15);}
+  else if(m==='follow'){camera.fov=camFov=40;camPos.set(0,9,22);camLook.set(0,1.5,-12);}
   camera.updateProjectionMatrix();camera.position.copy(camPos);camera.lookAt(camLook);aimLight(0,-8);}
 function updateCam(dt){
   if(camMode!=='follow')return;
@@ -1713,12 +1773,8 @@ function updateCam(dt){
     if(cut.kind==='base'){camPos.set(cut.x+dx*6.5-dz*2.5,2.4,cut.z+dz*6.5+dx*2.5);camLook.set(cut.x,0.8,cut.z);}
     else{const hx=-cut.x,hz=-cut.z,hl=Math.hypot(hx,hz)||1;camPos.set(cut.x+hx/hl*10,3.2,cut.z+hz/hl*10);camLook.set(cut.x,1.2,cut.z);}
     camera.fov=34;camera.updateProjectionMatrix();camera.position.copy(camPos);camera.lookAt(camLook);aimLight(cut.x,cut.z);P.wasCut=true;return;}
-  if(P&&P.wasCut){P.wasCut=false;camera.fov=40;camera.updateProjectionMatrix();}
-  const b=ball.position,d=Math.hypot(b.x,b.z);
-  const tp=new THREE.Vector3(b.x*0.3,7+d*0.14,15+b.z*0.22),k=1-Math.pow(0.05,dt);
-  camPos.lerp(tp,k);camLook.lerp(new THREE.Vector3(b.x,Math.max(0.5,b.y*0.6),b.z),Math.min(1,k*1.8));
-  camera.position.copy(camPos);camera.lookAt(camLook);
-  aimLight(camLook.x*0.8,camLook.z*0.8);
+  if(P&&P.wasCut){P.wasCut=false;}
+  directCam(P,dt);
 }
 
 /* ---------- メインループ ---------- */
@@ -1919,7 +1975,7 @@ function autoLineup(t){
 const NUMOF={'DH':10,'投':1,'捕':2,'一':3,'二':4,'三':5,'遊':6,'左':7,'中':8,'右':9};
 function engineP(dp,pos,num){
   const c=(dp.cond||0)*2.5,cl=v=>clamp(v+c,1,99);
-  const e={ref:dp,id:dp.id,name:dp.name,grade:dp.grade,pos,num,th:dp.th,bt:dp.bt,m:cl(dp.m),p:cl(dp.p),s:cl(dp.s),a:cl(dp.a),d:cl(dp.d),tired:dp.tired||0,hurt:dp.hurt,kmh:dp.pit?Math.round(dp.pit.kmh):0,pit:null};
+  const e={ref:dp,pf:dp.pit?pStyle(dp):null,bf:bStyle(dp),id:dp.id,name:dp.name,grade:dp.grade,pos,num,th:dp.th,bt:dp.bt,m:cl(dp.m),p:cl(dp.p),s:cl(dp.s),a:cl(dp.a),d:cl(dp.d),tired:dp.tired||0,hurt:dp.hurt,kmh:dp.pit?Math.round(dp.pit.kmh):0,pit:null};
   if(dp.pit){const tf=1-(dp.tired||0)/150;e.pit={vel:clamp((dp.pit.kmh-112)/0.48+c,0,99),ctl:cl(dp.pit.ctl),brk:cl(dp.pit.brk),sta:Math.max(5,dp.pit.sta*tf),gut:50};}
   return e;
 }
@@ -2258,6 +2314,7 @@ function detailHTML(p){
   const bars=[['ミート',p.m],['パワー',p.p],['走力',p.s],['肩',p.a],['守備',p.d]].concat(p.pit?[['制球',p.pit.ctl],['変化球',p.pit.brk],['スタミナ',p.pit.sta]]:[]);
   return '<div class="pd"><div class="who"><span class="emb sm" style="--tc:'+myTeam().color+'">'+p.grade+'</span><div><b class="big">'+esc(p.name)+'</b><small>'+(p.yomi?esc(p.yomi)+'　':'')+p.grade+'年　'+POSNAME[p.pos]+'　'+(p.th==='L'?'左投':'右投')+(p.bt==='L'?'左打':p.bt==='S'?'両打':'右打')+(p.ep?'　「'+esc(p.ep)+'」':'')+'</small></div></div>'+
     '<div class="bars">'+bars.map(([n,v])=>'<span>'+n+'</span><div class="bar"><i style="width:'+v+'%"></i></div><b class="g-'+grade(v)+'">'+grade(v)+'</b><span class="num">'+r1(v)+'</span>').join('')+'</div>'+
+    '<p class="muted small">打撃フォーム：'+BST[bStyle(p)].n+(p.pit?'　投球フォーム：'+styleName(p):'')+'</p>'+
     (p.pit?'<p>球速 <b class="num">'+r1(p.pit.kmh)+' km/h</b>　疲れ '+r1(p.tired)+'%<br><span class="muted small">持ち球：'+repertoire(p.name,p.pit.brk).map(i=>PITCHES[i].k).join('・')+'</span></p>':'')+
     '<p class="muted small">通算：'+c.g+'試合　打率 '+avg+'　'+c.h+'安打 '+c.hr+'本塁打 '+c.rbi+'打点 '+c.sb+'盗塁'+(p.pit?'　投手 '+c.w+'勝'+c.l+'敗 '+c.pk+'奪三振':'')+'</p>'+
     '<p class="muted small">伸びしろ：'+(p.pot>=1.3?'大きい':p.pot>=1.08?'ふつうより大きい':p.pot>=0.92?'ふつう':'小さめ')+'</p>'+
