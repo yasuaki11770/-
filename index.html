@@ -3289,23 +3289,30 @@ function useOnMap(k) {
     sfx('stairs'); flash(); msg('💨 けむり玉を投げた。煙にまぎれて、12秒のあいだ魔物に見つからない。'); return;
   }
 }
-const COOK = { sel: [] };
+const COOK = { sel: [], free: false };
 function cookMenu() {
-  const h = actH(G), foods = Object.keys(ITEM).filter(k => ITEM[k].food && invN(G, k) > 0);
+  const h = actH(G), full = G.full >= G.fullMax - 2, nuT = nu => Object.entries(nu || {}).map(([k, v]) => `${NN[k]}${Math.round(v * 10) / 10}`).join('・');
+  const have = (a, b) => a === b ? invN(G, a) >= 2 : invN(G, a) >= 1 && invN(G, b) >= 1;
+  const cook = (a, b) => { const R = cookResult(a, b); if (!have(a, b) || full) return; G.inv[a]--; G.inv[b]--; COOK.sel = [];
+    G.full = Math.min(G.fullMax, G.full + R.food); eat(h, R.nu); if (R.buff) h.buff = { k: R.buff[0], v: R.buff[1], t: R.buff[2], n: R.n };
+    sfx('chest'); msg(`🍳 ${R.n}を作って食べた。満腹+${R.food}。${R.buff ? `${BUFFN[R.buff[0]]}が${Math.round(R.buff[1] * 100)}%上がった！` : ''}`); ovClose(); hud(); saveSus(); };
+  // the recipe book: all of them, the ones you can make first
+  const rec = Object.entries(RECIPE).map(([key, R]) => { const [a, b] = key.split('+'); return { key, R, a, b, ok: have(a, b) }; }).sort((x, y) => y.ok - x.ok);
+  const foods = Object.keys(ITEM).filter(k => ITEM[k].food && invN(G, k) > 0);
   COOK.sel = COOK.sel.filter(k => invN(G, k) >= COOK.sel.filter(x => x === k).length);
-  const R = COOK.sel.length === 2 ? cookResult(COOK.sel[0], COOK.sel[1]) : null, full = G.full >= G.fullMax - 2;
-  const nuT = nu => Object.entries(nu || {}).map(([k, v]) => `${NN[k]}${Math.round(v * 10) / 10}`).join('・');
-  const known = Object.keys(G.recipes || {}).length;
-  const o = ov(`<h2>🍳 料理</h2><p class="dim" style="font-size:.8rem">食べ物を2つ選ぶ。組み合わせによっては名物料理になり、しばらく能力が上がる。（覚えたレシピ ${known}/${Object.keys(RECIPE).length}）</p>
-    <div class="ggrid">${foods.map(k => { const n = COOK.sel.filter(x => x === k).length; return `<button class="gc ${n ? 'sel' : ''}" data-ck="${k}"><span class="gi big">${ITEM[k].ic}</span><b>${ITEM[k].n}</b><small>満腹+${ITEM[k].food}</small><em class="cnt">${n ? '✓' + n + ' / ' : ''}×${G.inv[k]}</em></button>`; }).join('') || '<p class="dim">食べ物を持っていない</p>'}</div>
-    <div class="det" style="margin-top:8px">${R ? `<b>${R.ic} ${R.n}${R.key !== 'gotta' && !(G.recipes || {})[R.key] ? ' <em class="new">NEW</em>' : ''}</b><p>満腹+${R.food}・${nuT(R.nu)}${R.buff ? `<br>✨ ${BUFFN[R.buff[0]]}+${Math.round(R.buff[1] * 100)}%（${Math.round(R.buff[2] / 60 * 10) / 10}分）` : '<br><span class="dim">（ふつうの料理。名物の組み合わせなら能力が上がる）</span>'}</p>` : `<span class="dim">${2 - COOK.sel.length}つ選んで</span>`}</div>
-    <div class="choices two"><button class="pb pri" id="ckGo" ${R && !full ? '' : 'disabled'}>${full ? 'おなかがいっぱい' : '作って食べる'}</button><button class="pb" id="ckX">とじる</button></div>`, { mid: true });
+  const F = COOK.sel.length === 2 ? cookResult(COOK.sel[0], COOK.sel[1]) : null;
+  const o = ov(`<h2>🍳 料理</h2><p class="dim" style="font-size:.8rem">レシピの材料がそろっていれば作れる。作ったらその場で食べる。${full ? '<b style="color:var(--red)">　今はおなかがいっぱい</b>' : ''}</p>
+    <div class="choices two" style="margin-bottom:6px"><button class="pb ${COOK.free ? '' : 'on'}" id="ckR">レシピ ${rec.filter(r => r.ok).length}/${rec.length}</button><button class="pb ${COOK.free ? 'on' : ''}" id="ckF">ごった煮（自由に2つ）</button></div>
+    ${COOK.free ? `<div class="ggrid">${foods.map(k => { const n = COOK.sel.filter(x => x === k).length; return `<button class="gc ${n ? 'sel' : ''}" data-ck="${k}"><span class="gi big">${ITEM[k].ic}</span><b>${ITEM[k].n}</b><small>満腹+${ITEM[k].food}</small><em class="cnt">${n ? '✓' + n + ' / ' : ''}×${G.inv[k]}</em></button>`; }).join('') || '<p class="dim">食べ物を持っていない</p>'}</div>
+      <div class="det" style="margin-top:8px">${F ? `<b>${F.ic} ${F.n}</b><p>満腹+${F.food}・${nuT(F.nu)}${F.buff ? `<br>✨ ${BUFFN[F.buff[0]]}+${Math.round(F.buff[1] * 100)}%（${Math.round(F.buff[2] / 60 * 10) / 10}分）` : ''}</p>` : `<span class="dim">${2 - COOK.sel.length}つ選んで</span>`}</div>
+      <div class="choices"><button class="pb pri" id="ckGo" ${F && !full ? '' : 'disabled'}>作って食べる</button></div>`
+    : `<div class="tlist">${rec.map(r => `<div class="trow" style="${r.ok ? '' : 'opacity:.55'}"><b>${r.R.ic} ${r.R.n}</b><small>${ITEM[r.a].ic}${ITEM[r.a].n}＋${ITEM[r.b].ic}${ITEM[r.b].n}（${r.ok ? '<span style="color:var(--pine,#7fd88a)">そろっている</span>' : '足りない'}）<br>満腹+${r.R.food}・${BUFFN[r.R.buff[0]]}+${Math.round(r.R.buff[1] * 100)}%（${Math.round(r.R.buff[2] / 60 * 10) / 10}分）</small><button class="pb ${r.ok && !full ? 'pri' : ''}" data-rc="${r.key}" ${r.ok && !full ? '' : 'disabled'}>作る</button></div>`).join('')}</div>`}
+    <div class="choices"><button class="pb" id="ckX">とじる</button></div>`, { mid: true });
+  o.querySelectorAll('[data-rc]').forEach(b => b.onclick = () => { const [a, c] = b.dataset.rc.split('+'); cook(a, c); });
   o.querySelectorAll('[data-ck]').forEach(b => b.onclick = () => { const k = b.dataset.ck, n = COOK.sel.filter(x => x === k).length;
     if (n && (n >= G.inv[k] || COOK.sel.length >= 2)) COOK.sel.splice(COOK.sel.indexOf(k), 1); else if (COOK.sel.length < 2) COOK.sel.push(k); else { COOK.sel.shift(); COOK.sel.push(k); } sfx('blip'); cookMenu(); });
-  $('#ckGo').onclick = () => { if (!R || full) return; for (const k of COOK.sel) G.inv[k]--; COOK.sel = [];
-    G.full = Math.min(G.fullMax, G.full + R.food); eat(h, R.nu); if (R.key !== 'gotta') { G.recipes = G.recipes || {}; G.recipes[R.key] = 1; }
-    if (R.buff) h.buff = { k: R.buff[0], v: R.buff[1], t: R.buff[2], n: R.n };
-    sfx('chest'); msg(`🍳 ${R.n}を作って食べた。満腹+${R.food}。${R.buff ? `${BUFFN[R.buff[0]]}が${Math.round(R.buff[1] * 100)}%上がった！` : ''}`); ovClose(); hud(); saveSus(); };
+  const go = $('#ckGo'); if (go) go.onclick = () => { if (COOK.sel.length === 2) cook(COOK.sel[0], COOK.sel[1]); };
+  $('#ckR').onclick = () => { COOK.free = false; cookMenu(); }; $('#ckF').onclick = () => { COOK.free = true; cookMenu(); };
   $('#ckX').onclick = () => { ovClose(); bagMenu('item'); };
 }
 function bodyHTML(h) {
@@ -3347,11 +3354,27 @@ function sensMenu() {
   o.querySelectorAll('button[data-d]').forEach(b => b.onclick = () => { const r = o.querySelector(`input[data-k="${b.dataset.k}"]`); set(b.dataset.k, +r.value + +b.dataset.d); sfx('blip'); });
   $('#snOk').onclick = () => { ovClose(); mainMenu(); };
 }
-function shopMenu() {
-  const S2 = G.map.shop; if (!S2) return;
-  const o = ov(`<h2>🛒 行商人</h2><p class="dim" style="font-size:.82rem">「こんな地下まで、よく来なすった。食べ物なら少しはあるよ」</p><p>所持金 <b>$${G.cash}</b></p>
-    <div class="choices">${S2.stock.map((x, i) => `<button class="pb ${x.n && G.cash >= x.p ? 'pri' : ''}" data-buy="${i}" ${x.n && G.cash >= x.p ? '' : 'disabled'} style="justify-content:space-between"><span>${ITEM[x.k].ic} ${ITEM[x.k].n}<small style="opacity:.75">（満腹+${ITEM[x.k].food}）</small></span><span>$${x.p}・残り${x.n}</span></button>`).join('')}<button class="pb" id="shX">とじる</button></div>`, { mid: true });
+// what the pedlar pays for a piece: its level, its blessings and maker's mark, less if worn down, little if broken
+function sellPrice(it) {
+  let v = 6 + (it.lv || 1) * 4 + (it.b || []).reduce((a, [k, n]) => a + (BLESS[k].flag ? 12 : 3 * n), 0) + ({ ace: 15, king: 25, perfect: 40, used: -3 }[it.pf] || 0);
+  if (it.leg) v *= 5; if (it.el || it.res) v += 8;
+  v *= it.dur <= 0 ? .2 : .45 + .55 * it.dur / (it.mdur || 1);
+  return Math.max(1, Math.round(v));
+}
+let SHOPTAB = 'buy';
+function shopMenu(tab) {
+  const S2 = G.map.shop; if (!S2) return; if (tab) SHOPTAB = tab;
+  const buy = SHOPTAB === 'buy';
+  const list = buy ? S2.stock.map((x, i) => `<button class="pb ${x.n && G.cash >= x.p ? 'pri' : ''}" data-buy="${i}" ${x.n && G.cash >= x.p ? '' : 'disabled'} style="justify-content:space-between"><span>${ITEM[x.k].ic} ${ITEM[x.k].n}<small style="opacity:.75">（満腹+${ITEM[x.k].food}）</small></span><span>$${x.p}・残り${x.n}</span></button>`).join('')
+    : (G.bag.length ? G.bag.map((it, i) => `<button class="pb" data-sell="${i}" style="justify-content:space-between;text-align:left"><span>${SLOT_IC[it.s]} ${esc(it.n)} <small style="opacity:.75">Lv${it.lv || 1}${it.dur <= 0 ? '・壊れている' : `・耐久${it.dur}/${it.mdur}`}${it.mine ? '・思い出の品' : ''}</small></span><span>$${sellPrice(it)}</span></button>`).join('') : '<p class="dim">売れる物がない（装備中の物は売れない）</p>');
+  const o = ov(`<h2>🛒 行商人</h2><p class="dim" style="font-size:.82rem">${buy ? '「こんな地下まで、よく来なすった。食べ物なら少しはあるよ」' : '「どれどれ…装備なら買い取るよ。壊れた物は安くなるがね」'}</p><p>所持金 <b>$${G.cash}</b></p>
+    <div class="choices two" style="margin-bottom:6px"><button class="pb ${buy ? 'on' : ''}" id="shB">食べ物を買う</button><button class="pb ${buy ? '' : 'on'}" id="shS">装備を売る</button></div>
+    <div class="choices">${list}<button class="pb" id="shX">とじる</button></div>`, { mid: true });
   o.querySelectorAll('[data-buy]').forEach(b => b.onclick = () => { const x = S2.stock[+b.dataset.buy]; if (!x.n || G.cash < x.p) return; G.cash -= x.p; x.n--; invAdd(G, x.k); sfx('coin'); toast(`${ITEM[x.k].n}を買った`, 900); hud(); saveSus(); shopMenu(); });
+  o.querySelectorAll('[data-sell]').forEach(b => b.onclick = () => { const it = G.bag[+b.dataset.sell]; if (!it) return;
+    const go = () => { const v = sellPrice(it); G.bag = G.bag.filter(x => x !== it); G.cash += v; sfx('coin'); toast(`${esc(it.n)}を $${v} で売った`, 1100); msg(`🛒 ${it.n}を売った（+$${v}）。`); hud(); saveSus(); shopMenu(); };
+    if (it.mine || it.leg) ask('本当に売る？', `${esc(it.n)}は${it.leg ? '伝説の装備' : '思い出の品'}だ。売ったら戻らない。`, [['売る', go, 'warn'], ['やめる', () => shopMenu()]]); else go(); });
+  $('#shB').onclick = () => shopMenu('buy'); $('#shS').onclick = () => shopMenu('sell');
   $('#shX').onclick = () => { ovClose(); msg('「気をつけてな。また会えたら寄っておくれ」'); };
 }
 function restMenu() {
