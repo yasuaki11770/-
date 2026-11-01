@@ -540,6 +540,21 @@ function refOf(F) {
 /* --- the rats. Every one of them is a mine rat of some kind --- */
 /* the monsters: Magic City's own (the lumps, the bats, the ghosts, the mine rats, the mimic), in three looks by depth.
    fam = the model, b = which of its three colourings; a few rats of the dungeon game's own (rust, the leech) keep their colours */
+// a family's colouring with the hue turned (degrees), the saturation and lightness pushed (-1..1)
+function palMod(fam, b, dh, ds, dl, all) {
+  const P = (typeof PSPR !== 'undefined' && PSPR.p[fam] && PSPR.p[fam][b - 1]) || {}, out = {};
+  for (const [k, v] of Object.entries(P)) {
+    if (typeof v !== 'string' || v[0] !== '#') { out[k] = v; continue; }
+    let r = parseInt(v.slice(1, 3), 16) / 255, g = parseInt(v.slice(3, 5), 16) / 255, bl = parseInt(v.slice(5, 7), 16) / 255;
+    const mx = Math.max(r, g, bl), mn = Math.min(r, g, bl), L = (mx + mn) / 2, d = mx - mn; let h = 0, S = 0;
+    if (d) { S = d / (1 - Math.abs(2 * L - 1)); h = mx === r ? ((g - bl) / d) % 6 : mx === g ? (bl - r) / d + 2 : (r - g) / d + 4; h *= 60; }
+    const H = ((h + dh) % 360 + 360) % 360, S2 = Math.max(0, Math.min(1, S + ds)), L2 = Math.max(.03, Math.min(.97, L + dl * (!all && (L > .9 || L < .1) ? .3 : 1))), S3 = all && L > .9 ? Math.max(S2, .55) : S2;
+    const c = (1 - Math.abs(2 * L2 - 1)) * S3, x = c * (1 - Math.abs((H / 60) % 2 - 1)), m = L2 - c / 2;
+    const [r2, g2, b2] = H < 60 ? [c, x, 0] : H < 120 ? [x, c, 0] : H < 180 ? [0, c, x] : H < 240 ? [0, x, c] : H < 300 ? [x, 0, c] : [c, 0, x];
+    out[k] = '#' + [r2, g2, b2].map(u => Math.round((u + m) * 255).toString(16).padStart(2, '0')).join('');
+  }
+  return out;
+}
 const MON = {
   blob1: { fam: 'blob', b: 1, n: '錆の塊', f: [1, 7], weak: 'thunder', tr: 'armor', hp: 1.3, spd: .85, drop: ['jelly'], hello: 'ぶよぶよの体が鈍く光っている…（硬い。斧と鎚がよく効く）' },
   blob2: { fam: 'blob', b: 2, n: '鉄の塊', f: [7, 14], weak: 'thunder', tr: 'armor', hp: 1.35, spd: .85, drop: ['jelly', 'salt'], hello: '鉄のように硬い体だ…（斧と鎚がよく効く）' },
@@ -555,6 +570,19 @@ const MON = {
   chika: { fam: 'rat', b: 2, n: '地下鉄ネズミ', f: [7, 16], weak: 'ice', tr: 'quick', hp: .85, spd: 1.2, drop: ['bread', 'meat'], hello: '線路の上を走り回っている！（連続で襲ってくる）' },
   doku: { fam: 'rat', b: 2, pal: { a: '#16200a', b: '#86a64e', c: '#d8a6ff', d: '#ffffff', e: '#160a1c', f: '#5a6a3a', g: '#3f5a22' }, n: 'ヒルネズミ', f: [10, 20], weak: 'fire', tr: 'drain', drop: ['berry', 'meat'], hello: '口元が血で濡れている…（かみついて血を吸い、回復する）' },
   ougon: { fam: 'rat', b: 3, n: '黄金ネズミ', f: [4, 20], rare: .035, weak: 'fire', tr: 'flee', drop: ['gcheese'], hello: '金色に輝いている！（すぐ逃げる・攻撃が効きにくい）' },
+  // more kinds: the same families recoloured (palMod), spread over the depths
+  kemuri: { fam: 'rat', b: 1, pal: palMod('rat', 1, 0, -.6, -.35), n: 'すすネズミ', f: [1, 9], weak: 'fire', tr: 'quick', hp: .85, spd: 1.15, drop: ['bread', 'meat'], hello: '煤で真っ黒だ。ちょこまか動き回る（連続で襲ってくる）' },
+  yoroi: { fam: 'rat', b: 2, pal: palMod('rat', 2, 190, -.3, -.05), n: '鎧ネズミ', f: [8, 16], weak: 'thunder', tr: 'armor', hp: 1.25, spd: .9, drop: ['meat', 'salt'], hello: '背中が鉄板のように硬い…（斧と鎚がよく効く）' },
+  oonezu: { fam: 'rat', b: 3, pal: palMod('rat', 3, 20, -.2, -.2), n: '大ネズミ', f: [12, 20], weak: 'ice', tr: 'heavy', hp: 1.35, atk: 1.15, spd: .9, drop: ['meat', 'jerky'], hello: '人の背丈ほどもある巨体だ！（一撃が重い）' },
+  koke: { fam: 'blob', b: 1, pal: palMod('blob', 1, 95, .1, -.05), n: '苔の塊', f: [1, 8], weak: 'fire', tr: 'drain', hp: 1.2, spd: .85, drop: ['grass', 'jelly'], hello: '湿った苔がうごめいている…（吸いついて体力を奪う）' },
+  mizu: { fam: 'blob', b: 2, pal: palMod('blob', 2, -5, .4, -.02), n: '地下水の塊', f: [5, 12], weak: 'thunder', tr: 'heavy', hp: 1.3, spd: .85, drop: ['jelly', 'salt'], hello: '水が意思を持ったように揺れている（のしかかりが重い）' },
+  yogan: { fam: 'blob', b: 3, pal: palMod('blob', 3, -38, .25, -.05), n: '溶岩の塊', f: [12, 20], weak: 'ice', tr: 'breath', hp: 1.35, spd: .85, drop: ['jelly', 'bone'], hello: '赤く煮えたぎっている！（炎の息を吐く）' },
+  kage: { fam: 'bat', b: 1, pal: palMod('bat', 1, 0, -.25, -.3), n: '影コウモリ', f: [4, 11], weak: 'thunder', tr: 'steal', hp: .75, spd: 1.2, drop: ['wingm'], hello: '闇にまぎれて近づいてくる…（盗みをはたらく）' },
+  kaminari: { fam: 'bat', b: 2, pal: palMod('bat', 2, -134, .3, .12), n: '雷コウモリ', f: [9, 17], weak: 'ice', tr: 'quick', hp: .8, spd: 1.25, drop: ['wingm', 'berry'], hello: '翼がバチバチと光っている！（すばやく何度も襲う）' },
+  ookomori: { fam: 'bat', b: 3, pal: palMod('bat', 3, 330, 0, -.25), n: '吸血大コウモリ', f: [16, 20], weak: 'fire', tr: 'drain', hp: 1, atk: 1.1, spd: 1.1, drop: ['wingm', 'jerky'], hello: '大きな翼で天井をおおっている…（血を吸って回復する）' },
+  onibi: { fam: 'ghost', b: 1, pal: palMod('ghost', 1, 160, .55, -.28, 1), n: '鬼火', f: [2, 8], weak: 'ice', tr: 'breath', hp: .8, drop: ['bone'], hello: 'ゆらゆらと燃える火の玉だ（炎を吐く）' },
+  koufu: { fam: 'ghost', b: 2, pal: palMod('ghost', 2, -110, -.5, -.32, 1), n: '坑夫の亡霊', f: [6, 13], weak: 'fire', tr: 'steal', hp: .95, drop: ['bone', 'bread'], hello: 'つるはしを担いだ影がこちらを見ている…（持ち物を奪う）' },
+  koori: { fam: 'ghost', b: 3, pal: palMod('ghost', 3, -110, .35, -.12, 1), n: '凍れる亡霊', f: [11, 18], weak: 'fire', tr: 'phase', hp: 1, drop: ['bone', 'salt'], hello: '吐く息で空気が凍りつく…（武器がすり抜けやすい）' },
   mimic: { fam: 'mimic', b: 1, n: 'ミミック', f: [99, 99], weak: 'fire', tr: 'heavy', hp: 1.2, atk: 1.15, drop: ['jerky'], hello: '大きな口からよだれを垂らしている…（一撃が重い）' },
 };
 const RAT = MON;
@@ -2585,6 +2613,7 @@ function qdNear() {
   if (B.seal && Math.hypot(B.seal.position.x - P.x, B.seal.position.z - P.z) < 2.6) return { k: 'wall', label: invN(G, 'bomb') ? '💣 爆弾で壁を崩す' : '🧱 ひび割れた壁を調べる' };
   if (Math.hypot(B.rec.x - P.x, B.rec.z - P.z) < 1.8) return { k: 'record', label: `📜 記録する（$${recordCost(G)}）` };
   if (B.dx != null && Math.hypot(B.dx - P.x, B.dz - P.z) < 2.4) return { k: 'down', label: `⬇ 地下${G.floor + 1}階へ下りる` };
+  if (G.floor > 1 && M.up && Math.hypot(qdX(M.up.x) - P.x, qdX(M.up.y) - P.z) < 2.2) return { k: 'up', label: `⬆ 地下${G.floor - 1}階へ上る` };
   return null;
 }
 
@@ -3061,14 +3090,19 @@ function loadRecord() { const rec = LS.get(K_REC, null); if (!rec) return; G = J
 
 /* ===================== the floor ===================== */
 /* floors are made once and kept: coming back (a rescue starts on B1) finds the same floor */
-function enterFloor(F, first, note) {
+function enterFloor(F, first, note, opts) {
   G.floors = G.floors || {};
   let M = G.floors[F]; const fresh = !M;
   if (!M) { M = genFloor(F); G.floors[F] = M; }
-  M.diff = G.diff; G.floor = F; G.map = M; G.stay = 0; G.warned = 0; G.pos = null; rollSpecies.gold = M.ev === 'gold';
+  M.diff = G.diff; G.floor = F; G.map = M; G.stay = 0; G.warned = 0; G.pos = null;
+  if (opts && opts.atDown) {   // came up the stairs: stand next to this floor's way down
+    const d = M.down, nb = [[0, 1], [1, 0], [0, -1], [-1, 0], [1, 1], [-1, 1], [1, -1], [-1, -1]].map(([a, b]) => [d.x + a, d.y + b]).find(([x, y]) => walkable(M, x, y)) || [d.x, d.y];
+    const ux = nb[0] - d.x, uy = nb[1] - d.y, ul = Math.hypot(ux, uy) || 1;
+    G.pos = { F, x: qdX(d.x) + ux / ul * 1.7, z: qdX(d.y) + uy / ul * 1.7, ry: Math.atan2(ux, uy) };
+  } rollSpecies.gold = M.ev === 'gold';
   fade(() => {
     show('explore'); MSGS.length = 0; qdEnter(); saveSus(); floorMusic();
-    msg(note || (first ? `地下${F}階。Birminghamの坑道の奥へ… ${HEROES[G.act].n}は記録碑のそばに降り立った。` : fresh ? `地下${F}階に下りた。` : `地下${F}階。前に通った階だ。`));
+    msg(note || (opts && opts.atDown ? `地下${F}階に上った。` : first ? `地下${F}階。Birminghamの坑道の奥へ… ${HEROES[G.act].n}は記録碑のそばに降り立った。` : fresh ? `地下${F}階に下りた。` : `地下${F}階。前に通った階だ。`));
     placeMateria(M, G);
     if (M.ev && FLOOR_EV[M.ev]) { if (fresh) toast(`<b>${FLOOR_EV[M.ev].n}</b><br><small>${FLOOR_EV[M.ev].d}</small>`, 2600); msg(`✦ ${FLOOR_EV[M.ev].n}：${FLOOR_EV[M.ev].d}`); }
     if (G.soul && G.soul.F === F) msg(`👻 この階に${HEROES[G.soul.who].n}の魂がある（ミニマップの青い点）。${G.soul.gName}が守っている。`);
@@ -3127,6 +3161,7 @@ function doAct() {
   else if (n.k === 'wall') { if (!invN(G, 'bomb')) { msg('🧱 ひび割れた壁だ。爆弾があれば崩せそうだ。'); return; } ask('ひび割れた壁', '爆弾を使って壁を崩す？', [['💣 使う', () => { G.inv.bomb--; sfx('hit'); flash(); qdOpenWall(); msg('💥 壁が崩れて、隠し部屋が現れた！'); QD.near = null; }, 'pri'], ['やめる']]); }
   else if (n.k === 'record') recordPrompt();
   else if (n.k === 'down') stairsPrompt();
+  else if (n.k === 'up') upPrompt();
 }
 function openChest(cb) {
   const ch = cb.c, F = G.floor;
@@ -3144,7 +3179,18 @@ function stairsPrompt() {
   const M = G.map;
   if (BOSS[G.floor] && !M.bossBeat) { msg(`⚠ ${BOSS[G.floor].n}を倒さないと、先へは進めない。`); return; }
   if (G.soul && G.soul.F === G.floor) { msg(`${HEROES[G.soul.who].n}の魂を置いては行けない。`); return; }
-  ask(`地下${G.floor + 1}階へ`, G.floors && G.floors[G.floor + 1] ? '階段を下りる？（前に通った階）' : '階段を下りる？ 上に戻る道はない。', [['下りる', () => { sfx('stairs'); enterFloor(G.floor + 1); }, 'pri'], ['まだ']]);
+  ask(`地下${G.floor + 1}階へ`, G.floors && G.floors[G.floor + 1] ? '階段を下りる？（前に通った階）' : '階段を下りる？（あとで階段を上って戻ることもできる）', [['下りる', () => { sfx('stairs'); enterFloor(G.floor + 1); }, 'pri'], ['まだ']]);
+}
+// at the record stone the two can change places (the one waiting must be up and about)
+const canSwap = () => { const o = other(G.act); return !(G.soul && G.soul.who === o) && G.heroes[o].hp > 0; };
+function swapHero() {
+  if (!canSwap()) return; const was = G.act; G.act = other(was); qdHeroMesh(); hud(); saveSus(); sfx('equip');
+  msg(`🔁 ${HEROES[was].n}は控えに回り、${HEROES[G.act].n}が先頭に立った。`);
+}
+function upPrompt() {
+  if (G.floor <= 1) return;
+  if (G.soul && G.soul.F === G.floor) { msg(`${HEROES[G.soul.who].n}の魂を置いては行けない。`); return; }
+  ask(`地下${G.floor - 1}階へ`, '階段を上る？（上の階の、下り階段のそばに出る）', [['上る', () => { sfx('stairs'); enterFloor(G.floor - 1, false, null, { atDown: true }); }, 'pri'], ['まだ']]);
 }
 function recordPrompt() {
   const c = recordCost(G);
@@ -3152,7 +3198,7 @@ function recordPrompt() {
     [[`記録する（$${c}）`, () => {
       if (G.cash < c) { msg(`📜 記録するには$${c}必要だ。`); sfx('bad'); return; }
       G.cash -= c; G.saves++; qdSavePos(); LS.set(K_REC, { G: snap(), at: Date.now() }); saveSus(); sfx('chest'); msg(`📜 冒険を記録した（−$${c}）。`); hud();
-    }, 'pri'], ['やめる']]);
+    }, 'pri']].concat(canSwap() ? [[`${HEROES[other(G.act)].n}と交代する`, swapHero]] : []).concat([['やめる']]));
 }
 
 /* ===================== the bag (equipment, items, body, techniques, record) ===================== */
@@ -3555,10 +3601,11 @@ function heroDown(cause, killer) {
   const oh = G.heroes[o]; oh.hp = stats(oh).mhp;
   G.act = o; G.full = Math.max(G.full, 30); G.streak = 0;
   for (const m of G.map.mons) if (m.boss && !m.dead) { m.stun = 2; m.state = 'wander'; }
-  ov(`<h2>${HEROES[dead].n}は倒れた…</h2><p>${cause === 'hunger' ? '飢えに力尽きた。' : '魔物に倒された。'}</p><p>その場に、青白い<b style="color:var(--soul)">魂</b>が残った。<b>${G.soul.gName}</b>が魂のそばに居座っている（残りHP ${killer.hpLeft}）。</p><p>知らせを受けた<b>${HEROES[o].n}</b>が、地下1階から助けに向かう！ 倒した魔物は全ての階に戻ってくる。 地下${G.floor}階の魂を守る${G.soul.gName}を倒せば、${HEROES[dead].n}が復活する。${HEROES[dead].n}が与えたダメージはそのまま残っている。</p><p class="dim" style="font-size:.8rem">${HEROES[o].n}まで倒れたら、冒険は終わり。</p><div class="choices"><button class="pb pri" id="sOk">${HEROES[o].n}で向かう</button></div>`, { mid: true });
+  ov(`<h2>${HEROES[dead].n}は倒れた…</h2><p>${cause === 'hunger' ? '飢えに力尽きた。' : '魔物に倒された。'}</p><p>その場に、青白い<b style="color:var(--soul)">魂</b>が残った。<b>${G.soul.gName}</b>が魂のそばに居座っている（残りHP ${killer.hpLeft}）。</p><p>知らせを受けた<b>${HEROES[o].n}</b>が、地下${Math.max(1, G.floor - 1)}階から助けに向かう！ 倒した魔物は全ての階に戻ってくる。 地下${G.floor}階の魂を守る${G.soul.gName}を倒せば、${HEROES[dead].n}が復活する。${HEROES[dead].n}が与えたダメージはそのまま残っている。</p><p class="dim" style="font-size:.8rem">${HEROES[o].n}まで倒れたら、冒険は終わり。</p><div class="choices"><button class="pb pri" id="sOk">${HEROES[o].n}で向かう</button></div>`, { mid: true });
   // the mine fills up again: every beaten monster on every floor is back (bosses and the lords stay beaten)
   let back = 0; for (const M2 of Object.values(G.floors || {})) for (const m of M2.mons) if (m.dead && !m.boss && !m.lord) { m.dead = false; m.dying = null; m.wx = null; m.wz = null; m.state = 'wander'; m.tgt = null; m.stun = 0; back++; }
-  $('#sOk').onclick = () => { ovClose(); enterFloor(1, false, `地下1階。${HEROES[o].n}は坑道の入口から駆け下りていく。${HEROES[dead].n}の魂は地下${G.soul.F}階。${back ? `倒したはずの魔物たちが坑道に戻ってきている…（${back}匹）` : ''}`); };
+  const from = Math.max(1, G.soul.F - 1);
+  $('#sOk').onclick = () => { ovClose(); enterFloor(from, false, `地下${from}階。${HEROES[o].n}は${from === 1 ? '坑道の入口から' : 'ひとつ上の階から'}駆け下りていく。${HEROES[dead].n}の魂は地下${G.soul.F}階。${back ? `倒したはずの魔物たちが坑道に戻ってきている…（${back}匹）` : ''}`); };
 }
 function freeSoul() {
   const who = G.soul.who, me = G.act, h = G.heroes[who];
