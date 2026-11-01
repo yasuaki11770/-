@@ -1701,14 +1701,11 @@ function makeCharHD(spec) {
       add(head, hairShell('cbk', .119, P / 2 + .55, P * 2 - 1.1, P * .3, a => P * (.5 + .2 * Math.pow(Math.max(0, -Math.cos(a)), 1.5)), .012, 3), hm, 0, .133, -.006, .985, 1.08, 1.04);
       add(head, hairShell('cfr', .125, P / 2 - 1.2, 2.4, P * .04, a => P * (.22 + .19 * Math.pow(Math.min(1, Math.abs(a) / .95), .8) + .05 * Math.max(0, Math.abs(a) - 1.1)), .012, 1.7), hm, 0, .14, .002, .97, 1.08, 1.05);
     }
-    if (hs === 'crop') {   // a close crop: a dark cap hugging the skull, a clean line at the brow and over the ears, tight curls on top
+    if (hs === 'crop') {   // a buzz cut: a thin, matte shadow of hair on the scalp with a natural hairline (temples a little back, down to the ears, the nape)
       cap.visible = false;
-      const hm = cmat(s.hair, .9, { side: T.DoubleSide }), P = Math.PI;
-      add(head, hairShell('kc2', .119, 0, P * 2, 0, a => P * (.39 + .05 * Math.min(1, Math.abs(a) / 1.5) + .1 * Math.max(0, -Math.cos(a))), 0, 0), hm, 0, .14, -.005, .98, 1.06, 1.03);
-      add(head, hairShell('ks', .117, P / 2 + .7, P * 2 - 1.4, P * .32, a => P * (.46 + .1 * Math.pow(Math.max(0, -Math.cos(a)), 1.5)), .003, 5), hm, 0, .134, -.005, .99, 1.05, 1.03);
-      let sd = 11; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
-      for (let i = 0; i < 34; i++) { const ph = rnd() * P * 2, th = P * (.02 + rnd() * .36), r = .122;
-        add(head, gc('curl', () => new T.SphereGeometry(.016, 6, 5)), hm, -r * Math.cos(ph) * Math.sin(th) * .98, .14 + r * Math.cos(th) * 1.06, r * Math.sin(ph) * Math.sin(th) * 1.03 - .005); }
+      const hm = cmat(s.hair, 1, { side: T.DoubleSide }), P = Math.PI;
+      const line = a => { const x = Math.abs(a), k = [[0, .42], [.55, .39], [1.15, .43], [1.6, .49], [2.3, .53], [P, .56]]; for (let i = 1; i < k.length; i++) if (x <= k[i][0]) { const [x0, y0] = k[i - 1], [x1, y1] = k[i], u = (x - x0) / (x1 - x0); return P * (y0 + (y1 - y0) * u * u * (3 - 2 * u)); } return P * .56; };
+      add(head, hairShell('buzz3', .1175, 0, P * 2, 0, line, .002, 7), hm, 0, .139, -.004, .975, 1.06, 1.03);
     }
     if (hs === 'spiky') {   // short black hair, a high hairline, grey at the temples, a tousled top standing up
       cap.visible = false;
@@ -2379,7 +2376,7 @@ function ratMesh(m) {
 // the heroes in 3D: Yasu in a grey suit and tie, short black hair; Shu tall, black hair, a dark coat
 const HERO_SPEC = () => ({
   yasu: Object.assign({}, E.PLAYER_SPEC, { skin: [238, 206, 180], hair: [24, 22, 24], temple: [46, 44, 44], hairStyle: 'spiky', glasses: false, shirt: [244, 244, 246], top: 'shirt', coat: [58, 62, 70], suit: 1, tie: [176, 204, 222], pants: [52, 56, 64], shoes: [22, 20, 20], brow: 'straight', eyeR: 1, nose: 'broad', faceW: 1.02, build: 1 }),
-  shu: Object.assign({}, E.PLAYER_SPEC, { name: 'Leo', skin: [142, 94, 62], hair: [22, 18, 16], hairStyle: 'crop', shirt: [46, 92, 186], pants: [196, 176, 136], shoes: [64, 44, 32], top: 'shirt', glasses: false, coat: null, height: 1.1, build: 1, brow: 'bold', eye: [46, 30, 22], nose: 'broad', lips: 'full' }),
+  shu: Object.assign({}, E.PLAYER_SPEC, { name: 'Leo', skin: [142, 94, 62], hair: [36, 26, 22], hairStyle: 'crop', shirt: [46, 92, 186], pants: [196, 176, 136], shoes: [64, 44, 32], top: 'shirt', glasses: false, coat: null, height: 1.1, build: 1, brow: 'bold', eye: [46, 30, 22], nose: 'broad', lips: 'full' }),
 });
 
 /* --- the floor plan in 3D (Magic City's builder, fed the dungeon game's floor) --- */
