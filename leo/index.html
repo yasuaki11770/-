@@ -418,7 +418,7 @@ const gearShown = it => (it.el ? EL[it.el].ic : '') + it.n + ' Lv' + (it.lv || 1
 function blessLv(F, luck) { let v = 1; if (Math.random() < .12 + F * .03 + luck * .2) v++; if (Math.random() < F * .015 + luck * .15) v++; return v; }
 function rollGear(F, luck = 0, slot) {
   if (F >= 3 && Math.random() < (luck >= .9 ? .3 : luck >= .5 ? .06 : .006)) { const Ls = LEG.filter(x => !slot || x.s === slot); if (Ls.length) { const L = pick(Ls); return makeGear(L.s, L.k, F, [], null, { leg: L.id }); } }
-  const s = slot || pick(['wpn', 'wpn', 'wpn', 'body', 'hand']), B = pick(BASE[s]);
+  const s = slot || pick(['wpn', 'body', 'hand']), B = pick(BASE[s]);   // weapons, armour and arm-gear alike
   const ex = {};
   if (s === 'wpn' && F >= 2 && Math.random() < .2 + luck * .2) ex.el = pick(Object.keys(EL));
   if (s !== 'wpn' && Math.random() < .15) ex.res = pick(Object.keys(EL));
@@ -426,7 +426,7 @@ function rollGear(F, luck = 0, slot) {
   while (bl.length < nb) { const k = pick(keys); if (bl.some(b => b[0] === k)) continue; bl.push([k, BLESS[k].flag ? 1 : blessLv(F, luck)]); }
   bl.sort((a, b) => (BLESS[b[0]].flag ? 5 : b[1]) - (BLESS[a[0]].flag ? 5 : a[1]));
   let pf = null; if (s === 'wpn') { let q = Math.random() * 100 - luck * 8; for (const [k, P] of Object.entries(PF)) { if (!P.p) continue; q -= P.p; if (q < 0) { pf = k; break; } } }
-  return makeGear(s, B.k, F, bl, pf, ex);
+  return makeGear(s, B.k, Math.max(1, F - ri(0, 2)), bl, pf, ex);   // this floor's level, or one or two below
 }
 const bText = ([k, v]) => { const X = BLESS[k]; if (X.flag) return `${X.n}（${X.u}）`; if (X.lvOnly) return `${X.n}Lv${v}：${X.u}`; return `${X.n}Lv${v}：${X.u}${X.per > 0 ? '+' : ''}${X.per * v}${X.pct ? '%' : '%'}`; };
 /* heavy gear is Yasu's alone, light gear Shu's alone; the rest either can wear */
@@ -844,7 +844,7 @@ function battleWin(B) {
   // a boss of a materia floor guards it
   if (boss && MAT_BOSS[F] && !(G.materia || {})[MAT_BOSS[F]]) { G.materia = G.materia || {}; G.materia[MAT_BOSS[F]] = 1; const X = MAGIC[MAT_BOSS[F]]; loot.push(`🔮 マテリア【${X.n}】を手に入れた！ 魔法「${X.n}」を覚えた。`); }
   const gearP = (.07 + .04 * top + (nd ? .05 : 0)) * D.drop * (1 + luck);
-  const gl = []; if (boss) gl.push(rollGear(F, .9), rollGear(F, .6, 'wpn')); else if (Math.random() < gearP) gl.push(rollGear(F, .1 * top + (nd ? .2 : 0), Math.random() < .6 ? 'wpn' : null));
+  const gl = []; if (boss) gl.push(rollGear(F, .9), rollGear(F, .6)); else if (Math.random() < gearP) gl.push(rollGear(F, .1 * top + (nd ? .2 : 0)));
   for (const it of gl) loot.push(addGear(G, it, '落としていった'));
   G.full = Math.max(0, G.full - 1);
   return { L, cards, loot };
