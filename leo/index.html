@@ -1704,10 +1704,10 @@ function makeCharHD(spec) {
     if (hs === 'crop') {   // a close crop: a dark cap hugging the skull, a clean line at the brow and over the ears, tight curls on top
       cap.visible = false;
       const hm = cmat(s.hair, .9, { side: T.DoubleSide }), P = Math.PI;
-      add(head, hairShell('kc', .119, 0, P * 2, 0, a => P * (.3 + .12 * Math.min(1, Math.abs(a) / 1.5) + .1 * Math.max(0, -Math.cos(a))), 0, 0), hm, 0, .14, -.005, .98, 1.06, 1.03);
+      add(head, hairShell('kc2', .119, 0, P * 2, 0, a => P * (.39 + .05 * Math.min(1, Math.abs(a) / 1.5) + .1 * Math.max(0, -Math.cos(a))), 0, 0), hm, 0, .14, -.005, .98, 1.06, 1.03);
       add(head, hairShell('ks', .117, P / 2 + .7, P * 2 - 1.4, P * .32, a => P * (.46 + .1 * Math.pow(Math.max(0, -Math.cos(a)), 1.5)), .003, 5), hm, 0, .134, -.005, .99, 1.05, 1.03);
       let sd = 11; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
-      for (let i = 0; i < 34; i++) { const ph = rnd() * P * 2, th = P * (.02 + rnd() * .3), r = .122;
+      for (let i = 0; i < 34; i++) { const ph = rnd() * P * 2, th = P * (.02 + rnd() * .36), r = .122;
         add(head, gc('curl', () => new T.SphereGeometry(.016, 6, 5)), hm, -r * Math.cos(ph) * Math.sin(th) * .98, .14 + r * Math.cos(th) * 1.06, r * Math.sin(ph) * Math.sin(th) * 1.03 - .005); }
     }
     if (hs === 'spiky') {   // short black hair, a high hairline, grey at the temples, a tousled top standing up
