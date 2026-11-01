@@ -3029,7 +3029,7 @@ function titleScreen() {
     ${sus ? `<button class="pb pri" id="tCont">つづきから <small>地下${sus.floor}階・${HEROES[sus.act].n} Lv${sus.heroes[sus.act].lv}・${DIFF[sus.diff].n}</small></button>` : ''}
     ${rec ? `<button class="pb" id="tRec">記録から再開 <small>地下${rec.G.floor}階・${DIFF[rec.G.diff].n}</small></button>` : ''}
     <div class="lab">主人公</div>
-    <div class="heroes">${card('yasu')}${card('shu')}</div>
+    <div class="heroes">${card('shu')}${card('yasu')}</div>
     <p class="dim" style="margin:0;font-size:.78rem">選ばなかった方は控えに回る。主人公が倒れると魂がその場に残り、控えが魂を解放しに来る。</p>
     <div class="lab">難易度</div>
     <div class="diffs">${DIFF.map((d, i) => i < DIFF_MIN ? '' : `<button class="dbtn" data-df="${i}" aria-pressed="${PREF.diff === i}"><b>${d.n}${clr[i] ? '<span class="clr">★</span>' : ''}</b><small>${d.d}</small></button>`).join('')}</div>
