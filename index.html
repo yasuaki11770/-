@@ -3154,7 +3154,7 @@ function recordPrompt() {
 }
 
 /* ===================== the bag (equipment, items, body, techniques, record) ===================== */
-let BAG = { tab: 'gear', sel: null, who: null };
+let BAG = { tab: 'item', sel: null, who: null };
 const DUELW = { sword: '剣', great: '大剣', rapier: '宝剣', dagger: '双剣', spear: '槍', axe: '鉞', mace: '大鎚', fist: '拳', katana: '刀', scim: '曲刀', twin: '双剣', whip: '鞭', halberd: '戟', glaive: '大刀' };
 const DUELTAG = { '剣': ['sword'], '大剣': ['sword', 'axe'], '宝剣': ['sword'], '双剣': ['sword', 'dual'], '槍': ['pole'], '鉞': ['axe'], '大鎚': ['axe'], '拳': ['fist'] };
 const WKN = { fist: '素手', sword: '剣', great: '大剣', rapier: 'レイピア', dagger: 'ダガー', spear: '槍', axe: '斧', mace: '鎚', katana: '刀', scim: '曲刀', twin: '双剣', whip: '鞭', halberd: '戟', glaive: '大刀' };
@@ -3318,7 +3318,7 @@ function restMenu() {
 function doRest(tent, auto) {
   const h = actH(G), r = restPlan(G, tent ? .5 : 1); if (G.full < 15 || G.full <= r.cost) return false;
   { QD.trans = 1;
-    fade(() => {
+    (auto ? f => f() : fade)(() => {   // the automatic rest after a fight happens without the blackout
       h.hp = Math.min(stats(h).mhp, h.hp + r.heal); G.full = Math.max(0, G.full - r.cost); G.stay = (G.stay || 0) + r.t; G.stillT = 0;
       QD.trans = 0; QD.grace = 1.5; sfx('soul'); hud(); saveSus();
       msg(`${auto ? '（自動）' : ''}${tent ? '⛺ テントを張って' : '🏠 コテージで'}ひと休みした。HP +${r.heal}、満腹 −${r.cost}。`); toast(`💤 ${auto ? '戦いのあと、' : ''}${tent ? 'テント' : 'コテージ'}で休んだ<br><small>HP +${r.heal}　満腹 −${r.cost}</small>`, 1600);
