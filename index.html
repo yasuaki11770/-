@@ -426,7 +426,7 @@ function rollGear(F, luck = 0, slot) {
   while (bl.length < nb) { const k = pick(keys); if (bl.some(b => b[0] === k)) continue; bl.push([k, BLESS[k].flag ? 1 : blessLv(F, luck)]); }
   bl.sort((a, b) => (BLESS[b[0]].flag ? 5 : b[1]) - (BLESS[a[0]].flag ? 5 : a[1]));
   let pf = null; if (s === 'wpn') { let q = Math.random() * 100 - luck * 8; for (const [k, P] of Object.entries(PF)) { if (!P.p) continue; q -= P.p; if (q < 0) { pf = k; break; } } }
-  return makeGear(s, B.k, Math.max(1, F - ri(0, 2)), bl, pf, ex);   // this floor's level, or one or two below
+  return makeGear(s, B.k, Math.min(20, F + ri(0, 2)), bl, pf, ex);   // this floor's level, or one or two above (Lv20 at most)
 }
 const bText = ([k, v]) => { const X = BLESS[k]; if (X.flag) return `${X.n}（${X.u}）`; if (X.lvOnly) return `${X.n}Lv${v}：${X.u}`; return `${X.n}Lv${v}：${X.u}${X.per > 0 ? '+' : ''}${X.per * v}${X.pct ? '%' : '%'}`; };
 /* heavy gear is Yasu's alone, light gear Shu's alone; the rest either can wear */
