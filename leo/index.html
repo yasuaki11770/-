@@ -2379,7 +2379,7 @@ function ratMesh(m) {
 // the heroes in 3D: Yasu in a grey suit and tie, short black hair; Shu tall, black hair, a dark coat
 const HERO_SPEC = () => ({
   yasu: Object.assign({}, E.PLAYER_SPEC, { skin: [238, 206, 180], hair: [24, 22, 24], temple: [46, 44, 44], hairStyle: 'spiky', glasses: false, shirt: [244, 244, 246], top: 'shirt', coat: [58, 62, 70], suit: 1, tie: [176, 204, 222], pants: [52, 56, 64], shoes: [22, 20, 20], brow: 'straight', eyeR: 1, nose: 'broad', faceW: 1.02, build: 1 }),
-  shu: Object.assign({}, E.PLAYER_SPEC, { name: 'Leo', skin: [142, 94, 62], hair: [22, 18, 16], hairStyle: 'crop', shirt: [218, 98, 54], pants: [196, 176, 136], shoes: [64, 44, 32], top: 'shirt', glasses: false, coat: null, height: 1.1, build: 1, brow: 'bold', eye: [46, 30, 22], nose: 'broad', lips: 'full' }),
+  shu: Object.assign({}, E.PLAYER_SPEC, { name: 'Leo', skin: [142, 94, 62], hair: [22, 18, 16], hairStyle: 'crop', shirt: [46, 92, 186], pants: [196, 176, 136], shoes: [64, 44, 32], top: 'shirt', glasses: false, coat: null, height: 1.1, build: 1, brow: 'bold', eye: [46, 30, 22], nose: 'broad', lips: 'full' }),
 });
 
 /* --- the floor plan in 3D (Magic City's builder, fed the dungeon game's floor) --- */
@@ -3348,7 +3348,7 @@ function encounter(m, first) {
 function trap() { const F = G.floor; sfx('bad'); msg('カチッ… しまった、シャッターの罠だ！ 魔物に囲まれた！'); openDuel({ list: [{ sp: rollSpecies(F), rank: Math.min(2, rollRank(F)) }, { sp: rollSpecies(F), rank: Math.min(2, rollRank(F)) }], first: 'foes', trap: true }); }
 const LOOK = {
   yasu: { c: 0x3a3e46, t: 0x5a606a, sk: 0xeeceb4, hair: 0x181618, temple: 0x2e2c2c, h: 'none', b: 0, sc: 1, w: 1.04, spiky: 1 },
-  shu: { c: 0x2a6a72, t: 0xd8683a, sk: 0x8e5e3e, hair: 0x161210, h: 'none', b: 0, sc: 1.1, w: .95 },
+  shu: { c: 0x2e5cb4, t: 0xa8cdee, sk: 0x8e5e3e, hair: 0x161210, h: 'none', b: 0, sc: 1.1, w: .95 },
 };
 const hexN = s => parseInt(s.slice(1), 16);
 function duelRpg(h) { const st = stats(h), ref = refOf(G.floor); return { atk: st.atk, def: st.def, refDef: ref.def, cx: st.cx, crit: st.crit, el: st.el, tr: st.tr, wk: st.wk, drain: st.drain, bane: st.bane, cxb: st.cxb, resFire: !!st.res.fire, bomb: ref.atk * 1.6, matk: st.matk, mdef: st.mdef, refMdef: 5 + 1.3 * (ref.L - 1) }; }
