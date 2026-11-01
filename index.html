@@ -198,6 +198,7 @@ p.rare.r1{box-shadow:inset 0 0 0 1px #6fc0ff}p.rare.r2{box-shadow:inset 0 0 0 1p
 .ttitle{text-align:center;margin:-4px 0 8px;font-size:.85rem;color:var(--dim)}.ttitle b{color:#ffd24a;font-size:1.05rem}
 #tAch small{display:block;font-size:.72rem;opacity:.8}
 .trow.ach{text-align:left;font:inherit;color:inherit}.trow.ach.on{cursor:pointer;border-color:rgba(255,210,74,.5);background:rgba(255,210,74,.08)}.trow.ach.sel{border-color:#ffd24a;background:rgba(255,210,74,.2)}
+.trow.ofl{text-align:left;font:inherit;color:inherit;cursor:pointer;width:100%}.trow.ofl:not(:disabled):active{border-color:var(--red)}
 .trow.bonus{text-align:left;font:inherit;color:inherit;cursor:pointer}.trow.bonus.on{border-color:#7fd88a;background:rgba(127,216,138,.14)}.trow.bonus:disabled{opacity:.4;cursor:default}
 .memg{text-align:center;font-weight:700;color:#ffd24a;margin:.5rem 0}.memg small{display:block;font-weight:400;color:var(--dim);font-size:.75rem}
 .trow.coll{grid-template-columns:5.5em 1fr auto;grid-template-rows:auto}.trow.coll small{grid-column:3}.trow.coll .bar{height:6px}.trow.coll.done{border-color:#ffd24a}
@@ -900,7 +901,7 @@ function battleWin(B) {
 }
 function addGear(G, it, how) {
   G.codex = G.codex || { mon: {}, wpn: {} }; if (it.s === 'wpn' && !it.nm) { const c = G.codex.wpn[it.k] = G.codex.wpn[it.k] || {}; const isNew = !c[it.lv]; c[it.lv] = 1; if (isNew) it.newName = 1; }
-  if (G.bag.length >= BAG_CAP) return `${it.n}を見つけたが、これ以上持てない…（荷物は${BAG_CAP}個まで）`;
+  if (G.bag.length >= BAG_CAP) { (G.overflow = G.overflow || []).push(it); return `${it.n}を見つけた！ 荷物がいっぱい（このあと入れ替えるものを選べる）`; }
   it.fresh = true; G.bag.push(it); return `${SLOT_IC[it.s]} ${it.n}を${how === '落としていった' ? '手に入れた！' : how}`;
 }
 /* equip / unequip (for the active hero) */
@@ -2677,12 +2678,13 @@ function duelFigure(o, key) {
       const sw = Math.sin(ph) * .7 * k, br = Math.sin(t * 2.2) * .02;
       if (p.legF) { p.legF.rotation.z = sw; p.legB.rotation.z = -sw; p.knF.rotation.z = -Math.max(0, Math.sin(ph + 1.2)) * .9 * k - .08; p.knB.rotation.z = -Math.max(0, -Math.sin(ph + 1.2)) * .9 * k - .08; }
       if (p.armL) { p.armL.rotation.z = -sw * .6 + .15; p.elL.rotation.z = .35 + .2 * k; }
-      if (p.armR) { p.armR.rotation.z = .55 + sw * .25; p.elR.rotation.z = 1.05; }
+      if (p.armR) { if (this.free) { p.armR.rotation.z = sw * .6 + .15; p.elR.rotation.z = .35 + .2 * k; } else { p.armR.rotation.z = .55 + sw * .25; p.elR.rotation.z = 1.05; } }
       if (p.pelvis) p.pelvis.position.y = hy + Math.abs(Math.sin(ph)) * .05 * k + br;
     } };
 }
 // hold the weapon upright, leaning forward: find its long axis and its far (head) end, and turn that end skyward
-function aimWeapons(fig) {
+function aimWeapons(fig) {   // on the field no weapon is shown: hide it and let the arm swing free
+  { const obj = fig.root.children[0]; for (const n of ['wpn', 'wpn2']) { const w = obj.getObjectByName(n); if (w) w.visible = false; } fig.free = true; return; }
   const obj = fig.root.children[0]; fig.update(0, 0); obj.updateMatrixWorld(true);
   for (const n of ['wpn', 'wpn2']) {
     const w = obj.getObjectByName(n); if (!w) continue; const par = w.parent, pos = w.position.clone();
@@ -2699,11 +2701,11 @@ function qdHeroMesh() {
   const B = QD.B; if (QD.hero) { B.sc.remove(QD.hero.ch.root); QD.hero.ch.dispose && QD.hero.ch.dispose(); }
   const h = actH(G), st = stats(h);
   let ch = null; try { const o = duelMe(); ch = duelFigure(o, 'hero_' + h.k + '_' + st.wk); if (ch) aimWeapons(ch); } catch (e) { console.error(e); ch = null; }
-  if (!ch) { ch = E.makeChar(HERO_SPEC()[h.k]); qArm(ch, { me: true, st }); }   // until the duel page is ready: the plain figure
+  if (!ch) ch = E.makeChar(HERO_SPEC()[h.k]);   // until the duel page is ready: the plain figure
   B.sc.add(ch.root);
   QD.hero = { ch, k: h.k, wk: st.wk };
 }
-function qdRearm() { if (!QD.hero) return; const st = stats(actH(G)); if (QD.hero.ch.fig) { if (QD.hero.wk !== st.wk) qdHeroMesh(); return; } qArm(QD.hero.ch, { me: true, st }); QD.hero.wk = st.wk; }
+function qdRearm() { if (!QD.hero) return; const st = stats(actH(G)); if (QD.hero.ch.fig) { if (QD.hero.wk !== st.wk) qdHeroMesh(); return; } QD.hero.wk = st.wk; }
 function genMesh(m) {
   const g = genOf(m.gen) || GENERALS[0], rgb = c => [(c >> 16) & 255, (c >> 8) & 255, c & 255];
   const fig = duelFigure({ id: g[0], tmpl: g[0], n: g[1], gen: 1, rat: 0, hp: 100, p: 90 }, 'gen_' + g[0]);
@@ -2711,7 +2713,6 @@ function genMesh(m) {
     return { root: fig.root, ch: fig, mats: [], phase: 0, spd: 1, f: { sc: 1 }, blinkT: 99, gl, fig: true,
       rig: { w: .45, h: 1.9, eyes: [], anim(t, dt) { const q = fig.root.position; const v = lx == null ? 0 : Math.hypot(q.x - lx, q.z - lz) / Math.max(dt, 1e-3); lx = q.x; lz = q.z; fig.update(dt, v); gl.scale.setScalar(.9 + Math.sin(t * 4) * .15); } } }; }
   const ch = E.makeChar(Object.assign({}, E.PLAYER_SPEC, { name: 'Gen_' + g[0], skin: [222, 184, 150], hair: [26, 22, 20], hairStyle: 'bun', glasses: false, beard: true, top: 'uniform', shirt: rgb(g[5]), coat: rgb(g[4]), pants: rgb(g[4]).map(v => v * .6), shoes: [30, 26, 22], cap: null, height: 1.1, build: 2 }));
-  qArm(ch, { me: true, st: { wk: g[3] } });
   const gl = qmGlow(qLin('#ff5a3a'), .5); gl.position.y = 2.25; ch.root.add(gl);   // a red mark over the head: a bounty
   let lx = null, lz = null;
   return { root: ch.root, ch, mats: [], phase: 0, spd: 1, f: { sc: 1 }, blinkT: 99, gl,
@@ -3006,60 +3007,70 @@ const MUS = (() => {
     dbeat: { k: [0, 3, 8, 11], s: [4, 12], h: 2 }, half: { k: [0, 6, 10], s: [8], h: 2 }, march: { k: [0, 8], s: [4, 12, 14, 15], h: 4 }, four: { k: [0, 4, 8, 12], s: [4, 12], h: 'off' },
   };
   const GALLOP = [0, 2, 3, 4, 6, 7, 8, 10, 11, 12, 14, 15];
-  // battle songs: [name, bpm, low root, scale, progression, drums, bass, guitar, strings, lead, seed]
+  /* ---- battle songs in the manner of 1990s SaGa fights: prog-rock drive, a racing intro run and 3+3+2 brass stabs,
+     a syncopated octave-leaping bass, a singing string lead, brass taking over in B — and B lifted a whole step ---- */
+  const SAGA_PROG = [[0, 5, 6, 0], [0, 6, 5, 4], [0, 3, 6, 4], [5, 6, 0, 0], [0, 6, 5, 6], [3, 4, 0, 0], [0, 2, 5, 4], [5, 3, 6, 4], [0, 5, 3, 4], [5, 6, 4, 4]];
+  const _ = null;
+  const SAGA_BASS = [
+    [0, _, 12, 0, _, 0, 12, _, 0, _, 12, 0, 10, _, 7, _], [0, 0, 12, _, 0, 0, 12, _, 0, 0, 12, _, 10, _, 12, _],
+    [0, _, _, 0, _, _, 0, _, 12, _, 10, _, 7, _, 5, _], [0, 12, 0, 12, _, 0, 12, 0, _, 12, 0, 12, 7, _, 10, _],
+    [0, _, 0, 12, _, 12, 0, _, 0, _, 0, 12, _, 12, 10, 7],
+  ];
+  const SAGA_RUN = [[0, 1, 2, 3, 4, 3, 2, 1, 2, 3, 4, 5, 6, 5, 6, 7], [0, 2, 4, 2, 1, 3, 5, 3, 2, 4, 6, 4, 5, 6, 7, 8], [7, 6, 5, 4, 5, 4, 3, 2, 3, 4, 5, 6, 4, 5, 6, 7]];
+  // [name, bpm, low root, progression A, progression B, bass, seed, boss, B a whole step up]
   const BATTLES = [
-    ['坑道の死闘', 168, 40, 'harm', 0, 'gallop', 'gallop', 'gallop', 'ost', 'gtrlead', 11], ['鉄と牙', 150, 38, 'min', 2, 'rock', '8th', 'chug', 'sus', 'brass', 23],
-    ['火花散る', 182, 45, 'dor', 3, 'double', 'pulse', 'chug16', 'ost', 'lead', 37], ['嵐の一騎打ち', 160, 43, 'harm', 5, 'dbeat', 'oct', 'off', 'ost', 'brass', 41],
-    ['赤い眼光', 140, 40, 'phr', 5, 'half', '8th', 'sustain', 'sus', 'gtrlead', 53], ['地底の咆哮', 174, 38, 'min', 1, 'gallop', 'gallop', 'gallop', 'ost', 'lead', 67],
-    ['鋼の旋律', 156, 42, 'harm', 4, 'rock', 'oct', 'chug', 'ost', 'gtrlead', 71], ['疾走する刃', 190, 40, 'min', 7, 'double', 'pulse', 'chug16', 'sus', 'lead', 83],
-    ['闇を裂け', 146, 41, 'phr', 9, 'march', '8th', 'off', 'ost', 'brass', 97], ['逆境を越えて', 164, 45, 'min', 6, 'four', 'oct', 'chug', 'ost', 'lead', 101],
-    ['決死の間合い', 178, 39, 'harm', 8, 'dbeat', 'gallop', 'gallop', 'ost', 'gtrlead', 113], ['雷鳴の坑道', 170, 36, 'min', 3, 'double', 'pulse', 'chug16', 'sus', 'brass', 127],
-    ['火の粉の舞', 158, 44, 'dor', 4, 'four', 'oct', 'off', 'ost', 'gtrlead', 131], ['錆びた誓い', 152, 37, 'harm', 2, 'gallop', 'gallop', 'chug', 'sus', 'brass', 149],
+    ['坑道の死闘', 160, 40, 0, 3, 0, 11, 0, 1], ['鉄と牙', 152, 38, 1, 5, 1, 23, 0, 1], ['火花散る', 168, 45, 2, 7, 3, 37, 0, 0], ['嵐の一騎打ち', 158, 43, 4, 3, 2, 41, 0, 1],
+    ['赤い眼光', 148, 40, 6, 9, 4, 53, 0, 1], ['地底の咆哮', 164, 38, 8, 5, 0, 67, 0, 0], ['鋼の旋律', 156, 42, 1, 3, 3, 71, 0, 1], ['疾走する刃', 172, 40, 0, 7, 1, 83, 0, 1],
+    ['闇を裂け', 150, 41, 2, 5, 4, 97, 0, 0], ['逆境を越えて', 162, 45, 4, 9, 0, 101, 0, 1], ['決死の間合い', 170, 39, 6, 3, 2, 113, 0, 1], ['雷鳴の坑道', 166, 36, 8, 7, 3, 127, 0, 0],
+    ['火の粉の舞', 158, 44, 1, 5, 1, 131, 0, 1], ['錆びた誓い', 154, 37, 0, 9, 4, 149, 0, 1],
   ];
   const BOSSES = [
-    ['地の底の王', 150, 38, 'harm', 5, 'half', 'oct', 'sustain', 'ost', 'brass', 211, 1], ['鉄の巨影', 176, 40, 'phr', 9, 'gallop', 'gallop', 'gallop', 'ost', 'gtrlead', 223, 1],
-    ['奈落の玉座', 162, 41, 'harm', 0, 'double', 'pulse', 'chug16', 'ost', 'brass', 239, 1], ['最後の一騎打ち', 186, 38, 'harm', 3, 'double', 'pulse', 'chug16', 'ost', 'gtrlead', 251, 1],
+    ['地の底の王', 150, 38, 1, 3, 2, 211, 1, 1], ['鉄の巨影', 164, 40, 6, 7, 0, 223, 1, 1], ['奈落の玉座', 156, 41, 2, 5, 3, 239, 1, 0], ['最後の一騎打ち', 172, 38, 4, 9, 1, 251, 1, 1],
   ];
+  const slead = (t, f, dur, v = .06) => synth(t, f, dur, { voices: 3, det: 12, cut: 2200, cutPeak: 4400, fa: .05, fd: .3, a: .025, s: .8, vol: v, vib: 16, vibR: 6, r: .16, rv: .45, dl: .18 });
+  const organ = (t, f, dur, v = .03) => synth(t, f, dur, { voices: 2, types: ['square', 'sine'], det: 3, cut: 2600, a: .004, d: .1, s: .5, vol: v, r: .05, rv: .25 });
+  const stab = (t, f, dur, v = .07) => synth(t, f, dur, { voices: 3, det: 10, cut: 1200, cutPeak: 4200, fa: .015, fd: .12, a: .006, d: .1, s: .45, vol: v, r: .08, rv: .35 });
   function battleSong(spec) {
-    const [name, bpm, root, scn, pi, dr, bs, gp, stp, ld, seed, boss] = spec, sc = SCALE[scn], prog = PROG[pi], tune = compose(seed, prog), D = DRUM[dr];
-    const chordRoot = b => deg(sc, root, prog[b % 4]);
+    const [name, bpm, root, pa, pb, bl, seed, boss, mod] = spec, progA = SAGA_PROG[pa], progB = SAGA_PROG[pb], BL = SAGA_BASS[bl];
+    const tA = compose(seed, progA), tB = compose(seed + 7, progB), run = SAGA_RUN[seed % 3];
+    const scOf = d => (((d % 7) + 7) % 7) === 4 ? SCALE.harm : SCALE.min;   // the fifth chord is major, as the old masters liked
+    const triOf = (key, d, o = 0) => [0, 2, 4].map(x => deg(scOf(d), key + o, d + x));
     return {
       name, bpm: () => bpm,
       step(s, t, sd) {
-        const b = bar % 16, sec = b >> 2, inBar = b % 4, r = chordRoot(b), fill = inBar === 3 && s >= 12, bigFill = b % 8 === 7 && s >= 8;
-        // drums
-        if (s === 0 && inBar === 0) { crash(t, sec === 0 && bar === 0 ? 1.1 : .8); kick2(t, 1.1); }
-        if (bigFill) { snare2(t, .35 + (s - 8) * .09); if (s % 2 === 0) kick2(t, .7); }
-        else if (fill) { tom(t, [220, 175, 130, 98][s - 12], .9); if (s === 15) kick2(t, .8); }
-        else {
-          if (D.k === 'all' ? true : D.k.includes(s)) kick2(t, D.k === 'all' ? (s % 4 === 0 ? 1 : .65) : 1);
-          if (D.s.includes(s)) snare2(t, dr === 'march' && s > 12 ? .4 : 1);
-          if (D.h === 'off' ? s % 4 === 2 : s % D.h === 0) hat(t, s % 4 === 0 ? 1 : .65, D.h === 'off' || (s === 14 && dr === 'rock'));
-          if (dr === 'double' || dr === 'gallop') if (s % 4 === 2) hat(t, .5);
+        const L = bar % 18, intro = L < 2, secB = L >= 10, ib = intro ? L : (L - 2) % 8, key = root + (secB && mod ? 2 : 0), prog = secB ? progB : progA;
+        const cd = intro ? (L === 0 ? 0 : 4) : prog[ib % 4], r = deg(scOf(cd), key, cd), tri = triOf(key, cd, 24);
+        const secStart = !intro && ib === 0 && s === 0, endFill = !intro && ib === 7 && s >= 8;
+        // ---- the intro: a racing unison run, then three stabs (3+3+2) and a tom roll
+        if (intro) {
+          if (L === 0) { const m = deg(SCALE.harm, root + 24, run[s]); stab(t, mtof(m), sd * .9, .07); stab(t, mtof(m - 12), sd * .9, .05); snare2(t, .2 + s * .04); if (s === 0) { crash(t, 1); kick2(t, 1.1); } bass(t, mtof(root - 12 + (s % 2 ? 12 : 0)), sd * .8, .12); }
+          else { if (s === 0 || s === 6 || s === 12) { chord(t, s === 12 ? triOf(root, 4, 24) : triOf(root, 0, 24), sd * (s === 12 ? 3.5 : 2), stab, .075); kick2(t, 1.1); crash(t, s ? .5 : .9); bass(t, mtof((s === 12 ? deg(SCALE.harm, root, 4) : root) - 12), sd * 2, .17); if (boss) timp(t, mtof(root - 12), 1); }
+            if (s >= 13) tom(t, [175, 130, 98][s - 13], 1); }
+          return;
         }
-        if (boss && (s === 0 || s === 8)) timp(t, mtof(r - 12), .8);
-        // bass
-        const bsOn = bs === '8th' ? s % 2 === 0 : bs === 'oct' ? s % 2 === 0 : bs === 'gallop' ? GALLOP.includes(s) : true;
-        if (bsOn) { const up = bs === 'oct' && s % 4 === 2 ? 12 : 0; bass(t, mtof(r - 12 + up), sd * (bs === 'pulse' ? .8 : 1.5), bs === 'pulse' ? (s % 4 === 0 ? .15 : .1) : .14); }
-        if (s === 0) sub(t, mtof(r - 12), sd * 15, .1);
-        // guitar
-        if (gp === 'chug') { if (s === 0 || s === 10) gtr(t, r, sd * (s === 0 ? 5 : 4)); else if (s % 2 === 0 && s < 10) gtr(t, r, sd, { mute: 1, vol: .45 }); else if (s === 14) gtr(t, r, sd, { mute: 1, vol: .45 }); }
-        else if (gp === 'chug16') { if (s === 0 || s === 8) gtr(t, r, sd * 3); else if (s % 8 >= 3) gtr(t, r, sd, { mute: 1, vol: s % 2 ? .35 : .45 }); }
-        else if (gp === 'gallop') { if (s === 0) gtr(t, r, sd * 2); else if (GALLOP.includes(s)) gtr(t, r, sd, { mute: 1, vol: .45 }); }
-        else if (gp === 'off') { if (s % 4 === 2) gtr(t, r, sd * 1.6); else if (s % 4 === 0) gtr(t, r, sd, { mute: 1, vol: .45 }); }
-        else if (gp === 'sustain') { if (s === 0) gtr(t, r, sd * 7.6); if (s === 8) gtr(t, r + (inBar === 3 ? 1 : 0), sd * 7.6); }
-        // strings and brass
-        const tri = [0, 2, 4].map(x => deg(sc, root + 24, prog[b % 4] + x));
-        if (stp === 'ost') { if (sec > 0 || s % 2 === 0) synth(t, mtof(tri[[0, 1, 2, 1][(s >> 1) % 4]] + (s % 2 ? 12 : 0)), sd * .9, { voices: 2, det: 10, cut: 2400, a: .005, d: .08, s: .3, vol: .045, r: .05, rv: .3 }); }
-        if (s === 0) chord(t, tri.map(n => n - 12), sd * 16, strings, sec === 0 ? .03 : .04);
+        // ---- drums: syncopated kick, back-beat snare, sixteenth hats, tom fills at the end of a section
+        if (secStart) { crash(t, 1); kick2(t, 1.1); }
+        if (endFill) { if (s >= 12) tom(t, [220, 175, 130, 98][s - 12], 1); else snare2(t, .3 + (s - 8) * .12); if (s % 4 === 0) kick2(t, .8); }
+        else {
+          if ([0, 6, 10].includes(s) && !secStart) kick2(t, s ? .85 : 1);
+          if (s === 4 || s === 12) snare2(t, 1);
+          if (s % 2 === 0) hat(t, s % 4 === 0 ? .9 : .55, s === 14 && ib % 2 === 1); else hat(t, .3);
+        }
+        if (boss && (s === 0 || s === 8)) timp(t, mtof(r - 12), .75);
+        // ---- bass: the riff, moving with the chord
+        const bv = BL[s]; if (bv !== null) bass(t, mtof(r - 12 + bv), sd * .85, s % 4 === 0 ? .17 : .13);
+        if (s === 0) sub(t, mtof(r - 12), sd * 14, .09);
+        // ---- harmony: strings under it all, brass stabs 3+3+2 on every second bar, an organ pulse driving B
+        if (s === 0) chord(t, tri.map(n => n - 12), sd * 16, strings, secB ? .035 : .028);
+        if (ib % 2 === 1 && (s === 0 || s === 6 || s === 12)) chord(t, tri.map(n => n - 12), sd * 1.6, stab, .045);
+        if (secB) organ(t, mtof(tri[[0, 1, 2, 1][s % 4]]), sd * .8, s % 4 === 0 ? .03 : .02);
         if (boss && s === 0) chord(t, tri, sd * 16, choir, .045);
-        if (s === 0 && sec > 0 && ld !== 'brass') chord(t, tri, sd * 2, brass, .05);
-        // the tune
-        const T = tune[sec]; if (T) for (const [pos, len, d] of T[inBar]) if (pos === s) {
-          const m = deg(sc, root + 24, d), dur = sd * len * .92, hv = sec === 2 ? deg(sc, root + 24, d - 2) : null;
-          if (ld === 'gtrlead') { gtr(t, m + 12, dur, { lead: 1, vol: .42, vib: len >= 4 ? 28 : 0, glide: .97 }); if (hv) gtr(t, hv + 12, dur, { lead: 1, vol: .25 }); }
-          else if (ld === 'brass') { brass(t, mtof(m), dur, .12); brass(t, mtof(m - 12), dur, .06); if (hv) brass(t, mtof(hv), dur, .06); }
-          else { lead(t, mtof(m + 12), dur, .075); synth(t, mtof(m), dur, { voices: 2, det: 12, cut: 2600, a: .02, vol: .04, vib: 14, r: .1, rv: .3 }); if (hv) lead(t, mtof(hv + 12), dur, .04); }
+        // ---- the tune: strings sing A (and A'), brass takes B
+        const T = secB ? (ib < 4 ? tB[2] : tB[3]) : (ib < 4 ? tA[1] : tA[3]);
+        for (const [pos, len, d] of T[ib % 4]) if (pos === s) {
+          const m = deg(scOf(cd), key + 24, d), dur = sd * len * .94;
+          if (!secB) { slead(t, mtof(m), dur, .065); slead(t, mtof(m - 12), dur, .03); }
+          else { brass(t, mtof(m), dur, .12); brass(t, mtof(m - 12), dur, .06); slead(t, mtof(m + 12), dur, .025); }
         }
       },
     };
@@ -3348,6 +3359,7 @@ function resumeGame() {
   G.map.diff = G.diff; rollSpecies.gold = G.map.ev === 'gold'; show('explore'); MSGS.length = 0; qdEnter(); hud(); floorMusic();
   if (G.inBattle) { const s = G.inBattle; G.inBattle = null; msg('戦いの途中から再開した。'); setTimeout(() => openDuel(s), 500); }
   else msg(`地下${G.floor}階。冒険を再開した。`);
+  if (G.overflow && G.overflow.length && !G.inBattle) setTimeout(() => overflowMenu(), 800);
 }
 function hud() {
   if (!G || MODE !== 'explore') return; const h = actH(G), st = stats(h), o = G.heroes[other(G.act)], hr = h.hp / st.mhp;
@@ -3394,9 +3406,9 @@ function openChest(cb) {
   if (ch.box) { ch.box = false; sfx('bad'); msg('宝箱がガタガタ揺れだした！ 宝箱はミミックだった！'); ch.open = true; cb.g.visible = false; openDuel({ list: [{ sp: 'mimic', rank: Math.min(3, rollRank(F) + 1) }], first: 'foes', msg: '宝箱がガタガタ揺れだした！ 宝箱はミミックだった！' }); return; }
   const [k, q] = ch.item;
   if (k === 'gear') {
-    if (G.bag.length >= BAG_CAP) { msg('🧰 宝箱だ。しかし荷物がいっぱいで開けられない。（何か捨ててから）'); return; }
     const it = rollGear(F, ch.hid ? .55 : .12, q || null); ch.open = true; cb.t0 = QD.t; cb.sp.visible = false; sfx('chest');
     const rr = gearRare(it); msg(`🧰 ${rr ? `【${RARE_N[rr]}】` : ''}${addGear(G, it, '手に入れた！')}`); gearAch(it);
+    if (G.overflow && G.overflow.length) setTimeout(() => overflowMenu(), 300);
     if (rr) { qdPillar(rr, cb.x, cb.z); setTimeout(() => sfx('rare'), 200); toast(`<b class="r${rr}">★${RARE_N[rr]}★</b><br><small>${esc(it.n)}</small>`, 2400); }
     if (ch.hid) { const m = 30 + F * 6; G.cash += m; msg(`隠し部屋の宝箱には$${m}も入っていた！`); }
   } else { ch.open = true; cb.t0 = QD.t; cb.sp.visible = false; invAdd(G, k, q); sfx('chest'); msg(`🧰 宝箱を開けた！ ${ITEM[k].ic}${ITEM[k].n}${q > 1 ? '×' + q : ''}を手に入れた！`); }
@@ -3807,6 +3819,18 @@ window.MCG = {
   steal() { const foods = Object.keys(G.inv).filter(k => ITEM[k].food && G.inv[k] > 0); if (G.cash > 0 && (Math.random() < .5 || !foods.length)) { const c = Math.max(1, Math.round(G.cash * rnd(.08, .18))); G.cash -= c; return `$${c}を盗んだ！`; } if (foods.length) { const k = pick(foods); G.inv[k]--; return `${ITEM[k].n}を盗んだ！`; } return null; },
   result(r) { setTimeout(() => duelEnd(r), 0); },
 };
+/* the bag is full: pick something to throw away for the new find, or let the new one go */
+function overflowMenu(done) {
+  const it = (G.overflow || [])[0]; if (!it) { done && done(); return; }
+  const row = (x, attr) => `<button class="trow ofl" ${attr}><b class="r${gearRare(x)}">${SLOT_IC[x.s]} ${esc(x.n)} <small>Lv${x.lv || 1}</small></b><small>${gearLines(x).slice(0, 2).join('・')}${x.b.length ? '・✦' + x.b.length : ''}・${gearTag(x)}${x.dur <= 0 ? '・壊れている' : ''}</small></button>`;
+  const o = ov(`<h2>🎒 荷物がいっぱい</h2><p class="dim" style="font-size:.8rem">新しく見つけた装備を持つには、荷物から1つ捨てる。</p>
+    <div class="lab">見つけた装備</div><div class="tlist">${row(it, 'disabled style="opacity:1"')}</div>
+    <div class="lab">捨てるものを選ぶ（荷物 ${G.bag.length}/${BAG_CAP}）</div><div class="tlist">${G.bag.map(x => row(x, `data-of="${x.id}"`)).join('')}</div>
+    <div class="choices"><button class="pb warn" id="ofNew">見つけた方をあきらめる</button></div>`, { mid: true });
+  const next = () => { G.overflow.shift(); ovClose(); hud(); saveSus(); setTimeout(() => overflowMenu(done), 60); };
+  o.querySelectorAll('[data-of]').forEach(b => b.onclick = () => { const x = G.bag.find(y => y.id === b.dataset.of); if (!x) return; G.bag = G.bag.filter(y => y !== x); it.fresh = true; G.bag.push(it); sfx('drop'); msg(`${x.n}を捨てて、${it.n}を手に入れた。`); next(); });
+  $('#ofNew').onclick = () => { sfx('blip'); msg(`${it.n}はあきらめた。`); next(); };
+}
 function duelEnd(r) {
   const D = DUEL; if (!D) return; DUEL = null;
   if (DW.w) DW.w.className = 'idle';
@@ -3845,7 +3869,7 @@ function duelEnd(r) {
       if (f.gen === 'lubu') achieve('lubu'); if (Object.keys(META.wanted).length >= 10) achieve('wanted10'); if (Object.keys(META.wanted).length >= GENERALS.length) achieve('wanted');
       setTimeout(() => { toast(`⚔ 賞金首【${f.n}】を討ち取った！<br><small>賞金 $${v}</small>`, 2400); msg(`⚔ 賞金首【${f.n}】を討ち取った！ 賞金 $${v} を受け取った。`); sfx('coin'); hud(); }, 400); }
     const freed = G.soul && G.soul.F === G.floor && D.spec.list.some(x => x.id != null && x.id === G.soul.guard);
-    $('#rOk').onclick = () => { ovClose(); saveSus(); hud(); floorMusic(); if (res.rare) qdPillar(res.rare); if (!freed && !(boss && G.floor === 20)) setTimeout(autoRest, 350); if (freed) { msg(`👻 魂を守っていた魔物を倒した！`); freeSoul(); return; } if (boss && G.floor === 20) ending(); else if (boss) msg(`⬇ 地下${G.floor + 1}階への道が開いた。`); };
+    $('#rOk').onclick = () => { ovClose(); overflowMenu(() => { saveSus(); hud(); floorMusic(); if (res.rare) qdPillar(res.rare); if (!freed && !(boss && G.floor === 20)) setTimeout(autoRest, 350); if (freed) { msg(`👻 魂を守っていた魔物を倒した！`); freeSoul(); return; } if (boss && G.floor === 20) ending(); else if (boss) msg(`⬇ 地下${G.floor + 1}階への道が開いた。`); }); };
     $('#ov').querySelectorAll('[data-demo]').forEach(b => b.onclick = () => techDemo(b.dataset.demo, true));
     $('#rOk').focus(); hud(); return;
   }
