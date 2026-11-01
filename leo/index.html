@@ -88,7 +88,7 @@ button,.pb{touch-action:manipulation;-webkit-touch-callout:none}
 #msg{position:absolute;left:max(10px,env(safe-area-inset-left,0px));right:max(120px,calc(env(safe-area-inset-right,0px) + 110px));bottom:calc(max(10px,env(safe-area-inset-bottom,0px)) + 64px);display:grid;gap:2px;pointer-events:none}
 #msg p{margin:0;font-size:.8rem;line-height:1.35;padding:2px 8px;background:rgba(5,9,20,.72);border-radius:4px;text-shadow:1px 1px 0 #000;justify-self:start;max-width:100%}
 #msg p:not(:last-child){opacity:.6}
-#act{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(max(10px,env(safe-area-inset-bottom,0px)) + 8px);min-width:200px;min-height:50px;border-radius:26px;background:var(--bulb);color:#1d1405;text-shadow:none;font-weight:700;border:2px solid #fff;box-shadow:0 4px 0 #6b4b10}
+#act{position:absolute;right:max(12px,env(safe-area-inset-right,0px));top:calc(42% - 26px);max-width:64vw;min-width:150px;padding:0 16px;min-height:50px;border-radius:26px;background:var(--bulb);color:#1d1405;text-shadow:none;font-weight:700;border:2px solid #fff;box-shadow:0 4px 0 #6b4b10}
 .rbtn{position:absolute;right:max(10px,env(safe-area-inset-right,0px));display:grid;gap:6px;bottom:calc(max(10px,env(safe-area-inset-bottom,0px)) + 64px)}
 .rbtn .pb{min-width:96px;min-height:40px;font-size:.85rem}
 .hint{position:absolute;left:max(10px,env(safe-area-inset-left,0px));top:calc(max(8px,env(safe-area-inset-top,0px)) + 74px);font-size:.72rem;color:#fffc;text-shadow:1px 1px 0 #000;pointer-events:none;max-width:40%}
@@ -191,7 +191,7 @@ button,.pb{touch-action:manipulation;-webkit-touch-callout:none}
   <canvas id="mini" width="72" height="72"></canvas>
   <div id="msg"></div>
   <button class="pb" id="act" hidden></button>
-  <div class="rbtn"><button class="pb" id="bRest">⛺ 休む</button><button class="pb" id="bBag">🎒 持ち物</button><button class="pb" id="bTac">⚑ 方針</button><button class="pb" id="bMenu">≡ メニュー</button></div>
+  <div class="rbtn"><button class="pb" id="bBag">🎒 持ち物</button><button class="pb" id="bRest">⛺ 休む</button><button class="pb" id="bTac">⚑ 方針</button><button class="pb" id="bMenu">≡ メニュー</button></div>
   <p class="hint" id="hint">画面下半分を押して移動・上半分をドラッグで見回す／WASD・矢印キー、Q E で視点、Space で調べる</p>
 </div>
 <div id="stick"><i></i></div>
