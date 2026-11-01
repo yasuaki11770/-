@@ -3208,7 +3208,7 @@ function bagMenu(tab) {
     $('#bCook').onclick = () => cookMenu();
     const k = BAG.sel; if (k && invN(G, k)) {
       const X = ITEM[k], can = X.food ? 'eat' : k === 'smoke' ? 'use' : null;
-      showDet(`<b class="dn2">${X.ic} ${X.n} ×${G.inv[k]}</b><p>${X.d || ''}${X.food ? ` 満腹+${X.food}・${nuText(k)}` : ''}</p><div class="acts2">${can ? `<button class="pb pri" id="iUse">${can === 'eat' ? '食べる' : '使う'}</button>` : '<span class="dim" style="font-size:.8rem;align-self:center">戦闘中や壁の前で使う</span>'}<button class="pb warn" id="iDrop">1つ捨てる</button></div>`);
+      showDet(`<b class="dn2">${X.ic} ${X.n} ×${G.inv[k]}</b><p>${X.d || ''}${X.food ? ` 満腹+${X.food}・${nuText(k)}` : ''}</p><div class="acts2"><button class="pb warn" id="iDrop">1つ捨てる</button>${can ? `<button class="pb pri" id="iUse">${can === 'eat' ? '食べる' : '使う'}</button>` : '<span class="dim" style="font-size:.8rem;align-self:center">戦闘中や壁の前で使う</span>'}</div>`);
       const u = $('#iUse'); if (u) u.onclick = () => { useOnMap(k); bagMenu(); };
       $('#iDrop').onclick = () => { G.inv[k]--; sfx('drop'); toast(`${X.n}を捨てた`, 1000); bagMenu(); };
     }
