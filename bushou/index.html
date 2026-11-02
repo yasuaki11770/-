@@ -296,21 +296,19 @@ const GROW = { yasu: { mhp: 8, atk: 3, def: 2, matk: 1, mdef: 1, dex: 1, spd: 1 
 // what the next level brings: each hero's own growth, +1 (HP +2) for the nutrient eaten most, nothing from one that has run out
 function share(h) { return Object.assign({}, GROW[h.k] || GROW.yasu); }   // each hero grows his own way; what he eats no longer decides it
 /* --- the cards: at every level the hero picks one of three (each can be taken a few times) --- */
-const PERK = {
-  atk: { n: '剛力', ic: '💪', d: '攻撃+7%', max: 5 }, def: { n: '鉄壁', ic: '🛡', d: '防御+8%', max: 5 }, mhp: { n: '頑健', ic: '❤️', d: '最大HP+10%', max: 5 },
-  spd: { n: '俊足', ic: '💨', d: '素早さ+6%', max: 4 }, dex: { n: '器用', ic: '🎯', d: '器用さ+8%', max: 4 },
-  crit: { n: '急所狙い', ic: '⚡', d: '会心率+4', max: 3 }, evade: { n: '身かわし', ic: '🌀', d: '回避+4', max: 3 }, guard: { n: '受け流し', ic: '🤚', d: 'ガード率+5', max: 3 },
-  counter: { n: '返し技', ic: '↩️', d: '反撃率+6', max: 3 }, luck: { n: '強運', ic: '🍀', d: '落とし物が出やすい（運+8）', max: 3 },
-  regen: { n: '自然治癒', ic: '🌿', d: '歩くとHPが少しずつ戻る', max: 2 }, drain: { n: '吸命', ic: '🩸', d: '与えたダメージの3%を吸い取る', max: 2 }, mast: { n: '熟練の手', ic: '⚒️', d: '武器が育つ速さ+40%', max: 2 },
+const PERK = {   // 武将迷宮: at every level, one flat stat bonus of the hero's choosing
+  mhp: { n: '最大HP', ic: '❤️', d: '最大HP+6', g: { mhp: 6 }, max: 99 }, atk: { n: '攻撃', ic: '💪', d: '攻撃+2', g: { atk: 2 }, max: 99 },
+  def: { n: '防御', ic: '🛡', d: '防御+2', g: { def: 2 }, max: 99 }, dex: { n: '器用さ', ic: '🎯', d: '器用さ+2', g: { dex: 2 }, max: 99 },
+  spd: { n: '素早さ', ic: '💨', d: '素早さ+1', g: { spd: 1 }, max: 99 },
 };
 // three different cards the hero can still take; the plain strength cards come up a little more often
-function perkDeal(h) {
+function perkDeal(h) { return Object.keys(PERK);
   const P = h.perks || {}, L = Object.keys(PERK).filter(k => (P[k] || 0) < PERK[k].max), out = [];
   const w = k => ['atk', 'def', 'mhp', 'spd', 'dex', 'mag'].includes(k) ? 3 : 2;
   while (out.length < 3 && out.length < L.length) { const pool = L.filter(k => !out.includes(k)), tot = pool.reduce((a, k) => a + w(k), 0); let r = Math.random() * tot; for (const k of pool) { r -= w(k); if (r < 0) { out.push(k); break; } } }
   return out;
 }
-function perkTake(h, k) { h.perks = h.perks || {}; h.perks[k] = (h.perks[k] || 0) + 1; h.pend = Math.max(0, (h.pend || 0) - 1); h.hp = Math.min(h.hp, stats(h).mhp); }
+function perkTake(h, k) { h.bonus = h.bonus || {}; h.bonus[k] = (h.bonus[k] || 0) + 1; for (const [s, v] of Object.entries(PERK[k].g)) h.gr[s] = (h.gr[s] || 0) + v; if (k === 'mhp') h.hp += PERK[k].g.mhp; h.pend = Math.max(0, (h.pend || 0) - 1); h.hp = Math.min(h.hp, stats(h).mhp); }
 const shareTop = h => { const N = h.nut || {}; return Object.keys(NSTAT).reduce((a, b) => (N[b] || 0) > (N[a] || 0) ? b : a); };
 function eat(h, nu) {
   if (!nu) return; const N = h.nut;
@@ -617,7 +615,7 @@ function lexp(F) {
   return (LEXP[k] = L + X / need(L));
 }
 function refOf(F) {
-  const l = lexp(F) - 1, w = Math.round(2 + 1.2 * lvGrow(F)), a = Math.round(.9 + .75 * lvGrow(F));
+  const l = lexp(F) - 1, Fg = Math.min(F, 20), w = Math.round(2 + 1.2 * lvGrow(Fg)), a = Math.round(.9 + .75 * lvGrow(Fg));   // gear stops at Lv20
   return { F, L: l + 1, atk: 8.5 + 2 * l + w, def: 2.5 + 2 * l + a, mhp: 32 + 9 * l + Math.round(a * 1.1), spd: 10 + 2 * l, dex: 8 + 2 * l };
 }
 
@@ -702,6 +700,8 @@ const genFloorOf = id => id === 'lubu' ? LAST : 1 + Math.floor(genIdx(id) / PER_
 // the old depth (1-20) each general stands for: strength, experience, gear and money follow it
 const genDep = id => id === 'lubu' ? 20 : 1 + Math.max(0, genIdx(id)) * 18 / 32;
 const floorDep = F => [1, 1, 7, 13, 20][F] || 20;
+// the old depth whose typical hero stands at level lv: a general fights at the hero's own level
+function depForLv(lv) { let d = 1; while (d < 60 && lexp(d) < lv) d += .25; return d; }
 let DEPF = null; const curDep = () => DEPF != null ? DEPF : floorDep(G ? G.floor : 1);
 function fullHeal() { for (const k of ['yasu', 'shu']) { if (G.soul && G.soul.who === k) continue; const h = G.heroes[k]; h.hp = stats(h).mhp; } }
 const FLOOR_EV = {
@@ -932,9 +932,11 @@ function battleWin(B) {
   const xp = Math.round(dead.reduce((s, f) => s + f.xp, 0) * 1.1);
   const cash = Math.round(dead.reduce((s, f) => s + (3 + 2 * F) * (1 + f.rank * .5) * rnd(.7, 1.3) * (f.sp === 'ougon' ? 8 : MON[f.sp].gold || 1), 0) * (boss ? 3 : 1) * (1 + luck));
   G.cash += cash; G.kills += dead.length;
-  L.push(`${xp}の経験値と$${cash}を手に入れた。`);
+  L.push(xp ? `${xp}の経験値と$${cash}を手に入れた。` : `$${cash}を手に入れた。`);
   if (G.streak >= 2) L.push(`🔥 ${G.streak}連勝！（ノーダメージ） 落とし物が出やすくなっている（+${Math.round(streakLuck(G.streak) * 100)}%）`);
   const cards = gainXp(h, xp);
+  // 武将迷宮: every general beaten is one level for both heroes
+  for (const f of dead) if (f.gen) for (const k of [h.k, other(h.k)]) { const hh = G.heroes[k]; hh.xp = 0; for (const c of gainXp(hh, need(hh.lv))) cards.push(Object.assign(c, k === h.k ? {} : { away: 1 })); }
   const loot = [];
   for (const f of dead) {
     if ((RAT[f.sp].drop || []).length && Math.random() < .38 * D.drop * (1 + luck)) { const k = pick(RAT[f.sp].drop); invAdd(G, k); loot.push(`${f.n.replace(/[AB]$/, '')}は${ITEM[k].ic}${ITEM[k].n}を落としていった。`); }
@@ -3530,7 +3532,7 @@ function titleScreen() {
       <li><b>一騎打ち</b>　武将に触れると一騎打ち。間合いで技が自動で決まり、ガッツを使う。長押しで前進、2回タップで飛び退き、<b>見切り</b>で受け流す。つばぜり合いは呂布戦だけ。</li>
       <li><b>全回復</b>　戦いが終わるたびに、二人のHPは無料で全回復する。食べ物も魔法もない。</li>
       <li><b>技は閃き</b>　最初は通常攻撃だけ。戦いの最中に閃いて覚える。強い相手ほど閃きやすい。</li>
-      <li><b>成長</b>　レベルが上がるたびに、3枚のカードから1枚を選んで強くなる。</li>
+      <li><b>成長</b>　武将を1人倒すごとに、二人ともレベルが1上がる。そのたびにステータスボーナス（最大HP・攻撃・防御・器用さ・素早さ）を1つ選ぶ。相手の武将は、こちらと同じレベルで現れる。</li>
       <li><b>鍛冶屋</b>　どの階にもいる。賞金で装備を強化（+5まで）、同じ種類2つで鍛え直し、いらない装備は売れる。</li>
       <li><b>装備</b>　壊れない。武器は使うほど育つ（★5まで）。</li>
       <li><b>記録</b>　各階に着くと記録碑に自動で記録される。全滅したら記録から再開。主人公が倒れると魂が残り、控えが解放しに来る（魂を守る武将を倒す）。</li>
@@ -3822,9 +3824,9 @@ function cookMenu() {
   $('#ckX').onclick = () => { ovClose(); bagMenu('item'); };
 }
 function bodyHTML(h) {
-  const st = stats(h), g = share(h), P = h.perks || {}, bl = Object.entries(st.bl).map(([k, v]) => bText([k, v]));
+  const st = stats(h), g = share(h), P = h.bonus || {}, bl = Object.entries(st.bl).map(([k, v]) => bText([k, v]));
   const taken = Object.keys(PERK).filter(k => P[k]);
-  return `<div class="bodyg"><div class="det"><b>🃏 選んだカード</b>${taken.length ? `<div class="tlist" style="margin-top:4px">${taken.map(k => `<div class="trow"><b>${PERK[k].ic} ${PERK[k].n}${P[k] > 1 ? ' ×' + P[k] : ''}</b><small>${PERK[k].d}${P[k] > 1 ? `（×${P[k]}）` : ''}　あと${PERK[k].max - P[k]}回まで</small></div>`).join('')}</div>` : '<p class="dim">まだない。レベルが上がるたびに3枚から1枚選べる。</p>'}${h.pend ? `<button class="pb pri" id="bPerk" style="width:100%;margin-top:6px">🃏 カードを選ぶ（残り${h.pend}枚）</button>` : ''}</div>
+  return `<div class="bodyg"><div class="det"><b>⬆ 選んだボーナス</b>${taken.length ? `<div class="tlist" style="margin-top:4px">${taken.map(k => `<div class="trow"><b>${PERK[k].ic} ${PERK[k].n}${P[k] > 1 ? ' ×' + P[k] : ''}</b><small>${PERK[k].d}${P[k] > 1 ? `（×${P[k]}）` : ''}</small></div>`).join('')}</div>` : '<p class="dim">まだない。レベルが上がるたびに1つ選べる。</p>'}${h.pend ? `<button class="pb pri" id="bPerk" style="width:100%;margin-top:6px">⬆ ボーナスを選ぶ（残り${h.pend}回）</button>` : ''}</div>
   <dl class="kv"><dt>レベル</dt><dd>${h.lv}（次まで${need(h.lv) - h.xp}）</dd><dd></dd>${Object.keys(STAT).map(k => `<dt>${STAT[k]}</dt><dd>${st[k]}</dd><dd class="nx">次 +${g[k]}</dd>`).join('')}</dl>
   <div class="det"><b>神の加護</b>${bl.length ? `<ul>${bl.map(t => `<li class="bl">✦ ${t}</li>`).join('')}</ul>` : '<p class="dim">装備に加護がない</p>'}<p class="dim" style="font-size:.74rem">同じ加護は装備どうしで足し算（Lv10まで）。祭壇はない。</p></div></div>`;
 }
@@ -3833,9 +3835,9 @@ function perkMenu(done) {
   const k = [G.act, other(G.act)].find(x => (G.heroes[x].pend || 0) > 0 && !(G.soul && G.soul.who === x)); if (!k) { done && done(); return; }
   const h = G.heroes[k]; h.deal = h.deal && h.deal.length ? h.deal : perkDeal(h); if (!h.deal.length) { h.pend = 0; return perkMenu(done); }
   sfx('lvl');
-  const o = ov(`<h2>🃏 ${HEROES[k].n}のレベルアップ${k === G.act ? '' : '（控え）'}</h2><p class="dim" style="font-size:.8rem">カードを1枚選ぶ。${h.pend > 1 ? `（あと${h.pend}枚）` : ''}</p>
-    <div class="perks">${h.deal.map(p => { const X = PERK[p], n = (h.perks || {})[p] || 0; return `<button class="perk" data-pk="${p}"><span class="pic">${X.ic}</span><b>${X.n}${n ? `<small> Lv${n + 1}</small>` : ''}</b><small>${X.d}</small></button>`; }).join('')}</div>`, { mid: true });
-  o.querySelectorAll('[data-pk]').forEach(b => b.onclick = () => { const p = b.dataset.pk; perkTake(h, p); h.deal = null; sfx('equip'); msg(`🃏 ${HEROES[k].n}は「${PERK[p].n}」を身につけた（${PERK[p].d}）。`); ovClose(); hud(); saveSus(); setTimeout(() => perkMenu(done), 80); });
+  const o = ov(`<h2>⬆ ${HEROES[k].n} Lv${h.lv - (h.pend || 1) + 1}${k === G.act ? '' : '（控え）'}</h2><p class="dim" style="font-size:.8rem">ステータスボーナスを1つ選ぶ。${h.pend > 1 ? `（あと${h.pend}回）` : ''}</p>
+    <div class="perks">${h.deal.map(p => { const X = PERK[p], n = (h.bonus || {})[p] || 0; return `<button class="perk" data-pk="${p}"><span class="pic">${X.ic}</span><b>${X.n}${n ? `<small> ×${n}</small>` : ''}</b><small>${X.d}</small></button>`; }).join('')}</div>`, { mid: true });
+  o.querySelectorAll('[data-pk]').forEach(b => b.onclick = () => { const p = b.dataset.pk; perkTake(h, p); h.deal = null; sfx('equip'); msg(`⬆ ${HEROES[k].n}：${PERK[p].d}`); ovClose(); hud(); saveSus(); setTimeout(() => perkMenu(done), 80); });
 }
 const TAC_A = { n: ['バランス', 'ステータス通り'], p: ['強振狙い', '攻撃↑ 命中↓'], h: ['命中重視', '攻撃↓ 命中↑'] };
 const TAC_M = { n: ['使わない', '魔法石を温存'], s: ['ときどき', 'ここぞで唱える'], o: ['どんどん', '見かけたら唱える'] };
@@ -4000,7 +4002,7 @@ const TRAIT_MOVES = { steal: ['r_steal'], breath: ['b_fire'], rust: ['r_rust'], 
 function duelRat(f, i) {
   if (f.gen) {   // a general: his own look, weapon, moves and words in the duel; strength from this depth (his might shades it)
     const ref = refOf(curDep()), k = .85 + (f.might - 70) / 100;
-    return { id: f.gen, n: f.n, tmpl: f.gen, gen: 1, p: Math.round(70 + 30 * k), hp: f.mhp, hpNow: f.hpNow != null ? f.hpNow : null, df: Math.round(48 + 18 * k), i: Math.round(40 + 30 * k), cmd: Math.round(85 + 15 * k), cha: Math.round(clamp(60 * f.spd / ref.spd, 35, 100)), mu: 70, eva: Math.round(24 + 10 * k),
+    return { id: f.gen, n: f.n + (f.lvShow ? ' Lv' + f.lvShow : ''), tmpl: f.gen, gen: 1, p: Math.round(70 + 30 * k), hp: f.mhp, hpNow: f.hpNow != null ? f.hpNow : null, df: Math.round(48 + 18 * k), i: Math.round(40 + 30 * k), cmd: Math.round(85 + 15 * k), cha: Math.round(clamp(60 * f.spd / ref.spd, 35, 100)), mu: 70, eva: Math.round(24 + 10 * k),
       rpg: { atk: f.atk * k, def: ref.def, refDef: ref.def, weak: null, tr: null, rank: 4, boss: false, sp: 'general' } };
   }
   const ref = refOf(curDep()), X = MON[f.sp], fam = X.fam, pal = monPal(f.sp);
@@ -4024,10 +4026,10 @@ function duelFrameInit() {
 function openDuel(spec) {
   if (QD.trans) return; QD.trans = 1; QD.keys.clear(); QD.inp.jx = QD.inp.jy = 0;
   G.inBattle = spec; saveSus();
-  { const g0 = spec.list.find(x => x.gen); DEPF = g0 ? genDep(g0.gen) : null; }
+  { const g0 = spec.list.find(x => x.gen); DEPF = g0 ? depForLv(actH(G).lv) : null; }
   const F = curDep(), n = spec.list.length;
   const foes = spec.list.map((s, i) => Object.assign(makeFoe(F, s.sp, s.rank, n, G.diff, s.boss), { idx: i }));
-  for (const [i, s] of spec.list.entries()) if (s.gen) { const g = genOf(s.gen), f = foes[i]; f.gen = s.gen; f.n = g[1]; f.might = g[2]; f.xp = Math.round(f.xp * 3.2);   // fewer foes than the old mine: each one is worth more
+  for (const [i, s] of spec.list.entries()) if (s.gen) { const g = genOf(s.gen), f = foes[i]; f.gen = s.gen; f.n = g[1]; f.might = g[2]; f.xp = 0; f.lvShow = actH(G).lv;   // a general gives a level, not experience
     if (s.gen === 'lubu') { f.lubu = 1; f.hp = f.mhp = Math.round(f.mhp * 1.5); f.atk = Math.round(f.atk * 1.1); } }
   for (const [i, s] of spec.list.entries()) { const m = s.id != null && G.map.mons.find(x => x.id === s.id); if (m && m.guard && m.gMax) { foes[i].hp = foes[i].mhp = m.gMax; foes[i].hpNow = m.hpLeft; foes[i].guard = 1; } }
   G.known = G.known || {}; for (const f of foes) if (!G.known[f.sp]) { G.known[f.sp] = 1; msg(`${MON[f.sp].n}は${MON[f.sp].hello}`); }
@@ -4104,7 +4106,7 @@ function fieldWin(m) {
   for (const l of res.loot) msg(typeof l === 'string' ? l : '★ ' + l.t);
   const up = trainWeapon(h, 1); if (up) msg(`⚒ ${h.eq.wpn.n}が手になじんできた！ 熟練${'★'.repeat(up)}`);
   if (res.rare) { qdPillar(res.rare, m.wx, m.wz); setTimeout(() => sfx('rare'), 150); toast(`<b class="r${res.rare}">★${RARE_N[res.rare]}★</b>`, 1800); }
-  const me = res.cards.filter(c => !c.away); if (me.length) { setTimeout(() => sfx('lvl'), 200); toast(`<b>レベルアップ！</b><br><small>${HEROES[h.k].n} Lv${h.lv}・カードは戦いが落ち着いてから</small>`, 2000); }
+  const me = res.cards.filter(c => !c.away); if (me.length) { setTimeout(() => sfx('lvl'), 200); toast(`<b>レベルアップ！</b><br><small>${HEROES[h.k].n} Lv${h.lv}・ボーナスは戦いが落ち着いてから</small>`, 2000); }
   if (G.streak >= 2) FA_comboPop(G.streak);
   hud(); saveSus();
 }
@@ -4131,7 +4133,7 @@ function duelEnd(r) {
   if (r.out === 'win') {
     for (const f of D.foes) f.fled = !!(r.fled && r.fled[f.idx]); for (const f of D.foes) if (f.fled) f.hp = 0; else f.hp = 0;
     const prevStreak = G.streak || 0, collB = techColl(h);
-    const res = battleWin({ G, F: dep, H: { st: stats(h) }, foes: D.foes, taken: Math.max(0, D.hp0 - h.hp) });
+    const res = battleWin({ G, F: Math.min(20, dep), H: { st: stats(h) }, foes: D.foes, taken: Math.max(0, D.hp0 - h.hp) });
     fullHeal();   // after every fight: both back to full, for nothing
     for (const it of res.gear || []) gearAch(it);
     { const dn = D.foes.filter(f => !f.fled).length, up = trainWeapon(h, dn); if (up) res.loot.push(`⚒ ${h.eq.wpn.n}が手になじんできた！ 熟練${'★'.repeat(up)}（攻撃+${6 * up}%）`); }
