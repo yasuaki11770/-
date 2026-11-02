@@ -2768,6 +2768,8 @@ function qdMonMesh(m) {
   const o = m.gen ? genMesh(m) : ratMesh(m);
   if (m.wx == null) { m.wx = qdX(m.x) + (Math.random() - .5); m.wz = qdX(m.y) + (Math.random() - .5); m.ry = Math.random() * 6.28; }
   o.root.position.set(m.wx, 0, m.wz); QD.B.sc.add(o.root); QD.mesh.set(m.id, o);
+  // a monster that calls for a 一騎打ち stands in a purple ring
+  if (!faFoe(m) && !m.gen) { const r = new T.Mesh(new T.RingGeometry(.75, .95, 32), new T.MeshBasicMaterial({ color: qLin('#b07bff'), transparent: true, opacity: .7, side: T.DoubleSide, depthWrite: false, blending: T.AdditiveBlending })); r.rotation.x = -Math.PI / 2; r.position.y = .04; r.scale.setScalar((o.f.sc || 1) * .85); o.root.add(r); o.duelRing = r; }
   m.spdMove = ({ blob: 2.4, bat: 4.2, ghost: 3.0, rat: 3.6, mimic: 3, human: 3.4 }[MON[m.sp].fam] * (m.sp === 'chika' ? 1.25 : m.sp === 'ougon' ? 1.4 : 1)) * (m.lord ? 1.25 : 1) * (m.boss ? .8 : 1); m.state = m.state || 'wander'; m.stun = m.stun || 0; m.wait = Math.random() * 2;
   return o;
 }
@@ -2963,7 +2965,7 @@ function qdPillar(r, x, z) {
    A monster in reach winds up (a red glow) and lunges — step away to make it miss. The partner fights alongside.
    Bosses, bounties, the soul's guard, mimics and strong ones (きょうぼう・ぬし) still call for a 一騎打ち. */
 const FA = { g: 1, sw: 0, pops: [], calm: 9, dirty: 0, inv: 0, pt: null };
-const faFoe = m => !m.boss && !m.gen && !m.guard && !m.lord && m.sp !== 'mimic' && (m.rank || 0) < 3;
+const faFoe = m => !m.boss && !m.gen && !m.guard && !m.lord && m.sp !== 'mimic' && (m.rank || 0) < 4;   // only ぬし-class ones call for a 一騎打ち
 const faStop = o => o.rig.w * (o.f.sc || 1) + .95;
 function faInit(m) { if (!m.f) { m.f = makeFoe(G.floor, m.sp, m.rank || 0, 1, G.diff); m.f.idx = 0; } return m.f; }
 const faReach = () => { const wk = stats(actH(G)).wk; return 1.75 + (['spear', 'halberd', 'glaive', 'whip'].includes(wk) ? .5 : 0); };
@@ -3448,7 +3450,7 @@ function titleScreen() {
       <li><b>目的</b>　地下20階の奥に棲む「地の底の王」を倒す。街はない。3・6・9・12・15・18階はボスが階段を守る。</li>
       <li><b>探索</b>　画面の下半分を押してスティック移動、上半分をドラッグで見回す。宝箱・落とし物・泉・記録碑・階段は近づいて「調べる」。立ち止まると少しずつHPが戻るが、長居は禁物。</li>
       <li><b>戦闘</b>　ふつうの魔物とは、その場で戦う。⚔ボタン（Fキー）で攻撃。ゲージが100%のときがいちばん強い。魔物が赤く光ったら攻撃の合図で、離れればかわせる。控えの相棒も一緒に戦う。</li>
-      <li><b>一騎打ち</b>　ボス・賞金首・強敵（きょうぼうな／ぬしの）・ミミック・魂の番人に触れると一騎打ち。間合いで技が自動で決まり、ガッツを使う。長押しで前進、2回タップで飛び退き、<b>見切り</b>で受け流す。2匹がV字に並ぶと1対2：後ろの1匹が飛びかかってきて、1匹目を倒すと前に出てくる。つばぜり合いはボス戦だけ。</li>
+      <li><b>一騎打ち</b>　足元に紫の輪がある魔物（ボス・ぬしの魔物・ミミック・魂の番人）と賞金首に触れると一騎打ち。間合いで技が自動で決まり、ガッツを使う。長押しで前進、2回タップで飛び退き、<b>見切り</b>で受け流す。2匹がV字に並ぶと1対2：後ろの1匹が飛びかかってきて、1匹目を倒すと前に出てくる。つばぜり合いはボス戦だけ。</li>
       <li><b>技は閃き</b>　最初は通常攻撃だけ。戦いの最中に閃いて覚える。強い相手ほど閃きやすい。レイピアとダガーの技は横文字。</li>
       <li><b>魔法</b>　マテリアを拾うと魔法を覚える（持ち物の枠は使わない）。戦闘中の「魔法」ボタンで、魔法石を1個（ウルトラは3個）使って唱える。方針を「魔法」にすると自動でどんどん唱える。回復魔法はない。</li><li><b>坑夫の書き置き</b>　各階に落ちている紙を読むと、その階の魔物の弱点がわかる。戦闘の魔法画面にも「弱点」と出る。</li><li><b>行商人</b>　食べ物売りと鍛冶屋がいる。鍛冶屋は装備の修理と鍛え直し（同じ種類2つで1つをLv+1）。どちらも装備を買い取る。</li><li><b>賞金首</b>　一騎打ち英雄伝の武将が階をうろついている（ミニマップの赤い点）。倒すと賞金。</li><li><b>休む</b>　右下の ⛺ ボタン。戦闘のあと、休める状況なら自動で休む（メニューで切り替え）。テントで減ったHPを全回復。満腹は減ったHP（最大HPの）10%につき1（35%なら4、75%なら8）。満腹10以下では休めない。空腹だと休めない。魔物が近いときも休めない。</li><li><b>方針</b>　バランス・攻め・守り・魔法の4つから選ぶ。</li>
       <li><b>成長</b>　レベルが上がるたびに、3枚のカードから1枚を選んで強くなる（剛力・鉄壁・急所狙い・自然治癒など）。同じカードは何度か重ねられる。</li>
