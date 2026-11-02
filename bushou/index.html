@@ -480,11 +480,11 @@ function trainWeapon(h, n) {
   const it = h.eq.wpn; if (!it) return 0; const s0 = mastStars(it); it.mx = (it.mx || 0) + n * (stats(h).mast || 1) * (it.unbreak ? 2 : 1);
   const s1 = mastStars(it); return s1 > s0 ? s1 : 0;
 }
-const gearShown = it => (it.el ? EL[it.el].ic : '') + gearTitle(it) + ' Lv' + (it.lv || 1);
+const gearShown = it => (it.el ? EL[it.el].ic : '') + gearTitle(it) + (it.s === 'wpn' ? '' : ' Lv' + (it.lv || 1));
 function blessLv(F, luck) { let v = 1; if (Math.random() < .12 + F * .03 + luck * .2) v++; if (Math.random() < F * .015 + luck * .15) v++; return v; }
 function rollGear(F, luck = 0, slot) {
-  if (F >= 3 && Math.random() < (luck >= .9 ? .3 : luck >= .5 ? .06 : .006)) { const Ls = LEG.filter(x => !slot || x.s === slot); if (Ls.length) { const L = pick(Ls); return makeGear(L.s, L.k, F, [], null, { leg: L.id }); } }
-  const s = slot || pick(['wpn', 'body', 'hand']), B = pick(BASE[s]);   // weapons, armour and arm-gear alike
+  if (F >= 3 && Math.random() < (luck >= .9 ? .3 : luck >= .5 ? .06 : .006)) { const Ls = LEG.filter(x => x.s !== 'wpn' && (!slot || x.s === slot)); if (Ls.length) { const L = pick(Ls); return makeGear(L.s, L.k, F, [], null, { leg: L.id }); } }
+  const s = slot && slot !== 'wpn' ? slot : pick(['body', 'hand']), B = pick(BASE[s]);   // weapons only come from generals   // weapons, armour and arm-gear alike
   const ex = {};
   if (s === 'wpn' && F >= 2 && Math.random() < .2 + luck * .2) ex.el = pick(Object.keys(EL));
   if (s !== 'wpn' && Math.random() < .15) ex.res = pick(Object.keys(EL));
@@ -703,6 +703,9 @@ const floorDep = F => [1, 1, 7, 13, 20][F] || 20;
 // the old depth whose typical hero stands at level lv: a general fights at the hero's own level
 function depForLv(lv) { let d = 1; while (d < 60 && lexp(d) < lv) d += .25; return d; }
 let DEPF = null; const curDep = () => DEPF != null ? DEPF : floorDep(G ? G.floor : 1);
+const wLvOf = id => id === 'lubu' ? 20 : 1 + Math.round(Math.max(0, genIdx(id)) * 19 / 33);
+const ARMS_ALL = GENERALS.length + 2;   // the two starting weapons and one from each general
+const armorN = G => G.bag.filter(x => x.s !== 'wpn').length;
 function fullHeal() { for (const k of ['yasu', 'shu']) { if (G.soul && G.soul.who === k) continue; const h = G.heroes[k]; h.hp = stats(h).mhp; } }
 const FLOOR_EV = {
   vault: { n: '宝物庫の階', d: 'この階には宝箱が多い。' }, nest: { n: '魔物の巣', d: '魔物がうようよしている。そのぶん落とし物が多い。' },
@@ -949,7 +952,7 @@ function battleWin(B) {
   if (dead.length >= 3) L.push(`🐾 ${dead.length}匹の群れを打ち破った！ 落とし物が増える。`);
   const gl = []; if (boss) gl.push(rollGear(F, .9), rollGear(F, .6)); else if (Math.random() < gearP) gl.push(rollGear(F, .1 * top + (nd ? .2 : 0)));
   // 武将迷宮: a beaten general leaves his own weapon, at his level (weapons stop at Lv20)
-  for (const f of dead) if (f.gen) { const g = genOf(f.gen); gl.push(makeGear('wpn', g[3], Math.min(20, f.lvShow || Math.round(F)), [], null, { nm: `${g[1]}の${WKN[g[3]]}` })); }
+  for (const f of dead) if (f.gen) { const g = genOf(f.gen); if (!G.genArms || !G.genArms[f.gen]) { G.genArms = G.genArms || {}; G.genArms[f.gen] = 1; gl.push(makeGear('wpn', g[3], wLvOf(f.gen), [], null, { nm: `${g[1]}の${WKN[g[3]]}`, gw: f.gen })); } }
   // streak milestones: a few stones at 5, a sure piece of good gear at 10, 15, 20...
   if (G.streak === 5) { invAdd(G, 'whet', 1); loot.push('🔥 5連勝のごほうび！ 🪨砥石を手に入れた！'); }
   if (G.streak >= 10 && G.streak % 5 === 0) { const it = rollGear(F, 1); loot.push(`🔥 ${G.streak}連勝のごほうび！`); gl.push(it); }
@@ -958,7 +961,7 @@ function battleWin(B) {
 }
 function addGear(G, it, how) {
   G.codex = G.codex || { mon: {}, wpn: {} }; if (it.s === 'wpn' && !it.nm) { const c = G.codex.wpn[it.k] = G.codex.wpn[it.k] || {}; const isNew = !c[it.lv]; c[it.lv] = 1; if (isNew) it.newName = 1; }
-  if (G.bag.length >= BAG_CAP) { (G.overflow = G.overflow || []).push(it); return `${it.n}を見つけた！ 荷物がいっぱい（このあと入れ替えるものを選べる）`; }
+  if (it.s !== 'wpn' && armorN(G) >= BAG_CAP) { (G.overflow = G.overflow || []).push(it); return `${it.n}を見つけた！ 荷物がいっぱい（このあと入れ替えるものを選べる）`; }
   it.fresh = true; G.bag.push(it); return `${SLOT_IC[it.s]} ${it.n}を${how === '落としていった' ? '手に入れた！' : how}`;
 }
 /* equip / unequip (for the active hero) */
@@ -967,7 +970,7 @@ function equip(G, id, who = G.act) {
   const it = G.bag.splice(i, 1)[0], old = h.eq[it.s]; h.eq[it.s] = it; it.fresh = false; if (old) G.bag.push(old);
   h.hp = Math.min(h.hp, stats(h).mhp); return true;
 }
-function unequip(G, s, who = G.act) { const h = G.heroes[who], it = h.eq[s]; if (!it || G.bag.length >= BAG_CAP) return false; G.bag.push(it); h.eq[s] = null; h.hp = Math.min(h.hp, stats(h).mhp); return true; }
+function unequip(G, s, who = G.act) { const h = G.heroes[who], it = h.eq[s]; if (!it || (it.s !== 'wpn' && armorN(G) >= BAG_CAP)) return false; G.bag.push(it); h.eq[s] = null; h.hp = Math.min(h.hp, stats(h).mhp); return true; }
 function whet(G, id) {
   const it = [...Object.values(actH(G).eq), ...G.bag].find(x => x && x.id === id); if (!it || it.s !== 'wpn' || !invN(G, 'whet')) return false;
   if (mastStars(it) >= MAST_MAX) return false;
@@ -3536,7 +3539,7 @@ function titleScreen() {
       <li><b>技は閃き</b>　最初は通常攻撃だけ。戦いの最中に閃いて覚える。強い相手ほど閃きやすい。</li>
       <li><b>成長</b>　武将を1人倒すごとに、二人ともレベルが1上がる。そのたびにステータスボーナス（最大HP・攻撃・防御・器用さ・素早さ）を1つ選ぶ。相手の武将は、こちらと同じレベルで現れる。</li>
       <li><b>鍛冶屋</b>　どの階にもいる。賞金で装備を強化（+5まで）、同じ種類2つで鍛え直し、いらない装備は売れる。</li>
-      <li><b>装備</b>　武将に勝つと、その武将の武器（相手と同じレベル・Lv20まで）が手に入る。壊れない。武器は使うほど育つ（★5まで）。</li>
+      <li><b>武器</b>　武将に勝つと、その武将の武器が手に入る（初期装備と合わせて全36本のコレクション）。強さは武器ごとに決まっていて、深い階の武将の武器ほど強い。だから戦う順番が大事。武器は捨てられず、使うほど育つ（★5まで）。</li><li><b>防具</b>　宝箱などで見つかる。荷物の枠は12。</li>
       <li><b>記録</b>　各階に着くと記録碑に自動で記録される。全滅したら記録から再開。主人公が倒れると魂が残り、控えが解放しに来る（魂を守る武将を倒す）。</li>
     </ul></details>
   </div>
@@ -3734,11 +3737,12 @@ function bagMenu(tab) {
   const el = $('#bagIn'), det = $('#bagDet');
   const showDet = html => { det.innerHTML = html; det.hidden = false; };
   if (BAG.tab === 'gear') {
-    const card = (it, slot, eqd) => it ? `<button class="gc ${eqd ? 'eqd' : ''} ${BAG.sel === it.id ? 'sel' : ''}" data-id="${it.id}"><span class="gi">${SLOT_IC[it.s]}</span><b class="r${gearRare(it)}">${esc(gearTitle(it))}${it.fresh ? '<em>NEW</em>' : ''}</b><small>Lv${it.lv || 1}・${gearLines(it)[0] || ''}${it.b.length ? '・✦' + it.b.length : ''}</small><i class="gtag ${gearCls(it) ? (gearCls(it).who === 'yasu' ? 'hv' : 'lt') : 'cm'}${eqd || canEquip(BAG.who, it) ? '' : ' no'}">${gearTag(it)}</i></button>`
+    const card = (it, slot, eqd) => it ? `<button class="gc ${eqd ? 'eqd' : ''} ${BAG.sel === it.id ? 'sel' : ''}" data-id="${it.id}"><span class="gi">${SLOT_IC[it.s]}</span><b class="r${gearRare(it)}">${esc(gearTitle(it))}${it.fresh ? '<em>NEW</em>' : ''}</b><small>${it.s === 'wpn' ? '' : `Lv${it.lv || 1}・`}${gearLines(it)[0] || ''}${it.b.length ? '・✦' + it.b.length : ''}</small><i class="gtag ${gearCls(it) ? (gearCls(it).who === 'yasu' ? 'hv' : 'lt') : 'cm'}${eqd || canEquip(BAG.who, it) ? '' : ' no'}">${gearTag(it)}</i></button>`
       : `<div class="gc empty"><span class="gi">${SLOT_IC[slot]}</span><b class="dim">${slot === 'wpn' ? '素手' : 'なし'}</b><small>${{ wpn: '武器', body: '体', hand: '腕' }[slot]}</small></div>`;
     el.innerHTML = `<p class="sline">攻撃 <b>${st.atk}</b>　防御 <b>${st.def}</b>　魔攻 <b>${st.matk}</b>　魔防 <b>${st.mdef}</b>　素早さ <b>${st.spd}</b>　器用さ <b>${st.dex}</b>　会心 <b>${st.crit}%×${st.cx}</b></p>
       <div class="lab">装備中</div><div class="ggrid three">${SLOTS.map(([s2]) => card(h.eq[s2], s2, true)).join('')}</div>
-      <div class="lab">荷物 ${G.bag.length}/${BAG_CAP}</div><div class="ggrid">${G.bag.map(it => card(it, it.s, false)).join('') || '<p class="dim">荷物は空っぽ</p>'}</div>`;
+      <div class="lab">⚔ 武器コレクション ${armsN()}/${ARMS_ALL}</div><div class="ggrid">${G.bag.filter(x => x.s === 'wpn').map(it => card(it, it.s, false)).join('') || '<p class="dim">ほかの武器はまだない</p>'}</div>
+      <div class="lab">🛡 防具 ${armorN(G)}/${BAG_CAP}</div><div class="ggrid">${G.bag.filter(x => x.s !== 'wpn').map(it => card(it, it.s, false)).join('') || '<p class="dim">防具の荷物は空っぽ</p>'}</div>`;
     el.querySelectorAll('[data-id]').forEach(b => b.onclick = () => { BAG.sel = BAG.sel === b.dataset.id ? null : b.dataset.id; sfx('blip'); bagMenu(); });
     const it = [...Object.values(h.eq), ...G.bag].find(x => x && x.id === BAG.sel);
     if (it) {
@@ -3747,7 +3751,7 @@ function bagMenu(tab) {
       it.fresh = false;
       showDet(`<b class="dn2 r${gearRare(it)}">${gearRare(it) ? `<small class="rtag">${RARE_N[gearRare(it)]}</small> ` : ''}${esc(gearShown(it))}</b><div class="dl">${gearLines(it).map(l => `<span>${l}</span>`).join('')}${it.b.map(b2 => `<span class="bl">✦ ${bText(b2)}</span>`).join('')}${it.s === 'wpn' ? `<span class="dim">熟練 ${mastStars(it) ? '★'.repeat(mastStars(it)) : 'なし'}${mastStars(it) < MAST_MAX ? `（次の★まで あと${Math.ceil(MAST_NEED[mastStars(it)] - (it.mx || 0))}匹）` : '（極めた）'}</span>` : ''}${it.plus ? `<span class="dim">鍛冶屋の強化 +${it.plus}</span>` : ''}${it.mine ? '<span class="dim">思い出の品</span>' : ''}<span>${BASE[it.s].find(b => b.k === it.k).n}・${gearTag(it)}</span></div>
         ${cmp ? `<p class="cmp">付け替えると：${cmp}</p>` : ''}
-        <div class="acts2">${worn ? `<button class="pb" id="gOff">外す</button>` : canEquip(BAG.who, it) ? `<button class="pb pri" id="gOn">装備する</button>` : `<button class="pb" disabled>${HEROES[BAG.who].n}は装備できない</button>`}${it.s === 'wpn' ? `<button class="pb" id="gWhet" ${invN(G, 'whet') ? '' : 'disabled'}>🪨 研ぐ・熟練+1（${invN(G, 'whet')}）</button>` : ''}${worn ? '' : `<button class="pb warn" id="gDrop">捨てる</button>`}</div>`);
+        <div class="acts2">${worn ? `<button class="pb" id="gOff">外す</button>` : canEquip(BAG.who, it) ? `<button class="pb pri" id="gOn">装備する</button>` : `<button class="pb" disabled>${HEROES[BAG.who].n}は装備できない</button>`}${it.s === 'wpn' ? `<button class="pb" id="gWhet" ${invN(G, 'whet') ? '' : 'disabled'}>🪨 研ぐ・熟練+1（${invN(G, 'whet')}）</button>` : ''}${worn || it.s === 'wpn' ? '' : `<button class="pb warn" id="gDrop">捨てる</button>`}</div>`);
       const on = $('#gOn'), off = $('#gOff'), wh = $('#gWhet'), dr = $('#gDrop');
       if (on) on.onclick = () => { equip(G, it.id, BAG.who); sfx('equip'); if (BAG.who === G.act) qdRearm(); bagMenu(); };
       if (off) off.onclick = () => { if (!unequip(G, it.s, BAG.who)) toast('荷物がいっぱい'); else sfx('blip'); if (BAG.who === G.act) qdRearm(); bagMenu(); };
@@ -3777,12 +3781,15 @@ function bagMenu(tab) {
   } else if (BAG.tab === 'dex') {
     const C = G.codex || { mon: {}, wpn: {} }, mk2 = Object.keys(MON).filter(k => k !== 'mimic').concat(['mimic']);
     const nm = mk2.filter(k => C.mon[k]).length, nw = Object.values(C.wpn).reduce((a, o2) => a + Object.keys(o2).length, 0);
-    el.innerHTML = `<div class="lab">魔物図鑑 ${nm}/${mk2.length}</div><div class="ggrid">${mk2.map(k => { const c = C.mon[k]; return c ? `<div class="gc"><span class="gi big">${FAMIC[MON[k].fam]}</span><b>${MON[k].n}</b><small>${esc(MON[k].hello.replace(/^.*?（|）$/g, ''))}${(G.weakKnown || {})[k] ? `<br>弱点：${ELJ[MON[k].weak] || 'なし'}` : ''}</small><em class="cnt">倒した ${c.kill}</em></div>` : `<div class="gc empty"><span class="gi big">？</span><b class="dim">？？？</b><small>まだ出会っていない</small></div>`; }).join('')}</div>
+    const own = new Set(allGear().filter(x => x.it.s === 'wpn').map(x => x.it.gw || x.it.nm));
+    el.innerHTML = `<div class="lab">⚔ 武器コレクション ${armsN()}/${ARMS_ALL}</div><div class="ggrid">${['yasu', 'shu'].map(k => `<div class="gc"><span class="gi">⚔</span><b>${esc(HEROES[k].wpn[1])}</b><small>初期装備・${WKN[HEROES[k].wpn[0]]}</small></div>`).join('')}${GENERALS.map(g => own.has(g[0]) ? `<div class="gc"><span class="gi">⚔</span><b>${g[1]}の${WKN[g[3]]}</b><small>地下${genFloorOf(g[0])}階・${g[1]}</small></div>` : `<div class="gc empty"><span class="gi">？</span><b class="dim">？？？の${WKN[g[3]]}</b><small>地下${genFloorOf(g[0])}階の武将が持つ</small></div>`).join('')}</div>
+      <p class="dim" style="font-size:.76rem">武器は武将に勝つと手に入る。武器ごとに強さが決まっていて、深い階の武将の武器ほど強い。武器は捨てられない。</p>`;
+    if (0) el.innerHTML = `<div class="lab">魔物図鑑 ${nm}/${mk2.length}</div><div class="ggrid">${mk2.map(k => { const c = C.mon[k]; return c ? `<div class="gc"><span class="gi big">${FAMIC[MON[k].fam]}</span><b>${MON[k].n}</b><small>${esc(MON[k].hello.replace(/^.*?（|）$/g, ''))}${(G.weakKnown || {})[k] ? `<br>弱点：${ELJ[MON[k].weak] || 'なし'}` : ''}</small><em class="cnt">倒した ${c.kill}</em></div>` : `<div class="gc empty"><span class="gi big">？</span><b class="dim">？？？</b><small>まだ出会っていない</small></div>`; }).join('')}</div>
       <div class="lab">武器図鑑 ${nw}/140（拾った階の名前が並ぶ）</div>${Object.keys(WNAMES).map(k => { const got = C.wpn[k] || {}; return `<div class="wrow"><b>${WKN[k]}</b><div class="wcells">${WNAMES[k].map((n, i) => `<span class="${got[i + 1] ? 'on' : ''}" title="${got[i + 1] ? esc(n) : '？'}">${i + 1}</span>`).join('')}</div></div>`; }).join('')}
       <p class="dim" style="font-size:.76rem">武器は拾った階のレベル。1階から20階まで、それぞれ名前が違う。マスをタップすると名前が見られる。</p>`;
     const nG = GENERALS.length, nWant = Object.keys(META.wanted).length;
     el.innerHTML += `<div class="lab">📜 賞金首の手配書 ${nWant}/${nG}${nWant >= nG ? '　🏅' : ''}</div><p class="dim" style="font-size:.76rem;margin:0 0 6px">一騎打ち英雄伝の武将たち。倒すと手配書が集まる（冒険をまたいで残る）。全員そろえると…。強い武将ほど深い階にいる。</p>
-      <div class="wanted">${GENERALS.map((g, i) => { const c = META.wanted[g[0]], fl = Math.round(2 + i * 17 / Math.max(1, nG - 1)); return c ? `<div class="wp on"><i>WANTED</i><img alt="" src="${genPortrait(g[0])}"><b>${g[1]}</b><small>武力${g[2]}・討伐${c}</small></div>` : `<div class="wp"><i>WANTED</i><span class="sil">？</span><b class="dim">？？？</b><small>武力${g[2]}・地下${fl}階ごろ</small></div>`; }).join('')}</div>`;
+      <div class="wanted">${GENERALS.map((g, i) => { const c = META.wanted[g[0]], fl = Math.round(2 + i * 17 / Math.max(1, nG - 1)); return c ? `<div class="wp on"><i>WANTED</i><img alt="" src="${genPortrait(g[0])}"><b>${g[1]}</b><small>武力${g[2]}・討伐${c}</small></div>` : `<div class="wp"><i>WANTED</i><span class="sil">？</span><b class="dim">？？？</b><small>武力${g[2]}・地下${genFloorOf(g[0])}階</small></div>`; }).join('')}</div>`;
     el.querySelectorAll('.wcells span.on').forEach(c => c.onclick = () => toast(c.title, 1200));
   } else if (BAG.tab === 'rec') {
     const r = LS.get(K_REC, null);
@@ -3876,6 +3883,7 @@ function sellPrice(it) {
 const plusCost = it => ((it.plus || 0) + 1) * (15 + (it.lv || 1) * 6);
 const forgeCost = it => 8 + (it.lv || 1) * 4;
 // every piece the two carry: the leader's worn ones, the other's worn ones, the bag
+const armsN = () => allGear().filter(x => x.it.s === 'wpn').length;
 const allGear = () => { const L = []; for (const k of ['yasu', 'shu']) for (const [s2] of SLOTS) { const it = G.heroes[k].eq[s2]; if (it) L.push({ it, worn: k }); } for (const it of G.bag) L.push({ it, worn: null }); return L; };
 function smithMenu(tab) {
   const S2 = G.map.shop; if (tab) SHOPTAB = tab; if (!['plus', 'forge', 'sell'].includes(SHOPTAB)) SHOPTAB = 'plus';
@@ -3887,9 +3895,9 @@ function smithMenu(tab) {
       return `<button class="pb ${ok ? 'pri' : ''}" data-plus="${x.it.id}" ${ok ? '' : 'disabled'} style="justify-content:space-between;text-align:left"><span>${SLOT_IC[x.it.s]} ${esc(gearTitle(x.it))} → <b>+${(x.it.plus || 0) + 1}</b>${wtag(x.worn)}<br><small style="opacity:.75">${a} ${v0}→${v1}</small></span><span>$${c}</span></button>`; }).join('') || '<p class="dim">強化できる物がない（+5まで）</p>';
   } else if (SHOPTAB === 'forge') {
     // a piece and, as material, a lower or equal one of the same kind lying in the bag
-    const L = allGear().filter(x => (x.it.lv || 1) < 20).map(x => ({ x, mat: G.bag.filter(m => m !== x.it && m.s === x.it.s && m.k === x.it.k && !m.leg && (m.lv || 1) <= (x.it.lv || 1)).sort((a, b) => (a.lv || 1) - (b.lv || 1))[0] })).filter(o => o.mat);
+    const L = allGear().filter(x => x.it.s !== 'wpn' && (x.it.lv || 1) < 20).map(x => ({ x, mat: G.bag.filter(m => m !== x.it && m.s === x.it.s && m.k === x.it.k && !m.leg && (m.lv || 1) <= (x.it.lv || 1)).sort((a, b) => (a.lv || 1) - (b.lv || 1))[0] })).filter(o => o.mat);
     list = L.map(o => `<button class="pb ${G.cash >= forgeCost(o.x.it) ? 'pri' : ''}" data-forge="${o.x.it.id}" data-mat="${o.mat.id}" ${G.cash >= forgeCost(o.x.it) ? '' : 'disabled'} style="justify-content:space-between;text-align:left"><span>${SLOT_IC[o.x.it.s]} ${esc(o.x.it.n)} Lv${o.x.it.lv || 1}→<b>${(o.x.it.lv || 1) + 1}</b>${wtag(o.x.worn)}<br><small style="opacity:.75">素材：${esc(o.mat.n)} Lv${o.mat.lv || 1}（なくなる）</small></span><span>$${forgeCost(o.x.it)}</span></button>`).join('') || '<p class="dim">同じ種類の装備が2つあると、1つを素材にしてもう1つを鍛えられる（レベル+1・耐久も全快）</p>';
-  } else list = G.bag.length ? G.bag.map((it, i) => `<button class="pb" data-sell="${i}" style="justify-content:space-between;text-align:left"><span>${SLOT_IC[it.s]} ${esc(it.n)} <small style="opacity:.75">Lv${it.lv || 1}${it.plus ? '・+' + it.plus : ''}${it.s === 'wpn' && mastStars(it) ? '・' + '★'.repeat(mastStars(it)) : ''}</small></span><span>$${sellPrice(it)}</span></button>`).join('') : '<p class="dim">売れる物がない（装備中の物は売れない）</p>';
+  } else list = G.bag.length ? G.bag.map((it, i) => it.s === 'wpn' ? '' : `<button class="pb" data-sell="${i}" style="justify-content:space-between;text-align:left"><span>${SLOT_IC[it.s]} ${esc(it.n)} <small style="opacity:.75">Lv${it.lv || 1}${it.plus ? '・+' + it.plus : ''}${it.s === 'wpn' && mastStars(it) ? '・' + '★'.repeat(mastStars(it)) : ''}</small></span><span>$${sellPrice(it)}</span></button>`).join('') : '<p class="dim">売れる物がない（装備中の物は売れない）</p>';
   const o = ov(`<h2>🔨 鍛冶屋の行商人</h2><p class="dim" style="font-size:.82rem">${{ plus: '「金さえ払えば、どんな物でも一段強く打ち直してやる（+5まで）」', forge: '「同じ物が二つあれば、一つを溶かしてもう一つを鍛え上げてやる」', sell: '「使わん装備なら買い取るよ」' }[SHOPTAB]}</p><p>所持金 <b>$${G.cash}</b></p>
     <div class="choices" style="grid-template-columns:repeat(3,1fr);display:grid;gap:6px;margin-bottom:6px"><button class="pb ${SHOPTAB === 'plus' ? 'on' : ''}" data-tab="plus">強化</button><button class="pb ${SHOPTAB === 'forge' ? 'on' : ''}" data-tab="forge">鍛え直し</button><button class="pb ${SHOPTAB === 'sell' ? 'on' : ''}" data-tab="sell">売る</button></div>
     <div class="choices">${list}<button class="pb" id="shX">とじる</button></div>`, { mid: true });
@@ -3910,7 +3918,7 @@ function shopMenu(tab) {
   if (tab) SHOPTAB = tab; if (!['buy', 'sell'].includes(SHOPTAB)) SHOPTAB = 'buy';
   const buy = SHOPTAB === 'buy';
   const list = buy ? S2.stock.map((x, i) => `<button class="pb ${x.n && G.cash >= x.p ? 'pri' : ''}" data-buy="${i}" ${x.n && G.cash >= x.p ? '' : 'disabled'} style="justify-content:space-between"><span>${ITEM[x.k].ic} ${ITEM[x.k].n}<small style="opacity:.75">（満腹+${ITEM[x.k].food}）</small></span><span>$${x.p}・残り${x.n}</span></button>`).join('')
-    : (G.bag.length ? G.bag.map((it, i) => `<button class="pb" data-sell="${i}" style="justify-content:space-between;text-align:left"><span>${SLOT_IC[it.s]} ${esc(it.n)} <small style="opacity:.75">Lv${it.lv || 1}${it.plus ? '・+' + it.plus : ''}${it.s === 'wpn' && mastStars(it) ? '・' + '★'.repeat(mastStars(it)) : ''}${it.mine ? '・思い出の品' : ''}</small></span><span>$${sellPrice(it)}</span></button>`).join('') : '<p class="dim">売れる物がない（装備中の物は売れない）</p>');
+    : (G.bag.length ? G.bag.map((it, i) => it.s === 'wpn' ? '' : `<button class="pb" data-sell="${i}" style="justify-content:space-between;text-align:left"><span>${SLOT_IC[it.s]} ${esc(it.n)} <small style="opacity:.75">Lv${it.lv || 1}${it.plus ? '・+' + it.plus : ''}${it.s === 'wpn' && mastStars(it) ? '・' + '★'.repeat(mastStars(it)) : ''}${it.mine ? '・思い出の品' : ''}</small></span><span>$${sellPrice(it)}</span></button>`).join('') : '<p class="dim">売れる物がない（装備中の物は売れない）</p>');
   const o = ov(`<h2>🛒 行商人</h2><p class="dim" style="font-size:.82rem">${buy ? '「こんな地下まで、よく来なすった。食べ物なら少しはあるよ」' : '「どれどれ…装備なら買い取るよ。鍛えた物は高く買うよ」'}</p><p>所持金 <b>$${G.cash}</b></p>
     <div class="choices two" style="margin-bottom:6px"><button class="pb ${buy ? 'on' : ''}" id="shB">食べ物を買う</button><button class="pb ${buy ? '' : 'on'}" id="shS">装備を売る</button></div>
     <div class="choices">${list}<button class="pb" id="shX">とじる</button></div>`, { mid: true });
@@ -4091,7 +4099,7 @@ function overflowMenu(done) {
   const row = (x, attr) => `<button class="trow ofl" ${attr}><b class="r${gearRare(x)}">${SLOT_IC[x.s]} ${esc(gearTitle(x))} <small>Lv${x.lv || 1}</small></b><small>${gearLines(x).slice(0, 2).join('・')}${x.b.length ? '・✦' + x.b.length : ''}・${gearTag(x)}</small></button>`;
   const o = ov(`<h2>🎒 荷物がいっぱい</h2><p class="dim" style="font-size:.8rem">新しく見つけた装備を持つには、荷物から1つ捨てる。</p>
     <div class="lab">見つけた装備</div><div class="tlist">${row(it, 'disabled style="opacity:1"')}</div>
-    <div class="lab">捨てるものを選ぶ（荷物 ${G.bag.length}/${BAG_CAP}）</div><div class="tlist">${G.bag.map(x => row(x, `data-of="${x.id}"`)).join('')}</div>
+    <div class="lab">捨てるものを選ぶ（防具 ${armorN(G)}/${BAG_CAP}）</div><div class="tlist">${G.bag.filter(x => x.s !== 'wpn').map(x => row(x, `data-of="${x.id}"`)).join('')}</div>
     <div class="choices"><button class="pb warn" id="ofNew">見つけた方をあきらめる</button></div>`, { mid: true });
   const next = () => { G.overflow.shift(); ovClose(); hud(); saveSus(); setTimeout(() => overflowMenu(done), 60); };
   o.querySelectorAll('[data-of]').forEach(b => b.onclick = () => { const x = G.bag.find(y => y.id === b.dataset.of); if (!x) return; G.bag = G.bag.filter(y => y !== x); it.fresh = true; G.bag.push(it); sfx('drop'); msg(`${x.n}を捨てて、${it.n}を手に入れた。`); next(); });
