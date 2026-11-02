@@ -951,10 +951,12 @@ function bodyTick(G, meters, dt, still) {
   return ev;
 }
 /* resting in a tent (half the HP back for 5 of the belly) or a cottage (all of it for 10) */
-function restPlan(G, frac) {
-  const h = actH(G), st = stats(h), D = DIFF[G.diff], heal = Math.min(st.mhp - h.hp, Math.ceil(st.mhp * frac));
-  const t = heal / (st.mhp / 90 * D.rest) + 1.5, cost = frac >= 1 ? 10 : 5;   // a fixed price: the tent (half) 5, the cottage (all) 10
-  return { heal, cost, t };
+/* the tent: heals everything lost, and costs 1 of the belly for every 10% of max HP lost (rounded up); not with the belly at 10 or less */
+const REST_MIN = 10;
+function restPlan(G) {
+  const h = actH(G), st = stats(h), D = DIFF[G.diff], heal = Math.max(0, st.mhp - h.hp);
+  const t = heal / (st.mhp / 90 * D.rest) + 1.5, cost = heal ? Math.ceil(heal / st.mhp * 10 - 1e-9) : 0;
+  return { heal, cost, t, ok: heal > 0 && G.full > REST_MIN && G.full >= cost };
 }
 // the rats take their step. Returns a monster that touches the hero (an encounter), or null
 function monStep(M, P, G) {
@@ -3276,7 +3278,7 @@ function titleScreen() {
       <li><b>探索</b>　画面の下半分を押してスティック移動、上半分をドラッグで見回す。宝箱・落とし物・泉・記録碑・階段は近づいて「調べる」。立ち止まると少しずつHPが戻るが、長居は禁物。</li>
       <li><b>一騎打ち</b>　魔物（塊・コウモリ・ゴースト・ネズミ・ミミック）に触れると一騎打ち。間合いで技が自動で決まり、ガッツを使う。長押しで前進、2回タップで飛び退き、<b>見切り</b>で受け流す。2匹がV字に並ぶと1対2：後ろの1匹が飛びかかってきて、1匹目を倒すと前に出てくる。つばぜり合いはボス戦だけ。</li>
       <li><b>技は閃き</b>　最初は通常攻撃だけ。戦いの最中に閃いて覚える。強い相手ほど閃きやすい。レイピアとダガーの技は横文字。</li>
-      <li><b>魔法</b>　マテリアを拾うと魔法を覚える（持ち物の枠は使わない）。戦闘中の「魔法」ボタンで、魔法石を1個（ウルトラは3個）使って唱える。方針の「魔法方針」で自動で唱える頻度も選べる。回復魔法はない。</li><li><b>坑夫の書き置き</b>　各階に落ちている紙を読むと、その階の魔物の弱点がわかる。戦闘の魔法画面にも「弱点」と出る。</li><li><b>行商人</b>　食べ物売りと鍛冶屋がいる。鍛冶屋は装備の修理と鍛え直し（同じ種類2つで1つをLv+1）。どちらも装備を買い取る。</li><li><b>賞金首</b>　一騎打ち英雄伝の武将が階をうろついている（ミニマップの赤い点）。倒すと賞金。</li><li><b>休む</b>　右下の ⛺ ボタン。戦闘のあと、休める状況なら自動で休む（メニューで切り替え）。テントで最大HPの半分（満腹−5）、コテージで全快（満腹−10）。空腹だと休めない。魔物が近いときも休めない。</li><li><b>方針</b>　攻撃方針（バランス・強振狙い・命中重視）と防御方針（バランス・防御重視・回避狙い）を組み合わせる。</li>
+      <li><b>魔法</b>　マテリアを拾うと魔法を覚える（持ち物の枠は使わない）。戦闘中の「魔法」ボタンで、魔法石を1個（ウルトラは3個）使って唱える。方針の「魔法方針」で自動で唱える頻度も選べる。回復魔法はない。</li><li><b>坑夫の書き置き</b>　各階に落ちている紙を読むと、その階の魔物の弱点がわかる。戦闘の魔法画面にも「弱点」と出る。</li><li><b>行商人</b>　食べ物売りと鍛冶屋がいる。鍛冶屋は装備の修理と鍛え直し（同じ種類2つで1つをLv+1）。どちらも装備を買い取る。</li><li><b>賞金首</b>　一騎打ち英雄伝の武将が階をうろついている（ミニマップの赤い点）。倒すと賞金。</li><li><b>休む</b>　右下の ⛺ ボタン。戦闘のあと、休める状況なら自動で休む（メニューで切り替え）。テントで減ったHPを全回復。満腹は減ったHP（最大HPの）10%につき1（35%なら4、75%なら8）。満腹10以下では休めない。空腹だと休めない。魔物が近いときも休めない。</li><li><b>方針</b>　攻撃方針（バランス・強振狙い・命中重視）と防御方針（バランス・防御重視・回避狙い）を組み合わせる。</li>
       <li><b>栄養</b>　レベルが上がると、最近食べた物の5つの栄養で能力が伸びる。食べ物は魔物が落とす。</li>
       <li><b>装備</b>　使うほど壊れる。個体差はなく、エース・キング・パーフェクトの銘で会心が変わる。神の加護はレベル制で効果は％。</li>
       <li><b>記録</b>　各階の入口の記録碑で、お金を払って記録。全滅したら記録から再開。</li>
@@ -3665,30 +3667,29 @@ function shopMenu(tab) {
 function restMenu() {
   if (MODE !== 'explore' || ovOpen() || QD.trans) return;
   const h = actH(G), P = QD.P, near = G.map.mons.some(m => !m.dead && Math.hypot(m.wx - P.x, m.wz - P.z) < 9 && (m.state === 'chase' || Math.hypot(m.wx - P.x, m.wz - P.z) < 5));
-  const why = h.hp >= stats(h).mhp ? 'HPは満タンだ。' : near ? '魔物が近くにいて休めない。' : '';
-  const opt = (k, ic, n, frac) => { const r = restPlan(G, frac), ok = !why && G.full >= 15 && G.full > r.cost; return `<button class="pb ${ok ? 'pri' : ''}" data-r="${k}" ${ok ? '' : 'disabled'} style="flex-direction:column;align-items:flex-start;text-align:left"><b>${ic} ${n}（最大HPの${frac * 100}%）</b><small>HP +${r.heal}　満腹 −${r.cost}${!why && !ok ? '　<span style="color:var(--red)">お腹が空いていて休めない</span>' : ''}</small></button>`; };
-  const o = ov(`<h2>⛺ 休む</h2><p class="dim" style="font-size:.82rem">その場で休んでHPを回復する。テントは満腹5、コテージは満腹10を使う。満腹が15未満だと休めない。</p>${why ? `<p style="color:var(--red)">${why}</p>` : ''}<div class="choices">${opt('tent', '⛺', 'テント', .5)}${opt('cottage', '🏠', 'コテージ', 1)}<button class="pb" id="rsX">やめる</button></div>`, { mid: true });
-  o.querySelectorAll('[data-r]').forEach(b => b.onclick = () => { ovClose(); doRest(b.dataset.r === 'tent'); });
+  const r = restPlan(G), why = h.hp >= stats(h).mhp ? 'HPは満タンだ。' : near ? '魔物が近くにいて休めない。' : G.full <= REST_MIN ? `お腹が空いていて休めない（満腹${REST_MIN}以下）。` : !r.ok ? '満腹が足りない。' : '';
+  const o = ov(`<h2>⛺ 休む</h2><p class="dim" style="font-size:.82rem">テントを張って、減ったHPを全部回復する。満腹は減ったHP（最大HPの）10%につき1を使う（35%なら4、75%なら8）。満腹${REST_MIN}以下だと休めない。</p>${why ? `<p style="color:var(--red)">${why}</p>` : ''}
+    <div class="choices"><button class="pb ${why ? '' : 'pri'}" id="rsGo" ${why ? 'disabled' : ''} style="flex-direction:column;align-items:flex-start;text-align:left"><b>⛺ テントで休む</b><small>HP +${r.heal}　満腹 −${r.cost}</small></button><button class="pb" id="rsX">やめる</button></div>`, { mid: true });
+  $('#rsGo').onclick = () => { ovClose(); doRest(); };
   $('#rsX').onclick = () => ovClose();
 }
-function doRest(tent, auto) {
-  const h = actH(G), r = restPlan(G, tent ? .5 : 1); if (G.full < 15 || G.full <= r.cost) return false;
+function doRest(auto) {
+  const h = actH(G), r = restPlan(G); if (!r.ok) return false;
   { QD.trans = 1;
     (auto ? f => f() : fade)(() => {   // the automatic rest after a fight happens without the blackout
       h.hp = Math.min(stats(h).mhp, h.hp + r.heal); G.full = Math.max(0, G.full - r.cost); G.stay = (G.stay || 0) + r.t; G.stillT = 0; G.rested = 1;
       QD.trans = 0; QD.grace = 1.5; sfx('soul'); hud(); saveSus();
-      msg(`${auto ? '（自動）' : ''}${tent ? '⛺ テントを張って' : '🏠 コテージで'}ひと休みした。HP +${r.heal}、満腹 −${r.cost}。`); toast(`💤 ${auto ? '戦いのあと、' : ''}${tent ? 'テント' : 'コテージ'}で休んだ<br><small>HP +${r.heal}　満腹 −${r.cost}</small>`, 1600);
+      msg(`${auto ? '（自動）' : ''}⛺ テントを張ってひと休みした。HP +${r.heal}、満腹 −${r.cost}。`); toast(`💤 ${auto ? '戦いのあと、' : ''}テントで休んだ<br><small>HP +${r.heal}　満腹 −${r.cost}</small>`, 1600);
     });
   }
   return true;
 }
-// after a fight: rest by itself when nothing is near, the hero is hurt and not hungry (the cottage if it leaves the belly at 15 or more, else the tent)
+// after a fight: pitch the tent by itself when nothing is near, the hero is hurt and the belly is above 10
 function autoRest() {
   if (PREF.autoRest === false || MODE !== 'explore' || ovOpen() || QD.trans || !G || G.over) return;
-  const h = actH(G), P = QD.P; if (h.hp >= stats(h).mhp || G.full < 15) return;
+  const h = actH(G), P = QD.P; if (h.hp >= stats(h).mhp || !restPlan(G).ok) return;
   if (G.map.mons.some(m => !m.dead && Math.hypot(m.wx - P.x, m.wz - P.z) < 9 && (m.state === 'chase' || Math.hypot(m.wx - P.x, m.wz - P.z) < 5))) { msg('魔物が近くにいて、休めなかった。'); return; }
-  const c = restPlan(G, 1), t = restPlan(G, .5);
-  if (G.full - c.cost >= 15) doRest(false, true); else if (G.full - t.cost >= 15) doRest(true, true);
+  doRest(true);
 }
 function mainMenu() {
   ask('メニュー', `${DIFF[G.diff].n}・地下${G.floor}階`, [
