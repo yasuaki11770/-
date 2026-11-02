@@ -948,6 +948,8 @@ function battleWin(B) {
   const gearP = (.07 + .04 * top + (nd ? .05 : 0)) * D.drop * (1 + luck) * (dead.length >= 4 ? 2.2 : dead.length === 3 ? 1.5 : 1);
   if (dead.length >= 3) L.push(`🐾 ${dead.length}匹の群れを打ち破った！ 落とし物が増える。`);
   const gl = []; if (boss) gl.push(rollGear(F, .9), rollGear(F, .6)); else if (Math.random() < gearP) gl.push(rollGear(F, .1 * top + (nd ? .2 : 0)));
+  // 武将迷宮: a beaten general leaves his own weapon, at his level (weapons stop at Lv20)
+  for (const f of dead) if (f.gen) { const g = genOf(f.gen); gl.push(makeGear('wpn', g[3], Math.min(20, f.lvShow || Math.round(F)), [], null, { nm: `${g[1]}の${WKN[g[3]]}` })); }
   // streak milestones: a few stones at 5, a sure piece of good gear at 10, 15, 20...
   if (G.streak === 5) { invAdd(G, 'whet', 1); loot.push('🔥 5連勝のごほうび！ 🪨砥石を手に入れた！'); }
   if (G.streak >= 10 && G.streak % 5 === 0) { const it = rollGear(F, 1); loot.push(`🔥 ${G.streak}連勝のごほうび！`); gl.push(it); }
@@ -3534,7 +3536,7 @@ function titleScreen() {
       <li><b>技は閃き</b>　最初は通常攻撃だけ。戦いの最中に閃いて覚える。強い相手ほど閃きやすい。</li>
       <li><b>成長</b>　武将を1人倒すごとに、二人ともレベルが1上がる。そのたびにステータスボーナス（最大HP・攻撃・防御・器用さ・素早さ）を1つ選ぶ。相手の武将は、こちらと同じレベルで現れる。</li>
       <li><b>鍛冶屋</b>　どの階にもいる。賞金で装備を強化（+5まで）、同じ種類2つで鍛え直し、いらない装備は売れる。</li>
-      <li><b>装備</b>　壊れない。武器は使うほど育つ（★5まで）。</li>
+      <li><b>装備</b>　武将に勝つと、その武将の武器（相手と同じレベル・Lv20まで）が手に入る。壊れない。武器は使うほど育つ（★5まで）。</li>
       <li><b>記録</b>　各階に着くと記録碑に自動で記録される。全滅したら記録から再開。主人公が倒れると魂が残り、控えが解放しに来る（魂を守る武将を倒す）。</li>
     </ul></details>
   </div>
