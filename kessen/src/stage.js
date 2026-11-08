@@ -106,3 +106,17 @@ function stageGround(W,H){const T=R3.T;if(!T||!R3.world)return;const m=new T.Mes
 const _setWorld=R3.setWorld;R3.setWorld=function(kind,W,H,opt){_setWorld.apply(R3,arguments);if(kind==='war'){try{stageGround(W,H);}catch(e){}if(STAGE.cur)try{stageProps(STAGE.cur);}catch(e){}}};
 // 遠景で地面と水面がちらついて青く見えるのを防ぐ（カメラの手前の切り取り距離を距離に合わせる）
 const _r3render=R3.render;R3.render=function(){try{const c=R3.camera,d=R3.cam&&R3.cam.dist||20;const nr=Math.max(.1,Math.min(12,d*.18));if(c&&Math.abs(c.near-nr)>.05){c.near=nr;c.far=Math.max(400,d*8);c.updateProjectionMatrix();}}catch(e){}return _r3render.apply(R3,arguments);};
+// ---- 火計の炎：燃えている部隊から炎・火の粉・黒煙が立ちのぼる。赤壁では火攻めのあと船団が燃える
+const FIREFX={last:0};
+function fireBurst(x,z,k,dt){const R=R3;const h=R.hAt(x,z);const n=Math.max(1,Math.round(k*dt));
+  for(let i=0;i<n;i++){const rx=x+(Math.random()-.5)*1.8,rz=z+(Math.random()-.5)*1.8,hot=Math.random();
+    R.emit({x:rx,y:h+.15,z:rz,vx:(Math.random()-.5)*.5,vy:1.6+Math.random()*2.2,vz:(Math.random()-.5)*.5,t:0,d:.45+Math.random()*.45,c:hot<.35?[1,.92,.45]:hot<.75?[1,.58,.16]:[.95,.3,.08],a:1,s0:1.0+Math.random()*.7,s1:.15,g:-.8});
+    if(Math.random()<.35)R.emit({x:rx,y:h+.6,z:rz,vx:(Math.random()-.5)*1.2,vy:2.5+Math.random()*2.5,vz:(Math.random()-.5)*1.2,t:0,d:.9+Math.random()*.6,c:[1,.75,.3],a:1,s0:.09,s1:.03,g:-.4});
+    if(Math.random()<.45)R.emit({x:rx,y:h+1.4,z:rz,vx:(Math.random()-.5)*.3+.25,vy:.9+Math.random()*.7,vz:(Math.random()-.5)*.3,t:0,d:2.2+Math.random()*1.4,c:[.14,.12,.1],a:.6,s0:1.1,s1:3.6,g:0});}}
+const _r3render2=R3.render;R3.render=function(){try{const now=performance.now()/1000,dt=Math.min(.1,now-(FIREFX.last||now));FIREFX.last=now;
+  if(BT&&BT.started&&!BT.over&&!BT.paused&&R3.kind==='war'&&dt>0){
+    BT.sq.forEach(function(q){if(q.alive&&q.st_burn>BT.time)fireBurst(q.x,q.y,60,dt);});
+    if(RUN&&RUN.w&&RUN.w.n==='赤壁'&&STAGE.cur&&(BT.windFire||BT.sq.some(function(q){return q.side===1&&q.st_burn>BT.time;}))){STAGE.shipsFire=1;}
+    if(STAGE.shipsFire&&STAGE.cur)STAGE.cur.forEach(function(p){if(p.k==='ship'&&!p.wu)fireBurst(p.x,p.y,40,dt);});}}catch(e){}
+  return _r3render2.apply(R3,arguments);};
+const _swFire=R3.setWorld;R3.setWorld=function(){STAGE.shipsFire=0;return _swFire.apply(R3,arguments);};

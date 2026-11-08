@@ -103,6 +103,7 @@ async function runStory(i){
     if(s.wi<0){SV.seen[i]=1;i++;continue;}
     STORY_RUN={i:i,wi:s.wi};S.cleared=Math.max(S.cleared,s.wi);save();PREP=null;updBar();
     const how=await askHow(s);if(!how){STORY_RUN=null;return;}
+    if(how==='skip'){if(S.best[s.wi]===undefined)S.best[s.wi]=1;S.cleared=Math.max(S.cleared,s.wi+1);save();afterStoryWar();return;}
     if(how==='watch')watchWar(s.wi);else prepSheet(s.wi);return;
   }
   SV.idx=ST.SC.length;svSave();ending();
@@ -221,8 +222,10 @@ const _goHome=goHome;goHome=function(){endWatch();_goHome();};
 function askHow(s){return new Promise(function(res){const w=WARS[s.wi];
   let h='<div class="sq"><div class="hd"><b>'+esc(w.n)+'</b><span class="muted" style="font-size:12px">'+w.p+' ・ '+w.y+'年 ・ '+TER_NAME[w.ter]+'</span></div><p style="margin:0;font-size:13px" class="muted">'+esc(w.d)+'</p></div>';
   h+='<div class="list" style="margin-top:10px"><button class="btn pri" id="hwFight" type="button" style="min-height:58px;font-size:18px">戦う<small style="display:block;font-size:12px;font-weight:400">軍議で兵を配分し、自分で布陣して指揮する</small></button>';
-  h+='<button class="btn" id="hwWatch" type="button" style="min-height:58px;font-size:18px">鑑賞する<small style="display:block;font-size:12px;font-weight:400;color:var(--mute)">史実どおりに戦が進むのを見て、物語の続きへ</small></button></div>';
+  h+='<button class="btn" id="hwWatch" type="button" style="min-height:58px;font-size:18px">鑑賞する<small style="display:block;font-size:12px;font-weight:400;color:var(--mute)">史実どおりに戦が進むのを見て、物語の続きへ</small></button>';
+  h+='<button class="btn" id="hwSkip" type="button" style="min-height:50px;font-size:16px">スキップ<small style="display:block;font-size:12px;font-weight:400;color:var(--mute)">戦は史実どおりの結果として、すぐ物語の続きへ</small></button></div>';
   const sh=sheet('合戦',h,'glass');
   sh.querySelector('#hwFight').onclick=function(){closeSheet();res('fight');};
   sh.querySelector('#hwWatch').onclick=function(){closeSheet();res('watch');};
+  sh.querySelector('#hwSkip').onclick=function(){closeSheet();res('skip');};
   sh.querySelector('.x').onclick=function(){closeSheet();res(null);};});}
