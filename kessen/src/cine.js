@@ -19,8 +19,8 @@ function cineStart(){
   const tryDuel=function(){if(!BT||!BT.watch||BT.over)return;if(BT.paused||document.getElementById('duelIntro')){setTimeout(tryDuel,1500);return;}
     let a=pair&&heroUnit(0,pair[0]),b=pair&&heroUnit(1,pair[1]);
     if(!a||!b)return;if((BT.duels||[]).length){return;}
-    camEvent('skill',a,3);if(!tries)cineSub('<small>一騎打ち</small><b>'+esc(a.hs.n)+'　対　'+esc(b.hs.n)+'</b>',3.5);
-    setTimeout(function(){if(!BT||BT.over)return;if(!maybeDuel(a,b,true)&&!BT.histDuel&&++tries<10)setTimeout(tryDuel,2000);},1600);};
+    camEvent('skill',a,3);if(!tries)cineSub('<small>一騎打ちを挑む</small><b>'+esc(a.hs.n)+'　対　'+esc(b.hs.n)+'</b>',3.5);
+    setTimeout(function(){if(!BT||BT.over)return;const r=maybeDuel(a,b,true);if(!r&&!BT.histDuel&&++tries<10)setTimeout(tryDuel,2000);},1600);};
   const wait=function(){if(!BT||!BT.watch||BT.over)return;if((BT.time||0)>=9)tryDuel();else setTimeout(wait,400);};setTimeout(wait,1000);
 }
 // 史実の出来事は字幕にも出す
@@ -94,3 +94,16 @@ const _startDuelH=startDuel;startDuel=function(me,foe,cb){
     else{[me,foe].forEach(function(q){q.morale=Math.min(120,(q.morale||60)+6);});}
     cineCut();cineSub('<b>'+(r==='draw'?'勝負つかず':(r==='meflee'?me.hs.n:foe.hs.n)+'、退く')+'</b><small>'+esc(txt)+'</small>',5);});};
 // 引き分けで戦が止まらないよう、決着のつかない一騎打ちは「史実の一騎打ち」の後の再挑戦をしない
+
+// 一騎打ちは、二人の武将が実際に近づいてから（接敵してから）始まる。遠ければ互いに向かって進み、近づいたところで始める
+const DUEL_NEAR=3.6;
+const _maybeDuelNear=maybeDuel;maybeDuel=function(a,b,forced){
+  if(!BT||!a||!b||!a.alive||!b.alive)return _maybeDuelNear(a,b,forced);
+  const d=Math.hypot(a.x-b.x,a.y-b.y);if(d<=DUEL_NEAR)return _maybeDuelNear(a,b,forced);
+  if(!forced)return false;
+  // 呼び出し（史実の一騎打ち・命令・出来事）は覚えておき、互いに向かわせる
+  BT.duelPend={a:a,b:b,f:forced,t:BT.time};[[a,b],[b,a]].forEach(function(p){if(!p[0].cmd||BT.watch){p[0].order={k:'attack',tgt:p[1]};p[0].cmd={k:'attack',tgt:p[1],until:BT.time+20};}});
+  if(!BT.duelPendIv)BT.duelPendIv=setInterval(function(){const P=BT&&BT.duelPend;if(!BT||BT.over||!P){if(BT){clearInterval(BT.duelPendIv);BT.duelPendIv=0;}return;}
+    if(BT.paused)return;if(!P.a.alive||!P.b.alive||P.a.routed||P.b.routed||P.a.heroDown||P.b.heroDown||BT.time-P.t>40){BT.duelPend=null;return;}
+    if(Math.hypot(P.a.x-P.b.x,P.a.y-P.b.y)<=DUEL_NEAR){BT.duelPend=null;_maybeDuelNear(P.a,P.b,P.f);}},250);
+  return 'pending';};
