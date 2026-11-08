@@ -111,9 +111,11 @@ async function runStory(i){
 async function afterStoryWar(){
   const r=STORY_RUN;STORY_RUN=null;if(!r)return;
   const s=ST.SC[r.i];RUN=null;BT=null;PREP=null;goHome();
+  // 勝った時点で進み具合を保存する（戦のあとの会話の途中で閉じても、同じ戦に戻らない）
+  SV.seen[r.i]=1;SV.idx=r.i+1;SV.post=r.i;svSave();
   BGM.play('victory');
   await playStory(s.post,{bg:s.postBg||'camp',place:s.place});
-  SV.seen[r.i]=1;SV.idx=r.i+1;svSave();runStory(r.i+1);
+  SV.post=null;svSave();runStory(r.i+1);
 }
 function ending(){const d=document.createElement('div');d.className='sv sv-ch';
   d.innerHTML='<div><small>完</small><b>三国英雄伝</b><p>滾滾たる長江は東に逝き、<br>浪花は英雄を淘い尽くす。<br>是非成敗、頭を転ずれば空し。</p><p class="muted">名場面録からいつでも見返せる。</p></div>';
@@ -168,7 +170,9 @@ function storyTitle(){
   if(has)h+='<button class="btn" type="button" id="stGal" style="min-width:240px">名場面録</button>';
   h+='</div><div id="stCf"></div><p style="margin:14px auto 0;max-width:340px;text-align:center;font-size:11px;color:var(--mute);line-height:1.6">戦場の声：VOICEVOX:青山龍星 ／ VOICEVOX:玄野武宏 ／ VOICEVOX:剣崎雌雄 ／ VOICEVOX:雀松朱司 ／ VOICEVOX:麒ヶ島宗麟 ／ VOICEVOX:ちび式じい ／ VOICEVOX:白上虎太郎 ／ VOICEVOX:栗田まろん ／ VOICEVOX:冥鳴ひまり ／ VOICEVOX:九州そら</p>';
   d.innerHTML=h;UI.appendChild(d);
-  const start=function(i){SND.init();if(!S){newState('蜀');save();}d.remove();goHome();runStory(i);};
+  const start=function(i){SND.init();if(!S){newState('蜀');save();}d.remove();goHome();
+    if(SV.post!=null&&SV.post===i-1&&ST.SC[SV.post]&&ST.SC[SV.post].post){const ps=ST.SC[SV.post];BGM.play('victory');playStory(ps.post,{bg:ps.postBg||'camp',place:ps.place}).then(function(){SV.post=null;svSave();runStory(i);});return;}
+    runStory(i);};
   const c=d.querySelector('#stCont');if(c)c.onclick=function(){start(SV.idx);};
   const g=d.querySelector('#stGal');if(g)g.onclick=function(){SND.init();d.remove();goHome();storyGallery();};
   d.querySelector('#stNew').onclick=function(){
