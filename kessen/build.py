@@ -68,6 +68,10 @@ sub("const _brSR=showResult;showResult=function(win){if(BR){", "const _brSR=show
 sub("G3.look=function(id){return Object.assign({},DEFL,LOOK[id]||{});};", "G3.LOOK=LOOK;G3.look=function(id){return Object.assign({},DEFL,LOOK[id]||{});};")
 sub("UI.appendChild(d);setTimeout(function(){d.remove();},3000);", "UI.appendChild(d);setTimeout(function(){d.remove();},5000);", 2)
 sub("UI.appendChild(e);setTimeout(function(){e.remove();},1700);}", "UI.appendChild(e);setTimeout(function(){e.remove();},2800);}")
+sub("'を討ち取る!'", "'を打ち破る!'")
+sub("(win?'を討ち取った。':'に敗れた。')", "(win?'を打ち破った。':'に敗れた。')")
+sub("why=fg?fg.hs.n+'を討ち取った':'';", "why=fg?fg.hs.n+'を打ち破った':'';")
+sub("const ids=warIds(i).slice(0,w.maxU);\n  const lead=ids[0];", "const ids=leadFirst(w,warIds(i)).slice(0,w.maxU);\n  const lead=ids[0];")
 sub('  if(BT.started)MM.draw(x);', '  if(BT.started&&!BT.watch)MM.draw(x);')
 # 物語の見た目
 sub('<div id="app">', '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPMincho:wght@400;700&family=Yuji+Syuku&display=swap">\n<style>\n' + src('story.css') + src('theme.css') + '</style>\n<div id="app">')

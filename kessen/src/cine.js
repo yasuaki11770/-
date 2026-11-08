@@ -27,21 +27,19 @@ function cineStart(){
 const _evBanner=evBanner;evBanner=function(e,side){_evBanner(e,side);if(BT&&BT.watch)cineSub('<b>'+esc(e.n)+'</b><small>'+esc(e.d)+'</small>',5);};
 // 武将が倒れたらスローモーション
 const _camEvent=camEvent;camEvent=function(k,q,pri){_camEvent(k,q,pri);if(BT&&BT.watch&&k==='down'&&q){BT.slowT=1.5;cineSub('<b>'+esc(q.hs.n)+'</b><small>'+(q.side?'敵将、ここに退く':'無念の退却')+'</small>',3);}};
-// カット割り：低いアングルの寄り、騎馬の追走、激突、俯瞰へのクレーン
-const _pickShot=pickShot;pickShot=function(){if(!BT||!BT.watch)return _pickShot();
-  const s=_pickShot();if(s.k==='skill'||s.k==='down'){cineCut();return s;}
-  const heroes=alive().filter(function(q){return q.hero&&!q.heroDown;});const fight=alive().filter(function(q){return q.state==='fight'&&q.foe;});const mov=alive().filter(function(q){return q.state==='move'&&q.order.k!=='retreat';});
-  const r=rnd();let out;
-  if(fight.length&&r<.35){const q=fight.filter(function(o){return o.hero;})[0]||pick(fight);out={k:'clash2',q:q,dur:4.6,yaw0:R3.cam.yaw+(rnd()-.5)*1.6};}
-  else if(heroes.length&&r<.6){out={k:'hero',q:pick(heroes),dur:4.2,yaw0:rnd()*6.28};}
-  else if(mov.length&&r<.8){out={k:'track',q:pick(mov),dur:4.4};}
-  else out={k:'crane',dur:6,yaw0:R3.cam.yaw};
-  cineCut();return out;};
-const _shotCam=shotCam;shotCam=function(s,t){const q=s.q;
-  if(s.k==='hero')return {tx:q.x,tz:q.y,yaw:s.yaw0+t*.22,pitch:.3,dist:7.5+t*.3};
-  if(s.k==='track'){const yaw=Math.atan2(-Math.cos(q.face),-Math.sin(q.face));return {tx:q.x+Math.cos(q.face)*2,tz:q.y+Math.sin(q.face)*2,yaw:yaw+.35,pitch:.36,dist:9.5};}
-  if(s.k==='clash2'){const f=q.foe&&q.foe.alive?q.foe:q;return {tx:(q.x+f.x)/2,tz:(q.y+f.y)/2,yaw:s.yaw0+t*.12,pitch:.44,dist:11.5};}
-  if(s.k==='crane'){const w=_shotCam({k:'wide',yaw0:s.yaw0},t);const u=Math.min(1,t/s.dur);w.pitch=.42+.5*u;w.dist=w.dist*(.55+.45*u);return w;}
+// カメラ：基本は全軍を収める高い遠景（決戦風）。技や武将が倒れた時だけ一瞬寄る
+const _pickShot=pickShot;pickShot=function(){
+  const ev=(BT.ev||[]).filter(function(e){return BT.time-e.t<2.5&&e.q&&(e.q.alive||e.k==='down');}).sort(function(a,b){return b.pri-a.pri;});
+  if(ev.length){const e=ev[0];BT.ev=[];const gap=BT.time-(CAMD.lastClose||-99);if((e.k==='skill'&&gap>7)||(e.k==='down'&&gap>3)){CAMD.lastClose=BT.time;if(BT.watch)cineCut();return {k:e.k,q:e.q,dur:e.k==='skill'?2.2:2.6,yaw0:R3.cam.yaw};}}
+  if(CAMD.shot&&CAMD.shot.k==='kessen'&&CAMD.t<CAMD.shot.dur)return CAMD.shot;
+  const was=CAMD.shot&&(CAMD.shot.k==='skill'||CAMD.shot.k==='down');if(was&&BT.watch)cineCut();
+  return {k:'kessen',dur:7,yaw0:0};};
+const _shotCam=shotCam;shotCam=function(s,t){
+  if(s.k==='kessen'){const A=BT.sq.filter(function(q){return q.alive&&!q.routed&&!q.hidden;});if(!A.length)return _shotCam({k:'wide',yaw0:0},t);
+    let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9;A.forEach(function(o){x0=Math.min(x0,o.x);x1=Math.max(x1,o.x);z0=Math.min(z0,o.y);z1=Math.max(z1,o.y);});
+    const ext=Math.max(x1-x0,(z1-z0)*1.25,10);const tt=BT.time||0;
+    return {tx:(x0+x1)/2,tz:(z0+z1)/2+2,yaw:s.yaw0+Math.sin(tt*.05)*.07,pitch:1.0,dist:clamp(ext*(innerWidth<innerHeight?1.55:1.2)+18,34,86)};}
+  if(s.k==='skill'){const q=s.q;return {tx:q.x,tz:q.y,yaw:s.yaw0+t*.3,pitch:.42,dist:9};}
   return _shotCam(s,t);};
 
 // ================= 戦の見せ場：互角の激突 → 窮地 → 反撃 → 総攻撃 の流れを作る =================

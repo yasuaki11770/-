@@ -53,3 +53,6 @@ const _stepSquad=stepSquad;stepSquad=function(q,dt){const mc=BT&&BT.mc;
     const ahead=q.side===0?q.y<mc.line[0]+q.mdy-.6:q.y>mc.line[1]+q.mdy+.6;
     if(ahead){q.face=q.side===0?-Math.PI/2:Math.PI/2;return;}}
   return _stepSquad(q,dt);};
+// 総大将：その勢力の君主がいれば君主が率いる（曹操がいるのに関羽が総大将、にならない）
+const LORDS={'魏':['caoc','caopi','caorui','sima','simazhao','simayan'],'蜀':['liub','liushan','zhugel'],'呉':['sunj','suns','sunq','sunhao'],'漢':['caoc','sunj','yuans','liub'],'晋':['simayan','simazhao','sima']};
+function leadFirst(w,ids){const L=LORDS[w.side]||[];const lord=L.find(function(id){return ids.indexOf(id)>=0;});if(!lord||ids[0]===lord)return ids;return [lord].concat(ids.filter(function(id){return id!==lord;}));}
