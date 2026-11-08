@@ -73,9 +73,12 @@ sub("(win?'を討ち取った。':'に敗れた。')", "(win?'を打ち破った
 sub("why=fg?fg.hs.n+'を討ち取った':'';", "why=fg?fg.hs.n+'を打ち破った':'';")
 sub("const ids=warIds(i).slice(0,w.maxU);\n  const lead=ids[0];", "const ids=leadFirst(w,warIds(i)).slice(0,w.maxU);\n  const lead=ids[0];")
 sub("try{DUEL.frame.contentWindow.focus&&window.focus();}catch(_){}cb(m.win?0:1);}", "try{DUEL.frame.contentWindow.focus&&window.focus();}catch(_){}cb(m.draw?2:m.win?0:1);}")
+sub("q.atkFx=.3;shoot('arrow',q.x,q.y,e.x+(rnd()-.5)*.8,e.y+(rnd()-.5)*.8,.4);", "q.atkFx=.3;{const nA=Math.min(8,2+Math.round(cnt(q)/6));for(let iA=0;iA<nA;iA++)shoot('arrow',q.x+(rnd()-.5)*1.4,q.y+(rnd()-.5)*1.4,e.x+(rnd()-.5)*1.6,e.y+(rnd()-.5)*1.6,.38+rnd()*.25);}")
+sub("R.arrows=new T.InstancedMesh(new T.BoxGeometry(.025,.025,.5),new T.MeshBasicMaterial({color:0xf0e0c0}),600);", "R.arrows=new T.InstancedMesh(new T.BoxGeometry(.06,.06,.8),new T.MeshBasicMaterial({color:0xfff2d6}),2400);")
+sub("if(na<600){tmpM.compose(tmpV.set(x,h+R.hAt(x,z),z),tmpQ,tmpS.set(1,1,1));R.arrows.setMatrixAt(na++,tmpM);}", "if(na<2400){tmpM.compose(tmpV.set(x,h+R.hAt(x,z),z),tmpQ,tmpS.set(1,1,1));R.arrows.setMatrixAt(na++,tmpM);}")
 sub('  if(BT.started)MM.draw(x);', '  if(BT.started&&!BT.watch)MM.draw(x);')
 # 物語の見た目
-sub('<div id="app">', '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPMincho:wght@400;700&family=Yuji+Syuku&display=swap">\n<style>\n' + src('story.css') + src('theme.css') + '</style>\n<div id="app">')
+sub('<div id="app">', '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Yuji+Syuku&display=swap">\n<style>\n' + src('story.css') + src('theme.css') + '</style>\n<div id="app">')
 
 open(os.path.join(D, 'index.html'), 'w', encoding='utf-8').write(base)
 print('index.html', len(base))

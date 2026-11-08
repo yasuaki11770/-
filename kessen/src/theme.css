@@ -4,7 +4,7 @@
   --bg:#140d08; --ink:#120b06; --panel:#2b1b10; --panel2:#3a2516; --line:#6e4f26; --line2:#a07a3a;
   --fg:#f2e6c8; --mute:#cdb68c; --dim:#9a845e; --gold:#d8ac4c; --gold-ink:#2a1606; --red:#b02a1c; --red2:#7a1810;
   --f-disp:"Yuji Syuku","Shippori Mincho B1","Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",serif;
-  --f-body:"BIZ UDPMincho","Shippori Mincho B1","Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",serif;
+  --f-body:"BIZ UDPGothic","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic","YuGothic","Noto Sans JP",sans-serif;
   --tex-wood:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='140'%3E%3Cfilter id='w'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.008 .32' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .5 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23w)'/%3E%3C/svg%3E");
   --tex-paper:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .42 0 0 0 0 .3 0 0 0 0 .14 0 0 0 .28 0'/%3E%3C/filter%3E%3Cfilter id='q'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.012 .09' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .33 0 0 0 0 .16 0 0 0 .22 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)'/%3E%3Crect width='100%25' height='100%25' filter='url(%23q)'/%3E%3C/svg%3E");
 }
@@ -64,7 +64,7 @@ select,input{border-radius:2px!important}
 .sv-box.nar{background:var(--tex-paper),linear-gradient(#ece0c4,#d8c498)}
 .sv-who{display:inline-block;min-height:0;margin-bottom:6px;padding:1px 12px 2px;background:#a8281c;color:#fbe9c0;font-family:var(--f-disp);font-size:17px;letter-spacing:.14em;box-shadow:0 1px 0 #5a1008}
 .sv-box.nar .sv-who{display:none}
-.sv-said{font-family:var(--f-body);font-size:17.5px;line-height:1.95;color:#20130a;letter-spacing:.02em}
+.sv-said{font-family:var(--f-body);font-size:17px;line-height:1.85;color:#20130a;letter-spacing:.03em}
 .sv-box.nar .sv-said{font-family:var(--f-body);font-size:17px;color:#3a2410}
 .sv-next{color:#a8281c}
 .sv-stage{top:auto;bottom:3%;height:52%}
