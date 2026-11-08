@@ -1,10 +1,11 @@
 /* ================= 鑑賞を映画のように：字幕・黒帯・カット割り・名場面の一騎打ち ================= */
 // その戦の名場面の一騎打ち（こちら, 敵）
 const CINE_DUEL={'黄巾討伐':['guan','chengyuanzhi'],'汜水関':['guan','huax'],'虎牢関':['zhangf','lubu'],'神亭':['suns','tsc'],'濮陽':['dianw','lubu'],'白馬':['guan','yanl'],
- '五関':['guan','kongxiu'],'古城':['guan','caiyang'],'烏巣':['xuc','chunyuqiong'],'博望坡':['zhaoy','xhd'],'長坂':['zhaoy','zhangh'],'赤壁':['gann','zhangl'],'桂陽':['zhaoy','zhaofan'],
- '劉郎浦':['zhaoy','xusheng'],'潼関':['xuc','mac'],'落鳳坡':['weiy','zhangren'],'巴郡':['zhangf','yanyan'],'葭萌関':['zhangf','mac'],'定軍山':['huangz','xhy'],'樊城':['guan','pangd'],
- '麦城':['guan','panzhang'],'猇亭':['guanxing','panzhang'],'夷陵':['zhaoy','zhout'],'南中':['zhaoy','menghuo'],'盤蛇谷':['weiy','wutugu'],'鳳鳴山':['zhaoy','hande'],'街亭':['wangping','zhangh'],
- '上方谷':['weiy','simashi'],'五丈原':['jiangw','guohuai'],'洮西':['jiangw','wangjing'],'剣閣':['jiangw','zhonghui'],'建業':['wenyang','sunhao']};
+ '五関':['guan','kongxiu'],'古城':['guan','caiyang'],'博望坡':['zhaoy','xhd'],'長坂':['zhaoy','zhangh'],'潼関':['xuc','mac'],'巴郡':['zhangf','yanyan'],'葭萌関':['zhangf','mac'],
+ '定軍山':['huangz','xhy'],'樊城':['guan','pangd'],'猇亭':['guanxing','panzhang'],'盤蛇谷':['weiy','wutugu'],'鳳鳴山':['zhaoy','hande']};
+// 鑑賞では、史実（演義）で実際にあった一騎打ちだけが起こる
+function histPair(a,b){const w=RUN&&RUN.w;const pr=w&&CINE_DUEL[w.n];if(!pr||!a||!b)return false;const ids=[a.hero,b.hero];return ids.indexOf(pr[0])>=0&&ids.indexOf(pr[1])>=0;}
+const _maybeDuelH=maybeDuel;maybeDuel=function(a,b,forced){if(BT&&BT.watch){if(BT.histDuel||!histPair(a,b))return false;const r=_maybeDuelH(a,b,forced);if(r)BT.histDuel=1;return r;}return _maybeDuelH(a,b,forced);};
 const CINE={sub:null,cut:null,subT:null};
 function cineSub(txt,sec){if(!BT||!BT.watch)return;let e=CINE.sub;if(!e||!e.isConnected){e=document.createElement('div');e.className='cine-sub';document.getElementById('stage').appendChild(e);CINE.sub=e;}
   e.innerHTML=txt;e.classList.remove('go');void e.offsetWidth;e.classList.add('go');clearTimeout(CINE.subT);CINE.subT=setTimeout(function(){e.classList.remove('go');},(sec||4.5)*1000);}
@@ -17,7 +18,6 @@ function cineStart(){
   const pair=CINE_DUEL[w.n];let tries=0;
   const tryDuel=function(){if(!BT||!BT.watch||BT.over)return;if(BT.paused||document.getElementById('duelIntro')){setTimeout(tryDuel,1500);return;}
     let a=pair&&heroUnit(0,pair[0]),b=pair&&heroUnit(1,pair[1]);
-    if(!a||!b){const me=sideOf(0).filter(function(q){return q.hero&&q.alive&&!q.routed&&!q.heroDown;}).sort(function(x,y){return y.hs.p-x.hs.p;})[0];const fo=sideOf(1).filter(function(q){return q.hero&&q.alive&&!q.routed&&!q.heroDown;}).sort(function(x,y){return (y.gen?50:0)+y.hs.p-(x.gen?50:0)-x.hs.p;})[0];a=me;b=fo;}
     if(!a||!b)return;if((BT.duels||[]).length){return;}
     camEvent('skill',a,3);if(!tries)cineSub('<small>一騎打ち</small><b>'+esc(a.hs.n)+'　対　'+esc(b.hs.n)+'</b>',3.5);
     setTimeout(function(){if(!BT||BT.over)return;if(!maybeDuel(a,b,true)&&++tries<4)setTimeout(tryDuel,3000);},1600);};
