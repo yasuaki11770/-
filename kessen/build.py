@@ -42,7 +42,7 @@ sub('let r=1.15+.012*i;', 'let r=1.15+.006*i;')
 data = src('data.js').replace("if (typeof module !== 'undefined') module.exports = { CLS, TER, CH, SC, CHAPTERS, TRI, MT, chap, ev, bt, GEN };", '')
 stories = '\n'.join(src('story%d.js' % i) for i in range(1, 5))
 st = 'const ST=(function(){\n' + data + '\n' + stories + '\nreturn {SC:SC,CHAPTERS:CHAPTERS,CH:CH};\n})();\n'
-extra = [src('vendor_post.js'), src('assets_grass.js'), src('story_parts.js'), src('story_mode.js'), src('portrait2.js'), src('visual2.js'), src('sound2.js'), src('cine.js'), src('march.js')]
+extra = [src('vendor_post.js'), src('assets_grass.js'), src('story_parts.js'), src('story_mode.js'), src('portrait2.js'), src('visual2.js'), src('sound2.js'), src('cine.js'), src('march.js'), src('stage.js'), src('voice.js').replace('/*DIAL*/', src('voice_dial.js'))]
 for s in [st] + extra:
     assert '</script' not in s
 boot = '/* ================= BOOT ================= */'
@@ -52,7 +52,7 @@ sub(boot, st + '\n'.join(extra) + '\n' + boot)
 sub('  if(S){goHome();}\n  else{VIEW=null;showIntro();}', '  VIEW=null;storyTitle();')
 
 # 3D：中身を外から触れるように出し、後処理（ブルーム等）を通して描く
-sub("    R.world=new T.Group();scene.add(R.world);", "    R.renderer=renderer;R.scene=scene;R.camera=camera;R.hemi=hemi;R.sun=sun;R.TX=TX;\n    R.world=new T.Group();scene.add(R.world);")
+sub("    R.world=new T.Group();scene.add(R.world);", "    R.renderer=renderer;R.T=T;R.scene=scene;R.camera=camera;R.hemi=hemi;R.sun=sun;R.TX=TX;\n    R.world=new T.Group();scene.add(R.world);")
 sub("R.render=function(){placeCam();renderer.render(scene,camera);};", "R.render=function(){placeCam();if(R.comp){R.postResize&&R.postResize();R.comp.render();}else renderer.render(scene,camera);};")
 sub("  resize();R3.init();", "  resize();R3.init();R3.upgrade&&R3.upgrade();")
 
