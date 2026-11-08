@@ -20,8 +20,8 @@ function cineStart(){
     let a=pair&&heroUnit(0,pair[0]),b=pair&&heroUnit(1,pair[1]);
     if(!a||!b)return;if((BT.duels||[]).length){return;}
     camEvent('skill',a,3);if(!tries)cineSub('<small>一騎打ち</small><b>'+esc(a.hs.n)+'　対　'+esc(b.hs.n)+'</b>',3.5);
-    setTimeout(function(){if(!BT||BT.over)return;if(!maybeDuel(a,b,true)&&++tries<4)setTimeout(tryDuel,3000);},1600);};
-  setTimeout(tryDuel,17000);
+    setTimeout(function(){if(!BT||BT.over)return;if(!maybeDuel(a,b,true)&&!BT.histDuel&&++tries<10)setTimeout(tryDuel,2000);},1600);};
+  const wait=function(){if(!BT||!BT.watch||BT.over)return;if((BT.time||0)>=9)tryDuel();else setTimeout(wait,400);};setTimeout(wait,1000);
 }
 // 史実の出来事は字幕にも出す
 const _evBanner=evBanner;evBanner=function(e,side){_evBanner(e,side);if(BT&&BT.watch)cineSub('<b>'+esc(e.n)+'</b><small>'+esc(e.d)+'</small>',5);};
@@ -76,3 +76,20 @@ window.addEventListener('message',function(e){const m=e.data||{};if(m.t==='duelE
 // 戦法の表示は一つずつ（重ねない）、出ている間は叫びを隠す
 const _cutin=cutin;cutin=function(q,tk){UI.querySelectorAll('.cutin').forEach(function(e){e.remove();});const s=document.getElementById('cineSay');if(s)s.classList.remove('go');_cutin(q,tk);};
 const _dSay=dSay;dSay=function(q,line){if(UI.querySelector('.cutin'))return;_dSay(q,line);};
+
+// 史実の決着：win=勝つ draw=勝負つかず meflee=味方が退く（誘い・脱出） foeflee=敵が退く
+const DUEL_RES={'虎牢関':['draw','張飛と呂布、五十合打ち合うも勝負つかず'],'神亭':['draw','孫策と太史慈、組み合ったまま勝負つかず'],'濮陽':['draw','典韋、呂布を食い止め、曹操を逃がす'],
+  '潼関':['draw','許褚と馬超、二百合を超えても決着せず'],'葭萌関':['draw','張飛と馬超、夜を徹して打ち合うも勝負つかず'],'樊城':['draw','関羽と龐徳、百合打ち合うも勝負つかず'],
+  '博望坡':['meflee','趙雲、わざと退いて夏侯惇を誘い込む'],'長坂':['meflee','趙雲、張郃を振り切って駆け抜ける'],'盤蛇谷':['meflee','魏延、わざと負けて兀突骨を谷へ誘う'],
+  '巴郡':['foeflee','厳顔、張飛の勢いに押されて退く']};
+function histRes(me,foe){const w=RUN&&RUN.w;if(!w||!histPair(me,foe))return 'win';const r=DUEL_RES[w.n];return r?r[0]:'win';}
+const _startDuelH=startDuel;startDuel=function(me,foe,cb){
+  if(!BT||!BT.watch)return _startDuelH(me,foe,cb);const r=histRes(me,foe);if(r==='win')return _startDuelH(me,foe,cb);
+  const txt=(DUEL_RES[RUN.w.n]||[])[1]||'';
+  return _startDuelH(me,foe,function(res){cb(2);
+    const back=function(q){if(!q||!q.alive)return;const t0=BT.time,dir=q.side===0?1:-1,tx=q.x,ty=clamp(q.y+dir*7,1,BT.H-1);const go=function(){BT.lastFight=BT.time;q.cmd={k:'move',until:BT.time+1};q.order={k:'move',x:tx,y:ty};q.foe=null;if(q.state==='fight')q.state='move';};go();
+      const iv=setInterval(function(){if(!BT||BT.over||!q.alive){clearInterval(iv);return;}if(BT.time-t0>6){clearInterval(iv);q.cmd=null;q.order={k:'hold',x:q.x,y:q.y};return;}go();},250);};
+    if(r==='meflee')back(me);else if(r==='foeflee')back(foe);
+    else{[me,foe].forEach(function(q){q.morale=Math.min(120,(q.morale||60)+6);});}
+    cineCut();cineSub('<b>'+(r==='draw'?'勝負つかず':(r==='meflee'?me.hs.n:foe.hs.n)+'、退く')+'</b><small>'+esc(txt)+'</small>',5);});};
+// 引き分けで戦が止まらないよう、決着のつかない一騎打ちは「史実の一騎打ち」の後の再挑戦をしない
