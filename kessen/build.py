@@ -42,7 +42,7 @@ sub('let r=1.15+.012*i;', 'let r=1.15+.006*i;')
 data = src('data.js').replace("if (typeof module !== 'undefined') module.exports = { CLS, TER, CH, SC, CHAPTERS, TRI, MT, chap, ev, bt, GEN };", '')
 stories = '\n'.join(src('story%d.js' % i) for i in range(1, 5))
 st = 'const ST=(function(){\n' + data + '\n' + stories + '\nreturn {SC:SC,CHAPTERS:CHAPTERS,CH:CH};\n})();\n'
-extra = [src('vendor_post.js'), src('assets_grass.js'), src('story_parts.js'), src('story_mode.js'), src('portrait2.js'), src('visual2.js'), src('sound2.js'), src('cine.js')]
+extra = [src('vendor_post.js'), src('assets_grass.js'), src('story_parts.js'), src('story_mode.js'), src('portrait2.js'), src('visual2.js'), src('sound2.js'), src('cine.js'), src('march.js')]
 for s in [st] + extra:
     assert '</script' not in s
 boot = '/* ================= BOOT ================= */'
