@@ -1,4 +1,4 @@
-/* ================= 三國志決戦伝：物語モード（会話シーン → 合戦 → 会話シーン） =================
+/* ================= 三国英雄伝：物語モード（会話シーン → 合戦 → 会話シーン） =================
    ST は src/data.js と src/story1〜4.js（全113シーン）。合戦は三国決戦伝の合戦をそのまま使う。 */
 (function addStoryHeroes(){
   const FK={shu:'蜀',wei:'魏',wu:'呉',qun:'群',han:'漢',nan:'南蛮',jin:'晋'};
@@ -46,7 +46,7 @@ function playStory(text,opt){opt=opt||{};
   return new Promise(function(done){
     const l=document.createElement('div');l.className='sv';document.getElementById('app').appendChild(l);
     l.innerHTML='<canvas class="sv-sky"></canvas><div class="sv-place"'+(opt.place?'':' hidden')+'>'+esc(opt.place||'')+'</div><button class="btn sm sv-skip" type="button">スキップ ▶▶</button>'+
-      '<div class="sv-stage"><img class="sv-l" alt="" hidden><img class="sv-r" alt="" hidden></div>'+
+      '<div class="sv-stage"><div class="sv-fig sv-l" hidden><img alt=""><b class="sv-nm"></b></div><div class="sv-fig sv-r" hidden><img alt=""><b class="sv-nm"></b></div></div>'+
       '<div class="sv-box"><div class="sv-who"></div><div class="sv-said"></div><div class="sv-next">▼</div></div>';
     const sky=l.querySelector('.sv-sky'),box=l.querySelector('.sv-box'),who=l.querySelector('.sv-who'),said=l.querySelector('.sv-said'),nx=l.querySelector('.sv-next');
     const paint=function(k){requestAnimationFrame(function(){paintBg(sky,k);});};paint(opt.bg||'field');
@@ -54,7 +54,7 @@ function playStory(text,opt){opt=opt||{};
     const stage=function(name){const im={l:l.querySelector('.sv-l'),r:l.querySelector('.sv-r')};
       if(!name){im.l.classList.add('off');im.r.classList.add('off');return;}
       let k=slot.l===name?'l':slot.r===name?'r':null;
-      if(!k){k=last==='l'?'r':'l';slot[k]=name;im[k].src=storyPortrait(name);im[k].hidden=false;im[k].classList.remove('in');void im[k].offsetWidth;im[k].classList.add('in');}
+      if(!k){k=last==='l'?'r':'l';slot[k]=name;im[k].querySelector('img').src=storyPortrait(name);im[k].querySelector('.sv-nm').textContent=name;im[k].hidden=false;im[k].classList.remove('in');void im[k].offsetWidth;im[k].classList.add('in');}
       last=k;im[k].classList.remove('off');im[k==='l'?'r':'l'].classList.add('off');};
     let skip=false,adv=null,choice=opt.choice||0,i=0;
     l.querySelector('.sv-skip').onclick=function(e){e.stopPropagation();skip=true;if(adv){const a=adv;adv=null;a();}};
@@ -115,7 +115,7 @@ async function afterStoryWar(){
   SV.seen[r.i]=1;SV.idx=r.i+1;svSave();runStory(r.i+1);
 }
 function ending(){const d=document.createElement('div');d.className='sv sv-ch';
-  d.innerHTML='<div><small>完</small><b>三國志決戦伝</b><p>滾滾たる長江は東に逝き、<br>浪花は英雄を淘い尽くす。<br>是非成敗、頭を転ずれば空し。</p><p class="muted">名場面録からいつでも見返せる。</p></div>';
+  d.innerHTML='<div><small>完</small><b>三国英雄伝</b><p>滾滾たる長江は東に逝き、<br>浪花は英雄を淘い尽くす。<br>是非成敗、頭を転ずれば空し。</p><p class="muted">名場面録からいつでも見返せる。</p></div>';
   document.getElementById('app').appendChild(d);BGM.play('camp');d.onclick=function(){d.remove();goHome();};}
 
 /* ---- 結果画面：物語の合戦なら「物語を進める」 ---- */
@@ -136,8 +136,8 @@ finishWar=function(win,why){
 // 物語以外から選んだ戦も開けるように（名場面録の「戦う」）
 openStage=function(i){if(i<0||i>=WARS.length)return;prepSheet(i);};
 // 物語にいない将（added）は、英雄伝の一騎打ちでは「おまかせ」で戦う
-const _startDuel=startDuel;
-startDuel=function(me,foe,cb){const a=byId(me.hero),b=byId(foe.hero);if((a&&a.added)||(b&&b.added)){quickDuel(me,foe,cb);return;}_startDuel(me,foe,cb);};
+function duelAdd(ids){return ids.map(byId).filter(function(h){return h&&h.added;}).map(function(h){
+  return {id:h.id,i:h.i,s:[h.hp*2,h.df,70,h.cmd,50,60,h.p],lk:Object.assign({sc:1,w:1},h.lk||{}),h:{id:h.id,n:h.n,az:h.az||'',en:h.n,p:h.p,f:h.f,s:h.s||h.n.charAt(0),w:h.w||'剣'}};});}
 
 /* ---- 名場面録 ---- */
 function storyGallery(){
@@ -160,7 +160,7 @@ function storyTitle(){
   const d=document.createElement('div');d.className='intro';
   const has=!!S&&(SV.idx>0||Object.keys(SV.seen).length>0);
   const cur=ST.SC[Math.min(SV.idx,ST.SC.length-1)];
-  let h='<div class="lb2"></div><div class="ttlwrap"><small class="eyeb">桃園の誓い ― 天下統一</small><h1>三國志決戦伝</h1><p>三国志の名場面116を、物語と合戦でたどる。全7章・113場面・34の合戦。会話のあとは軍議で兵を配分し、陣形を組んで布陣、3Dの戦場で武将たちを率いて戦う。因縁の武将がぶつかれば一騎打ち。合戦は「鑑賞する」を選べば、史実どおりに進むのを見て先へ進める。</p></div>';
+  let h='<div class="lb2"></div><div class="ttlwrap"><small class="eyeb">桃園の誓い ― 天下統一</small><h1>三国英雄伝</h1><p>三国志の名場面116を、物語と合戦でたどる。全7章・113場面・34の合戦。会話のあとは軍議で兵を配分し、陣形を組んで布陣、3Dの戦場で武将たちを率いて戦う。因縁の武将がぶつかれば一騎打ち。合戦は「鑑賞する」を選べば、史実どおりに進むのを見て先へ進める。</p></div>';
   h+='<div class="facs" style="display:flex;flex-direction:column;align-items:center;gap:8px">';
   if(has)h+='<button class="facb" type="button" id="stCont" style="min-width:240px;border-color:var(--gold)"><b style="color:var(--gold);font-size:24px">つづきから</b><span>'+esc(ST.CHAPTERS[cur.ch].split('　')[0]+'・'+cur.title)+'</span></button>';
   h+='<button class="facb" type="button" id="stNew" style="min-width:240px'+(has?'':';border-color:var(--gold)')+'"><b style="'+(has?'font-size:20px':'color:var(--gold);font-size:24px')+'">はじめから</b><span>184年、幽州涿郡の桃園から</span></button>';
@@ -199,7 +199,7 @@ duelPlan=function(a,b,sa,sb){let p=_duelPlan(a,b,sa,sb);
 function bestGun(wi){const c=counterOf(FOE_GUN[wi])||[];return c.find(function(k){return GUNORDER.indexOf(k)>=0;})||'rinki';}
 function watchWar(wi){
   PREP=null;prepSheet(wi);PREP.gun=bestGun(wi);closeSheet();councilFull(false);
-  WATCH={dm:S.duelMode};S.duelMode='quick';
+  WATCH={dm:S.duelMode};S.duelMode='full';
   startWar(wi);BT.watch=true;$('#hGo').onclick();
   BT.tap=function(X,Y){const q=unitAt(X,Y);if(q)focusUnit(q);};
   UI.classList.add('watching');CAMD.auto=true;
@@ -211,9 +211,9 @@ function watchWar(wi){
   const chk=BT.check;BT.check=function(){
     if(BT.watch&&!BT.over&&BT.time>=BT.limit-.5&&BT.cond!=='survive'){const fg=BT.sq.find(function(q){return q.side===1&&q.gen;});const mg=BT.sq.find(function(q){return q.side===0&&q.gen;});if(fg&&fg.alive)_hurtSq(fg,fg.hp+1,mg);}
     chk();};
-  setTimeout(function(){toast('鑑賞中。カメラは自動で名場面を追う。「速度」で早送りできる');},4500);
+  cineStart();
 }
-function endWatch(){UI.classList.remove('watching');if(WATCH){S.duelMode=WATCH.dm;WATCH=null;save();}}
+function endWatch(){UI.classList.remove('watching');document.body.classList.remove('cine');if(CINE.sub)CINE.sub.classList.remove('go');if(WATCH){S.duelMode=WATCH.dm;WATCH=null;save();}}
 const _goHome=goHome;goHome=function(){endWatch();_goHome();};
 
 /* 合戦の前に「戦う」か「鑑賞する」かを選ぶ */

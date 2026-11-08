@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""三國志決戦伝を組み立てる。
+"""三国英雄伝を組み立てる。
 
 三国決戦伝（src/base.html）の合戦・3D・一騎打ち・音楽はそのまま使い、
 物語モード（src/ の台本・合戦表・物語の仕組み）を足して index.html を作る。
@@ -18,8 +18,8 @@ def sub(old, new, count=1):
     base = base.replace(old, new, count)
 
 # 名前
-sub('<title>三国決戦伝</title>', '<title>三國志決戦伝</title>')
-sub('<span class="ttl">三国決戦伝</span>', '<span class="ttl">三國志決戦伝</span>')
+sub('<title>三国決戦伝</title>', '<title>三国英雄伝</title>')
+sub('<span class="ttl">三国決戦伝</span>', '<span class="ttl">三国英雄伝</span>')
 sub("const SKEY='sangoku-kessen-v4';", "const SKEY='sangoku-kessenden-v1';")
 
 # 合戦表を物語の34戦に差し替え
@@ -42,7 +42,7 @@ sub('let r=1.15+.012*i;', 'let r=1.15+.006*i;')
 data = src('data.js').replace("if (typeof module !== 'undefined') module.exports = { CLS, TER, CH, SC, CHAPTERS, TRI, MT, chap, ev, bt, GEN };", '')
 stories = '\n'.join(src('story%d.js' % i) for i in range(1, 5))
 st = 'const ST=(function(){\n' + data + '\n' + stories + '\nreturn {SC:SC,CHAPTERS:CHAPTERS,CH:CH};\n})();\n'
-extra = [src('vendor_post.js'), src('assets_grass.js'), src('story_parts.js'), src('story_mode.js'), src('portrait2.js'), src('visual2.js'), src('sound2.js')]
+extra = [src('vendor_post.js'), src('assets_grass.js'), src('story_parts.js'), src('story_mode.js'), src('portrait2.js'), src('visual2.js'), src('sound2.js'), src('cine.js')]
 for s in [st] + extra:
     assert '</script' not in s
 boot = '/* ================= BOOT ================= */'
@@ -56,6 +56,16 @@ sub("    R.world=new T.Group();scene.add(R.world);", "    R.renderer=renderer;R.
 sub("R.render=function(){placeCam();renderer.render(scene,camera);};", "R.render=function(){placeCam();if(R.comp){R.postResize&&R.postResize();R.comp.render();}else renderer.render(scene,camera);};")
 sub("  resize();R3.init();", "  resize();R3.init();R3.upgrade&&R3.upgrade();")
 
+# 一騎打ち：物語の武将も英雄伝で戦えるように送り、鑑賞中は自動で進む映画のような見せ方にする
+sub("const msg={t:'duel',id:DUEL.id,me:me.hero,foe:foe.hero,strat:me.strat||'bal',stage:stg,mm:1+.02*((me.hs.lv||1)-1),fm:1+.015*((foe.hs.lv||1)-1)};",
+    "const msg={t:'duel',id:DUEL.id,me:me.hero,foe:foe.hero,strat:me.strat||'bal',stage:stg,mm:(BT&&BT.watch?1.5:1)*(1+.02*((me.hs.lv||1)-1)),fm:(BT&&BT.watch?.85:1)*(1+.015*((foe.hs.lv||1)-1)),add:duelAdd([me.hero,foe.hero]),demo:!!(BT&&BT.watch)};")
+sub("window.addEventListener('message',function(e){const m=e.data||{};if(m.t!=='duel')return;",
+    "window.addEventListener('message',function(e){const m=e.data||{};if(m.t!=='duel')return;if(m.add)m.add.forEach(function(a){if(byId(a.id))return;HEROES.push(a.h);INT[a.id]=a.i;STAT[a.id]=a.s;LOOK[a.id]=a.lk;const h=byId(a.id);h.i=a.i;h.hp=Math.round(a.s[0]/2);h.df=a.s[1];h.mu=a.s[2];h.cmd=a.s[3];h.pol=a.s[4];h.cha=a.s[5];h.p=a.s[6];});")
+sub("startDuel();parent.postMessage({t:'duelStarted',id:m.id},'*');",
+    "startDuel();parent.postMessage({t:'duelStarted',id:m.id},'*');if(m.demo){document.body.classList.add('demo');clearInterval(window.__dmT);window.__dmT=setInterval(function(){if(!BR){clearInterval(window.__dmT);return;}const sp=document.getElementById('stratP'),o=document.getElementById('stOk');if(S.paused&&sp&&!sp.hidden&&o)o.click();},700);}else{document.body.classList.remove('demo');clearInterval(window.__dmT);}")
+sub("const _brSR=showResult;showResult=function(win){if(BR){", "const _brSR=showResult;showResult=function(win){if(BR){document.body.classList.remove('demo');")
+
+sub('  if(BT.started)MM.draw(x);', '  if(BT.started&&!BT.watch)MM.draw(x);')
 # 物語の見た目
 sub('<div id="app">', '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPMincho:wght@400;700&family=Yuji+Syuku&display=swap">\n<style>\n' + src('story.css') + src('theme.css') + '</style>\n<div id="app">')
 

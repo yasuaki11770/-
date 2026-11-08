@@ -1,13 +1,14 @@
-/* 物語モード（三國志決戦伝）：会話・章見出し・名場面録 */
+/* 物語モード（三国英雄伝）：会話・章見出し・名場面録 */
 .sv{position:fixed;inset:0;z-index:250;display:flex;flex-direction:column;justify-content:flex-end;background:#0b0806;color:var(--fg);padding-bottom:env(safe-area-inset-bottom,0px);-webkit-user-select:none;user-select:none}
 .sv-sky{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:0}
 .sv-place{position:absolute;z-index:3;top:calc(10px + env(safe-area-inset-top,0px));left:max(10px,env(safe-area-inset-left,0px));max-width:calc(100% - 140px);background:rgba(10,8,6,.72);border-left:4px solid var(--gold);padding:4px 12px;font-family:var(--f-disp);font-size:14px;border-radius:0 6px 6px 0}
 .sv-skip{position:absolute;z-index:3;top:calc(8px + env(safe-area-inset-top,0px));right:max(8px,env(safe-area-inset-right,0px));opacity:.85}
 .sv-stage{position:absolute;left:0;right:0;top:56px;bottom:170px;pointer-events:none;z-index:1}
-.sv-stage img{position:absolute;bottom:0;width:min(44vw,220px);height:auto;border-radius:10px;border:2px solid var(--gold);box-shadow:0 10px 30px rgba(0,0,0,.6);transition:filter .25s,transform .25s}
+.sv-fig{position:absolute;bottom:0;width:min(46vw,230px);transition:filter .25s,transform .25s}
+.sv-fig img{display:block;width:100%;height:auto;border-radius:10px;border:2px solid var(--gold);box-shadow:0 10px 30px rgba(0,0,0,.6);transition:filter .25s,transform .25s}
 .sv-l{left:5%}.sv-r{right:5%}
-.sv-stage img.off{filter:brightness(.45) saturate(.6);transform:scale(.94)}
-.sv-stage img.in{animation:svin .35s}
+.sv-fig.off{filter:brightness(.45) saturate(.6);transform:scale(.94)}
+.sv-fig.in{animation:svin .35s}
 @keyframes svin{from{opacity:0;transform:translateY(16px)}}
 .sv-box{position:relative;z-index:2;margin:0 max(8px,env(safe-area-inset-right,0px)) 10px max(8px,env(safe-area-inset-left,0px));min-height:140px;padding:12px 14px;border-radius:12px;border:1px solid var(--line2);border-top:2px solid var(--gold);background:linear-gradient(rgba(42,32,23,.96),rgba(24,18,12,.97));box-shadow:0 -6px 24px rgba(0,0,0,.5)}
 .sv-box.nar{background:rgba(8,6,4,.82);border-top-color:var(--line2)}

@@ -68,10 +68,24 @@ select,input{border-radius:2px!important}
 .sv-box.nar .sv-said{font-family:var(--f-body);font-size:17px;color:#3a2410}
 .sv-next{color:#a8281c}
 .sv-stage{top:auto;bottom:3%;height:52%}
-.sv-stage img{width:min(46vw,230px);border-radius:0;border:4px solid #3a2010;outline:1px solid var(--gold);outline-offset:-7px;box-shadow:0 10px 28px rgba(0,0,0,.65)}
+.sv-fig{position:absolute;bottom:0;width:min(46vw,230px);transition:filter .25s,transform .25s}
+.sv-fig img{display:block;width:100%;height:auto;border-radius:0;border:4px solid #3a2010;outline:1px solid var(--gold);outline-offset:-7px;box-shadow:0 10px 28px rgba(0,0,0,.65)}
 .sv-choice{bottom:auto;top:46%}
 .sv-choice .btn{font-family:var(--f-body);font-size:17px;background:var(--tex-paper),linear-gradient(#f0e4c8,#dcc79c);color:#22150a;border:1px solid #8a6a3a;text-shadow:none}
 .sv-title b{font-family:var(--f-disp);font-weight:400}
 .sv-ch b,.sv-ch small{font-family:var(--f-disp);font-weight:400}
 .sv-ch{background:var(--tex-wood),radial-gradient(#2a180c,#080402)}
 .intro p{background:linear-gradient(90deg,transparent,rgba(16,9,4,.72) 12%,rgba(16,9,4,.72) 88%,transparent);padding:8px 22px;border-top:1px solid rgba(216,172,76,.35);border-bottom:1px solid rgba(216,172,76,.35)}
+.sv-fig .sv-nm{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);white-space:nowrap;padding:2px 14px 3px;font-family:var(--f-disp);font-weight:400;font-size:19px;letter-spacing:.16em;color:#2a1608;background:var(--tex-paper),linear-gradient(#f4e8cc,#dcc596);border:1px solid #6e4f26;box-shadow:0 2px 6px rgba(0,0,0,.6),inset 0 0 0 2px rgba(168,40,28,.35)}
+.sv-fig.off .sv-nm{opacity:.75}
+.sv-fig:not(.off) .sv-nm{background:linear-gradient(#b8301e,#7a160c);color:#fbe9c0;border-color:#e6c06a}
+/* 鑑賞（映画のような見せ方） */
+body.cine #lbox::before,body.cine #lbox::after{height:11%!important}
+body.cine #hInfo,body.cine .hbot,body.cine #hCam,body.cine #hPause,body.cine .tip,body.cine .toast{display:none!important}
+.cine-sub{position:absolute;left:0;right:0;bottom:calc(11% + 10px);z-index:9;text-align:center;pointer-events:none;opacity:0;transition:opacity .6s;padding:0 18px;color:#f6ead0;text-shadow:0 2px 4px #000,0 0 14px rgba(0,0,0,.8)}
+.cine-sub.go{opacity:1}
+.cine-sub b{display:block;font-family:var(--f-disp);font-weight:400;font-size:clamp(24px,7vw,40px);letter-spacing:.18em;line-height:1.2}
+.cine-sub small{display:block;font-family:var(--f-body);font-size:15px;letter-spacing:.06em;line-height:1.7}
+.cine-cut{position:absolute;inset:0;z-index:8;background:#000;opacity:0;pointer-events:none}
+.cine-cut.go{animation:ccut .42s ease-out}
+@keyframes ccut{0%{opacity:.85}100%{opacity:0}}
