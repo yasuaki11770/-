@@ -12,10 +12,10 @@ function bvProf(h){if(BV2.cache[h.id])return BV2.cache[h.id];const L=bvList(),id
   const f1=(hs%1000)/1000,f2=((hs>>>10)%1000)/1000;const o={v:L.length?L[idx%L.length]:null,pitch:Math.max(.45,Math.min(1.35,.5+f1*.8)),rate:.95+f2*.2};
   if(L.length)BV2.cache[h.id]=o;return o;}
 try{if('speechSynthesis' in window){speechSynthesis.getVoices();speechSynthesis.onvoiceschanged=function(){BV2.cache={};};}}catch(e){}
-// ---- 録音済みの声（Open JTalk で作った音声。端末の読み上げは使わない）
+// ---- 録音済みの声（VOICEVOX で作った音声。端末の読み上げは使わない）
 const VREC={buf:null,loading:false,cache:{},cur:null,curPri:-1};
 function vrecLoad(){if(VREC.buf||VREC.loading)return;VREC.loading=true;try{fetch('voices.mp3').then(function(r){return r.arrayBuffer();}).then(function(b){VREC.buf=b;}).catch(function(){VREC.loading=false;});}catch(e){VREC.loading=false;}}
-function vrecCls(h){if(VOICE_CLS[h.id])return VOICE_CLS[h.id];if(typeof FEMALE!=='undefined'&&FEMALE[h.id])return 'fem';const p=bvProf(h).pitch;return p<.72?'low':p>1.08?'high':'mid';}
+function vrecCls(h){if(VOICE_CLS[h.id])return VOICE_CLS[h.id];if(typeof FEMALE!=='undefined'&&FEMALE[h.id])return 'fem';return ['takehiro','ryusei','mesuo','maron'][bvHash(h.id)%4];}
 function vrecGet(key,cb){const c=VREC.cache[key];if(c){cb(c);return;}const ix=VOICE_IDX[key];if(!ix||!VREC.buf||!SND.ctx)return;
   try{SND.ctx.decodeAudioData(VREC.buf.slice(ix[0],ix[0]+ix[1]),function(ab){VREC.cache[key]=ab;cb(ab);},function(){});}catch(e){}}
 // pri: 0=普段の掛け声, 1=武将の叫び, 2=戦法・名台詞。text は方言に直した後の台詞
