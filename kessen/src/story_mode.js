@@ -165,7 +165,7 @@ function storyTitle(){
   if(has)h+='<button class="facb" type="button" id="stCont" style="min-width:240px;border-color:var(--gold)"><b style="color:var(--gold);font-size:24px">つづきから</b><span>'+esc(ST.CHAPTERS[cur.ch].split('　')[0]+'・'+cur.title)+'</span></button>';
   h+='<button class="facb" type="button" id="stNew" style="min-width:240px'+(has?'':';border-color:var(--gold)')+'"><b style="'+(has?'font-size:20px':'color:var(--gold);font-size:24px')+'">はじめから</b><span>184年、幽州涿郡の桃園から</span></button>';
   if(has)h+='<button class="btn" type="button" id="stGal" style="min-width:240px">名場面録</button>';
-  h+='</div><div id="stCf"></div>';
+  h+='</div><div id="stCf"></div><p style="margin:14px auto 0;max-width:340px;text-align:center;font-size:11px;color:var(--mute);line-height:1.6">戦場の声：Open JTalk（HTS voice nitech_jp_atr503_m001 ／ tohoku-f01 © 東北大学 伊藤・能勢研究室, CC BY 4.0）</p>';
   d.innerHTML=h;UI.appendChild(d);
   const start=function(i){SND.init();if(!S){newState('蜀');save();}d.remove();goHome();runStory(i);};
   const c=d.querySelector('#stCont');if(c)c.onclick=function(){start(SV.idx);};
