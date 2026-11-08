@@ -24,6 +24,18 @@ let SV=(function(){try{const v=JSON.parse(localStorage.getItem(SVK));if(v&&typeo
 function svSave(){try{localStorage.setItem(SVK,JSON.stringify(SV));}catch(e){}}
 let STORY_RUN=null;
 
+/* ---- 会話の背景に仕上げ（光のにじみ・かすみ・粒子・周辺減光） ---- */
+let GRAIN=null;
+const _paintBg=paintBg;
+paintBg=function(cv,kind){_paintBg(cv,kind);const g=cv.getContext('2d'),W=cv.width,H=cv.height;
+  try{g.save();g.globalAlpha=.4;g.filter='blur('+Math.round(W/90)+'px)';g.globalCompositeOperation='screen';g.drawImage(cv,0,0);g.restore();}catch(e){}
+  const dark=['night','dark','blood','altar','fire'].indexOf(kind)>=0;
+  if(!dark){const hz=g.createLinearGradient(0,H*.35,0,H*.62);hz.addColorStop(0,'rgba(255,250,235,0)');hz.addColorStop(.6,'rgba(255,248,230,.22)');hz.addColorStop(1,'rgba(255,248,230,0)');g.fillStyle=hz;g.fillRect(0,0,W,H);
+    g.save();g.globalCompositeOperation='screen';g.globalAlpha=.12;g.fillStyle='#fff4d8';for(let i=0;i<4;i++){g.beginPath();g.moveTo(W*(.1+i*.12),0);g.lineTo(W*(.3+i*.2),H);g.lineTo(W*(.36+i*.2),H);g.lineTo(W*(.14+i*.12),0);g.fill();}g.restore();}
+  if(!GRAIN){GRAIN=document.createElement('canvas');GRAIN.width=GRAIN.height=128;const x=GRAIN.getContext('2d'),d=x.createImageData(128,128);for(let i=0;i<d.data.length;i+=4){const v=Math.random()*255;d.data[i]=d.data[i+1]=d.data[i+2]=v;d.data[i+3]=255;}x.putImageData(d,0,0);}
+  g.save();g.globalCompositeOperation='overlay';g.globalAlpha=.07;g.fillStyle=g.createPattern(GRAIN,'repeat');g.fillRect(0,0,W,H);g.restore();
+  const vg=g.createRadialGradient(W/2,H*.45,Math.min(W,H)*.3,W/2,H*.45,Math.max(W,H)*.75);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,'+(dark?.6:.38)+')');g.fillStyle=vg;g.fillRect(0,0,W,H);};
+
 /* ---- 会話の再生 ---- */
 function storyPortrait(name){const h=HN[name];return h?portrait(h):'';}
 function playStory(text,opt){opt=opt||{};
@@ -51,7 +63,8 @@ function playStory(text,opt){opt=opt||{};
         if(ln.cond&&ln.cond!==choice)continue;
         if(ln.k==='cmd'){
           if(ln.c==='bg')paint(ln.a);
-          else if(ln.c==='se'){try{if(ln.a==='gong')SND.gong(.2);else if(ln.a==='fire')SND.fire();else if(ln.a==='crit'||ln.a==='hit')SND.click();else if(ln.a==='duel')SND.horn();}catch(_){}}
+          else if(ln.c==='se'){try{storySE(ln.a);}catch(_){}}
+          else if(ln.c==='bgm'){BGM.play(ln.a==='sad'?'sad':ln.a);}
           else if(ln.c==='title'&&!skip){const c=document.createElement('div');c.className='sv-title';c.innerHTML='<b>'+esc(ln.a)+'</b>';l.appendChild(c);try{SND.gong(.2);}catch(_){}await new Promise(function(r){setTimeout(r,1600);});c.remove();}
           continue;}
         if(ln.k==='q'){box.hidden=true;choice=await new Promise(function(res){const c=document.createElement('div');c.className='sv-choice';
@@ -61,7 +74,7 @@ function playStory(text,opt){opt=opt||{};
         const t=ln.t.replace(/／/g,'\n');
         if(ln.k==='n'){box.classList.add('nar');who.textContent='';stage(null);}
         else{box.classList.remove('nar');who.textContent=ln.who;if(HN[ln.who])stage(ln.who);else stage(null);}
-        nx.hidden=true;said.textContent='';
+        nx.hidden=true;said.textContent='';storyBlip();
         const ch=Array.from(t);let n=0,typing=true;
         await new Promise(function(res){adv=function(){typing=false;};
           const tick=function(){if(!typing||skip){said.textContent=t;res();return;}said.textContent=ch.slice(0,++n).join('');if(n>=ch.length){res();return;}setTimeout(tick,22);};tick();});
@@ -80,7 +93,7 @@ async function runStory(i){
   while(i<ST.SC.length){
     const s=ST.SC[i];SV.idx=i;svSave();
     if(i===0||ST.SC[i-1].ch!==s.ch)await chapterCard(s.ch);
-    BGM.play(s.bgm==='sad'?'defeat':'camp');
+    BGM.play(storySong(s));
     if(s.type==='ev'){await playStory(s.text,{bg:s.bg,place:s.place});SV.seen[i]=1;i++;continue;}
     // 合戦：前の会話 → 三国決戦伝の軍議へ
     await playStory(s.pre,{bg:s.bg||'battle',place:s.place});
@@ -133,7 +146,7 @@ function storyGallery(){
     h+='</div>';});
   const sh=sheet('名場面録 '+got+'/'+total,h,'full');
   $$('[data-v]',sh).forEach(function(b){b.onclick=async function(){const s=ST.SC[+b.dataset.v];closeSheet();
-    if(s.type==='ev')await playStory(s.text,{bg:s.bg,place:s.place});else{await playStory(s.pre,{bg:s.bg||'battle',place:s.place});await playStory(s.post,{bg:s.postBg||'camp',place:s.place});}storyGallery();};});
+    BGM.play(storySong(s));if(s.type==='ev')await playStory(s.text,{bg:s.bg,place:s.place});else{await playStory(s.pre,{bg:s.bg||'battle',place:s.place});await playStory(s.post,{bg:s.postBg||'camp',place:s.place});}storyGallery();};});
   $$('[data-w]',sh).forEach(function(b){b.onclick=function(){const s=ST.SC[+b.dataset.w];STORY_RUN=null;closeSheet();watchWar(s.wi);};});
   $$('[data-b]',sh).forEach(function(b){b.onclick=function(){const s=ST.SC[+b.dataset.b];STORY_RUN=null;closeSheet();PREP=null;prepSheet(s.wi);};});
 }
