@@ -24,14 +24,17 @@ let SV=(function(){try{const v=JSON.parse(localStorage.getItem(SVK));if(v&&typeo
 function svSave(){try{localStorage.setItem(SVK,JSON.stringify(SV));}catch(e){}}
 let STORY_RUN=null;
 
+/* ---- 古い絹本の絵のような色合い：彩度を落とし、茶色がかった紙の色をのせる */
+function oldTone(g,W,H,k){try{const d=g.getImageData(0,0,W,H),a=d.data;for(let i=0;i<a.length;i+=4){const r=a[i],gg=a[i+1],b=a[i+2];const l=r*.3+gg*.59+b*.11;
+  const sr=l*1.07+18,sg=l*.95+12,sb=l*.74+4;a[i]=r+(sr-r)*k;a[i+1]=gg+(sg-gg)*k;a[i+2]=b+(sb-b)*k;}g.putImageData(d,0,0);}catch(e){}}
 /* ---- 会話の背景に仕上げ（光のにじみ・かすみ・粒子・周辺減光） ---- */
 let GRAIN=null;
 const _paintBg=paintBg;
 paintBg=function(cv,kind){_paintBg(cv,kind);const g=cv.getContext('2d'),W=cv.width,H=cv.height;
   try{g.save();g.globalAlpha=.4;g.filter='blur('+Math.round(W/90)+'px)';g.globalCompositeOperation='screen';g.drawImage(cv,0,0);g.restore();}catch(e){}
   const dark=['night','dark','blood','altar','fire'].indexOf(kind)>=0;
-  if(!dark){const hz=g.createLinearGradient(0,H*.35,0,H*.62);hz.addColorStop(0,'rgba(255,250,235,0)');hz.addColorStop(.6,'rgba(255,248,230,.22)');hz.addColorStop(1,'rgba(255,248,230,0)');g.fillStyle=hz;g.fillRect(0,0,W,H);
-    g.save();g.globalCompositeOperation='screen';g.globalAlpha=.12;g.fillStyle='#fff4d8';for(let i=0;i<4;i++){g.beginPath();g.moveTo(W*(.1+i*.12),0);g.lineTo(W*(.3+i*.2),H);g.lineTo(W*(.36+i*.2),H);g.lineTo(W*(.14+i*.12),0);g.fill();}g.restore();}
+  if(!dark){const hz=g.createLinearGradient(0,H*.35,0,H*.62);hz.addColorStop(0,'rgba(255,248,230,0)');hz.addColorStop(.6,'rgba(250,240,215,.26)');hz.addColorStop(1,'rgba(250,240,215,0)');g.fillStyle=hz;g.fillRect(0,0,W,H);}
+  oldTone(g,W,H,dark?.2:.42);
   if(!GRAIN){GRAIN=document.createElement('canvas');GRAIN.width=GRAIN.height=128;const x=GRAIN.getContext('2d'),d=x.createImageData(128,128);for(let i=0;i<d.data.length;i+=4){const v=Math.random()*255;d.data[i]=d.data[i+1]=d.data[i+2]=v;d.data[i+3]=255;}x.putImageData(d,0,0);}
   g.save();g.globalCompositeOperation='overlay';g.globalAlpha=.07;g.fillStyle=g.createPattern(GRAIN,'repeat');g.fillRect(0,0,W,H);g.restore();
   const vg=g.createRadialGradient(W/2,H*.45,Math.min(W,H)*.3,W/2,H*.45,Math.max(W,H)*.75);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,'+(dark?.6:.38)+')');g.fillStyle=vg;g.fillRect(0,0,W,H);};

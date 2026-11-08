@@ -176,10 +176,11 @@ function portrait2(h){
   const cv=document.createElement('canvas');cv.width=256;cv.height=288;const g=cv.getContext('2d');g.scale(2,2);
   let seed=phash(h.id)||7;const R=function(){seed=(seed*16807)%2147483647;return seed/2147483647;};
   const bgc={'魏':['#36508a','#0d1428'],'蜀':['#2f6e48','#0b1a10'],'呉':['#8a3430','#220a08'],'群':['#6e5a32','#1a140a'],'南蛮':['#6e4a22','#1a0e06'],'漢':['#7a6430','#1c1608'],'晋':['#6a2a3a','#1a0a10'],'烏桓':['#50505e','#121218']}[h.f]||['#555','#111'];
-  // ---- 背景：勢力の色に墨の山並み
-  let gr=g.createRadialGradient(64,58,8,64,70,110);gr.addColorStop(0,bgc[0]);gr.addColorStop(1,bgc[1]);g.fillStyle=gr;g.fillRect(0,0,128,144);
-  g.globalAlpha=.18;g.fillStyle='#000';for(let k=0;k<2;k++){g.beginPath();g.moveTo(0,144);let y0=78+k*14;for(let x=0;x<=128;x+=8)g.lineTo(x,y0-Math.abs(Math.sin(x*.05+k*2+R()))*(16-k*5));g.lineTo(128,144);g.fill();}
-  g.globalAlpha=.08;g.fillStyle='#fff';for(let i=0;i<5;i++){g.beginPath();g.moveTo(64,-10);g.lineTo(10+i*28,150);g.lineTo(18+i*28,150);g.fill();}g.globalAlpha=1;
+  // ---- 背景：古い絹に墨の山水、勢力の色は縁取りに
+  let gr=g.createRadialGradient(64,56,10,64,72,110);gr.addColorStop(0,'#d9c69a');gr.addColorStop(.6,'#b49a68');gr.addColorStop(1,'#6e5634');g.fillStyle=gr;g.fillRect(0,0,128,144);
+  g.fillStyle=bgc[0];g.globalAlpha=.22;g.fillRect(0,0,128,144);g.globalAlpha=1;
+  for(let k=0;k<3;k++){g.globalAlpha=.10+k*.05;g.fillStyle='#2a1c10';g.beginPath();g.moveTo(0,144);let y0=70+k*16;for(let x=0;x<=128;x+=6)g.lineTo(x,y0-Math.abs(Math.sin(x*.045+k*1.7+R()*.4))*(22-k*6));g.lineTo(128,144);g.fill();}
+  g.globalAlpha=.16;g.strokeStyle='#2a1c10';g.lineWidth=.6;for(let i=0;i<5;i++){const x=8+R()*112,y=10+R()*30;g.beginPath();g.moveTo(x,y);g.quadraticCurveTo(x+6,y-3,x+12,y);g.stroke();}g.globalAlpha=1;
   const cx=64,top=33,fw=S.fw*(fat?1.08:1),chin=fem?86:S.fs==='long'?91:S.fs==='round'?86:88,ey=61;
   const sk=S.sk,skD=shadeC(sk,-.22),skDD=shadeC(sk,-.4),skL=shadeC(sk,.18);
   const hc=S.hc||'#1a1410',hcL=shadeC(hc,.25),hcD=shadeC(hc,-.35);
@@ -350,10 +351,15 @@ function portrait2(h){
   if(S.x.indexOf('fan')>=0){g.save();g.translate(104,136);g.rotate(-.35);g.fillStyle='#8a6a3a';g.fillRect(-1.5,0,3,14);
     const fgr=g.createLinearGradient(0,-38,0,0);fgr.addColorStop(0,'#ffffff');fgr.addColorStop(1,'#d8d8d0');g.fillStyle=fgr;g.beginPath();g.moveTo(0,2);g.quadraticCurveTo(-24,-14,-16,-40);g.quadraticCurveTo(0,-48,16,-40);g.quadraticCurveTo(24,-14,0,2);g.fill();
     g.strokeStyle='rgba(120,120,110,.55)';g.lineWidth=.5;for(let k=-6;k<=6;k++){g.beginPath();g.moveTo(0,0);g.lineTo(k*2.6,-42+Math.abs(k)*.8);g.stroke();}g.restore();}
-  // ---- 光：左上から、右に縁の光
-  g.globalCompositeOperation='soft-light';const lt=g.createLinearGradient(0,0,128,144);lt.addColorStop(0,'rgba(255,240,210,.55)');lt.addColorStop(.6,'rgba(0,0,0,0)');lt.addColorStop(1,'rgba(0,0,30,.5)');g.fillStyle=lt;g.fillRect(0,0,128,144);g.globalCompositeOperation='source-over';
-  const vg=g.createRadialGradient(64,70,40,64,72,100);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,.55)');g.fillStyle=vg;g.fillRect(0,0,128,144);
-  g.strokeStyle='rgba(232,200,120,.7)';g.lineWidth=1.2;g.strokeRect(.6,.6,126.8,142.8);
+  // ---- 古い絵の色合い：彩度を落として茶に寄せ、絹の粒をのせる
+  try{const d=g.getImageData(0,0,256,288),a=d.data;let sd=phash(h.n)||3;for(let i=0;i<a.length;i+=4){const r=a[i],gg=a[i+1],b=a[i+2];const l=r*.3+gg*.59+b*.11;
+    a[i]=r+(l*1.08+16-r)*.26;a[i+1]=gg+(l*.96+10-gg)*.26;a[i+2]=b+(l*.76+2-b)*.26;sd=(sd*16807)%2147483647;const n=(sd/2147483647-.5)*14;a[i]+=n;a[i+1]+=n;a[i+2]+=n*.8;}g.putImageData(d,0,0);}catch(e){}
+  g.save();g.setTransform(1,0,0,1,0,0);g.globalAlpha=.5;g.strokeStyle='rgba(60,40,20,.25)';g.lineWidth=1;for(let y=0;y<288;y+=3){g.beginPath();g.moveTo(0,y);g.lineTo(256,y);g.stroke();}g.restore();
+  const vg=g.createRadialGradient(64,66,36,64,72,104);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(40,20,5,.6)');g.fillStyle=vg;g.fillRect(0,0,128,144);
+  // 勢力の印（朱の落款）
+  const fk=h.f||'群';g.fillStyle='rgba(168,40,28,.88)';g.fillRect(104,6,18,18);g.strokeStyle='rgba(255,230,200,.6)';g.lineWidth=.8;g.strokeRect(105.5,7.5,15,15);
+  g.fillStyle='#f6e2c0';g.font='bold '+(fk.length>1?8:12)+'px "Yuji Syuku","Hiragino Mincho ProN",serif';g.textAlign='center';g.textBaseline='middle';g.fillText(fk.slice(0,2),113,15.5);
+  g.strokeStyle='#2a160a';g.lineWidth=2.4;g.strokeRect(1.2,1.2,125.6,141.6);g.strokeStyle='rgba(216,172,76,.75)';g.lineWidth=.8;g.strokeRect(3.4,3.4,121.2,137.2);
   const u=cv.toDataURL('image/png');PT2[h.id]=u;return u;
 }
 portrait=portrait2;

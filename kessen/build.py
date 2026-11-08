@@ -57,7 +57,7 @@ sub("R.render=function(){placeCam();renderer.render(scene,camera);};", "R.render
 sub("  resize();R3.init();", "  resize();R3.init();R3.upgrade&&R3.upgrade();")
 
 # 物語の見た目
-sub('<div id="app">', '<style>\n' + src('story.css') + '</style>\n<div id="app">')
+sub('<div id="app">', '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPMincho:wght@400;700&family=Yuji+Syuku&display=swap">\n<style>\n' + src('story.css') + src('theme.css') + '</style>\n<div id="app">')
 
 open(os.path.join(D, 'index.html'), 'w', encoding='utf-8').write(base)
 print('index.html', len(base))

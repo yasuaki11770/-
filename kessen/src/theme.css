@@ -1,0 +1,77 @@
+/* ================= 時代に合わせた見た目：漆塗りの木枠・金の縁・和紙・朱の印 =================
+   見出しは筆文字（Yuji Syuku）、本文は読みやすい明朝（BIZ UDP明朝） */
+:root{
+  --bg:#140d08; --ink:#120b06; --panel:#2b1b10; --panel2:#3a2516; --line:#6e4f26; --line2:#a07a3a;
+  --fg:#f2e6c8; --mute:#cdb68c; --dim:#9a845e; --gold:#d8ac4c; --gold-ink:#2a1606; --red:#b02a1c; --red2:#7a1810;
+  --f-disp:"Yuji Syuku","Shippori Mincho B1","Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",serif;
+  --f-body:"BIZ UDPMincho","Shippori Mincho B1","Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",serif;
+  --tex-wood:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='140'%3E%3Cfilter id='w'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.008 .32' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .5 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23w)'/%3E%3C/svg%3E");
+  --tex-paper:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .42 0 0 0 0 .3 0 0 0 0 .14 0 0 0 .28 0'/%3E%3C/filter%3E%3Cfilter id='q'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.012 .09' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .33 0 0 0 0 .16 0 0 0 .22 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)'/%3E%3Crect width='100%25' height='100%25' filter='url(%23q)'/%3E%3C/svg%3E");
+}
+body{font-family:var(--f-body);font-feature-settings:"palt" 0}
+/* 上の帯・下の命令札 */
+.bar{background:var(--tex-wood),linear-gradient(#3a2414,#1e1208);border-bottom:2px solid var(--gold);box-shadow:0 2px 0 #000,0 4px 10px rgba(0,0,0,.5)}
+.ttl{font-family:var(--f-disp);font-size:20px;letter-spacing:.18em;text-shadow:0 1px 0 #000}
+.res{border-radius:2px;background:rgba(0,0,0,.45);border-color:var(--line2)}
+.cmd{background:var(--tex-wood),linear-gradient(#2a180c,#140c06);border-top:2px solid var(--gold);box-shadow:0 -2px 0 #000}
+.cmd button{border-radius:2px;border:1px solid var(--line2);background:var(--tex-wood),linear-gradient(#4a2e18,#24150b);box-shadow:inset 0 0 0 1px #000,inset 0 0 0 2px rgba(216,172,76,.22)}
+.cmd button b{font-family:var(--f-disp);font-size:22px}
+.cmd button.hot{background:var(--tex-wood),linear-gradient(#a8281c,#5e100a);border-color:#e0b860}
+.cmd button.hot b{color:#fbe2a8}
+/* 札（ボタン） */
+.btn{border-radius:2px;border:1px solid var(--line2);background:var(--tex-wood),linear-gradient(#4a2e18,#28170c);box-shadow:inset 0 0 0 1px rgba(0,0,0,.7),inset 0 0 0 2px rgba(216,172,76,.2);letter-spacing:.06em;font-family:var(--f-body)}
+.btn:hover:not(:disabled){border-color:var(--gold)}
+.btn.pri,.btn.on{background:var(--tex-wood),linear-gradient(#b8301e,#6a120a);border-color:#e6c06a;color:#fbe9c0;text-shadow:0 1px 0 #000}
+.btn.red{background:var(--tex-wood),linear-gradient(#7a1810,#3e0a06);border-color:#c8703a;color:#fbe0c0}
+.btn.jade{background:var(--tex-wood),linear-gradient(#2a5a3a,#14301e);border-color:#9ac890;color:#f0ead0}
+.x{border-radius:2px;background:var(--tex-wood),linear-gradient(#4a2e18,#24150b);border-color:var(--line2);color:var(--gold)}
+.chip{border-radius:2px;background:var(--tex-wood),linear-gradient(#3a2414,#1e1208);border-color:var(--line)}
+.chip.on{background:linear-gradient(#b8301e,#6a120a);color:#fbe9c0;border-color:#e6c06a}
+select,input{border-radius:2px!important}
+/* 板・巻物 */
+.sheet{border-radius:0;border-top:3px double var(--gold);background:var(--tex-wood),linear-gradient(#26180d,#140c06);box-shadow:0 -6px 24px rgba(0,0,0,.7),inset 0 0 0 1px rgba(216,172,76,.15)}
+.sheet.council{background:linear-gradient(180deg,rgba(18,11,6,.6) 0,rgba(26,16,9,.95) 180px,rgba(22,14,8,.98)),var(--tex-wood)}
+.sheet.glass{background:var(--tex-wood),linear-gradient(rgba(38,24,13,.94),rgba(20,12,6,.96))}
+.sh-h{border-bottom:3px double var(--line2)}
+.sh-h h2{font-family:var(--f-disp);font-size:23px;letter-spacing:.22em;text-shadow:0 2px 0 #000}
+.sec{font-family:var(--f-disp);font-size:17px;letter-spacing:.2em;border-bottom:1px solid var(--line);padding-bottom:2px}
+.sq,.card,.hero,.stage,.gcard,.facb,.fmd,.sv-gl{border-radius:2px!important;background:var(--tex-wood),linear-gradient(#2e1d10,#1a1009)!important;border:1px solid var(--line)!important;box-shadow:inset 0 0 0 1px rgba(0,0,0,.6),inset 0 0 0 2px rgba(216,172,76,.13)}
+.gcard.on,.hero.sel,.stage.next{border-color:var(--gold)!important;box-shadow:inset 0 0 0 1px #000,inset 0 0 0 2px var(--gold)!important}
+.hpill,.sqc,.tip,.toast,#camctl button{border-radius:2px!important;background:var(--tex-wood),rgba(24,14,8,.88)!important;border-color:var(--line2)!important}
+.tag{border-radius:1px}
+.pt,.sqc img,.cutin img,.df img{border-radius:2px!important}
+.verdict,.big-stars{font-family:var(--f-disp)}
+.banner,.titlecard b,.cutin b,.dtech{font-family:var(--f-disp)}
+.banner{background:linear-gradient(90deg,transparent,rgba(20,10,4,.78) 18%,rgba(20,10,4,.78) 82%,transparent);border-top:1px solid rgba(216,172,76,.5);border-bottom:1px solid rgba(216,172,76,.5)}
+.cutin{border-color:var(--gold)}
+/* タイトル */
+.intro h1{font-family:var(--f-disp);font-weight:400;background:linear-gradient(#fff4cc,#e0b44c 50%,#8a5a14);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 3px 0 #000) drop-shadow(0 0 18px rgba(255,180,60,.35))}
+.intro .eyeb{font-family:var(--f-disp);font-size:15px}
+.intro p{font-family:var(--f-body);font-size:14px;line-height:1.85}
+.facb b{font-family:var(--f-disp)!important;font-weight:400}
+/* 一騎打ちの前ぶれ */
+#duelIntro .dt{font-family:var(--f-disp)}
+#duelIntro{background:radial-gradient(ellipse at 50% 60%,#5a2a12 0%,#140904 72%)}
+
+/* ================= 物語の会話：上のほうに巻物の文字欄 ================= */
+.sv{justify-content:flex-start;padding-top:env(safe-area-inset-top,0px)}
+.sv-place{top:calc(8px + env(safe-area-inset-top,0px));left:max(10px,env(safe-area-inset-left,0px));background:var(--tex-paper),linear-gradient(#efe2c2,#dcc89c);color:#2a1808;border:0;border-left:4px solid #a8281c;border-radius:0;font-family:var(--f-disp);font-size:15px;letter-spacing:.06em;box-shadow:0 2px 6px rgba(0,0,0,.5);padding:3px 12px}
+.sv-skip{top:calc(8px + env(safe-area-inset-top,0px))}
+.sv-box{margin:calc(50px + env(safe-area-inset-top,0px)) max(18px,env(safe-area-inset-right,0px)) 0 max(18px,env(safe-area-inset-left,0px));min-height:150px;padding:14px 20px 18px;border-radius:0;border:0;
+  background:var(--tex-paper),linear-gradient(#f4ead2,#e4d2a8);color:#22150a;box-shadow:0 0 0 1px #8a6a3a,0 6px 22px rgba(0,0,0,.6),inset 0 0 26px rgba(120,80,30,.25)}
+.sv-box::before,.sv-box::after{content:"";position:absolute;top:-8px;bottom:-8px;width:12px;border-radius:6px;background:linear-gradient(90deg,#2a160a,#7a4e24 40%,#3a2010);box-shadow:0 3px 6px rgba(0,0,0,.6)}
+.sv-box::before{left:-10px}.sv-box::after{right:-10px}
+.sv-box.nar{background:var(--tex-paper),linear-gradient(#ece0c4,#d8c498)}
+.sv-who{display:inline-block;min-height:0;margin-bottom:6px;padding:1px 12px 2px;background:#a8281c;color:#fbe9c0;font-family:var(--f-disp);font-size:17px;letter-spacing:.14em;box-shadow:0 1px 0 #5a1008}
+.sv-box.nar .sv-who{display:none}
+.sv-said{font-family:var(--f-body);font-size:17.5px;line-height:1.95;color:#20130a;letter-spacing:.02em}
+.sv-box.nar .sv-said{font-family:var(--f-body);font-size:17px;color:#3a2410}
+.sv-next{color:#a8281c}
+.sv-stage{top:auto;bottom:3%;height:52%}
+.sv-stage img{width:min(46vw,230px);border-radius:0;border:4px solid #3a2010;outline:1px solid var(--gold);outline-offset:-7px;box-shadow:0 10px 28px rgba(0,0,0,.65)}
+.sv-choice{bottom:auto;top:46%}
+.sv-choice .btn{font-family:var(--f-body);font-size:17px;background:var(--tex-paper),linear-gradient(#f0e4c8,#dcc79c);color:#22150a;border:1px solid #8a6a3a;text-shadow:none}
+.sv-title b{font-family:var(--f-disp);font-weight:400}
+.sv-ch b,.sv-ch small{font-family:var(--f-disp);font-weight:400}
+.sv-ch{background:var(--tex-wood),radial-gradient(#2a180c,#080402)}
+.intro p{background:linear-gradient(90deg,transparent,rgba(16,9,4,.72) 12%,rgba(16,9,4,.72) 88%,transparent);padding:8px 22px;border-top:1px solid rgba(216,172,76,.35);border-bottom:1px solid rgba(216,172,76,.35)}

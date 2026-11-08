@@ -231,6 +231,7 @@ select{font:inherit;color:var(--fg);background:var(--ink);border:1px solid var(-
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPMincho:wght@400;700&family=Yuji+Syuku&display=swap">
 <style>
 /* 物語モード（三國志決戦伝）：会話・章見出し・名場面録 */
 .sv{position:fixed;inset:0;z-index:250;display:flex;flex-direction:column;justify-content:flex-end;background:#0b0806;color:var(--fg);padding-bottom:env(safe-area-inset-bottom,0px);-webkit-user-select:none;user-select:none}
@@ -263,6 +264,83 @@ select{font:inherit;color:var(--fg);background:var(--ink);border:1px solid var(-
 .sv-gl .tag{margin-left:4px}
 .watching #hGun,.watching #hCards,.watching #hQuit,.watching #hBot{display:none!important}
 .intro h1{font-size:clamp(36px,12.5vw,96px);letter-spacing:.06em;white-space:nowrap}
+/* ================= 時代に合わせた見た目：漆塗りの木枠・金の縁・和紙・朱の印 =================
+   見出しは筆文字（Yuji Syuku）、本文は読みやすい明朝（BIZ UDP明朝） */
+:root{
+  --bg:#140d08; --ink:#120b06; --panel:#2b1b10; --panel2:#3a2516; --line:#6e4f26; --line2:#a07a3a;
+  --fg:#f2e6c8; --mute:#cdb68c; --dim:#9a845e; --gold:#d8ac4c; --gold-ink:#2a1606; --red:#b02a1c; --red2:#7a1810;
+  --f-disp:"Yuji Syuku","Shippori Mincho B1","Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",serif;
+  --f-body:"BIZ UDPMincho","Shippori Mincho B1","Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",serif;
+  --tex-wood:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='140'%3E%3Cfilter id='w'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.008 .32' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .5 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23w)'/%3E%3C/svg%3E");
+  --tex-paper:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .42 0 0 0 0 .3 0 0 0 0 .14 0 0 0 .28 0'/%3E%3C/filter%3E%3Cfilter id='q'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.012 .09' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .33 0 0 0 0 .16 0 0 0 .22 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)'/%3E%3Crect width='100%25' height='100%25' filter='url(%23q)'/%3E%3C/svg%3E");
+}
+body{font-family:var(--f-body);font-feature-settings:"palt" 0}
+/* 上の帯・下の命令札 */
+.bar{background:var(--tex-wood),linear-gradient(#3a2414,#1e1208);border-bottom:2px solid var(--gold);box-shadow:0 2px 0 #000,0 4px 10px rgba(0,0,0,.5)}
+.ttl{font-family:var(--f-disp);font-size:20px;letter-spacing:.18em;text-shadow:0 1px 0 #000}
+.res{border-radius:2px;background:rgba(0,0,0,.45);border-color:var(--line2)}
+.cmd{background:var(--tex-wood),linear-gradient(#2a180c,#140c06);border-top:2px solid var(--gold);box-shadow:0 -2px 0 #000}
+.cmd button{border-radius:2px;border:1px solid var(--line2);background:var(--tex-wood),linear-gradient(#4a2e18,#24150b);box-shadow:inset 0 0 0 1px #000,inset 0 0 0 2px rgba(216,172,76,.22)}
+.cmd button b{font-family:var(--f-disp);font-size:22px}
+.cmd button.hot{background:var(--tex-wood),linear-gradient(#a8281c,#5e100a);border-color:#e0b860}
+.cmd button.hot b{color:#fbe2a8}
+/* 札（ボタン） */
+.btn{border-radius:2px;border:1px solid var(--line2);background:var(--tex-wood),linear-gradient(#4a2e18,#28170c);box-shadow:inset 0 0 0 1px rgba(0,0,0,.7),inset 0 0 0 2px rgba(216,172,76,.2);letter-spacing:.06em;font-family:var(--f-body)}
+.btn:hover:not(:disabled){border-color:var(--gold)}
+.btn.pri,.btn.on{background:var(--tex-wood),linear-gradient(#b8301e,#6a120a);border-color:#e6c06a;color:#fbe9c0;text-shadow:0 1px 0 #000}
+.btn.red{background:var(--tex-wood),linear-gradient(#7a1810,#3e0a06);border-color:#c8703a;color:#fbe0c0}
+.btn.jade{background:var(--tex-wood),linear-gradient(#2a5a3a,#14301e);border-color:#9ac890;color:#f0ead0}
+.x{border-radius:2px;background:var(--tex-wood),linear-gradient(#4a2e18,#24150b);border-color:var(--line2);color:var(--gold)}
+.chip{border-radius:2px;background:var(--tex-wood),linear-gradient(#3a2414,#1e1208);border-color:var(--line)}
+.chip.on{background:linear-gradient(#b8301e,#6a120a);color:#fbe9c0;border-color:#e6c06a}
+select,input{border-radius:2px!important}
+/* 板・巻物 */
+.sheet{border-radius:0;border-top:3px double var(--gold);background:var(--tex-wood),linear-gradient(#26180d,#140c06);box-shadow:0 -6px 24px rgba(0,0,0,.7),inset 0 0 0 1px rgba(216,172,76,.15)}
+.sheet.council{background:linear-gradient(180deg,rgba(18,11,6,.6) 0,rgba(26,16,9,.95) 180px,rgba(22,14,8,.98)),var(--tex-wood)}
+.sheet.glass{background:var(--tex-wood),linear-gradient(rgba(38,24,13,.94),rgba(20,12,6,.96))}
+.sh-h{border-bottom:3px double var(--line2)}
+.sh-h h2{font-family:var(--f-disp);font-size:23px;letter-spacing:.22em;text-shadow:0 2px 0 #000}
+.sec{font-family:var(--f-disp);font-size:17px;letter-spacing:.2em;border-bottom:1px solid var(--line);padding-bottom:2px}
+.sq,.card,.hero,.stage,.gcard,.facb,.fmd,.sv-gl{border-radius:2px!important;background:var(--tex-wood),linear-gradient(#2e1d10,#1a1009)!important;border:1px solid var(--line)!important;box-shadow:inset 0 0 0 1px rgba(0,0,0,.6),inset 0 0 0 2px rgba(216,172,76,.13)}
+.gcard.on,.hero.sel,.stage.next{border-color:var(--gold)!important;box-shadow:inset 0 0 0 1px #000,inset 0 0 0 2px var(--gold)!important}
+.hpill,.sqc,.tip,.toast,#camctl button{border-radius:2px!important;background:var(--tex-wood),rgba(24,14,8,.88)!important;border-color:var(--line2)!important}
+.tag{border-radius:1px}
+.pt,.sqc img,.cutin img,.df img{border-radius:2px!important}
+.verdict,.big-stars{font-family:var(--f-disp)}
+.banner,.titlecard b,.cutin b,.dtech{font-family:var(--f-disp)}
+.banner{background:linear-gradient(90deg,transparent,rgba(20,10,4,.78) 18%,rgba(20,10,4,.78) 82%,transparent);border-top:1px solid rgba(216,172,76,.5);border-bottom:1px solid rgba(216,172,76,.5)}
+.cutin{border-color:var(--gold)}
+/* タイトル */
+.intro h1{font-family:var(--f-disp);font-weight:400;background:linear-gradient(#fff4cc,#e0b44c 50%,#8a5a14);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 3px 0 #000) drop-shadow(0 0 18px rgba(255,180,60,.35))}
+.intro .eyeb{font-family:var(--f-disp);font-size:15px}
+.intro p{font-family:var(--f-body);font-size:14px;line-height:1.85}
+.facb b{font-family:var(--f-disp)!important;font-weight:400}
+/* 一騎打ちの前ぶれ */
+#duelIntro .dt{font-family:var(--f-disp)}
+#duelIntro{background:radial-gradient(ellipse at 50% 60%,#5a2a12 0%,#140904 72%)}
+
+/* ================= 物語の会話：上のほうに巻物の文字欄 ================= */
+.sv{justify-content:flex-start;padding-top:env(safe-area-inset-top,0px)}
+.sv-place{top:calc(8px + env(safe-area-inset-top,0px));left:max(10px,env(safe-area-inset-left,0px));background:var(--tex-paper),linear-gradient(#efe2c2,#dcc89c);color:#2a1808;border:0;border-left:4px solid #a8281c;border-radius:0;font-family:var(--f-disp);font-size:15px;letter-spacing:.06em;box-shadow:0 2px 6px rgba(0,0,0,.5);padding:3px 12px}
+.sv-skip{top:calc(8px + env(safe-area-inset-top,0px))}
+.sv-box{margin:calc(50px + env(safe-area-inset-top,0px)) max(18px,env(safe-area-inset-right,0px)) 0 max(18px,env(safe-area-inset-left,0px));min-height:150px;padding:14px 20px 18px;border-radius:0;border:0;
+  background:var(--tex-paper),linear-gradient(#f4ead2,#e4d2a8);color:#22150a;box-shadow:0 0 0 1px #8a6a3a,0 6px 22px rgba(0,0,0,.6),inset 0 0 26px rgba(120,80,30,.25)}
+.sv-box::before,.sv-box::after{content:"";position:absolute;top:-8px;bottom:-8px;width:12px;border-radius:6px;background:linear-gradient(90deg,#2a160a,#7a4e24 40%,#3a2010);box-shadow:0 3px 6px rgba(0,0,0,.6)}
+.sv-box::before{left:-10px}.sv-box::after{right:-10px}
+.sv-box.nar{background:var(--tex-paper),linear-gradient(#ece0c4,#d8c498)}
+.sv-who{display:inline-block;min-height:0;margin-bottom:6px;padding:1px 12px 2px;background:#a8281c;color:#fbe9c0;font-family:var(--f-disp);font-size:17px;letter-spacing:.14em;box-shadow:0 1px 0 #5a1008}
+.sv-box.nar .sv-who{display:none}
+.sv-said{font-family:var(--f-body);font-size:17.5px;line-height:1.95;color:#20130a;letter-spacing:.02em}
+.sv-box.nar .sv-said{font-family:var(--f-body);font-size:17px;color:#3a2410}
+.sv-next{color:#a8281c}
+.sv-stage{top:auto;bottom:3%;height:52%}
+.sv-stage img{width:min(46vw,230px);border-radius:0;border:4px solid #3a2010;outline:1px solid var(--gold);outline-offset:-7px;box-shadow:0 10px 28px rgba(0,0,0,.65)}
+.sv-choice{bottom:auto;top:46%}
+.sv-choice .btn{font-family:var(--f-body);font-size:17px;background:var(--tex-paper),linear-gradient(#f0e4c8,#dcc79c);color:#22150a;border:1px solid #8a6a3a;text-shadow:none}
+.sv-title b{font-family:var(--f-disp);font-weight:400}
+.sv-ch b,.sv-ch small{font-family:var(--f-disp);font-weight:400}
+.sv-ch{background:var(--tex-wood),radial-gradient(#2a180c,#080402)}
+.intro p{background:linear-gradient(90deg,transparent,rgba(16,9,4,.72) 12%,rgba(16,9,4,.72) 88%,transparent);padding:8px 22px;border-top:1px solid rgba(216,172,76,.35);border-bottom:1px solid rgba(216,172,76,.35)}
 </style>
 <div id="app">
   <div class="bar" id="topbar">
@@ -8053,7 +8131,7 @@ function paintBg(cv, kind) {
   const vign = a => { const v = g.createRadialGradient(W / 2, H * 0.45, H * 0.2, W / 2, H * 0.45, H * 0.8); v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, `rgba(0,0,0,${a})`); g.fillStyle = v; g.fillRect(0, 0, W, H); };
   switch (kind) {
     case 'garden': sky('#f9dfe8', '#fdf0f3', '#b9cf8c'); ridge(H * 0.5, H * 0.08, '#c9b8c8'); ground(H * 0.55, '#a9c47c', '#6f9548');
-      for (let i = 0; i < 7; i++) { const x = R() * W, y = H * (0.55 + R() * 0.2), s = H * (0.18 + R() * 0.12); g.fillStyle = '#4a2a18'; g.save(); g.translate(x, y); g.rotate((R() - 0.5) * 0.3); g.fillRect(-s * 0.05, -s * 0.7, s * 0.1, s * 0.7); g.restore(); for (let k = 0; k < 14; k++) { g.fillStyle = ['#ffb3cc', '#ff9ec0', '#ffd0df', '#f78fb3'][k % 4]; g.beginPath(); g.arc(x + (R() - 0.5) * s * 0.9, y - s * 0.7 - R() * s * 0.4, s * (0.08 + R() * 0.08), 0, 7); g.fill(); } }
+      for (let i = 0; i < 7; i++) { const x = R() * W, y = H * (0.55 + R() * 0.2), s = H * (0.18 + R() * 0.12); g.fillStyle = '#4a2a18'; g.save(); g.translate(x, y); g.rotate((R() - 0.5) * 0.3); g.fillRect(-s * 0.05, -s * 0.7, s * 0.1, s * 0.7); g.restore(); for (let k = 0; k < 90; k++) { g.globalAlpha = .35 + R() * .45; g.fillStyle = ['#f2b8c8', '#e89cb0', '#f8d8e0', '#d88aa0'][k % 4]; const ang = R() * 6.28, rr = Math.pow(R(), .6) * s * 0.5; g.beginPath(); g.arc(x + Math.cos(ang) * rr * 1.1, y - s * 0.78 + Math.sin(ang) * rr * .7, s * (0.018 + R() * 0.03), 0, 7); g.fill(); } g.globalAlpha = 1; }
       g.fillStyle = '#ffc7da'; for (let i = 0; i < 60; i++) { g.globalAlpha = 0.6; g.beginPath(); g.ellipse(R() * W, R() * H, 4, 2.5, R() * 3, 0, 7); g.fill(); } g.globalAlpha = 1; break;
     case 'palace': sky('#2a0806', '#5a1a10', '#3a1a0a'); g.fillStyle = '#7a4a1e'; g.fillRect(0, H * 0.62, W, H); for (let i = 0; i < 5; i++) { const x = W * (0.08 + i * 0.21); g.fillStyle = '#a8281a'; g.fillRect(x, H * 0.12, W * 0.06, H * 0.52); g.fillStyle = '#e8b040'; g.fillRect(x - 6, H * 0.12, W * 0.06 + 12, 12); g.fillRect(x - 6, H * 0.6, W * 0.06 + 12, 14); }
       g.fillStyle = '#c9a227'; g.fillRect(W * 0.3, H * 0.44, W * 0.4, H * 0.06); g.fillStyle = '#5a1010'; g.fillRect(W * 0.38, H * 0.3, W * 0.24, H * 0.14); roof(W / 2, H * 0.12, W * 1.1, '#2a1410'); for (let i = 0; i < 4; i++) { g.fillStyle = '#ffb040'; g.globalAlpha = 0.7; g.beginPath(); g.ellipse(W * (0.18 + i * 0.21), H * 0.24, 14, 20, 0, 0, 7); g.fill(); } g.globalAlpha = 1; vign(0.5); break;
@@ -8112,14 +8190,17 @@ let SV=(function(){try{const v=JSON.parse(localStorage.getItem(SVK));if(v&&typeo
 function svSave(){try{localStorage.setItem(SVK,JSON.stringify(SV));}catch(e){}}
 let STORY_RUN=null;
 
+/* ---- 古い絹本の絵のような色合い：彩度を落とし、茶色がかった紙の色をのせる */
+function oldTone(g,W,H,k){try{const d=g.getImageData(0,0,W,H),a=d.data;for(let i=0;i<a.length;i+=4){const r=a[i],gg=a[i+1],b=a[i+2];const l=r*.3+gg*.59+b*.11;
+  const sr=l*1.07+18,sg=l*.95+12,sb=l*.74+4;a[i]=r+(sr-r)*k;a[i+1]=gg+(sg-gg)*k;a[i+2]=b+(sb-b)*k;}g.putImageData(d,0,0);}catch(e){}}
 /* ---- 会話の背景に仕上げ（光のにじみ・かすみ・粒子・周辺減光） ---- */
 let GRAIN=null;
 const _paintBg=paintBg;
 paintBg=function(cv,kind){_paintBg(cv,kind);const g=cv.getContext('2d'),W=cv.width,H=cv.height;
   try{g.save();g.globalAlpha=.4;g.filter='blur('+Math.round(W/90)+'px)';g.globalCompositeOperation='screen';g.drawImage(cv,0,0);g.restore();}catch(e){}
   const dark=['night','dark','blood','altar','fire'].indexOf(kind)>=0;
-  if(!dark){const hz=g.createLinearGradient(0,H*.35,0,H*.62);hz.addColorStop(0,'rgba(255,250,235,0)');hz.addColorStop(.6,'rgba(255,248,230,.22)');hz.addColorStop(1,'rgba(255,248,230,0)');g.fillStyle=hz;g.fillRect(0,0,W,H);
-    g.save();g.globalCompositeOperation='screen';g.globalAlpha=.12;g.fillStyle='#fff4d8';for(let i=0;i<4;i++){g.beginPath();g.moveTo(W*(.1+i*.12),0);g.lineTo(W*(.3+i*.2),H);g.lineTo(W*(.36+i*.2),H);g.lineTo(W*(.14+i*.12),0);g.fill();}g.restore();}
+  if(!dark){const hz=g.createLinearGradient(0,H*.35,0,H*.62);hz.addColorStop(0,'rgba(255,248,230,0)');hz.addColorStop(.6,'rgba(250,240,215,.26)');hz.addColorStop(1,'rgba(250,240,215,0)');g.fillStyle=hz;g.fillRect(0,0,W,H);}
+  oldTone(g,W,H,dark?.2:.42);
   if(!GRAIN){GRAIN=document.createElement('canvas');GRAIN.width=GRAIN.height=128;const x=GRAIN.getContext('2d'),d=x.createImageData(128,128);for(let i=0;i<d.data.length;i+=4){const v=Math.random()*255;d.data[i]=d.data[i+1]=d.data[i+2]=v;d.data[i+3]=255;}x.putImageData(d,0,0);}
   g.save();g.globalCompositeOperation='overlay';g.globalAlpha=.07;g.fillStyle=g.createPattern(GRAIN,'repeat');g.fillRect(0,0,W,H);g.restore();
   const vg=g.createRadialGradient(W/2,H*.45,Math.min(W,H)*.3,W/2,H*.45,Math.max(W,H)*.75);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,'+(dark?.6:.38)+')');g.fillStyle=vg;g.fillRect(0,0,W,H);};
@@ -8489,10 +8570,11 @@ function portrait2(h){
   const cv=document.createElement('canvas');cv.width=256;cv.height=288;const g=cv.getContext('2d');g.scale(2,2);
   let seed=phash(h.id)||7;const R=function(){seed=(seed*16807)%2147483647;return seed/2147483647;};
   const bgc={'魏':['#36508a','#0d1428'],'蜀':['#2f6e48','#0b1a10'],'呉':['#8a3430','#220a08'],'群':['#6e5a32','#1a140a'],'南蛮':['#6e4a22','#1a0e06'],'漢':['#7a6430','#1c1608'],'晋':['#6a2a3a','#1a0a10'],'烏桓':['#50505e','#121218']}[h.f]||['#555','#111'];
-  // ---- 背景：勢力の色に墨の山並み
-  let gr=g.createRadialGradient(64,58,8,64,70,110);gr.addColorStop(0,bgc[0]);gr.addColorStop(1,bgc[1]);g.fillStyle=gr;g.fillRect(0,0,128,144);
-  g.globalAlpha=.18;g.fillStyle='#000';for(let k=0;k<2;k++){g.beginPath();g.moveTo(0,144);let y0=78+k*14;for(let x=0;x<=128;x+=8)g.lineTo(x,y0-Math.abs(Math.sin(x*.05+k*2+R()))*(16-k*5));g.lineTo(128,144);g.fill();}
-  g.globalAlpha=.08;g.fillStyle='#fff';for(let i=0;i<5;i++){g.beginPath();g.moveTo(64,-10);g.lineTo(10+i*28,150);g.lineTo(18+i*28,150);g.fill();}g.globalAlpha=1;
+  // ---- 背景：古い絹に墨の山水、勢力の色は縁取りに
+  let gr=g.createRadialGradient(64,56,10,64,72,110);gr.addColorStop(0,'#d9c69a');gr.addColorStop(.6,'#b49a68');gr.addColorStop(1,'#6e5634');g.fillStyle=gr;g.fillRect(0,0,128,144);
+  g.fillStyle=bgc[0];g.globalAlpha=.22;g.fillRect(0,0,128,144);g.globalAlpha=1;
+  for(let k=0;k<3;k++){g.globalAlpha=.10+k*.05;g.fillStyle='#2a1c10';g.beginPath();g.moveTo(0,144);let y0=70+k*16;for(let x=0;x<=128;x+=6)g.lineTo(x,y0-Math.abs(Math.sin(x*.045+k*1.7+R()*.4))*(22-k*6));g.lineTo(128,144);g.fill();}
+  g.globalAlpha=.16;g.strokeStyle='#2a1c10';g.lineWidth=.6;for(let i=0;i<5;i++){const x=8+R()*112,y=10+R()*30;g.beginPath();g.moveTo(x,y);g.quadraticCurveTo(x+6,y-3,x+12,y);g.stroke();}g.globalAlpha=1;
   const cx=64,top=33,fw=S.fw*(fat?1.08:1),chin=fem?86:S.fs==='long'?91:S.fs==='round'?86:88,ey=61;
   const sk=S.sk,skD=shadeC(sk,-.22),skDD=shadeC(sk,-.4),skL=shadeC(sk,.18);
   const hc=S.hc||'#1a1410',hcL=shadeC(hc,.25),hcD=shadeC(hc,-.35);
@@ -8663,10 +8745,15 @@ function portrait2(h){
   if(S.x.indexOf('fan')>=0){g.save();g.translate(104,136);g.rotate(-.35);g.fillStyle='#8a6a3a';g.fillRect(-1.5,0,3,14);
     const fgr=g.createLinearGradient(0,-38,0,0);fgr.addColorStop(0,'#ffffff');fgr.addColorStop(1,'#d8d8d0');g.fillStyle=fgr;g.beginPath();g.moveTo(0,2);g.quadraticCurveTo(-24,-14,-16,-40);g.quadraticCurveTo(0,-48,16,-40);g.quadraticCurveTo(24,-14,0,2);g.fill();
     g.strokeStyle='rgba(120,120,110,.55)';g.lineWidth=.5;for(let k=-6;k<=6;k++){g.beginPath();g.moveTo(0,0);g.lineTo(k*2.6,-42+Math.abs(k)*.8);g.stroke();}g.restore();}
-  // ---- 光：左上から、右に縁の光
-  g.globalCompositeOperation='soft-light';const lt=g.createLinearGradient(0,0,128,144);lt.addColorStop(0,'rgba(255,240,210,.55)');lt.addColorStop(.6,'rgba(0,0,0,0)');lt.addColorStop(1,'rgba(0,0,30,.5)');g.fillStyle=lt;g.fillRect(0,0,128,144);g.globalCompositeOperation='source-over';
-  const vg=g.createRadialGradient(64,70,40,64,72,100);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,.55)');g.fillStyle=vg;g.fillRect(0,0,128,144);
-  g.strokeStyle='rgba(232,200,120,.7)';g.lineWidth=1.2;g.strokeRect(.6,.6,126.8,142.8);
+  // ---- 古い絵の色合い：彩度を落として茶に寄せ、絹の粒をのせる
+  try{const d=g.getImageData(0,0,256,288),a=d.data;let sd=phash(h.n)||3;for(let i=0;i<a.length;i+=4){const r=a[i],gg=a[i+1],b=a[i+2];const l=r*.3+gg*.59+b*.11;
+    a[i]=r+(l*1.08+16-r)*.26;a[i+1]=gg+(l*.96+10-gg)*.26;a[i+2]=b+(l*.76+2-b)*.26;sd=(sd*16807)%2147483647;const n=(sd/2147483647-.5)*14;a[i]+=n;a[i+1]+=n;a[i+2]+=n*.8;}g.putImageData(d,0,0);}catch(e){}
+  g.save();g.setTransform(1,0,0,1,0,0);g.globalAlpha=.5;g.strokeStyle='rgba(60,40,20,.25)';g.lineWidth=1;for(let y=0;y<288;y+=3){g.beginPath();g.moveTo(0,y);g.lineTo(256,y);g.stroke();}g.restore();
+  const vg=g.createRadialGradient(64,66,36,64,72,104);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(40,20,5,.6)');g.fillStyle=vg;g.fillRect(0,0,128,144);
+  // 勢力の印（朱の落款）
+  const fk=h.f||'群';g.fillStyle='rgba(168,40,28,.88)';g.fillRect(104,6,18,18);g.strokeStyle='rgba(255,230,200,.6)';g.lineWidth=.8;g.strokeRect(105.5,7.5,15,15);
+  g.fillStyle='#f6e2c0';g.font='bold '+(fk.length>1?8:12)+'px "Yuji Syuku","Hiragino Mincho ProN",serif';g.textAlign='center';g.textBaseline='middle';g.fillText(fk.slice(0,2),113,15.5);
+  g.strokeStyle='#2a160a';g.lineWidth=2.4;g.strokeRect(1.2,1.2,125.6,141.6);g.strokeStyle='rgba(216,172,76,.75)';g.lineWidth=.8;g.strokeRect(3.4,3.4,121.2,137.2);
   const u=cv.toDataURL('image/png');PT2[h.id]=u;return u;
 }
 portrait=portrait2;
