@@ -60,11 +60,12 @@ sub("  resize();R3.init();", "  resize();R3.init();R3.upgrade&&R3.upgrade();")
 sub("const msg={t:'duel',id:DUEL.id,me:me.hero,foe:foe.hero,strat:me.strat||'bal',stage:stg,mm:1+.02*((me.hs.lv||1)-1),fm:1+.015*((foe.hs.lv||1)-1)};",
     "const msg={t:'duel',id:DUEL.id,me:me.hero,foe:foe.hero,strat:me.strat||'bal',stage:stg,mm:(BT&&BT.watch?1.5:1)*(1+.02*((me.hs.lv||1)-1)),fm:(BT&&BT.watch?.85:1)*(1+.015*((foe.hs.lv||1)-1)),add:duelAdd([me.hero,foe.hero]),demo:!!(BT&&BT.watch)};")
 sub("window.addEventListener('message',function(e){const m=e.data||{};if(m.t!=='duel')return;",
-    "window.addEventListener('message',function(e){const m=e.data||{};if(m.t!=='duel')return;if(m.add)m.add.forEach(function(a){if(byId(a.id))return;HEROES.push(a.h);INT[a.id]=a.i;STAT[a.id]=a.s;LOOK[a.id]=a.lk;const h=byId(a.id);h.i=a.i;h.hp=Math.round(a.s[0]/2);h.df=a.s[1];h.mu=a.s[2];h.cmd=a.s[3];h.pol=a.s[4];h.cha=a.s[5];h.p=a.s[6];});")
+    "window.addEventListener('message',function(e){const m=e.data||{};if(m.t!=='duel')return;if(m.add)m.add.forEach(function(a){if(byId(a.id))return;HEROES.push(a.h);INT[a.id]=a.i;STAT[a.id]=a.s;try{if(typeof G3!=='undefined'&&G3.LOOK)G3.LOOK[a.id]=a.lk;}catch(_){}const h=byId(a.id);h.i=a.i;h.hp=Math.round(a.s[0]/2);h.df=a.s[1];h.mu=a.s[2];h.cmd=a.s[3];h.pol=a.s[4];h.cha=a.s[5];h.p=a.s[6];});")
 sub("startDuel();parent.postMessage({t:'duelStarted',id:m.id},'*');",
     "startDuel();parent.postMessage({t:'duelStarted',id:m.id},'*');if(m.demo){document.body.classList.add('demo');clearInterval(window.__dmT);window.__dmT=setInterval(function(){if(!BR){clearInterval(window.__dmT);return;}const sp=document.getElementById('stratP'),o=document.getElementById('stOk');if(S.paused&&sp&&!sp.hidden&&o)o.click();},700);}else{document.body.classList.remove('demo');clearInterval(window.__dmT);}")
 sub("const _brSR=showResult;showResult=function(win){if(BR){", "const _brSR=showResult;showResult=function(win){if(BR){document.body.classList.remove('demo');")
 
+sub("G3.look=function(id){return Object.assign({},DEFL,LOOK[id]||{});};", "G3.LOOK=LOOK;G3.look=function(id){return Object.assign({},DEFL,LOOK[id]||{});};")
 sub('  if(BT.started)MM.draw(x);', '  if(BT.started&&!BT.watch)MM.draw(x);')
 # 物語の見た目
 sub('<div id="app">', '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPMincho:wght@400;700&family=Yuji+Syuku&display=swap">\n<style>\n' + src('story.css') + src('theme.css') + '</style>\n<div id="app">')
