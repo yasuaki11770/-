@@ -96,6 +96,7 @@ async function runStory(i){
   while(i<ST.SC.length){
     const s=ST.SC[i];SV.idx=i;svSave();
     if(i===0||ST.SC[i-1].ch!==s.ch)await chapterCard(s.ch);
+    if(typeof MAPS!=='undefined'&&MAPS[i])await showMap(MAPS[i]);
     BGM.play(storySong(s));
     if(s.type==='ev'){await playStory(s.text,{bg:s.bg,place:s.place});SV.seen[i]=1;i++;continue;}
     // 合戦：前の会話 → 三国決戦伝の軍議へ
