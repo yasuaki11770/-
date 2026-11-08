@@ -38,6 +38,7 @@ const _shotCam=shotCam;shotCam=function(s,t){
   if(s.k==='kessen'){const A=BT.sq.filter(function(q){return q.alive&&!q.routed&&!q.hidden;});if(!A.length)return _shotCam({k:'wide',yaw0:0},t);
     let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9;A.forEach(function(o){x0=Math.min(x0,o.x);x1=Math.max(x1,o.x);z0=Math.min(z0,o.y);z1=Math.max(z1,o.y);});
     const ext=Math.max(x1-x0,(z1-z0)*1.25,10);const tt=BT.time||0;
+    const dd=clamp(ext*(innerWidth<innerHeight?1.55:1.2)+18,34,86);if(R3.scene&&R3.scene.fog){R3.scene.fog.near=Math.max(55,dd*1.1);R3.scene.fog.far=Math.max(140,dd*3);}
     return {tx:(x0+x1)/2,tz:(z0+z1)/2+2,yaw:s.yaw0+Math.sin(tt*.05)*.07,pitch:1.0,dist:clamp(ext*(innerWidth<innerHeight?1.55:1.2)+18,34,86)};}
   if(s.k==='skill'){const q=s.q;return {tx:q.x,tz:q.y,yaw:s.yaw0+t*.3,pitch:.42,dist:9};}
   return _shotCam(s,t);};

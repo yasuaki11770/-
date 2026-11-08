@@ -101,4 +101,8 @@ function stageProps(P){const R=R3,T=R.T;if(!T||!R.world||!P)return;const g=new T
     else if(p.k==='shrine'){const h=Math.max(0,H(p.x,p.y));box(2,1.2,1.4,red,p.x,h+.6,p.y);const rf=new T.Mesh(new T.ConeGeometry(1.8,1,4),roof);rf.scale.z=.6;rf.rotation.y=Math.PI/4;rf.position.set(p.x,h+1.7,p.y);g.add(rf);}
   });
   R.world.add(g);}
-const _setWorld=R3.setWorld;R3.setWorld=function(kind,W,H,opt){_setWorld.apply(R3,arguments);if(kind==='war'&&STAGE.cur)try{stageProps(STAGE.cur);}catch(e){}};
+// 遠景で戦場の外（空の背景）が見えないよう、周りに広い大地を敷く
+function stageGround(W,H){const T=R3.T;if(!T||!R3.world)return;const m=new T.Mesh(new T.PlaneGeometry(900,900),new T.MeshLambertMaterial({color:0x6c7a44}));m.rotation.x=-Math.PI/2;m.position.set(W/2,-.45,H/2);m.receiveShadow=false;R3.world.add(m);}
+const _setWorld=R3.setWorld;R3.setWorld=function(kind,W,H,opt){_setWorld.apply(R3,arguments);if(kind==='war'){try{stageGround(W,H);}catch(e){}if(STAGE.cur)try{stageProps(STAGE.cur);}catch(e){}}};
+// 遠景で地面と水面がちらついて青く見えるのを防ぐ（カメラの手前の切り取り距離を距離に合わせる）
+const _r3render=R3.render;R3.render=function(){try{const c=R3.camera,d=R3.cam&&R3.cam.dist||20;const nr=Math.max(.1,Math.min(12,d*.18));if(c&&Math.abs(c.near-nr)>.05){c.near=nr;c.far=Math.max(400,d*8);c.updateProjectionMatrix();}}catch(e){}return _r3render.apply(R3,arguments);};
