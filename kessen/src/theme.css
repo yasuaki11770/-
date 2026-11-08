@@ -81,7 +81,7 @@ select,input{border-radius:2px!important}
 .sv-fig:not(.off) .sv-nm{background:linear-gradient(#b8301e,#7a160c);color:#fbe9c0;border-color:#e6c06a}
 /* 鑑賞（映画のような見せ方） */
 body.cine #lbox::before,body.cine #lbox::after{height:11%!important}
-body.cine #hInfo,body.cine .hbot,body.cine #hCam,body.cine #hPause,body.cine .tip,body.cine .toast{display:none!important}
+body.cine #camctl,body.cine #hInfo,body.cine .hbot,body.cine #hCam,body.cine #hPause,body.cine .tip,body.cine .toast{display:none!important}
 .cine-sub{position:absolute;left:0;right:0;bottom:calc(11% + 10px);z-index:9;text-align:center;pointer-events:none;opacity:0;transition:opacity .6s;padding:0 18px;color:#f6ead0;text-shadow:0 2px 4px #000,0 0 14px rgba(0,0,0,.8)}
 .cine-sub.go{opacity:1}
 .cine-sub b{display:block;font-family:var(--f-disp);font-weight:400;font-size:clamp(24px,7vw,40px);letter-spacing:.18em;line-height:1.2}
@@ -89,3 +89,12 @@ body.cine #hInfo,body.cine .hbot,body.cine #hCam,body.cine #hPause,body.cine .ti
 .cine-cut{position:absolute;inset:0;z-index:8;background:#000;opacity:0;pointer-events:none}
 .cine-cut.go{animation:ccut .42s ease-out}
 @keyframes ccut{0%{opacity:.85}100%{opacity:0}}
+/* 戦場の武将の叫び（鑑賞） */
+.cine-say{position:absolute;z-index:10;left:max(10px,env(safe-area-inset-left,0px));top:calc(13% + 8px);display:flex;align-items:center;gap:10px;max-width:min(86%,460px);padding:8px 14px 8px 8px;background:linear-gradient(90deg,rgba(20,10,4,.9),rgba(20,10,4,.7));border-left:3px solid var(--gold);border-radius:0 8px 8px 0;opacity:0;transform:translateX(-14px);transition:opacity .4s,transform .4s;pointer-events:none}
+.cine-say.foe{left:auto;right:max(10px,env(safe-area-inset-right,0px));flex-direction:row-reverse;text-align:right;border-left:0;border-right:3px solid #c0392b;border-radius:8px 0 0 8px;background:linear-gradient(270deg,rgba(30,6,4,.9),rgba(30,6,4,.7));transform:translateX(14px)}
+.cine-say.go{opacity:1;transform:none}
+.cine-say img{width:54px;height:61px;border:1px solid var(--gold);border-radius:2px}
+.cine-say small{display:block;color:var(--gold);font-family:var(--f-disp);font-size:13px;letter-spacing:.1em}
+.cine-say b{display:block;font-family:var(--f-disp);font-weight:400;font-size:17px;line-height:1.5;color:#f6ead0}
+/* 戦法の表示を長めに */
+.cutin{animation-duration:4.8s!important}

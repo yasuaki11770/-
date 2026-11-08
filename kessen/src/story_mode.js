@@ -186,8 +186,9 @@ let WATCH=null;
 const _hurtSq=hurtSq;
 hurtSq=function(q,dmg,src){
   if(BT&&BT.watch&&dmg>0){
-    dmg*=q.side===0?.45:1.7;
+    dmg*=typeof cineBias==='function'?cineBias(q.side):(q.side===0?.45:1.7);
     if(q.side===0&&q.gen){const floor=q.n0*q.hpPer*.35;dmg=Math.min(dmg,Math.max(0,q.hp-floor));}
+    if(q.side===1&&q.gen&&typeof DRAMA!=='undefined'&&DRAMA.ph!=='final'){const floor=q.n0*q.hpPer*.4;dmg=Math.min(dmg,Math.max(0,q.hp-floor));}
   }
   _hurtSq(q,dmg,src);
   if(BT&&BT.watch&&q.side===0&&q.gen){q.morale=Math.max(q.morale,30);q.routed=false;if(q.hp>0)q.alive=true;}
