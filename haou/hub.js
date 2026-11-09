@@ -508,7 +508,7 @@ function fortHtml(r,mine){const g=S.reg[r];let b='<h3 class="sec">城の守り</
   b+='<div class="news" style="margin-top:6px">'+(g.bld.length?g.bld.map((x,i)=>'<div class="row" style="justify-content:space-between;flex-wrap:nowrap"><span><b>'+FB[x.t].n+'</b> Lv'+x.lv+' <small class="muted">'+FB[x.t].d+'</small></span>'+(mine&&x.lv<5?'<button class="btn sm" type="button" data-fu="'+i+'"'+(S.gold<FB[x.t].c*x.lv?' disabled':'')+'>強化 金'+FB[x.t].c*x.lv+'</button>':'')+'</div>').join(''):'<div class="muted">防衛施設はない</div>')+'</div>';
   if(mine&&g.bld.length<bldSlots(r)){b+='<div class="row" style="margin-top:6px">'+Object.keys(FB).map(t=>{const ok=g.wall>=FB[t].w;return '<button class="btn sm" type="button" data-fn="'+t+'"'+(!ok||S.gold<FB[t].c?' disabled':'')+'>'+FB[t].n+(ok?' 金'+FB[t].c:'（壁Lv'+FB[t].w+'）')+'</button>';}).join('')+'</div>';}
   b+='<p class="dim" style="margin:4px 0 0;font-size:11.5px">施設 '+g.bld.length+'/'+bldSlots(r)+'（城壁Lv＋1まで）。籠城戦・攻城戦では城壁と施設がそのまま戦場に並ぶ。</p></div>';return b;}
-function draft(r){if(S.ap<1)return;const R_=REG[r];const add=Math.min(R_.cap-S.reg[r].tr,2500+Math.round(R_.cap*.1));S.reg[r].tr+=add;S.ap--;toast(R_.c+'で兵を集めた（+'+man(add)+'）');SND.coin&&SND.coin();save();repaint();}
+function draft(r){if(S.ap<1)return;const R_=REG[r];const add=Math.min(R_.cap-S.reg[r].tr,2500+Math.round(R_.cap*.1));S.reg[r].tr+=add;S.ap--;toast(R_.c+'で兵を集めた（+'+man(add)+'）');{const h0=heroesAt(r)[0];if(h0)speak(h0,'accept');}SND.coin&&SND.coin();save();repaint();}
 function moveSheet(r){const nb=ADJ[r].filter(n=>S.reg[n].o===S.me);if(!nb.length){toast('隣に自分の領地がない');return;}
   const hs=heroesAt(r).filter(id=>id);const sel={};let dest=nb[0],tr=0;
   const render=()=>{let b='<p class="muted" style="margin:0">移動は令を使わない。移った武将はこの季節もう出陣できる。</p><h3 class="sec">行き先</h3><div class="row">'+nb.map(n=>'<button class="btn sm'+(n===dest?' pri':'')+'" type="button" data-d="'+n+'">'+REG[n].c+'</button>').join('')+'</div>';
@@ -518,7 +518,7 @@ function moveSheet(r){const nb=ADJ[r].filter(n=>S.reg[n].o===S.me);if(!nb.length
     d.querySelectorAll('[data-d]').forEach(e=>e.onclick=()=>{dest=e.dataset.d;render();});
     d.querySelectorAll('[data-h]').forEach(e=>e.onclick=()=>{sel[e.dataset.h]=!sel[e.dataset.h];render();});
     d.querySelector('#mTr').oninput=e=>{tr=+e.target.value;d.querySelector('.sec:last-of-type b').textContent=man(tr);};
-    d.querySelector('#mGo').onclick=()=>{Object.keys(sel).filter(k=>sel[k]).forEach(id=>S.hero[id].loc=dest);tr=Math.min(tr,REG[dest].cap-S.reg[dest].tr);S.reg[r].tr-=tr;S.reg[dest].tr+=tr;save();repaint();toast(REG[dest].c+'へ移動した');regionSheet(dest);UIS.sel=dest;};};
+    d.querySelector('#mGo').onclick=()=>{const mv=Object.keys(sel).filter(k=>sel[k]);if(mv[0])speak(mv[0],'accept');mv.forEach(id=>S.hero[id].loc=dest);tr=Math.min(tr,REG[dest].cap-S.reg[dest].tr);S.reg[r].tr-=tr;S.reg[dest].tr+=tr;save();repaint();toast(REG[dest].c+'へ移動した');regionSheet(dest);UIS.sel=dest;};};
   render();}
 
 /* ================= 出陣 ================= */
@@ -545,7 +545,7 @@ function muster(target){const src=ADJ[target].filter(n=>S.reg[n].o===S.me);if(!s
     d.querySelector('#mGo').onclick=()=>{if(tr<1000)return;
       // 兵は送り元から比率で引く
       let left=tr;src.forEach((r,i)=>{const can=Math.max(0,S.reg[r].tr-1000);const take=i===src.length-1?left:Math.min(left,Math.round(tr*can/Math.max(1,trMax)));S.reg[r].tr-=take;left-=take;});
-      S.ap--;save();topBar();closeSheet();
+      S.ap--;save();topBar();closeSheet();if(sel[0]){const v=speak(sel[0],'charge');if(v)toast(HB(sel[0]).n+'「'+v+'」');}
       battle({atkF:S.me,defF:S.reg[target].o,target,atk:sel.slice(),def:heroesAt(target),atkTr:tr,defTr:S.reg[target].tr,player:'atk',home:sel.reduce((o,id)=>{o[id]=S.hero[id].loc;return o;},{}),src:src[0]});};};
   render();}
 
@@ -590,7 +590,7 @@ function chooseMode(B,me,foe){return new Promise(res=>{
   else b+='<p class="muted" style="margin:0;font-size:12.5px">武将がいないので、委任しか選べない。</p>';
   const d=sheet(sit[0],b,'');
   if(mySide==='def')d.querySelector('.x').hidden=true;
-  d.querySelectorAll('[data-m]').forEach(e=>e.onclick=()=>{d.remove();res(e.dataset.m);});
+  d.querySelectorAll('[data-m]').forEach(e=>e.onclick=()=>{d.remove();const m=e.dataset.m;if(me[0]&&m!=='auto')speak(me[0],m==='td'?'defend':'charge');res(m);});
   d.onclose=()=>res(null);});}
 async function runMode(mode,B,me,foe){
   if(mode==='auto')return autoBattle(B);
@@ -702,7 +702,9 @@ async function runDuel3(B,me,foe){const n=Math.min(3,me.length,foe.length);const
   const sumU=(A,T,f)=>Object.keys(A.per).reduce((a,id)=>a+(T[id]!==undefined?T[id]:Math.round(A.per[id]*f)),0)+Math.round(A.reserve*f);
   return {win,myLeft:sumU(myA,myT,win?.95:.6),foeLeft:sumU(foA,foT,win?.6:.95),down,duels};}
 function interBout(i,n,a,b,w,l,ta,tb){return new Promise(res=>{const ha=HB(a),hb=HB(b);
-  const bd='<div style="text-align:center"><small class="muted">第'+(i+1)+'番 ・ '+w+'勝'+l+'敗</small></div><div class="row" style="justify-content:center;gap:18px"><div style="text-align:center">'+heroCard(a,{sub:'兵 '+man(ta||0)+'（体力+'+Math.floor((ta||0)/1000)*10+'%）'})+'<p style="margin:4px 0 0;font-size:13px">「'+esc(line(a,'sp'))+'」</p></div><b style="font-family:var(--f-disp);font-size:30px;color:var(--gold)">対</b><div style="text-align:center">'+heroCard(b,{sub:'兵 '+man(tb||0)+'（体力+'+Math.floor((tb||0)/1000)*10+'%）'})+'<p style="margin:4px 0 0;font-size:13px">「'+esc(line(b,'sp'))+'」</p></div></div>';
+  const va=speak(a,'sp')||speak(a,'duel'),vb=speak(b,'sp',2600)||speak(b,'duel',2600);
+  const fc=id=>'<img alt="" src="'+face(id)+'" style="width:96px;height:108px;border:2px solid var(--gold);display:block;margin:0 auto 4px">';
+  const bd='<div style="text-align:center"><small class="muted">第'+(i+1)+'番 ・ '+w+'勝'+l+'敗</small></div><div class="row" style="justify-content:center;gap:18px"><div style="text-align:center">'+fc(a)+heroCard(a,{sub:'兵 '+man(ta||0)+'（体力+'+Math.floor((ta||0)/1000)*10+'%）'})+'<p style="margin:4px 0 0;font-size:13px">「'+esc(va||line(a,'sp'))+'」</p></div><b style="font-family:var(--f-disp);font-size:30px;color:var(--gold)">対</b><div style="text-align:center">'+fc(b)+heroCard(b,{sub:'兵 '+man(tb||0)+'（体力+'+Math.floor((tb||0)/1000)*10+'%）'})+'<p style="margin:4px 0 0;font-size:13px">「'+esc(vb||line(b,'sp'))+'」</p></div></div>';
   try{SND.horn();}catch(_){}
   const d=sheet('一騎打ち 第'+(i+1)+'番',bd,'<button class="btn pri" type="button" id="bGo">いざ、尋常に勝負</button>');d.querySelector('.x').hidden=true;d.querySelector('#bGo').onclick=()=>{d.remove();res();};});}
 
@@ -756,7 +758,7 @@ async function applyResult(B,res){
     const lost=caught.filter(c=>c.by!==S.me);if(lost.length)b+='<h3 class="sec">敵に捕まった武将</h3><div class="grid">'+lost.map(c=>heroCard(c.id,{})).join('')+'</div>';
     if(myInj)b+='<p style="margin:0">負傷兵 <b style="color:var(--gold2)">'+man(myInj)+'</b> は次の季節に隊へ戻る。</p>';
     if(ups.length)b+='<p class="muted" style="margin:0">レベルが上がった：'+ups.join('・')+'</p>';
-    const spk=(win?mineIds.find(id=>!res.down[id]):mineIds[0])||null;if(spk)b+='<div class="card row" style="flex-wrap:nowrap"><img alt="" src="'+portrait(HB(spk))+'" style="width:48px;height:54px;border:1px solid var(--gold)"><div><b style="font-family:var(--f-disp);color:var(--gold2)">'+HB(spk).n+'</b><p style="margin:0;color:var(--fg)">「'+esc(line(spk,win?'win':'lose'))+'」</p></div></div>';
+    const spk=(win?mineIds.find(id=>!res.down[id]):mineIds[0])||null;if(spk){const vt=speak(spk,win?'win':'lose',400);b+='<div class="card row" style="flex-wrap:nowrap"><img alt="" src="'+face(spk)+'" style="width:72px;height:81px;border:1px solid var(--gold)"><div><b style="font-family:var(--f-disp);color:var(--gold2)">'+HB(spk).n+'</b><p style="margin:0;color:var(--fg)">「'+esc(vt||line(spk,win?'win':'lose'))+'」</p></div></div>';}
     await new Promise(r=>{const d=sheet(R_.c+'の戦い',b,'<button class="btn pri" type="button" id="rOk">天下図へ</button>');d.querySelector('.x').hidden=true;d.querySelector('#rOk').onclick=()=>{d.remove();r();};});
     for(const c of caught.filter(c=>c.by===S.me))await storyHook('captured',c.id);
   }else S.news.push(...news);
@@ -783,7 +785,7 @@ async function recruitFree(id,r){if(S.ap<1){toast('令が足りない');return;}
   if(id==='zhugel'){if(v<3){await playStory(v===1?'#'+REG[r].c+'の西、隆中の草廬を訪ねた。\n童子：先生はお出かけでございます。\n#諸葛亮は留守だった。':'#雪の中、ふたたび草廬を訪ねた。\n童子：先生はまだお戻りになりませぬ。\n#またも会えなかった。だが、あきらめるにはまだ早い。',{bg:v===1?'garden':'snow',place:'隆中'});save();topBar();return;}
     await playStory(SANKO(S.me),{bg:'room',place:'隆中・草廬'});joinHero(id,r);return;}
   const p=chanceFree(id);const ok=R()<p;
-  if(ok){joinHero(id,r);await playStory(HB(rulerOf(S.me)).n+'：'+HB(id).n+'殿、我が軍に力を貸してはくれぬか。\n'+HB(id).n+'：'+line(id,'sp')+'　……この身、お預けいたしましょう。',{bg:'room',place:REG[r].c});}
+  if(ok){joinHero(id,r);await playStory(HB(rulerOf(S.me)).n+'：'+HB(id).n+'殿、我が軍に力を貸してはくれぬか。\n'+HB(id).n+'：'+(HB(id).sp||line(id,'sp'))+'\n'+HB(id).n+'：……この身、お預けいたしましょう。',{bg:'room',place:REG[r].c});}
   else{toast(HB(id).n+'は首を縦に振らなかった（もう一度訪ねてもよい）');}
   save();repaint();regionSheet(r);}
 function joinHero(id,r){const h=S.hero[id];h.f=S.me;h.cap=null;h.loc=r||h.loc;h.tired=1;S.met[id]=1;S.stats.recruit++;banner(HB(id).n+'が仲間に','登用');try{SND.gong(.18);}catch(_){}save();repaint();}
@@ -794,7 +796,7 @@ function talentSheet(){const caps=captivesOf(S.me);const fr=[];regsOf(S.me).forE
   const met=Object.keys(S.met).length;b+='<p class="dim" style="margin:0;font-size:12px">これまで仕えた武将 '+met+' / '+HEROES.length+'人</p>';
   const d=sheet('人材・捕虜',b,'');
   d.querySelectorAll('[data-h]').forEach(e=>e.onclick=()=>{const id=e.dataset.h;if(S.hero[id].cap===S.me)captiveSheet(id);else{const r=S.hero[id].loc;recruitFree(id,r);}});}
-function captiveSheet(id){const p=chanceCap(id);const b=heroCard(id,{})+'<p style="margin:0">「'+esc(line(id,'lose'))+'」</p><p class="muted" style="margin:0">登用の見込み：'+(p>=.8?'高い':p>=.45?'五分':p>=.15?'低い':'ほぼ無理')+'</p>';
+function captiveSheet(id){const p=chanceCap(id);const b='<img alt="" src="'+face(id)+'" style="width:110px;height:124px;border:2px solid var(--gold);display:block;margin:0 auto">'+heroCard(id,{})+'<p style="margin:0">「'+esc(line(id,'lose'))+'」</p><p class="muted" style="margin:0">登用の見込み：'+(p>=.8?'高い':p>=.45?'五分':p>=.15?'低い':'ほぼ無理')+'</p>';
   const d=sheet(HB(id).n+'（捕虜）',b,'<button class="btn pri" type="button" id="cTry"'+(S.ap<1?' disabled':'')+'>説得する（令1）</button><button class="btn" type="button" id="cFree">解き放つ</button>');
   d.querySelector('#cTry').onclick=async()=>{S.ap--;const h=S.hero[id];h.tries=(h.tries||0)+1;
     if(id==='menghuo'&&h.tries<7){await playStory('孟獲：まだだ! まだ心は服さぬぞ!\n#孟獲は首を振った。（'+h.tries+'度目）七度でも説けば、あるいは……');save();topBar();talentSheet();return;}
@@ -862,7 +864,7 @@ async function aiFaction(f){const F=FAC[f];
     const tr=Math.round(S.reg[c.r].tr*.75);S.reg[c.r].tr-=tr;
     const B={atkF:f,defF:S.reg[c.t].o,target:c.t,atk:hs,def:heroesAt(c.t),atkTr:tr,defTr:S.reg[c.t].tr,player:S.reg[c.t].o===S.me?'def':null,home:hs.reduce((o,id)=>{o[id]=c.r;return o;},{}),src:c.r};
     UIS.arrows=[{a:c.r,b:c.t,col:F.col,t0:performance.now()/1000}];dirty=true;focusReg(c.t);await sleep(B.player?900:550);
-    if(B.player){try{SND.horn();}catch(_){}banner('敵襲!',F.n+'が'+REG[c.t].c+'へ');await sleep(900);UIS.arrows=[];
+    if(B.player){try{SND.horn();}catch(_){}banner('敵襲!',F.n+'が'+REG[c.t].c+'へ');if(hs[0]){const v=speak(hs[0],pick(['charge','duel']),500);if(v)toast(HB(hs[0]).n+'「'+v+'」',3200);}await sleep(900);UIS.arrows=[];
       if(!B.def.length){const r0=autoBattle(B,false);await applyResult(B,await r0);}else await battle(B);}
     else{const r0=autoBattle(B,true);UIS.arrows=[];await applyResult(B,toPlayerless(r0));}
     if(!alive(S.me))return;}
@@ -883,6 +885,38 @@ function checkEnd(){if(!S||S.over)return;
 function endingCard(){const s=S.stats;const b='<div style="text-align:center;font-family:var(--f-disp);font-size:clamp(50px,15vw,90px);line-height:1.1;color:var(--gold2)">天下統一</div><p style="text-align:center;margin:0">'+FAC[S.me].n+' ・ '+S.year+'年'+SEASON[S.season]+'</p><dl class="kv" style="justify-content:center"><dt>合戦</dt><dd>'+s.war+'戦 '+s.win+'勝</dd><dt>一騎打ち</dt><dd>'+s.dwon+'勝 / '+s.duel+'回</dd><dt>登用</dt><dd>'+s.recruit+'人</dd><dt>仕えた武将</dt><dd>'+Object.keys(S.met).length+'人</dd></dl>';
   const d=sheet('覇王',b,'<button class="btn pri" type="button" id="eNew">別の君主で遊ぶ</button>');d.querySelector('#eNew').onclick=()=>{localStorage.removeItem(SKEY);S=null;closeSheet();title();};}
 
+/* ================= 声（三国英雄伝で VOICEVOX 収録した台詞） ================= */
+const VREC={buf:null,loading:false,cache:{},cur:null,curEnd:0};
+function vrecLoad(){if(VREC.buf||VREC.loading||typeof VOICE_IDX==='undefined')return;VREC.loading=true;try{fetch('voices.mp3').then(r=>r.arrayBuffer()).then(b=>{VREC.buf=b;}).catch(()=>{VREC.loading=false;});}catch(e){VREC.loading=false;}}
+const vhash=id=>{let x=0;for(let i=0;i<id.length;i++)x=(x*31+id.charCodeAt(i))>>>0;return x;};
+function vcls(id){return VOICE_CLS[id]||(typeof FEMALE!=='undefined'&&FEMALE[id]?'fem':['takehiro','ryusei','mesuo','maron'][vhash(id)%4]);}
+const PERS_OF={zhangf:'mou',xuc:'mou',dianw:'mou',huax:'mou',wenc:'mou',yanl:'mou',gann:'mou',suns:'mou',mac:'mou',xhd:'mou',pangd:'mou',menghuo:'mou',zhurong:'mou',tadun:'mou',xhy:'mou',zhangliang:'mou',zhout:'mou',
+ lubu:'doku',weiy:'doku',dongz:'doku',guan:'yuu',zhaoy:'yuu',zhangl:'yuu',xuh:'yuu',huangz:'yuu',tsc:'yuu',lingt:'yuu',guanp:'yuu',jil:'yuu',yuej:'yuu',gongsunz:'yuu',zhangx:'yuu',matengg:'yuu',sunj:'yuu',huanggai:'yuu',zhangb:'yuu',
+ zhugel:'rei',sima:'rei',zhouy:'rei',luxun:'rei',caoc:'rei',pangt:'rei',jiangw:'rei',lumeng:'rei',zhangj:'rei',sunq:'rei',zhangh:'rei',caor:'ken',gaos:'ken',liub:'ken',yuans:'yuu2'};
+function persOf(id){if(PERS_OF[id])return PERS_OF[id];const h=HB(id);if(!h)return 'yuu';if(h.p>=95&&h.i<50)return 'mou';if(h.i>=85)return 'rei';if((h.cmd||60)>=90)return 'ken';return 'yuu';}
+// 性格ごとの台詞（三国決戦伝の掛け声）と、誰でも言う鼓舞
+const VL={
+ accept:{mou:['おう、任せろ!','よっしゃ、暴れてくるぜ!'],doku:['…まあいいだろう。'],yuu:['承知!','御意!'],rei:['心得ました。','策の通りに。'],ken:['承知つかまつった。'],yuu2:['…わかった、そうしよう。']},
+ charge:{mou:['邪魔だ、どけい!','突っ込むぞ! 遅れるな!','敵将はどこだ!'],doku:['獲物は俺がもらう!','雑魚に用はない!'],yuu:['続け! 押し出せ!','味方を救え!'],rei:['あの隊なら崩せる。かかれ。','相性は我らに分がある。'],ken:['来たか。迎え撃て!','一歩も通すな!'],yuu2:['よし…行くぞ!'],all:['いざ、参る！','この戦、必ず勝つ！','我らの力、見せてくれよう！','我に続けぇ！','この一戦に天下が懸かっておる！']},
+ defend:{ken:['来たか。迎え撃て!','一歩も通すな!','陣を下げよ。'],all:['一歩も退くな！','ここが踏ん張りどころぞ！','怯むな！ 持ちこたえよ！','退くな！ 退けば国が滅ぶぞ！']},
+ win:{mou:['ははは、口ほどにもない！'],doku:['ははは、口ほどにもない！'],all:['敵は崩れた！ 追い討てぇ！','一兵たりとも逃すな！','この戦、必ず勝つ！']},
+ lose:{rei:['一旦引いて立て直す。','深追いは禁物。下がれ。'],ken:['陣を下げよ。'],yuu2:['ひ、引け! 引けい!'],yuu:['無念…一旦引く!'],doku:['ここは退いてやる。'],mou:['…ちっ!'],all:['まだだ……まだ終わらぬ！']},
+ duel:{mou:['そこの大将! 俺と勝負しろ!','逃げるなよ、一騎打ちだ!'],doku:['俺の相手が務まるか?'],yuu:['我と尋常に勝負せよ!'],rei:['…受けて立とう。'],ken:['挑まれたなら仕方あるまい。'],yuu2:['な、なぜ私が…']}};
+function voiceLine(id,cat){if(typeof VOICE_IDX==='undefined'||!HB(id))return null;
+  if(cat==='sp')return VOICE_IDX['h:'+id]?{text:HB(id).sp,key:'h:'+id}:null;
+  const T=VL[cat];if(!T)return null;const cls=vcls(id),p=persOf(id);const base=(T[p]||[]).concat(T.all||[]);const c=[];
+  base.forEach(t=>{const d=BVOICE.dial(t,id);[d,t].forEach(x=>{const k=cls+'|'+x;if(VOICE_IDX[k]&&!c.some(o=>o.key===k))c.push({text:x,key:k});});});
+  return c.length?pick(c):null;}
+function playVoice(id,key,delay){try{SND.init();if(!SND.ctx||!SND.on)return;vrecLoad();const ix=VOICE_IDX[key];if(!ix)return;let n=0;
+  const go=()=>{if(!VREC.buf){if(n++<25)setTimeout(go,300);return;}const run=ab=>{const c=SND.ctx;try{if(VREC.cur&&c.currentTime<VREC.curEnd)VREC.cur.stop();}catch(e){}
+      const s=c.createBufferSource();s.buffer=ab;if(key.indexOf('h:')!==0)s.playbackRate.value=.96+((vhash(id)>>>4)%9)*.01;const g=c.createGain();g.gain.value=1.2;s.connect(g);g.connect(SND.master||c.destination);if(SND.revIn)g.connect(SND.revIn);
+      s.start();VREC.cur=s;VREC.curEnd=c.currentTime+ab.duration/s.playbackRate.value;
+      try{if(SND.music){SND.music.gain.setTargetAtTime(.18,c.currentTime,.08);clearTimeout(VREC.dk);VREC.dk=setTimeout(()=>SND.music.gain.setTargetAtTime(.42,SND.ctx.currentTime,.3),ab.duration*1000+250);}}catch(e){}};
+    if(VREC.cache[key]){run(VREC.cache[key]);return;}try{SND.ctx.decodeAudioData(VREC.buf.slice(ix[0],ix[0]+ix[1]),ab=>{VREC.cache[key]=ab;run(ab);},()=>{});}catch(e){}};
+  setTimeout(go,delay||0);}catch(e){}}
+// しゃべらせて、表示する台詞を返す（収録がなければ null）
+function speak(id,cat,delay){const v=voiceLine(id,cat);if(!v)return null;playVoice(id,v.key,delay);return v.text;}
+const face=id=>typeof portrait2==='function'?portrait2(HB(id)):portrait(HB(id));
 /* ================= 物語（三国英雄伝の物語画面） ================= */
 const HN={};HEROES.forEach(h=>HN[h.n]=h);
 function parseScript(text){const out=[];for(let raw of String(text||'').split('\n')){let ln=raw.trim();if(!ln)continue;let cond=0;const m=ln.match(/^([12])[>＞]/);if(m){cond=+m[1];ln=ln.slice(2).trim();}
@@ -925,7 +959,7 @@ function playStory(text,opt){opt=opt||{};const lines=parseScript(text);if(!lines
     const slot={l:null,r:null};let last='r';
     const stage=name=>{const im={l:l.querySelector('.sv-l'),r:l.querySelector('.sv-r')};if(!name){im.l.classList.add('off');im.r.classList.add('off');return;}
       let k=slot.l===name?'l':slot.r===name?'r':null;
-      if(!k){k=last==='l'?'r':'l';slot[k]=name;im[k].querySelector('img').src=portrait(HN[name]);im[k].querySelector('.sv-nm').textContent=name;im[k].hidden=false;im[k].classList.remove('in');void im[k].offsetWidth;im[k].classList.add('in');}
+      if(!k){k=last==='l'?'r':'l';slot[k]=name;im[k].querySelector('img').src=face(HN[name].id);im[k].querySelector('.sv-nm').textContent=name;im[k].hidden=false;im[k].classList.remove('in');void im[k].offsetWidth;im[k].classList.add('in');}
       last=k;im[k].classList.remove('off');im[k==='l'?'r':'l'].classList.add('off');};
     let skip=false,adv=null,choice=0,i=0;
     l.querySelector('.sv-skip').onclick=e=>{e.stopPropagation();skip=true;if(adv){const a=adv;adv=null;a();}};
@@ -933,12 +967,14 @@ function playStory(text,opt){opt=opt||{};const lines=parseScript(text);if(!lines
     const wait=()=>new Promise(r=>{adv=r;});
     (async()=>{for(;i<lines.length;i++){const ln=lines[i];if(ln.cond&&ln.cond!==choice)continue;
         if(ln.k==='cmd'){if(ln.c==='bg')paint(ln.a);else if(ln.c==='se'){try{({gong:()=>SND.gong(.2),horn:()=>SND.horn(),fire:()=>SND.fire(),cry:()=>SND.warcry()})[ln.a]();}catch(_){}}
+          else if(ln.c==='vo'&&!skip){speak(ln.a,'sp');}
           else if(ln.c==='title'&&!skip){const c=el('div','sv-title','<b>'+esc(ln.a)+'</b>');l.appendChild(c);try{SND.gong(.2);}catch(_){}await sleep(1600);c.remove();}continue;}
         if(ln.k==='q'){box.hidden=true;choice=await new Promise(res=>{const c=el('div','sv-choice');ln.opts.forEach((o,k)=>{const b=el('button','btn',esc(o));b.type='button';b.onclick=e=>{e.stopPropagation();c.remove();res(k+1);};c.appendChild(b);});l.appendChild(c);});box.hidden=false;skip=false;continue;}
         if(skip)continue;
         const t=ln.t.replace(/／/g,'\n');
         if(ln.k==='n'){box.classList.add('nar');who.textContent='';stage(null);}else{box.classList.remove('nar');who.textContent=ln.who;if(HN[ln.who])stage(ln.who);else stage(null);}
         nx.hidden=true;said.textContent='';try{SND.tone(880,.03,'triangle',.02);}catch(_){}
+        if(ln.k==='s'&&HN[ln.who]&&HN[ln.who].sp&&t.indexOf(HN[ln.who].sp)>=0)speak(HN[ln.who].id,'sp');
         const ch=Array.from(t);let n=0,typing=true;
         await new Promise(res=>{adv=()=>{typing=false;};const tick=()=>{if(!typing||skip){said.textContent=t;res();return;}said.textContent=ch.slice(0,++n).join('');if(n>=ch.length){res();return;}setTimeout(tick,22);};tick();});
         nx.hidden=false;if(!skip)await wait();}
@@ -956,7 +992,8 @@ function OPENING(f){const r=rulerOf(f),R0=NM(r);
    ma:'@bg field\n馬騰：西涼の騎兵は天下一。漢室を乱す董卓を討つ。\n馬超：父上、この馬孟起が先陣を駆けます!\n龐徳：西涼の風、中原へ吹かせてみせましょう。',
    gs:'@bg snow\n公孫瓚：白馬義従の名、天下に知らしめてくれる。\n趙雲：常山の趙子龍、殿のために槍を振るいます。\n公孫瓚：まずは南の袁紹よ。あれを倒せば河北は我らのもの。',
    man:'@bg south\n孟獲：北の連中が争っている間に、南蛮の力を見せてやる!\n祝融：あんた、あたしも一緒に暴れるよ!\n孟獲：わははは! 七度でも八度でも戦ってやるわい!'};
-  return base+(T[f]||'')+'\n#天下は二十一の地に分かれている。そのすべてを治めたとき、乱世は終わる。';}
+  const sp=HB(r)&&HB(r).sp?'\n'+R0+'：'+HB(r).sp:'';
+  return base+(T[f]||'#'+FAC[f].n+'が旗を揚げた。')+sp+'\n#天下は二十一の地に分かれている。そのすべてを治めたとき、乱世は終わる。';}
 function SANKO(f){const r=NM(rulerOf(f));return '@title 三顧の礼\n#三度目の訪問。'+r+'は草廬の前で、主が昼寝から覚めるのを待った。\n諸葛亮：お待たせいたしました。三度も足を運ばれるとは。\n'+r+'：先生の知恵をお借りしたい。乱れた天下を正すために。\n諸葛亮：……北に強大な者あり、東に長江の国あり。まず荊州と益州を取り、天下を三つに分ける。それが「天下三分の計」。\n?先生、どうか我が軍へ｜天下三分の先を聞かせてほしい\n2>諸葛亮：三つに分けた天下を、やがて一つにまとめる。その道筋は、殿の歩みしだいでございます。\n諸葛亮：この孔明、殿のために草廬を出ましょう。\n#諸葛亮が仲間に加わった。';}
 function ENDING_WIN(){const r=NM(rulerOf(S.me));return '@title 天下統一\n#'+S.year+'年。二十一の地はすべて'+FAC[S.me].n+'の旗のもとに一つとなった。\n'+r+'：長かった……。だが、ようやく乱世は終わる。\n#'+r+'は洛陽の祭壇に立ち、天に勝利を告げた。\n'+r+'：'+line(rulerOf(S.me),'win')+'\n#こうして、百年続くはずだった乱世は、一人の覇王の手で幕を閉じた。';}
 function ENDING_LOSE(){const r=NM(rulerOf(S.me)||FAC[S.me].ruler);return '@bg dark\n#最後の城が落ちた。\n'+r+'：'+line(rulerOf(S.me)||FAC[S.me].ruler,'lose')+'\n#'+FAC[S.me].n+'の旗は、乱世の風にちぎれて消えた。\n#……だが、天下を夢見る者は、また現れる。';}
@@ -1079,7 +1116,7 @@ function ownerPicker(r,cb){const d=el('div','');d.style.cssText='position:fixed;
   d.innerHTML='<div class="card" style="width:min(560px,100%);max-height:70vh;overflow:auto;background:var(--tex-wood),linear-gradient(#26180d,#140c06);border-top:3px double var(--gold)"><h3>'+REG[r].c+'の持ち主</h3><div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(100px,1fr))">'+
     '<button class="btn sm'+(!cur?' pri':'')+'" type="button" data-o="">空白地</button>'+fs.map(f=>'<button class="btn sm'+(cur===f?' pri':'')+'" type="button" data-o="'+f+'" style="border-left:6px solid '+FAC[f].col+'">'+FAC[f].n+'</button>').join('')+'</div></div>';
   document.body.appendChild(d);d.onclick=e=>{const b=e.target.closest('[data-o]');if(b){d.remove();cb(b.dataset.o||null);}else if(e.target===d)d.remove();};}
-function enterMap(){applyMap(S.map||DEF_MAP);buildGrid();view.init=0;fitView();repaint();UIS.sel=null;try{BGM.play('camp');}catch(_){}
+function enterMap(){applyMap(S.map||DEF_MAP);buildGrid();vrecLoad();view.init=0;fitView();repaint();UIS.sel=null;try{BGM.play('camp');}catch(_){}
   const mine=regsOf(S.me);if(mine.length){/* 自国が見えるように少し寄る */const cv=$('#map');if(cv.clientWidth<700){view.s=1.6;const k=view.fit*view.s;const r=mine[0];view.ox=cv.clientWidth/2-REG[r].x*BW/100*k;view.oy=cv.clientHeight/2-REG[r].y*BH/90*k;clampView();}}
   dirty=true;checkEnd();}
 
@@ -1090,6 +1127,6 @@ function boot(){buildGrid();bindMap();
   $('#cEnd').onclick=()=>{if(S.ap>0&&!$('#cEnd').dataset.arm){$('#cEnd').dataset.arm=1;toast('令が'+S.ap+'つ残っている。もう一度押すと季節を進める');setTimeout(()=>delete $('#cEnd').dataset.arm,2500);return;}delete $('#cEnd').dataset.arm;endTurn();};
   document.addEventListener('pointerdown',()=>{try{SND.init();}catch(_){}},true);
   requestAnimationFrame(loop);title();
-  window.__HAOU={get S(){return S;},makeWorld,rateWorld,FIDS,battle,autoBattle,endTurn,REG,ADJ,tap:r=>tapRegion(r),talent:()=>talentSheet()};}
+  window.__HAOU={get S(){return S;},vt:()=>({buf:!!VREC.buf,cached:Object.keys(VREC.cache).length,liub:voiceLine("liub","charge"),guan:voiceLine("guan","sp"),cao:voiceLine("caoc","defend"),zhou:voiceLine("zhouy","accept"),rand:voiceLine("xuh","win")}),makeWorld,rateWorld,FIDS,battle,autoBattle,endTurn,REG,ADJ,tap:r=>tapRegion(r),talent:()=>talentSheet()};}
 boot();
 })();
