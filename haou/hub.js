@@ -100,7 +100,7 @@ const START={
 const SKEY='sangoku-haou-v1';
 let S=null;
 function save(){if(!S)return;try{localStorage.setItem(SKEY,JSON.stringify(S));}catch(e){}}
-function load(){try{const v=JSON.parse(localStorage.getItem(SKEY));if(v&&v.v===1)return v;}catch(e){}return null;}
+function load(){try{const v=JSON.parse(localStorage.getItem(SKEY));if(v&&v.v===1)return migrate(v);}catch(e){}return null;}
 function newGame(me){
   S={v:1,me,year:194,season:0,turn:0,ap:0,reg:{},hero:{},flags:{},visits:{},met:{},news:[],stats:{war:0,win:0,duel:0,dwon:0,recruit:0,capt:0},rulers:{}};
   RIDS.forEach(r=>{const[o,t]=START.reg[r];S.reg[r]={o,tr:t};});
@@ -108,8 +108,12 @@ function newGame(me){
   START.free.forEach(([id,loc])=>{S.hero[id]={f:null,loc,lv:1,exp:0,tired:0};});
   FIDS.forEach(f=>S.rulers[f]=FAC[f].ruler);
   Object.keys(S.hero).forEach(id=>{if(S.hero[id].f===me)S.met[id]=1;});
-  S.ap=apMax();save();
+  S.ap=apMax();migrate(S);save();
 }
+/* 城の守り・金・負傷兵（後から足した項目） */
+function migrate(o){if(!o)return o;o.gold=o.gold==null?3000:o.gold;o.fgold=o.fgold||{};
+  const caps={};FIDS.forEach(f=>{const h=START.hero.find(x=>x[0]===FAC[f].ruler);if(h)caps[h[2]]=1;});
+  RIDS.forEach(r=>{const g=o.reg[r];if(g.wall==null){g.wall=caps[r]?2:1;g.bld=caps[r]?[{t:'yumi',lv:1},{t:'yumi',lv:1}]:g.o?[{t:'yumi',lv:1}]:[];}g.inj=g.inj||0;});return o;}
 const H=id=>S.hero[id];
 const owner=r=>S.reg[r].o;
 const regsOf=f=>RIDS.filter(r=>S.reg[r].o===f);
@@ -186,7 +190,7 @@ function draw(){const cv=$('#map');const dpr=Math.min(2,devicePixelRatio||1);con
     x.fillStyle=o?facCol(o):'#9a8a68';x.strokeStyle=mine?'#ffe08a':'#20140a';x.lineWidth=mine?4:2.5;x.beginPath();x.arc(cx,cy,19,0,7);x.fill();x.stroke();
     x.fillStyle='#fff';x.font='400 24px "Yuji Syuku",serif';x.textAlign='center';x.textBaseline='middle';x.fillText(o?FAC[o].ch:'城',cx,cy+1);
     x.font='700 17px "BIZ UDPGothic",sans-serif';x.lineWidth=4;x.strokeStyle='rgba(255,250,235,.92)';x.strokeText(R_.c,cx,cy+33);x.fillStyle='#24160a';x.fillText(R_.c,cx,cy+33);
-    const nh=heroesAt(r).length;const lab=man(S.reg[r].tr)+(nh?' 将'+nh:'');x.font='700 14px "BIZ UDPGothic",sans-serif';const tw=x.measureText(lab).width+12;
+    const nh=heroesAt(r).length;const lab=man(S.reg[r].tr)+(nh?' 将'+nh:'')+' 壁'+(S.reg[r].wall||0);x.font='700 14px "BIZ UDPGothic",sans-serif';const tw=x.measureText(lab).width+12;
     x.fillStyle='rgba(20,12,6,.78)';x.fillRect(cx-tw/2,cy+43,tw,19);x.fillStyle=mine?'#ffe08a':'#f2e6c8';x.fillText(lab,cx,cy+53);
     if(freeAt(r).length&&mine){x.fillStyle='#7fd08e';x.beginPath();x.arc(cx+20,cy-16,7,0,7);x.fill();x.fillStyle='#062';x.font='700 11px sans-serif';x.fillText('才',cx+20,cy-15.5);}});
   x.restore();
@@ -215,7 +219,7 @@ function repaint(){paintBase();dirty=true;topBar();}
 function topBar(){if(!S)return;const f=FAC[S.me];const rid=rulerOf(S.me);
   let ap='';for(let i=0;i<apMax();i++)ap+='<u class="'+(i<S.ap?'on':'')+'"></u>';
   $('#top').innerHTML='<span class="when">'+S.year+'年 '+SEASON[S.season]+'</span><span class="lord"><img alt="" src="'+portrait(HB(rid))+'"><b style="color:'+f.col+';filter:brightness(1.5)">'+f.n+'</b></span><span class="sp"></span>'+
-    '<span class="pill"><i>領</i>'+regsOf(S.me).length+'/21</span><span class="pill"><i>将</i>'+heroesOf(S.me).length+'</span><span class="pill"><i>令</i><span class="ap">'+ap+'</span></span>';
+    '<span class="pill"><i>金</i>'+man(S.gold)+'</span><span class="pill"><i>領</i>'+regsOf(S.me).length+'/21</span><span class="pill"><i>将</i>'+heroesOf(S.me).length+'</span><span class="pill"><i>令</i><span class="ap">'+ap+'</span></span>';
   $('#cEnd').classList.toggle('hot',S.ap<=0);$('#cWar').classList.toggle('hot',S.ap>0);}
 function toast(s,ms){const d=el('div','',esc(s));$('#toast').appendChild(d);setTimeout(()=>d.remove(),ms||2600);}
 function banner(t,s){const b=el('div','banner',(s?'<small>'+esc(s)+'</small>':'')+esc(t));$('#stage').appendChild(b);setTimeout(()=>b.remove(),2500);}
@@ -230,8 +234,20 @@ function heroCard(id,o){o=o||{};const h=HB(id),s=st(id),r=S.hero[id];
 function choiceSheet(title,html,btns){return new Promise(res=>{const foot=btns.map((b,i)=>'<button class="btn'+(b.pri?' pri':'')+'" type="button" data-i="'+i+'">'+b.t+'</button>').join('');
   const d=sheet(title,html,foot);d.querySelector('.x').hidden=!btns.some(b=>b.cancel);d.querySelectorAll('[data-i]').forEach(e=>e.onclick=()=>{d.remove();res(btns[+e.dataset.i].v);});
   d.onclose=()=>res(null);});}
+/* ---- 城の守り ---- */
+const FB={yumi:{n:'弓楼',c:400,w:1,d:'矢で一部隊ずつ射る。射程が長い'},doki:{n:'連弩台',c:700,w:2,d:'近くの敵に矢を浴びせ続ける'},toseki:{n:'投石機',c:1200,w:3,d:'密集した敵をまとめて潰す。近くは狙えない'},kaen:{n:'火計台',c:1600,w:4,d:'周りの敵をまとめて焼く'},trap:{n:'地雷火',c:300,w:2,d:'城の外に埋める。踏んだ敵の周りを爆破'}};
+const wallCost=lv=>Math.round(700*Math.pow(lv,1.5));
+const bldSlots=r=>Math.min(6,S.reg[r].wall+1);
+function fortMul(r){const g=S.reg[r];if(!g||g.wall==null)return 1;return 1+.1*g.wall+.05*g.bld.reduce((a,b)=>a+b.lv,0);}
+function income(f){return regsOf(f).reduce((a,r)=>a+300+Math.round(REG[r].cap/40),0);}
+const trCap=id=>Math.max(1000,Math.floor(st(id).cmd/10)*1000);
+function alloc(ids,tr){const o={};const caps=ids.map(trCap),sum=caps.reduce((a,b)=>a+b,0);
+  if(tr>=sum){ids.forEach((id,i)=>o[id]=caps[i]);return {per:o,reserve:tr-sum};}
+  let left=tr;ids.forEach((id,i)=>{o[id]=Math.floor(caps[i]*tr/sum/1000)*1000;left-=o[id];});
+  for(let k=0;left>=1000&&k<20;k++)ids.forEach((id,i)=>{if(left>=1000&&o[id]<caps[i]){o[id]+=1000;left-=1000;}});
+  return {per:o,reserve:Math.max(0,left)};}
 function strength(ids,tr,def,r){let top=0,sum=0;ids.forEach(id=>{const s=st(id);top=Math.max(top,s.cmd);sum+=s.p*.05+s.i*.035;});
-  let v=(tr/1000)*(.55+top/180)+sum+(ids.length?0:-.5);if(def)v*=(REG[r]&&(REG[r].t==='castle'||REG[r].t==='gate')?1.3:1.15);return Math.max(.3,v);}
+  let v=(tr/1000)*(.55+top/180)+sum+(ids.length?0:-.5);if(def)v*=(REG[r]&&(REG[r].t==='castle'||REG[r].t==='gate')?1.15:1.05)*fortMul(r);return Math.max(.3,v);}
 function winP(a,d){return a*a/(a*a+d*d);}
 
 /* ================= 地域をタップ ================= */
@@ -241,8 +257,9 @@ function tapRegion(r){if(!r||!S)return;try{SND.click();}catch(_){}
 function regionSheet(r){const R_=REG[r],o=S.reg[r].o,mine=o===S.me;
   const hs=heroesAt(r);const fr=freeAt(r);
   let b='<div class="card"><div class="row" style="justify-content:space-between"><h3 style="margin:0">'+R_.n+' ・ '+R_.c+'</h3><span class="pill" style="border-color:'+facCol(o)+'"><i>'+(o?FAC[o].ch:'')+'</i>'+facName(o)+'</span></div>'+
-    '<dl class="kv" style="margin-top:6px"><dt>兵</dt><dd>'+man(S.reg[r].tr)+' / '+man(R_.cap)+'</dd><dt>地形</dt><dd>'+({castle:'城',gate:'関所',plain:'平原',river:'川',yangtze:'長江',hills:'丘',mountain:'山',forest:'森'})[R_.t]+'</dd><dt>隣</dt><dd>'+ADJ[r].map(n=>'<span style="color:'+facCol(S.reg[n].o)+';filter:brightness(1.4)">'+REG[n].c+'</span>').join('・')+'</dd></dl></div>';
+    '<dl class="kv" style="margin-top:6px"><dt>兵</dt><dd>'+man(S.reg[r].tr)+' / '+man(R_.cap)+(mine&&S.reg[r].inj?' <small class="muted">（負傷 '+man(S.reg[r].inj)+' が次の季節に戻る）</small>':'')+'</dd><dt>地形</dt><dd>'+({castle:'城',gate:'関所',plain:'平原',river:'川',yangtze:'長江',hills:'丘',mountain:'山',forest:'森'})[R_.t]+'</dd><dt>隣</dt><dd>'+ADJ[r].map(n=>'<span style="color:'+facCol(S.reg[n].o)+';filter:brightness(1.4)">'+REG[n].c+'</span>').join('・')+'</dd></dl></div>';
   b+='<h3 class="sec">武将</h3>'+(hs.length?'<div class="grid">'+hs.map(id=>heroCard(id,{tag:id===rulerOf(o)?'君主':S.hero[id].tired?'疲労':'',tagR:id===rulerOf(o)})).join('')+'</div>':'<p class="muted" style="margin:0">'+(o?'武将はいない':'土地の兵が守っている')+'</p>');
+  b+=fortHtml(r,mine);
   if(mine&&fr.length)b+='<h3 class="sec">在野の人材</h3><div class="grid">'+fr.map(id=>heroCard(id,{btn:true,sub:'登用を試せる'})).join('')+'</div>';
   let f='';
   if(mine){f+='<button class="btn" type="button" id="rDraft"'+(S.ap<1||S.reg[r].tr>=R_.cap?' disabled':'')+'>徴兵（令1）</button><button class="btn" type="button" id="rMove">移動</button>';
@@ -254,7 +271,15 @@ function regionSheet(r){const R_=REG[r],o=S.reg[r].o,mine=o===S.me;
   if(q('#rMove'))q('#rMove').onclick=()=>moveSheet(r);
   if(q('#rAtk'))q('#rAtk').onclick=()=>startTarget(ADJ[r].filter(n=>S.reg[n].o!==S.me));
   if(q('#rAtk2'))q('#rAtk2').onclick=()=>{closeSheet();muster(r);};
-  d.querySelectorAll('[data-h]').forEach(e=>e.onclick=()=>recruitFree(e.dataset.h,r));}
+  d.querySelectorAll('[data-h]').forEach(e=>e.onclick=()=>recruitFree(e.dataset.h,r));
+  d.querySelectorAll('[data-fw]').forEach(e=>e.onclick=()=>{const g=S.reg[r];const c=wallCost(g.wall);if(S.gold<c){toast('金が足りない');return;}S.gold-=c;g.wall++;toast('城壁をLv'+g.wall+'に強化した');try{SND.coin();}catch(_){}save();repaint();regionSheet(r);});
+  d.querySelectorAll('[data-fu]').forEach(e=>e.onclick=()=>{const g=S.reg[r];const b=g.bld[+e.dataset.fu];const c=FB[b.t].c*b.lv;if(S.gold<c){toast('金が足りない');return;}S.gold-=c;b.lv++;toast(FB[b.t].n+'をLv'+b.lv+'にした');try{SND.coin();}catch(_){}save();repaint();regionSheet(r);});
+  d.querySelectorAll('[data-fn]').forEach(e=>e.onclick=()=>{const g=S.reg[r];const t=e.dataset.fn;const c=FB[t].c;if(S.gold<c){toast('金が足りない');return;}S.gold-=c;g.bld.push({t,lv:1});toast(FB[t].n+'を建てた');try{SND.coin();}catch(_){}save();repaint();regionSheet(r);});}
+function fortHtml(r,mine){const g=S.reg[r];let b='<h3 class="sec">城の守り</h3><div class="card"><div class="row" style="justify-content:space-between"><b style="font-family:var(--f-disp);font-size:17px">城壁 Lv'+g.wall+' <small class="muted" style="font-family:var(--f-body);font-size:11.5px">守り+'+Math.round((fortMul(r)-1)*100)+'%</small></b>'+
+    (mine&&g.wall<5?'<button class="btn sm" type="button" data-fw="1"'+(S.gold<wallCost(g.wall)?' disabled':'')+'>強化 金'+wallCost(g.wall)+'</button>':'')+'</div>';
+  b+='<div class="news" style="margin-top:6px">'+(g.bld.length?g.bld.map((x,i)=>'<div class="row" style="justify-content:space-between;flex-wrap:nowrap"><span><b>'+FB[x.t].n+'</b> Lv'+x.lv+' <small class="muted">'+FB[x.t].d+'</small></span>'+(mine&&x.lv<5?'<button class="btn sm" type="button" data-fu="'+i+'"'+(S.gold<FB[x.t].c*x.lv?' disabled':'')+'>強化 金'+FB[x.t].c*x.lv+'</button>':'')+'</div>').join(''):'<div class="muted">防衛施設はない</div>')+'</div>';
+  if(mine&&g.bld.length<bldSlots(r)){b+='<div class="row" style="margin-top:6px">'+Object.keys(FB).map(t=>{const ok=g.wall>=FB[t].w;return '<button class="btn sm" type="button" data-fn="'+t+'"'+(!ok||S.gold<FB[t].c?' disabled':'')+'>'+FB[t].n+(ok?' 金'+FB[t].c:'（壁Lv'+FB[t].w+'）')+'</button>';}).join('')+'</div>';}
+  b+='<p class="dim" style="margin:4px 0 0;font-size:11.5px">施設 '+g.bld.length+'/'+bldSlots(r)+'（城壁Lv＋1まで）。籠城戦・攻城戦では城壁と施設がそのまま戦場に並ぶ。</p></div>';return b;}
 function draft(r){if(S.ap<1)return;const R_=REG[r];const add=Math.min(R_.cap-S.reg[r].tr,2500+Math.round(R_.cap*.1));S.reg[r].tr+=add;S.ap--;toast(R_.c+'で兵を集めた（+'+man(add)+'）');SND.coin&&SND.coin();save();repaint();}
 function moveSheet(r){const nb=ADJ[r].filter(n=>S.reg[n].o===S.me);if(!nb.length){toast('隣に自分の領地がない');return;}
   const hs=heroesAt(r).filter(id=>id);const sel={};let dest=nb[0],tr=0;
@@ -300,34 +325,49 @@ function muster(target){const src=ADJ[target].filter(n=>S.reg[n].o===S.me);if(!s
 async function battle(B){
   // B: atkF defF target atk[] def[] atkTr defTr player('atk'|'def'|null) home{} src
   const mySide=B.player;const me=mySide==='atk'?B.atk:B.def,foe=mySide==='atk'?B.def:B.atk;
-  storyHook('preBattle',B);
+  if(!B.kind){if(mySide==='atk'){const fs=strength(B.def,B.defTr,false),as=strength(B.atk,B.atkTr,false);B.kind=B.def.length&&fs>=as*.8&&R()<.8?'field':'siege';}else B.kind='def';}
   let res=null;
-  while(!res){const mode=await chooseMode(B,me,foe);if(!mode){if(mySide==='atk'){/* 取りやめ */refundMuster(B);return;}continue;}
+  while(!res){const mode=await chooseMode(B,me,foe);if(!mode){if(mySide==='atk'){refundMuster(B);return;}continue;}
     res=await runMode(mode,B,me,foe);}
   await applyResult(B,res);
 }
 function refundMuster(B){S.reg[B.src].tr+=B.atkTr;S.ap++;save();repaint();toast('出陣を取りやめた');}
+function allocLine(ids,tr){if(!ids.length)return '';const a=alloc(ids,tr);return ids.map(id=>HB(id).n+' '+man(a.per[id])).join('・')+(a.reserve?' ・ 控え '+man(a.reserve):'');}
 function chooseMode(B,me,foe){return new Promise(res=>{
   const mySide=B.player;const myTr=mySide==='atk'?B.atkTr:B.defTr,foeTr=mySide==='atk'?B.defTr:B.atkTr;
   const as=strength(B.atk,B.atkTr,false),ds=strength(B.def,B.defTr,true,B.target);const p=mySide==='atk'?winP(as,ds):1-winP(as,ds);
-  const fF=mySide==='atk'?B.defF:B.atkF;
-  let b='<div class="card"><h3>'+(mySide==='def'?'敵襲! ':'')+REG[B.target].c+'の戦い</h3><div class="row" style="justify-content:space-between;align-items:flex-start;gap:12px">'+
+  const fF=mySide==='atk'?B.defF:B.atkF;const g=S.reg[B.target];
+  const fortTxt='城壁Lv'+g.wall+(g.bld.length?' ・ '+g.bld.map(x=>FB[x.t].n+x.lv).join('・'):' ・ 施設なし');
+  const sit={field:['野戦','敵は城を出て迎え撃ってきた。'],siege:['攻城戦','敵は城に籠もった。'+fortTxt],def:['敵襲','籠城して守るか、打って出るか。'+fortTxt]}[B.kind];
+  let b='<div class="card"><h3>'+REG[B.target].c+' ― '+sit[0]+'</h3><p style="margin:0 0 6px">'+sit[1]+'</p><div class="row" style="justify-content:space-between;align-items:flex-start;gap:12px">'+
     '<div style="flex:1;min-width:130px"><b style="color:var(--me)">'+FAC[S.me].n+'</b><br><small class="muted">兵 '+man(myTr)+'<br>'+(me.map(id=>HB(id).n).join('・')||'武将なし')+'</small></div>'+
     '<div style="flex:1;min-width:130px;text-align:right"><b style="color:var(--foe)">'+facName(fF)+'</b><br><small class="muted">兵 '+man(foeTr)+'<br>'+(foe.map(id=>HB(id).n).join('・')||'武将なし')+'</small></div></div>'+
     '<div class="vsbar" style="margin-top:6px"><span style="color:var(--me)">'+Math.round(p*100)+'%</span><u><i style="width:'+Math.round(p*100)+'%"></i></u><span style="color:var(--foe)">'+Math.round(100-p*100)+'%</span></div></div>';
-  b+='<h3 class="sec">戦い方を選ぶ</h3><div class="modes">'+
-    '<button class="mode" type="button" data-m="kessen"'+(me.length?'':' disabled')+'><span class="k">決</span><div><b>決戦<small>三国決戦伝</small></b><span>大軍と大軍がぶつかる合戦。兵を配分し陣形を組んで布陣、戦場で指揮をとる。武将がぶつかれば一騎打ち。</span></div></button>'+
-    '<button class="mode" type="button" data-m="tac"'+(me.length?'':' disabled')+'><span class="k">戦</span><div><b>戦術<small>三国タクティクス</small></b><span>高低差のある戦場で一手ずつ動かす。ジョブと技を組み、隣の敵将には一騎打ちを挑める。</span></div></button>'+
-    '<button class="mode" type="button" data-m="duel"'+(me.length&&foe.length?'':' disabled')+'><span class="k">騎</span><div><b>一騎打ち<small>一騎打ち英雄伝</small></b><span>'+(foe.length?'代表の武将どうしの三番勝負で、この城の行方を決める。':'敵に武将がいないので選べない')+'</span></div></button>'+
-    '<button class="mode" type="button" data-m="auto"><span class="k">任</span><div><b>委任<small>すぐ終わる</small></b><span>部下に任せて結果だけを見る。勝率は上の見込みどおり。</span></div></button></div>';
-  if(!me.length)b+='<p class="muted" style="margin:0;font-size:12.5px">武将がいないので、委任しか選べない。</p>';
-  const d=sheet(mySide==='def'?'迎撃':'合戦',b,'',mySide==='def'?'':'');
+  const card=(m,k,t,sub,d,ok)=>'<button class="mode" type="button" data-m="'+m+'"'+(ok?'':' disabled')+'><span class="k">'+k+'</span><div><b>'+t+'<small>'+sub+'</small></b><span>'+d+'</span></div></button>';
+  const hasMe=me.length>0,shield='兵は武将ごとに統率まで配り、1000につき体力+10%（先に減り、回復しない）。';
+  b+='<h3 class="sec">戦い方を選ぶ</h3><div class="modes">';
+  if(B.kind==='field'){
+    b+=card('kessen','決','決戦','三国決戦伝','大軍と大軍がぶつかる野戦。兵を配分し陣形を組んで布陣、戦場で指揮をとる。',hasMe);
+    b+=card('tac','戦','戦術','三国タクティクス','一手ずつ動かす野戦。'+shield+'隣の敵将には一騎打ちを挑める。',hasMe);
+    b+=card('duel','騎','一騎打ち','一騎打ち英雄伝',foe.length?'代表の武将どうしの三番勝負。'+shield:'敵に武将がいないので選べない',hasMe&&foe.length);
+  }else if(B.kind==='siege'){
+    b+=card('siege','城','攻城','三国決戦伝','城壁を破り、本陣を落とすか敵総大将を討てば勝ち。弓楼や投石機が撃ってくる。衝車と衡軛の陣が城壁に強い。',hasMe);
+  }else{
+    b+=card('td','籠','籠城','三国決戦伝','城壁と防衛施設で迎え撃つ。'+'4分守り抜くか、敵総大将を討てば勝ち。本陣が落ちれば負け。',hasMe);
+    b+=card('tac','出','出撃','三国タクティクス','城を出て迎え撃つ。'+shield,hasMe);
+  }
+  b+=card('auto','任','委任','すぐ終わる','部下に任せて結果だけを見る。勝率は上の見込みどおり。',true)+'</div>';
+  if(hasMe)b+='<p class="dim" style="margin:0;font-size:12px">兵の配分（戦術・一騎打ち）：'+allocLine(me.slice().sort((a,c)=>(c===rulerOf(S.me))-(a===rulerOf(S.me))||heroPower(c)-heroPower(a)),myTr)+'</p>';
+  else b+='<p class="muted" style="margin:0;font-size:12.5px">武将がいないので、委任しか選べない。</p>';
+  const d=sheet(sit[0],b,'');
   if(mySide==='def')d.querySelector('.x').hidden=true;
   d.querySelectorAll('[data-m]').forEach(e=>e.onclick=()=>{d.remove();res(e.dataset.m);});
   d.onclose=()=>res(null);});}
 async function runMode(mode,B,me,foe){
   if(mode==='auto')return autoBattle(B);
-  if(mode==='kessen')return runKessen(B,me,foe);
+  if(mode==='kessen')return runKessen(B,me,foe,'field');
+  if(mode==='siege')return runKessen(B,me,foe,'siege');
+  if(mode==='td')return runKessen(B,me,foe,'td');
   if(mode==='tac')return runTac(B,me,foe);
   if(mode==='duel')return runDuel3(B,me,foe);
 }
@@ -362,38 +402,41 @@ function frameRun(src,readyT,msg,endT,title,me,foe){return new Promise(res=>{try
 let FID=0;
 function ktype(id){const h=HB(id);return h.i>=85&&h.p<85?'kyuhei':h.p>=92||['mac','pangd','gongsunz','zhaoy','tadun','matengg','caochun','zhangl'].includes(id)?'kihei':'hohei';}
 function kfm(t,id){return t==='kyuhei'?'gankou':t==='kihei'?'hoshi':HB(id).p>=95?'engetsu':'houen';}
-async function runKessen(B,me,foe){const myTr=B.player==='atk'?B.atkTr:B.defTr,foeTr=B.player==='atk'?B.defTr:B.atkTr;const fF=B.player==='atk'?B.defF:B.atkF;
+async function runKessen(B,me,foe,kind){const myTr=B.player==='atk'?B.atkTr:B.defTr,foeTr=B.player==='atk'?B.defTr:B.atkTr;const fF=B.player==='atk'?B.defF:B.atkF;
   const caps=me.map(id=>(10+Math.round(st(id).cmd*.32)+S.hero[id].lv*2)*100);const total=Math.max(1000,Math.min(myTr,caps.reduce((a,b)=>a+b,0)));
   const fsorted=foe.slice().sort((a,b)=>(b===rulerOf(fF))-(a===rulerOf(fF))||st(b).cmd-st(a).cmd).slice(0,5);
   const fl=[];const slots=[[.5,.1,'gen'],[.3,.27,'charge'],[.72,.24,'flank'],[.5,.3,'hold'],[.18,.2,'archer']];
   const n=Math.max(2,fsorted.length);const wsum=fsorted.reduce((a,id)=>a+st(id).cmd,0)||1;
   for(let i=0;i<n;i++){const id=fsorted[i]||'';const t=id?ktype(id):i===1?'hohei':'kyuhei';const share=id?st(id).cmd/wsum:1/n;
     let men=Math.max(800,Math.round(foeTr*(fsorted.length?(id?share:.25):1/n)/100)*100);const sl=slots[i];
-    fl.push([id,t,men,id?kfm(t,id):(t==='kyuhei'?'gankou':'gyorin'),sl[0],sl[1],t==='kyuhei'?'archer':sl[2],i===0?1:0,id?S.hero[id].lv:Math.min(8,1+S.turn/3|0)]);}
+    const y=kind==='siege'?[.06,.16,.12,.19,.1][i]:sl[1];const ai=kind==='siege'?(t==='kyuhei'?'archer':i===0?'gen':'hold'):(t==='kyuhei'?'archer':sl[2]);
+    fl.push([id,t,men,id?kfm(t,id):(t==='kyuhei'?'gankou':'gyorin'),sl[0],y,ai,i===0?1:0,id?S.hero[id].lv:Math.min(8,1+S.turn/3|0)]);}
   const lead=fsorted[0];const fg=lead?(HB(lead).i>=85?'kakei':HB(lead).p>=95?'toppa':B.player==='atk'?'kenshu':'shippu'):'kenshu';
-  const msg={t:'war',id:++FID,n:REG[B.target].c+'の戦い',p:REG[B.target].n,y:S.year,fac:FAC[S.me].dk,ter:REG[B.target].k,
-    d:(B.player==='atk'?FAC[S.me].n+'が'+REG[B.target].c+'へ攻め込む。':facName(B.atkF)+'が'+REG[B.target].c+'へ攻め寄せてきた。')+'敵総大将を討てば勝ち。',total,maxU:Math.min(5,me.length),limit:390,fg,
+  const g=S.reg[B.target];const fort=kind==='siege'||kind==='td'?{side:kind==='td'?0:1,wall:g.wall,hon:g.wall,blds:g.bld.map((x,i)=>({t:x.t,lv:x.lv,i}))}:null;
+  const nm=REG[B.target].c+(kind==='siege'?'攻め':kind==='td'?'籠城戦':'の戦い');
+  const desc=kind==='siege'?FAC[S.me].n+'は'+REG[B.target].c+'を囲んだ。城壁を破り、本陣を落とすか敵総大将を討て。':kind==='td'?facName(B.atkF)+'が'+REG[B.target].c+'に攻め寄せた。城壁と施設で4分守り抜くか、敵総大将を討て。本陣が落ちれば負け。':(B.player==='atk'?FAC[S.me].n+'が'+REG[B.target].c+'へ攻め込む。':facName(B.atkF)+'が'+REG[B.target].c+'へ攻め寄せてきた。')+'敵総大将を討てば勝ち。';
+  const msg={t:'war',id:++FID,n:nm,p:REG[B.target].n,y:S.year,fac:FAC[S.me].dk,ter:fort?'plain':REG[B.target].k,d:desc,total,maxU:Math.min(5,me.length),limit:kind==='td'?240:kind==='siege'?420:390,cond:kind==='td'?'survive':'kill',fg,fort,
     me:me.slice().sort((a,b)=>(b===rulerOf(S.me))-(a===rulerOf(S.me))).map(id=>({id,lv:S.hero[id].lv})),foe:fl};
-  const m=await frameRun('kessen.html','warReady',msg,['warEnd','warCancel'],'決戦 ― '+REG[B.target].c,me[0],foe[0]);
+  const m=await frameRun('kessen.html','warReady',msg,['warEnd','warCancel'],(kind==='siege'?'攻城 ― ':kind==='td'?'籠城 ― ':'決戦 ― ')+REG[B.target].c,me[0],foe[0]);
   if(m.t==='warCancel')return null;
   const down={};(m.mine||[]).forEach(o=>{if(o.down)down[o.id]=1;});(m.foes||[]).forEach(o=>{if(o.id&&o.down)down[o.id]=1;});
   const mineLeft=(m.mine||[]).reduce((a,o)=>a+o.men,0)+Math.max(0,myTr-total);const foeSent=fl.reduce((a,f)=>a+f[2],0);
   const foeLeft=Math.round((m.foes||[]).reduce((a,o)=>a+o.men,0)*foeTr/Math.max(1,foeSent));
-  return {win:!!m.win,myLeft:Math.round(mineLeft),foeLeft:clamp(foeLeft,0,foeTr),down,duels:(m.duels||[]).map(d=>({me:d.me,foe:d.foe,res:d.res}))};}
+  return {win:!!m.win,myLeft:Math.round(mineLeft),foeLeft:clamp(foeLeft,0,foeTr),down,duels:(m.duels||[]).map(d=>({me:d.me,foe:d.foe,res:d.res})),fort:m.fort||null};}
 function tjob(id){const h=HB(id);if(h.i>=88&&h.p<80)return 'kuro';if(h.w==='弓'||h.w==='弩')return 'yumi';if(['トンファー','拳','大鎚','爪','三節棍'].includes(h.w))return 'monk';if(h.p>=96)return 'samurai';if(['方天画戟','蛇矛','槍','戟','鉄脊蛇矛'].includes(h.w))return 'ryu';if(h.i>=80)return 'shiro';return 'knight';}
 async function runTac(B,me,foe){const myTr=B.player==='atk'?B.atkTr:B.defTr,foeTr=B.player==='atk'?B.defTr:B.atkTr;const fF=B.player==='atk'?B.defF:B.atkF;
   const party=me.slice().sort((a,b)=>(b===rulerOf(S.me))-(a===rulerOf(S.me))||heroPower(b)-heroPower(a)).slice(0,5);
   const fs=foe.slice().sort((a,b)=>(b===rulerOf(fF))-(a===rulerOf(fF))||heroPower(b)-heroPower(a)).slice(0,6);
+  const myA=alloc(party,myTr),foA=alloc(fs,foeTr);
   let fstr=fs.length?fs.map((id,i)=>(i===0?'*':'')+(HB(id).p>=98?'!':'')+id+':'+tjob(id)).join(' '):'*g:knight g:yumi g:senshi';
   const sold=fF&&FAC[fF]?FAC[fF].sold:NEUTRAL.sold;
-  const msg={t:'tac',id:++FID,n:REG[B.target].c,y:S.year,p:REG[B.target].n,map:REG[B.target].t,opt:REG[B.target].o||{},side:B.player==='atk'?'atk':'def',
+  const msg={t:'tac',id:++FID,n:REG[B.target].c,y:S.year,p:REG[B.target].n,map:({castle:REG[B.target].k==='river'?'river':'plain',gate:'hills'})[REG[B.target].t]||REG[B.target].t,opt:REG[B.target].t==='castle'||REG[B.target].t==='gate'?{}:(REG[B.target].o||{}),side:B.player==='atk'?'atk':'def',
     fname:FAC[S.me].n,fcol:FAC[S.me].col,fch:FAC[S.me].ch,ef:sold,ech:fF&&FAC[fF]?FAC[fF].ch:'郷',ecol:facCol(fF),
-    party:party.map(id=>({id,lv:S.hero[id].lv})),foe:fstr,s:(B.player==='atk'?FAC[S.me].n+'は'+REG[B.target].c+'へ攻め込んだ。':facName(fF)+'が'+REG[B.target].c+'に攻め寄せた。')+'敵の総大将を倒せば勝ち。'};
+    party:party.map(id=>({id,lv:S.hero[id].lv,tr:myA.per[id]})),foeTr:foA.per,foe:fstr,s:(B.player==='atk'?FAC[S.me].n+'は'+REG[B.target].c+'へ攻め込んだ。':facName(fF)+'が'+REG[B.target].c+'に攻め寄せた。')+'敵の総大将を倒せば勝ち。'};
   const m=await frameRun('tactics.html','tacReady',msg,['tacEnd','tacCancel'],'戦術戦 ― '+REG[B.target].c,party[0],fs[0]);
   if(m.t==='tacCancel')return null;
   const down={};(m.mine||[]).forEach(o=>{if(o.down)down[o.id]=1;});(m.foes||[]).forEach(o=>{if(o.id&&o.down)down[o.id]=1;});
-  const mu=m.mine||[],alive=mu.filter(o=>!o.down).length/Math.max(1,mu.length);const fu=m.foes||[],falive=fu.filter(o=>!o.down).length/Math.max(1,fu.length);
-  const myLeft=Math.round(myTr*(m.win?.55+.4*alive:.15+.3*alive)),foeLeft=Math.round(foeTr*(m.win?.1+.3*falive:.5+.4*falive));
+  const myLeft=(m.mine||[]).reduce((a,o)=>a+(o.tr||0),0)+Math.round(myA.reserve*(m.win?.95:.6)),foeLeft=(m.foes||[]).reduce((a,o)=>a+(o.tr||0),0)+Math.round(foA.reserve*(m.win?.6:.95));
   return {win:!!m.win,myLeft,foeLeft,down,duels:(m.duels||[]).map(d=>({me:d.me,foe:d.foe,res:d.res}))};}
 
 /* ---------- 一騎打ち三番勝負 ---------- */
@@ -403,8 +446,8 @@ function duelSession(){let f=null,ready=false,pend=null,cb=null,id=0,onStart=nul
     else if(m.t==='duelStarted'){setTimeout(()=>{f.classList.remove('hide');if(onStart)onStart();},300);}
     else if(m.t==='duelEnd'&&m.id===id&&cb){const c=cb;cb=null;f.classList.add('hide');c(m);}};
   addEventListener('message',on);
-  return {fight(a,b,stage,os){return new Promise(res=>{if(!f){f=document.createElement('iframe');f.className='bframe hide';f.src='duel.html';f.setAttribute('allow','autoplay');document.body.appendChild(f);}
-      id++;cb=res;onStart=os;const msg={t:'duel',id,me:a,foe:b,strat:'bal',stage,mm:lvMul(a),fm:lvMul(b)};if(ready)f.contentWindow.postMessage(msg,'*');else pend=msg;});},
+  return {fight(a,b,stage,os,msh,fsh){return new Promise(res=>{if(!f){f=document.createElement('iframe');f.className='bframe hide';f.src='duel.html';f.setAttribute('allow','autoplay');document.body.appendChild(f);}
+      id++;cb=res;onStart=os;const msg={t:'duel',id,me:a,foe:b,strat:'bal',stage,mm:lvMul(a),fm:lvMul(b),msh:msh||0,fsh:fsh||0};if(ready)f.contentWindow.postMessage(msg,'*');else pend=msg;});},
     close(){removeEventListener('message',on);if(f)f.remove();}};}
 function pickOrder(me,n){return new Promise(res=>{const order=me.slice().sort((a,b)=>st(b).p-st(a).p).slice(0,n);
   const render=()=>{let b='<p class="muted" style="margin:0">'+n+'人を選び、出る順に並べる（先に選んだ順）。先に'+Math.ceil((n+1)/2)+'勝した方が城を取る。</p><div class="grid">'+me.map(id=>{const k=order.indexOf(id);return heroCard(id,{btn:true,on:k>=0,tag:k>=0?(k+1)+'番手':''});}).join('')+'</div>';
@@ -414,19 +457,23 @@ function pickOrder(me,n){return new Promise(res=>{const order=me.slice().sort((a
 async function runDuel3(B,me,foe){const n=Math.min(3,me.length,foe.length);const fF=B.player==='atk'?B.defF:B.atkF;
   const mine=n>1?await pickOrder(me,n):[me.slice().sort((a,b)=>st(b).p-st(a).p)[0]];
   const theirs=foe.slice().sort((a,b)=>st(b).p-st(a).p).slice(0,n);if(n>1){const t=theirs.shift();theirs.splice(n===3?1:0,0,t);} // 大将格は二番手に
+  const myTr0=B.player==='atk'?B.atkTr:B.defTr,foeTr0=B.player==='atk'?B.defTr:B.atkTr;
+  const myA=alloc(mine,myTr0),foA=alloc(theirs,foeTr0);const myT={},foT={};
   const need=Math.ceil((n+1)/2);let w=0,l=0;const duels=[],down={};const D=duelSession();try{BGM.stop();}catch(_){}
   for(let i=0;i<n&&w<need&&l<need;i++){const a=mine[i],b=theirs[i];
-    await interBout(i,n,a,b,w,l);
+    await interBout(i,n,a,b,w,l,myA.per[a],foA.per[b]);
     const ld=loadingCard('第'+(i+1)+'番',a,b);
-    const m=await D.fight(a,b,REG[B.target].d,()=>ld.remove());ld.remove();
+    const m=await D.fight(a,b,REG[B.target].d,()=>ld.remove(),Math.floor(myA.per[a]/1000)*.1,Math.floor(foA.per[b]/1000)*.1);ld.remove();
+    const sh=m.sh||[0,0];myT[a]=Math.round(myA.per[a]*sh[0]);foT[b]=Math.round(foA.per[b]*sh[1]);
     const win=!!m.win;duels.push({me:a,foe:b,res:win?0:1});if(win){w++;down[b]=1;}else{l++;down[a]=1;}}
   D.close();try{BGM.play('camp',true);}catch(_){}
   const win=w>l;const myTr=B.player==='atk'?B.atkTr:B.defTr,foeTr=B.player==='atk'?B.defTr:B.atkTr;
   await new Promise(res=>{const b='<div style="text-align:center;font-family:var(--f-disp);font-size:clamp(46px,13vw,78px);line-height:1.1;color:'+(win?'var(--gold2)':'var(--foe)')+'">'+w+' 対 '+l+'</div><div class="news">'+duels.map(d=>'<div class="'+(d.res===0?'me':'bad')+'">'+HB(d.me).n+' 対 '+HB(d.foe).n+' ― '+(d.res===0?'勝ち':'負け')+'</div>').join('')+'</div><p class="muted" style="margin:0;text-align:center">'+(win?'一騎打ちを制した。敵兵は戦意を失い崩れた。':'一騎打ちに敗れ、兵の士気は地に落ちた。')+'</p>';
     const d=sheet('三番勝負 決着',b,'<button class="btn pri" type="button" id="dOk">続ける</button>');d.querySelector('.x').hidden=true;d.querySelector('#dOk').onclick=()=>{d.remove();res();};});
-  return {win,myLeft:Math.round(myTr*(win?.9:.55)),foeLeft:Math.round(foeTr*(win?.45:.9)),down,duels};}
-function interBout(i,n,a,b,w,l){return new Promise(res=>{const ha=HB(a),hb=HB(b);
-  const bd='<div style="text-align:center"><small class="muted">第'+(i+1)+'番 ・ '+w+'勝'+l+'敗</small></div><div class="row" style="justify-content:center;gap:18px"><div style="text-align:center">'+heroCard(a)+'<p style="margin:4px 0 0;font-size:13px">「'+esc(line(a,'sp'))+'」</p></div><b style="font-family:var(--f-disp);font-size:30px;color:var(--gold)">対</b><div style="text-align:center">'+heroCard(b)+'<p style="margin:4px 0 0;font-size:13px">「'+esc(line(b,'sp'))+'」</p></div></div>';
+  const sumU=(A,T,f)=>Object.keys(A.per).reduce((a,id)=>a+(T[id]!==undefined?T[id]:Math.round(A.per[id]*f)),0)+Math.round(A.reserve*f);
+  return {win,myLeft:sumU(myA,myT,win?.95:.6),foeLeft:sumU(foA,foT,win?.6:.95),down,duels};}
+function interBout(i,n,a,b,w,l,ta,tb){return new Promise(res=>{const ha=HB(a),hb=HB(b);
+  const bd='<div style="text-align:center"><small class="muted">第'+(i+1)+'番 ・ '+w+'勝'+l+'敗</small></div><div class="row" style="justify-content:center;gap:18px"><div style="text-align:center">'+heroCard(a,{sub:'兵 '+man(ta||0)+'（体力+'+Math.floor((ta||0)/1000)*10+'%）'})+'<p style="margin:4px 0 0;font-size:13px">「'+esc(line(a,'sp'))+'」</p></div><b style="font-family:var(--f-disp);font-size:30px;color:var(--gold)">対</b><div style="text-align:center">'+heroCard(b,{sub:'兵 '+man(tb||0)+'（体力+'+Math.floor((tb||0)/1000)*10+'%）'})+'<p style="margin:4px 0 0;font-size:13px">「'+esc(line(b,'sp'))+'」</p></div></div>';
   try{SND.horn();}catch(_){}
   const d=sheet('一騎打ち 第'+(i+1)+'番',bd,'<button class="btn pri" type="button" id="bGo">いざ、尋常に勝負</button>');d.querySelector('.x').hidden=true;d.querySelector('#bGo').onclick=()=>{d.remove();res();};});}
 
@@ -464,12 +511,21 @@ async function applyResult(B,res){
     const back=B.src&&S.reg[B.src].o===B.atkF?B.src:regsOf(B.atkF).find(r=>ADJ[r].includes(T));if(back)S.reg[back].tr=Math.min(REG[back].cap,S.reg[back].tr+Math.round(aLeft*.7));
     news.unshift(facName(B.atkF)+'の'+R_.c+'攻めは退けられた');
   }
+  // 城の傷み
+  {const g=S.reg[T];const fr=res.fort;if(fr&&fr.dead&&fr.dead.length){const dead=new Set(fr.dead);g.bld=g.bld.filter((x,i)=>!dead.has(i));}
+    if(atkWin){g.wall=Math.max(1,g.wall-1);if(!fr&&g.bld.length&&R()<.5)g.bld.splice(Math.floor(R()*g.bld.length),1);}else if(fr&&fr.wall<.5)g.wall=Math.max(1,g.wall-1);}
+  // 負傷兵：勝てば失った兵の半分、負ければ2割が次の季節に戻る
+  const lostA=Math.max(0,B.atkTr-aLeft),lostD=Math.max(0,B.defTr-dLeft);const injA=Math.round(lostA*(atkWin?.5:.2)),injD=Math.round(lostD*(atkWin?.2:.5));
+  {const atkHome=atkWin?T:(B.src&&S.reg[B.src].o===B.atkF?B.src:regsOf(B.atkF).find(r=>ADJ[r].includes(T)));if(atkHome)S.reg[atkHome].inj+=injA;
+   const defHome=atkWin?(B.defF?ADJ[T].find(n=>S.reg[n].o===B.defF):null):T;if(defHome)S.reg[defHome].inj+=injD;}
+  const myInj=B.player==='atk'?injA:B.player==='def'?injD:0;
   save();repaint();
   if(B.player){
     const win=res.win;try{win?SND.win():SND.lose();}catch(_){}
     let b='<div style="text-align:center;font-family:var(--f-disp);font-size:clamp(50px,15vw,86px);line-height:1.1;color:'+(win?'var(--gold2)':'var(--foe)')+'">'+(win?'勝利':'敗北')+'</div><div class="news">'+news.map(s=>'<div class="'+(win?'me':'bad')+'">'+esc(s)+'</div>').join('')+'</div>';
     if(caught.length)b+='<h3 class="sec">捕らえた武将</h3><div class="grid">'+caught.filter(c=>c.by===S.me).map(c=>heroCard(c.id,{sub:'捕虜（人材の画面で登用を試せる）'})).join('')+'</div>';
     const lost=caught.filter(c=>c.by!==S.me);if(lost.length)b+='<h3 class="sec">敵に捕まった武将</h3><div class="grid">'+lost.map(c=>heroCard(c.id,{})).join('')+'</div>';
+    if(myInj)b+='<p style="margin:0">負傷兵 <b style="color:var(--gold2)">'+man(myInj)+'</b> は次の季節に隊へ戻る。</p>';
     if(ups.length)b+='<p class="muted" style="margin:0">レベルが上がった：'+ups.join('・')+'</p>';
     const spk=(win?mineIds.find(id=>!res.down[id]):mineIds[0])||null;if(spk)b+='<div class="card row" style="flex-wrap:nowrap"><img alt="" src="'+portrait(HB(spk))+'" style="width:48px;height:54px;border:1px solid var(--gold)"><div><b style="font-family:var(--f-disp);color:var(--gold2)">'+HB(spk).n+'</b><p style="margin:0;color:var(--fg)">「'+esc(line(spk,win?'win':'lose'))+'」</p></div></div>';
     await new Promise(r=>{const d=sheet(R_.c+'の戦い',b,'<button class="btn pri" type="button" id="rOk">天下図へ</button>');d.querySelector('.x').hidden=true;d.querySelector('#rOk').onclick=()=>{d.remove();r();};});
@@ -525,7 +581,7 @@ function infoSheet(){let b='';FIDS.filter(alive).sort((a,b)=>regsOf(b).length-re
   if(S.news.length)b+='<h3 class="sec">最近の軍報</h3><div class="news">'+S.news.slice(-12).reverse().map(s=>'<div>'+esc(s)+'</div>').join('')+'</div>';
   sheet('諸侯の勢力',b,'');}
 function menuSheet(){const s=S.stats;let b='<dl class="kv"><dt>合戦</dt><dd>'+s.war+'戦 '+s.win+'勝</dd><dt>一騎打ち</dt><dd>'+s.duel+'回 '+s.dwon+'勝</dd><dt>登用</dt><dd>'+s.recruit+'人</dd><dt>捕縛</dt><dd>'+s.capt+'人</dd><dt>仕えた武将</dt><dd>'+Object.keys(S.met).length+' / '+HEROES.length+'</dd></dl>';
-  b+='<div class="card"><h3>遊び方</h3><p>・季節ごとに「令」がある。出陣・徴兵・登用で1つ使う。<br>・赤い輪の地域を攻め、戦い方を選ぶ：<b>決戦</b>（大軍の合戦）・<b>戦術</b>（一手ずつ）・<b>一騎打ち</b>（三番勝負）・<b>委任</b>。<br>・勝てば城を取り、敵将を捕らえられる。捕虜や在野の人材を登用して軍を大きくしよう。<br>・季節を進めると諸侯が動く。攻められたら迎え撃つ。<br>・洛陽を取ると帝を迎え、令が1つ増える。<br>・21の地域をすべて治めれば天下統一。</p></div>';
+  b+='<div class="card"><h3>遊び方</h3><p>・季節ごとに「令」がある。出陣・徴兵・登用で1つ使う。金は季節ごとに領地から入る。<br>・赤い輪の地域を攻める。<br>・勝てば城を取り、敵将を捕らえられる。捕虜や在野の人材を登用して軍を大きくしよう。<br>・季節を進めると諸侯が動く。攻められたら迎え撃つ。<br>・敵が城を出てくれば<b>野戦</b>（決戦か戦術）、城に籠もれば<b>攻城戦</b>（決戦）。攻められたら<b>籠城</b>（城壁と施設で守る）か<b>出撃</b>（戦術）。<br>・兵は武将ごとに統率まで配られ、戦術・一騎打ちでは1000につき体力+10%の上乗せになる（先に減り、回復しない）。<br>・失った兵の一部は負傷兵として次の季節に戻る（勝てば半分、負ければ2割）。<br>・金で城壁を強化し、弓楼・連弩台・投石機・火計台・地雷火を建てられる。<br>・洛陽を取ると帝を迎え、令が1つ増える。<br>・21の地域をすべて治めれば天下統一。</p></div>';
   b+='<p class="dim" style="font-size:12px;margin:0">素材：武将の顔・3Dモデル・合戦・戦術戦・一騎打ちは「三国決戦伝」「三国タクティクス」「一騎打ち英雄伝」、物語画面と勢力図は「三国英雄伝」から。武器の音の一部は Battle for Wesnoth（GPL-2.0以降）、術のエフェクトとボタン音は Kenney（CC0）。</p>';
   const d=sheet('記録',b,'<button class="btn" type="button" id="mBgm">BGM '+(SND.bgmOn?'オン':'オフ')+'</button><button class="btn" type="button" id="mTitle">タイトルへ</button><button class="btn" type="button" id="mNew">最初から</button>');
   d.querySelector('#mBgm').onclick=()=>{try{SND.init();BGM.setOn(!SND.bgmOn);}catch(_){}menuSheet();};
@@ -542,6 +598,11 @@ async function endTurn(){if(BUSY)return;BUSY=true;closeSheet();endTargetMode();c
     S.season=(S.season+1)%4;if(S.season===0)S.year++;S.turn++;
     RIDS.forEach(r=>{const o=S.reg[r].o;const g=o?Math.round(REG[r].cap*.1):Math.round(REG[r].cap*.05);S.reg[r].tr=Math.min(REG[r].cap,S.reg[r].tr+g);});
     Object.keys(S.hero).forEach(id=>S.hero[id].tired=0);
+    // 負傷兵が戻る・金が入る
+    let back=0;RIDS.forEach(r=>{const g=S.reg[r];if(g.inj){const v=Math.min(g.inj,REG[r].cap-g.tr);if(g.o===S.me)back+=Math.max(0,v);g.tr+=Math.max(0,v);g.inj=0;}});
+    if(back)S.news.push('負傷兵 '+man(back)+' が隊に戻った');
+    const inc=income(S.me);S.gold+=inc;S.news.push('金 '+man(inc)+' が入った');
+    FIDS.filter(f=>f!==S.me&&alive(f)).forEach(f=>{S.fgold[f]=(S.fgold[f]||0)+income(f);aiBuild(f);});
     // 在野の人材は時々旅をする
     Object.keys(S.hero).forEach(id=>{const h=S.hero[id];if(h.f===null&&!h.cap&&R()<.12)h.loc=pick(ADJ[h.loc]);});
     // AIの捕虜
@@ -577,6 +638,13 @@ async function aiFaction(f){const F=FAC[f];
     else{const r0=autoBattle(B,true);UIS.arrows=[];await applyResult(B,toPlayerless(r0));}
     if(!alive(S.me))return;}
   UIS.arrows=[];dirty=true;}
+function aiBuild(f){let g=S.fgold[f];const fr=regsOf(f).filter(r=>ADJ[r].some(n=>S.reg[n].o!==f));const list=fr.length?fr:regsOf(f);
+  for(let k=0;k<3&&list.length;k++){const r=pick(list),c=S.reg[r];
+    if(c.wall<3&&g>=wallCost(c.wall)){g-=wallCost(c.wall);c.wall++;continue;}
+    if(c.bld.length<bldSlots(r)){const ok=Object.keys(FB).filter(t=>c.wall>=FB[t].w&&g>=FB[t].c);if(ok.length){const t=pick(ok);g-=FB[t].c;c.bld.push({t,lv:1});continue;}}
+    const up=c.bld.filter(x=>x.lv<4&&g>=FB[x.t].c*x.lv);if(up.length){const x=pick(up);g-=FB[x.t].c*x.lv;x.lv++;continue;}
+    if(c.wall<5&&g>=wallCost(c.wall)){g-=wallCost(c.wall);c.wall++;}}
+  S.fgold[f]=g;}
 function toPlayerless(r){return {win:r.awin,myLeft:r.aLeft,foeLeft:r.dLeft,down:r.down,duels:[]};}
 
 /* ================= 終わり ================= */

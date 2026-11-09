@@ -721,7 +721,7 @@ function scr(p){_v.copy(p).project(camera);return {x:(_v.x+1)/2*innerWidth,y:(1-
 function updLabels(){if(!G||!G.units)return;
   for(const u of G.units){if(!u.bar)continue;if(u.gone||u.away){u.bar.hidden=true;continue;}u.bar.hidden=false;
     const p=u.m.holder.position.clone();p.y+=1.18;const s=scr(p);u.bar.style.transform='translate('+s.x.toFixed(1)+'px,'+s.y.toFixed(1)+'px)';
-    u.bar.firstChild.style.width=(u.hp/u.mhp*100)+'%';u.bar.classList.toggle('ko',!u.alive);
+    {const tot=u.mhp+(u.sh0||0);u.bar.firstChild.style.width=(u.hp/tot*100)+'%';if(u.sh0){let e=u.bar.querySelector('em');if(!e){e=el('em','');e.style.cssText='position:absolute;top:0;bottom:0;background:#e8c25a';u.bar.appendChild(e);}e.style.left=(u.hp/tot*100)+'%';e.style.width=(u.sh/tot*100)+'%';}}u.bar.classList.toggle('ko',!u.alive);
     if(u.ctrEl){const p2=u.m.holder.position.clone();p2.y+=1.45;const s2=scr(p2);u.ctrEl.style.left=s2.x+'px';u.ctrEl.style.top=s2.y+'px';}}
   for(const q of pops){const s=scr(q.p);q.e.style.left=s.x+'px';q.e.style.top=s.y+'px';}
   for(const q of says){const p=q.u.m.holder.position.clone();p.y+=1.55;const s=scr(p);q.e.style.left=s.x+'px';q.e.style.top=s.y+'px';q.e.hidden=!!(q.u.gone||q.u.away);}
@@ -831,6 +831,7 @@ function newBattle(fk,idx,party,seed,mode){
     const lv=eLv+(e.boss?2:e.leader?1:0);const u=mkUnit(h,e.job,1,'enemy',{boss:e.boss,leader:e.leader,ai:1,lv,eq:lv>=3?ENEMY_EQ[e.job]:{}});
     JOBS[u.job].ab.forEach((k,i)=>{if(i<Math.min(4,1+Math.floor(lv/2)))u.rc.ln[k]=1;});calcStats(u);u.hp=u.mhp;u.mp=u.mmp;return u;});
   G.units=pu.concat(eu);
+  if(EXT)G.units.forEach(u=>{const tr=u.hero?((u.side===0?EXT.tr0:EXT.tr1)[u.h.id]||0):0;u.trv=tr;u.sh0=u.sh=Math.round(u.mhp*Math.floor(tr/1000)*.1);});
   // 配置
   const used=new Set();
   const take=list=>{for(const t of list){if(!used.has(t)&&passable(M,t,false)&&!t.deep){used.add(t);return t;}}return null;};
@@ -1094,7 +1095,8 @@ async function arrowFly(u,tp){const a=u.m.holder.position.clone().add(new THREE.
 function addStatus(t,st){for(const k in st){t.st[k]=st[k];if(k==='haste'&&t.st.slow)delete t.st.slow;if(k==='slow'&&t.st.haste)delete t.st.haste;}
   const nm={haste:'ヘイスト',slow:'スロウ',stop:'ストップ',protect:'プロテス',shell:'シェル'};pop(t,Object.keys(st).map(k=>nm[k]||k).join(' '),'st');}
 async function damage(t,d,src){
-  const hp0=t.hp;t.hp=Math.max(0,t.hp-d);pop(t,d);
+  let dd=d;if(t.sh>0){const a=Math.min(t.sh,dd);t.sh-=a;dd-=a;}
+  const hp0=t.hp;t.hp=Math.max(0,t.hp-dd);pop(t,d);
   if(t.hero&&t.hp>0){if(t.hp<=t.mhp*.3&&!t.saidLow){t.saidLow=1;say(t,lineOf(t.h,'fury'));}else if(d>=t.mhp*.3&&Math.random()<.5)say(t,lineOf(t.h,'big'));else if(Math.random()<.2)say(t,lineOf(t.h,'hurt'));}SND.play(pick(['human-hit-1','human-hit-2','human-hit-3']),.45);
   t.m.mats.forEach(q=>{q.m.emissive&&q.m.emissive.setHex(0x883322);});setPose(t.m,'hurt');
   setTimeout(()=>{t.m.mats.forEach(q=>{q.m.emissive&&q.m.emissive.setHex(0);});if(t.alive)setPose(t.m,'idle');},220/SPD);
@@ -1416,7 +1418,8 @@ function showCard(u){const c=$('#card');c.hidden=false;
   const eq=[u.ra&&RSM[u.ra].n,u.su&&RSM[u.su].n,u.mo&&RSM[u.mo].n].filter(Boolean).join('・');
   c.innerHTML='<img alt="" src="'+portrait(u.h)+'"><div style="min-width:0"><div class="nm">'+u.h.n+'<small>Lv'+u.lv+' '+JOBS[u.job].n+(u.sec?'/'+JOBS[u.sec].n:'')+'</small></div>'+
     '<div style="margin-top:2px"><span class="chip '+(u.side?'foe':'me')+'">'+(u.side?'敵':u.ai?'味方AI':'味方')+'</span> '+(u.leader?'<span class="chip ld">総大将</span> ':'')+(st.length?'<span class="chip">'+st.join('・')+'</span>':'')+'</div>'+
-    '<div class="bars"><span>HP</span><u><i style="width:'+(u.hp/u.mhp*100)+'%;background:#3a9a5a"></i></u><span>'+u.hp+'/'+u.mhp+'</span>'+
+    '<div class="bars"><span>HP</span><u><i style="width:'+(u.hp/u.mhp*100)+'%;background:#3a9a5a"></i></u><span>'+u.hp+(u.sh0?'<b style="color:#a8780a">＋'+u.sh+'</b>':'')+'</span>'+
+    (u.sh0?'<span>兵</span><u><i style="width:'+(u.sh/u.sh0*100)+'%;background:#e8c25a"></i></u><span>'+Math.round(u.trv*u.sh/u.sh0)+'</span>':'')+
     '<span>MP</span><u><i style="width:'+(u.mmp?u.mp/u.mmp*100:0)+'%;background:#4a7ad8"></i></u><span>'+u.mp+'/'+u.mmp+'</span>'+
     '<span>CT</span><u><i style="width:'+Math.min(100,u.ct)+'%;background:#c9962e"></i></u><span>'+Math.min(100,Math.round(u.ct))+'</span></div></div>'+
     '<div class="st"><span>PA <b>'+u.pa+'</b></span><span>MA <b>'+u.ma+'</b></span><span>Sp <b>'+u.sp+'</b></span><span>移動 <b>'+u.mv+'</b></span><span>跳躍 <b>'+u.jpw+'</b></span><span>Br <b>'+u.br+'</b></span><span>Fa <b>'+u.fa+'</b></span><span>回避 <b>'+u.ev+'</b></span>'+(eq?'<span>'+eq+'</span>':'')+'</div>';}
@@ -1504,7 +1507,7 @@ function renderPrep(){
     const eqSel=slot=>{const ks=Object.keys(RSM).filter(k=>RSM[k].slot===slot&&r.ln[k]);return '<select data-q="'+i+':'+slot+'" aria-label="'+SLOTN[slot]+'" id="q'+i+slot+'"><option value="">'+SLOTN[slot]+'なし</option>'+ks.map(k=>'<option value="'+k+'"'+(r.eq[slot]===k?' selected':'')+'>'+RSM[k].n+'</option>').join('')+'</select>';};
     const ld=p.leader?'<span class="chip ld">総大将</span>':'';
     h+='<div class="ru'+(p.on?'':' off')+'"><img alt="" src="'+portrait(p.h)+'"><div style="min-width:0"><div class="nm">'+p.h.n+ld+'<small>Lv'+r.lv+' '+(p.h.gen?'兵':'武将')+'</small></div>'+
-      '<div class="sx">武力 '+p.h.p+' ・ 知力 '+p.h.i+' ・ 統率 '+p.h.cmd+' ・ EXP '+r.exp+'/100 ・ JP '+(r.jp[p.job]||0)+'</div>'+
+      '<div class="sx">'+(EXT&&EXT.tr0[p.h.id]?'<b style="color:#a8780a">兵 '+EXT.tr0[p.h.id]+'（HP+'+Math.floor(EXT.tr0[p.h.id]/1000)*10+'%）</b> ・ ':'')+'武力 '+p.h.p+' ・ 知力 '+p.h.i+' ・ 統率 '+p.h.cmd+' ・ EXP '+r.exp+'/100 ・ JP '+(r.jp[p.job]||0)+'</div>'+
       '<div class="ctl"><button type="button" class="tog'+(p.on?' on':'')+'" data-t="'+i+'"'+(p.leader?' disabled':'')+'>'+(p.on?'出陣':'待機')+'</button>'+
       '<select id="j'+i+'" data-j="'+i+'" aria-label="ジョブ">'+opts(p.job)+'</select><select id="s'+i+'" data-s="'+i+'" aria-label="サブの技">'+opts(p.sec,1)+'</select></div>'+
       '<div class="ctl">'+eqSel('ra')+eqSel('su')+eqSel('mo')+'<button type="button" class="tog" data-o="'+i+'">'+(PREP.open===i?'閉じる':'技を覚える')+'</button></div>';
@@ -1589,7 +1592,7 @@ function endBattle(res){
 let EXT=null;
 const extPost=m=>{try{parent.postMessage(m,'*');}catch(e){}};
 function extStart(m){
-  EXT={id:m.id};
+  EXT={id:m.id,tr0:{},tr1:m.foeTr||{}};m.party.forEach(p=>{EXT.tr0[p.id]=p.tr||0;});
   const ids=m.party.map(p=>p.id);
   CAMP.ext={n:m.fname,col:m.fcol,lead:ids[0],start:ids,gen:0,diff:['',''],d:'',list:[{b:'ext',side:m.side,ef:m.ef,foe:m.foe,s:m.s||'',w:m.w||'',roster:ids}]};
   BATTLES.ext={n:m.n,y:m.y||194,p:m.p||'',map:m.map,opt:m.opt||{}};
@@ -1607,8 +1610,8 @@ function extEnd(res){
   SND[win?'win':'lose']();
   const spk=G.units.find(u=>u.side===0&&u.leader&&u.hero)||G.units.find(u=>u.side===0&&u.hero);const quote=spk?lineOf(spk.h,win?'win':'lose'):null;if(spk&&quote)say(spk,quote,2400);
   const out={t:'tacEnd',id:EXT.id,win,
-    mine:G.units.filter(u=>u.side===0&&u.hero).map(u=>({id:u.h.id,down:!u.alive||u.gone})),
-    foes:G.units.filter(u=>u.side===1).map(u=>({id:u.hero?u.h.id:'',down:!u.alive||u.gone})),duels:G.duels||[]};
+    mine:G.units.filter(u=>u.side===0&&u.hero).map(u=>({id:u.h.id,down:!u.alive||u.gone,tr:u.sh0?Math.round(u.trv*u.sh/u.sh0):0})),
+    foes:G.units.filter(u=>u.side===1).map(u=>({id:u.hero?u.h.id:'',down:!u.alive||u.gone,tr:u.sh0?Math.round(u.trv*u.sh/u.sh0):0})),duels:G.duels||[]};
   setTimeout(()=>{
     const gains=G.units.filter(u=>u.side===0).map(u=>'<span>'+u.h.n+' Lv'+u.lv+(u.lvUps?'<b style="color:var(--seal)">↑'+u.lvUps+'</b>':'')+' +'+u.expGain+'EXP +'+u.jpGain+'JP</span>').join('');
     let h='<div class="wrap" style="max-width:680px"><div class="verdict '+(win?'win':'lose')+'">'+(win?'勝利':'敗北')+'</div>';

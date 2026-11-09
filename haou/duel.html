@@ -5773,10 +5773,19 @@ window.addEventListener('message',function(e){const m=e.data||{};if(m.t!=='duel'
   meId=m.me;foeId=m.foe;if(STRAT[m.strat]){S.strat=m.strat;LS.set('yd_strat',m.strat);}
   stId=(m.stage&&ST[m.stage])?m.stage:'rand';S.mu=null;S.beaten=[];S.nextCarry=0;S.lastWin=false;
   if(m.spd)S.spd=m.spd;
-  startDuel();parent.postMessage({t:'duelStarted',id:m.id},'*');});
+  startDuel();brShield(m.msh||0,m.fsh||0);parent.postMessage({t:'duelStarted',id:m.id},'*');});
 const _brSR=showResult;showResult=function(win){if(BR){const r=BR;brRestore();BR=null;try{SND.mode('off');}catch(_){}
-  const hp=D?[D.hp[0],D.hpMax[0],D.hp[1],D.hpMax[1],D.rd]:null;show('sel');parent.postMessage({t:'duelEnd',id:r.id,win:!!win,hp:hp},'*');return;}_brSR(win);};
+  const hp=D?[D.hp[0],D.hpMax[0],D.hp[1],D.hpMax[1],D.rd]:null;const sh=D&&D.sh0?[D.sh[0]/(D.sh0[0]||1),D.sh[1]/(D.sh0[1]||1)]:null;show('sel');parent.postMessage({t:'duelEnd',id:r.id,win:!!win,hp:hp,sh:sh},'*');return;}_brSR(win);};
 const _brQD=quitDuel;quitDuel=function(){if(BR){const r=BR;brRestore();BR=null;_brQD();parent.postMessage({t:'duelEnd',id:r.id,win:false,quit:1},'*');return;}_brQD();};
+
+/* ===== 三国覇王伝：兵の上乗せ体力（先に減り、回復しない） ===== */
+function brShield(a,b){if(!D)return;D.base=[D.hpMax[0],D.hpMax[1]];D.sh0=[Math.round(D.base[0]*a),Math.round(D.base[1]*b)];D.sh=D.sh0.slice();
+  for(const i of [0,1]){D.hpMax[i]+=D.sh0[i];D.hp[i]+=D.sh0[i];}try{hud();}catch(e){}}
+const _brHud=hud;hud=function(){if(D&&D.sh0){for(const i of [0,1]){D.sh[i]=Math.min(D.sh[i],Math.max(0,D.hp[i]-D.base[i]));if(D.hp[i]>D.base[i]+D.sh[i])D.hp[i]=D.base[i]+D.sh[i];}}
+  _brHud();if(!D||!D.sh0)return;
+  [0,1].forEach(function(i){const f=E.ft[i];if(!f)return;const hv=f.querySelector('.hv');const base=Math.min(D.hp[i],D.base[i]);if(hv)hv.textContent=base+(D.sh0[i]?'+'+D.sh[i]:'');
+    const hp=f.querySelector('.hp');if(!hp||!D.sh0[i])return;let s=hp.querySelector('.shb');if(!s){s=document.createElement('i');s.className='shb';s.style.cssText='position:absolute;top:0;bottom:0;background:linear-gradient(#ffe08a,#c9962e);transition:width .3s';hp.appendChild(s);}
+    const tot=D.hpMax[i];s.style.width=(D.sh[i]/tot*100)+'%';if(i===0){s.style.left=(base/tot*100)+'%';s.style.right='auto';}else{s.style.right=(base/tot*100)+'%';s.style.left='auto';}});};
 parent.postMessage({t:'duelReady'},'*');
 
 try{if(!localStorage.getItem('yd_seen')){const h=document.getElementById('howD');if(h)h.open=true;localStorage.setItem('yd_seen','1');}}catch(e){}
