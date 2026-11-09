@@ -105,95 +105,144 @@ const START={
   ['lingt','jiangdong'],['xusheng','jiangdong'],['jiangw','yong'],['guohuai','bing'],['simashi','yu'],['guanxing','qing'],['zhangbao2','qing'],['tadun','you']]
 };
 
-/* ================= 天下の組み立て：国替・配下シャッフル・新大陸 ================= */
+/* ================= 天下の組み立て：地図・配下・都市数・空白地・国数・都市規模 ================= */
+// 陸地（島の多角形の集まり − 湖）・山脈・森・道の種類
+const LAND={blobs:[MAP_OUT],lakes:[]};const MAP_MTN=[],MAP_FOR=[];let ET={};
+const segX=(a,b,c,d)=>{const o=(p,q,r)=>(q[0]-p[0])*(r[1]-p[1])-(q[1]-p[1])*(r[0]-p[0]);return o(a,b,c)*o(a,b,d)<0&&o(c,d,a)*o(c,d,b)<0;};
+const pdist=(p,a,b)=>{const dx=b[0]-a[0],dy=b[1]-a[1],l=dx*dx+dy*dy||1,t=clamp(((p[0]-a[0])*dx+(p[1]-a[1])*dy)/l,0,1);return Math.hypot(p[0]-a[0]-t*dx,p[1]-a[1]-t*dy);};
+const plDist=(p,pl)=>{let m=1e9;for(let i=0;i<pl.length-1;i++)m=Math.min(m,pdist(p,pl[i],pl[i+1]));return m;};
+function edgeTypes(adj,pos,riv,mtn,sea){const o={};adj.forEach(k=>{const[a,b]=k.split('-');const A=pos[a],B=pos[b];
+    o[k]=sea&&sea.includes(k)?'sea':riv.some(pl=>pl.some((p,i)=>i<pl.length-1&&segX(A,B,p,pl[i+1])))?'river':mtn.some(pl=>plDist([(A[0]+B[0])/2,(A[1]+B[1])/2],pl)<4.5||pl.some((p,i)=>i<pl.length-1&&segX(A,B,p,pl[i+1])))?'mount':'road';});return o;}
 const DEF_REG=Object.fromEntries(RIDS.map(r=>[r,{cap:REG[r].cap,t:REG[r].t,k:REG[r].k,d:REG[r].d,o:REG[r].o}]));
 const DEF_MAP={seeds:MAP_SEEDS.map(s=>s.slice()),out:MAP_OUT.map(p=>p.slice()),riv:MAP_RIV.map(r=>r.map(p=>p.slice())),adj:ADJ_L.slice(),pos:Object.fromEntries(RIDS.map(r=>[r,[REG[r].x,REG[r].y]]))};
+DEF_MAP.et=edgeTypes(DEF_MAP.adj,DEF_MAP.pos,DEF_MAP.riv,[],null);
+DEF_MAP.adj.forEach(k=>{const[a,b]=k.split('-');if(DEF_MAP.et[k]==='road'&&(REG[a].t==='mountain'||REG[b].t==='mountain'||REG[a].t==='gate'||REG[b].t==='gate'))DEF_MAP.et[k]='mount';});
 function applyMap(m){m=m||DEF_MAP;
   MAP_SEEDS.length=0;m.seeds.forEach(s=>MAP_SEEDS.push(s.slice()));MAP_OUT.length=0;m.out.forEach(p=>MAP_OUT.push(p.slice()));
   MAP_RIV.length=0;m.riv.forEach(r=>MAP_RIV.push(r.map(p=>p.slice())));ADJ_L.length=0;m.adj.forEach(a=>ADJ_L.push(a));
+  LAND.blobs=m.land?m.land.blobs:[m.out];LAND.lakes=m.land?m.land.lakes:[];MAP_MTN.length=0;(m.mtn||[]).forEach(p=>MAP_MTN.push(p));MAP_FOR.length=0;(m.forest||[]).forEach(p=>MAP_FOR.push(p));
+  ET=m.et||edgeTypes(m.adj,m.pos,m.riv,m.mtn||[],null);
   RIDS.forEach(r=>{ADJ[r]=[];REG[r].x=m.pos[r][0];REG[r].y=m.pos[r][1];Object.assign(REG[r],DEF_REG[r],m.reg&&m.reg[r]||{});});ADJ_L.forEach(s=>{const[a,b]=s.split('-');ADJ[a].push(b);ADJ[b].push(a);});GRID=null;}
+const edgeOf=(a,b)=>ET[a+'-'+b]||ET[b+'-'+a]||'road';
 const rf=(a,b)=>a+R()*(b-a);
 function inPoly(P,x,y){let c=false;for(let i=0,j=P.length-1;i<P.length;j=i++){const a=P[i],b=P[j];if((a[1]>y)!==(b[1]>y)&&x<(b[0]-a[0])*(y-a[1])/(b[1]-a[1])+a[0])c=!c;}return c;}
-// 21都市の新しい大陸：海岸線・川・都市の位置・隣接を作る
+function landAt(L,x,y){return L.blobs.some(P=>inPoly(P,x,y))&&!L.lakes.some(P=>inPoly(P,x,y));}
+function blob(cx,cy,rx,ry,rot,rough,n){n=n||48;const H=[...Array(6)].map((_,k)=>[rf(.02,rough)/(k*.5+1),rf(0,6.28)]);const out=[];
+  for(let i=0;i<n;i++){const a=i/n*Math.PI*2;let r=1;H.forEach(([amp,ph],k)=>r+=amp*Math.sin(a*(k+2)+ph));const X=Math.cos(a)*rx*r,Y=Math.sin(a)*ry*r;
+    out.push([clamp(cx+X*Math.cos(rot)-Y*Math.sin(rot),2,98),clamp(cy+X*Math.sin(rot)+Y*Math.cos(rot),2,88)]);}return out;}
+const SHAPES={big:'大陸',twin:'双子大陸',arch:'群島',ring:'内海の大陸',pen:'半島の国',long:'細長い国',crescent:'三日月の国'};
+function genLand(kind){const L={blobs:[],lakes:[]};
+  if(kind==='big')L.blobs.push(blob(50,45,rf(40,46),rf(34,40),rf(-.3,.3),.28));
+  else if(kind==='twin'){const v=R()<.5;const gap=rf(4,10);if(v){L.blobs.push(blob(27,45,rf(20,24),rf(32,38),rf(-.3,.3),.3));L.blobs.push(blob(73,45,rf(20,24),rf(32,38),rf(-.3,.3),.3));L.blobs[0]=L.blobs[0].map(p=>[p[0]-gap/2,p[1]]);L.blobs[1]=L.blobs[1].map(p=>[p[0]+gap/2,p[1]]);}
+    else{L.blobs.push(blob(50,24,rf(40,46),rf(16,20),rf(-.2,.2),.3));L.blobs.push(blob(50,67,rf(40,46),rf(16,20),rf(-.2,.2),.3));L.blobs[0]=L.blobs[0].map(p=>[p[0],p[1]-gap/2]);L.blobs[1]=L.blobs[1].map(p=>[p[0],p[1]+gap/2]);}}
+  else if(kind==='arch'){const n=3+Math.floor(R()*3);const cs=[[28,26],[72,24],[30,66],[72,66],[50,45]];shuffle(cs).slice(0,n).forEach(c=>L.blobs.push(blob(c[0]+rf(-5,5),c[1]+rf(-4,4),rf(13,19),rf(12,17),rf(0,3),.35)));}
+  else if(kind==='ring'){L.blobs.push(blob(50,45,rf(43,47),rf(37,41),0,.2));L.lakes.push(blob(50+rf(-5,5),45+rf(-4,4),rf(14,19),rf(11,15),rf(0,3),.3));}
+  else if(kind==='pen'){L.blobs.push(blob(50,40,rf(32,38),rf(24,30),0,.25));const n=2+Math.floor(R()*2);for(let k=0;k<n;k++){const a=rf(.2,2.9)+k*1.9;L.blobs.push(blob(50+Math.cos(a)*30,40+Math.sin(a)*28,rf(16,22),rf(6,9),a,.25));}}
+  else if(kind==='long'){const a=rf(-.6,.6)+(R()<.5?0:Math.PI/2*.0);L.blobs.push(blob(50,45,rf(48,54),rf(17,22),a+(R()<.5?.5:-.5),.3));}
+  else if(kind==='crescent'){L.blobs.push(blob(50,45,rf(42,46),rf(36,40),0,.2));L.lakes.push(blob(50+rf(14,22)*(R()<.5?1:-1),45+rf(-8,8),rf(26,32),rf(24,30),0,.2));}
+  return L;}
 function genContinent(){
-  for(let tryN=0;tryN<40;tryN++){
-    const n=44,cx=50+rf(-4,4),cy=45+rf(-3,3);const H=[...Array(5)].map((_,k)=>[rf(.03,.2)/(k*.6+1),rf(0,6.28)]);const sx=rf(.85,1.05),sy=rf(.85,1.05);
-    const out=[];for(let i=0;i<n;i++){const a=i/n*Math.PI*2;let r=1;H.forEach(([amp,ph],k)=>r+=amp*Math.sin(a*(k+2)+ph));out.push([clamp(cx+Math.cos(a)*46*r*sx,2,98),clamp(cy+Math.sin(a)*41*r*sy,2,88)]);}
-    const pts=[];let md=13.5,g=0;
-    while(pts.length<21&&g<6000){g++;const x=rf(6,94),y=rf(5,85);if(!inPoly(out,x,y))continue;
-      // 海岸から少し離す
-      if(!inPoly(out,x+3,y)||!inPoly(out,x-3,y)||!inPoly(out,x,y+3)||!inPoly(out,x,y-3))continue;
-      if(pts.every(p=>Math.hypot(p[0]-x,p[1]-y)>=md))pts.push([x,y]);else if(g%400===0)md*=.93;}
+  for(let tryN=0;tryN<60;tryN++){const kind=pick(Object.keys(SHAPES));const L=genLand(kind);
+    const ok=(x,y)=>landAt(L,x,y)&&landAt(L,x+2.5,y)&&landAt(L,x-2.5,y)&&landAt(L,x,y+2.5)&&landAt(L,x,y-2.5);
+    const pts=[];let md=13,g=0;while(pts.length<21&&g<9000){g++;const x=rf(4,96),y=rf(4,86);if(!ok(x,y))continue;if(pts.every(p=>Math.hypot(p[0]-x,p[1]-y)>=md))pts.push([x,y]);else if(g%500===0)md*=.93;}
     if(pts.length<21)continue;
-    // 隣接：ボロノイの境界を数える
     const W=200,Hh=180,gd=new Int8Array(W*Hh);
-    for(let py=0;py<Hh;py++)for(let px=0;px<W;px++){const x=px/W*100,y=py/Hh*90;if(!inPoly(out,x,y)){gd[py*W+px]=-1;continue;}
-      const nx=x+2.2*Math.sin(y*.45)+1.3*Math.sin(y*1.3+x*.2),ny=y+2.2*Math.cos(x*.4)+1.2*Math.sin(x*1.1);let b=0,bd=1e9;
-      for(let i=0;i<21;i++){const d=(nx-pts[i][0])**2+(ny-pts[i][1])**2;if(d<bd){bd=d;b=i;}}gd[py*W+px]=b;}
+    for(let py=0;py<Hh;py++)for(let px=0;px<W;px++){const x=px/W*100,y=py/Hh*90;if(!landAt(L,x,y)){gd[py*W+px]=-1;continue;}
+      const nx=x+2.2*Math.sin(y*.45)+1.3*Math.sin(y*1.3+x*.2),ny=y+2.2*Math.cos(x*.4)+1.2*Math.sin(x*1.1);let b=0,bd=1e9;for(let i=0;i<21;i++){const d=(nx-pts[i][0])**2+(ny-pts[i][1])**2;if(d<bd){bd=d;b=i;}}gd[py*W+px]=b;}
     const cnt={};for(let py=0;py<Hh;py++)for(let px=0;px<W;px++){const a=gd[py*W+px];if(a<0)continue;[[1,0],[0,1]].forEach(([dx,dy])=>{const q=px+dx,r=py+dy;if(q>=W||r>=Hh)return;const b=gd[r*W+q];if(b<0||b===a)return;const k=a<b?a+'-'+b:b+'-'+a;cnt[k]=(cnt[k]||0)+1;});}
     const edges=Object.keys(cnt).filter(k=>cnt[k]>=3).map(k=>k.split('-').map(Number));
-    const adj=pts.map(()=>[]);edges.forEach(([a,b])=>{adj[a].push(b);adj[b].push(a);});
-    const seen=new Set([0]),q=[0];while(q.length){const u=q.pop();adj[u].forEach(v=>{if(!seen.has(v)){seen.add(v);q.push(v);}});}
-    if(seen.size<21)continue;
-    // 川：内陸から海へ
-    const riv=[];for(let k=0;k<2;k++){let x=cx+rf(-15,15),y=cy+rf(-12,12),a=rf(0,6.28);const pl=[[x,y]];for(let s=0;s<40&&inPoly(out,x,y);s++){a+=rf(-.5,.5);x+=Math.cos(a)*5;y+=Math.sin(a)*5;pl.push([x,y]);}if(pl.length>4)riv.push(pl);}
-    return {pts,adj,edges,out,riv};}
+    // 海で分かれた島どうしは海路でつなぐ
+    const comp=()=>{const adj=pts.map(()=>[]);edges.forEach(([a,b])=>{adj[a].push(b);adj[b].push(a);});const c=new Array(21).fill(-1);let n=0;for(let i=0;i<21;i++){if(c[i]>=0)continue;const q=[i];c[i]=n;while(q.length){const u=q.pop();adj[u].forEach(v=>{if(c[v]<0){c[v]=n;q.push(v);}});}n++;}return {c,n};};
+    const seaE=[];let C=comp();let guard=0;
+    while(C.n>1&&guard++<10){let best=null,bd=1e9;for(let i=0;i<21;i++)for(let j=0;j<21;j++){if(C.c[i]===C.c[j])continue;const d=Math.hypot(pts[i][0]-pts[j][0],pts[i][1]-pts[j][1]);if(d<bd){bd=d;best=[i,j];}}edges.push(best);seaE.push(best);C=comp();}
+    if(C.n>1)continue;
+    if(L.blobs.length>1&&R()<.7){// もう一本、別の海路
+      let best=null,bd=1e9;const has=new Set(edges.map(e=>e.slice().sort((a,b)=>a-b).join('-')));for(let i=0;i<21;i++)for(let j=i+1;j<21;j++){if(has.has(i+'-'+j))continue;const sameLand=L.blobs.findIndex(P=>inPoly(P,pts[i][0],pts[i][1]))===L.blobs.findIndex(P=>inPoly(P,pts[j][0],pts[j][1]));if(sameLand)continue;const d=Math.hypot(pts[i][0]-pts[j][0],pts[i][1]-pts[j][1]);if(d<bd&&d<34){bd=d;best=[i,j];}}if(best){edges.push(best);seaE.push(best);}}
+    // 山脈・川・森
+    const mtn=[];for(let k=0;k<1+Math.floor(R()*3);k++){let p=pick(pts).slice(),a=rf(0,6.28);p=[p[0]+rf(-6,6),p[1]+rf(-6,6)];const pl=[p];for(let s=0;s<4+Math.floor(R()*3);s++){a+=rf(-.6,.6);const q=[p[0]+Math.cos(a)*rf(8,12),p[1]+Math.sin(a)*rf(7,10)];if(!landAt(L,q[0],q[1]))break;pl.push(q);p=q;}if(pl.length>=3)mtn.push(pl);}
+    const riv=[];for(let k=0;k<1+Math.floor(R()*3);k++){const src=mtn.length&&R()<.75?pick(pick(mtn)):pick(pts);let x=src[0],y=src[1],a=rf(0,6.28);const pl=[[x,y]];for(let s=0;s<45&&landAt(L,x,y);s++){a+=rf(-.45,.45);x+=Math.cos(a)*4;y+=Math.sin(a)*4;pl.push([x,y]);}if(pl.length>4)riv.push(pl);}
+    const forest=[];for(let k=0;k<2+Math.floor(R()*4);k++){const p=pick(pts);forest.push([p[0]+rf(-5,5),p[1]+rf(-5,5),rf(5,10)]);}
+    return {pts,edges,seaE,L,kind,mtn,riv,forest};}
   return null;}
-// 勢力ごとの領地の固まりを、隣どうしで広げて作る
-function growClusters(adj,sizes){const N=adj.length;
-  for(let t=0;t<300;t++){const own=new Array(N).fill(-1);const seeds=[];const order=shuffle(sizes.map((_,i)=>i));let ok=true;
-    for(const f of order){let free=[...Array(N).keys()].filter(i=>own[i]<0&&adj[i].every(n=>own[n]<0));if(!free.length)free=[...Array(N).keys()].filter(i=>own[i]<0&&adj[i].some(n=>own[n]<0));if(!free.length){ok=false;break;}
-      const s=pick(free);own[s]=f;seeds.push(s);}
+// 地形を地理から決める
+function terrainOf(p,C,coast){const dM=C.mtn.length?Math.min(...C.mtn.map(pl=>plDist(p,pl))):99,dR=C.riv.length?Math.min(...C.riv.map(pl=>plDist(p,pl))):99;const inF=C.forest.some(f=>Math.hypot(p[0]-f[0],p[1]-f[1])<f[2]);
+  if(dM<4)return {t:'mountain',k:'mountain',d:'mountain'};if(dM<8)return {t:'hills',k:'hills',d:'desert'};
+  if(dR<4)return coast?{t:'yangtze',k:'river',d:'river'}:{t:'river',k:'river',d:'river'};if(inF)return {t:'forest',k:'forest',d:'night'};
+  return {t:'plain',k:'plain',d:p[1]<16?'snow':'plain'};}
+function growClusters(adj,sizes,fill){const N=adj.length;
+  for(let t=0;t<400;t++){const own=new Array(N).fill(-1);const order=shuffle(sizes.map((_,i)=>i));let ok=true;
+    for(const f of order){let free=[...Array(N).keys()].filter(i=>own[i]<0&&adj[i].every(n=>own[n]<0));if(!free.length)free=[...Array(N).keys()].filter(i=>own[i]<0&&adj[i].some(n=>own[n]<0));if(!free.length)free=[...Array(N).keys()].filter(i=>own[i]<0);if(!free.length){ok=false;break;}own[pick(free)]=f;}
     if(!ok)continue;const quota=sizes.map(s=>s-1);let guard=0;
-    while(quota.some(x=>x>0)&&guard++<500){const f=pick(quota.map((x,i)=>x>0?i:-1).filter(i=>i>=0));const fr=[];own.forEach((o,i)=>{if(o===f)adj[i].forEach(n=>{if(own[n]<0)fr.push(n);});});
-      if(!fr.length){ok=false;break;}own[pick(fr)]=f;quota[f]--;}
-    if(ok)return own;}
+    while(quota.some(x=>x>0)&&guard++<600){const f=pick(quota.map((x,i)=>x>0?i:-1).filter(i=>i>=0));const fr=[];own.forEach((o,i)=>{if(o===f)adj[i].forEach(n=>{if(own[n]<0)fr.push(n);});});
+      if(!fr.length){if(t<300){ok=false;break;}quota[f]=0;continue;}own[pick(fr)]=f;quota[f]--;}
+    if(!ok)continue;
+    if(fill){let g2=0;while(own.some(o=>o<0)&&g2++<50)own.forEach((o,i)=>{if(o<0){const n=adj[i].filter(j=>own[j]>=0);if(n.length)own[i]=own[pick(n)];}});}
+    return own;}
   return null;}
-function makeWorld(opt){opt=opt||{};const lv=k=>opt[k]|0;const ri=(a,b)=>a+Math.floor(R()*(b-a+1));
-  // 既定の初期領地：先頭は君主のいる城
+// 選べる項目
+const WOPT=[
+ {k:'map',n:'マップ',v:[['def','デフォルト'],['new','新大陸']]},
+ {k:'sub',n:'配下',v:[['def','デフォルト'],['rand','ランダム']]},
+ {k:'subn',n:'配下数',v:[['def','デフォルト'],['rand','ランダム']],need:o=>o.sub==='rand'},
+ {k:'size',n:'初期都市数',v:[['def','デフォルト'],['rand','ランダム']]},
+ {k:'blank',n:'空白地',v:[['def','デフォルト'],['few','少ない'],['none','なし']]},
+ {k:'nf',n:'国数',v:[['def','デフォルト'],['many','多い'],['max','最大']]},
+ {k:'scale',n:'都市規模',v:[['def','デフォルト'],['rand','ランダム']]}];
+function makeWorld(opt){opt=Object.assign({map:'def',sub:'def',subn:'def',size:'def',blank:'def',nf:'def',scale:'def'},opt||{});if(opt.sub!=='rand')opt.subn='def';
+  const ri=(a,b)=>a+Math.floor(R()*(b-a+1));
   const groups={};BASE_FIDS.forEach(f=>{const cap=START.hero.find(x=>x[0]===FAC[f].ruler)[2];groups[f]=[cap].concat(RIDS.filter(r=>START.reg[r][0]===f&&r!==cap));});
-  // 勢力の顔ぶれと、領地の広さ
-  let fids=BASE_FIDS.slice();
-  if(lv('swap')===2)fids=shuffle(BASE_FIDS.concat(Object.keys(EXFAC))).slice(0,ri(5,13));
-  const assign={};fids.forEach(f=>assign[f]=f);
-  if(lv('swap')===1){const p=shuffle(fids.slice());fids.forEach((f,i)=>assign[f]=p[i]);}
-  let sizes=fids.map(f=>groups[assign[f]]?groups[assign[f]].length:1);
-  if(lv('swap')===2){sizes=fids.map(()=>ri(1,3));while(sizes.reduce((a,b)=>a+b,0)>16){const i=sizes.findIndex(x=>x>1);if(i<0)break;sizes[i]--;}}
+  // 国数
+  const EX=Object.keys(EXFAC);let fids=BASE_FIDS.slice();
+  if(opt.nf==='many')fids=fids.concat(shuffle(EX.slice()).slice(0,ri(2,3)));else if(opt.nf==='max')fids=fids.concat(EX);
+  // 初期都市数と空白地
+  let sizes=fids.map(f=>opt.size==='rand'?ri(1,3):groups[f]?groups[f].length:1);
+  const sum=()=>sizes.reduce((a,b)=>a+b,0);
+  const blanks=opt.blank==='few'?3:opt.blank==='none'?0:Math.max(0,21-sum());const target=Math.max(fids.length,21-blanks);
+  let g=0;while(sum()>target&&g++<200){const i=pick(sizes.map((s,i)=>s>1?i:-1).filter(i=>i>=0));if(i===undefined)break;sizes[i]--;}
+  g=0;while(sum()<target&&g++<200){const i=Math.floor(R()*sizes.length);if(sizes[i]<6)sizes[i]++;}
+  const historic=opt.size==='def'&&opt.blank==='def'&&opt.nf==='def';
   let map=DEF_MAP,own={};RIDS.forEach(r=>own[r]=null);const lands={};
   const byDeg=(pts,adj)=>pts.sort((a,b)=>adj[b].length-adj[a].length);
-  if(lv('newland')){let C=null,cl=null;for(let k=0;k<20&&!cl;k++){C=genContinent();if(C)cl=growClusters(C.adj,sizes);}
-    if(!cl)return makeWorld(Object.assign({},opt,{newland:0}));
+  if(opt.map==='new'){let C=null,cl=null,adj=null;
+    for(let k=0;k<25&&!cl;k++){C=genContinent();if(!C)continue;adj=C.pts.map(()=>[]);C.edges.forEach(([a,b])=>{adj[a].push(b);adj[b].push(a);});cl=growClusters(adj,sizes,opt.blank==='none');}
+    if(!cl)return makeWorld(Object.assign({},opt,{map:'def'}));
     const ids=new Array(21);const used=new Set();
-    fids.forEach((f,fi)=>{const pts=byDeg(cl.map((o,i)=>o===fi?i:-1).filter(i=>i>=0),C.adj);const names=lv('swap')?null:groups[f];if(names)pts.forEach((p,k)=>{ids[p]=names[k];used.add(names[k]);});});
+    if(historic)fids.forEach((f,fi)=>{const pts=byDeg(cl.map((o,i)=>o===fi?i:-1).filter(i=>i>=0),adj);pts.forEach((p,k)=>{ids[p]=groups[f][k];used.add(groups[f][k]);});});
     const rest=shuffle(RIDS.filter(r=>!used.has(r)));cl.forEach((o,i)=>{if(!ids[i])ids[i]=rest.pop();});
-    fids.forEach((f,fi)=>{lands[f]=byDeg(cl.map((o,i)=>o===fi?i:-1).filter(i=>i>=0),C.adj).map(p=>ids[p]);});
-    const r1=v=>Math.round(v*10)/10;
-    map={seeds:C.pts.map((p,i)=>[ids[i],r1(p[0]),r1(p[1])]),out:C.out.map(p=>[r1(p[0]),r1(p[1])]),riv:C.riv,adj:C.edges.map(([a,b])=>ids[a]+'-'+ids[b]),pos:Object.fromEntries(C.pts.map((p,i)=>[ids[i],[r1(p[0]),r1(p[1])]]))};}
-  else if(lv('swap')===2){// いつもの大陸で、領地の固まりを作り直す
-    const ix={};RIDS.forEach((r,i)=>ix[r]=i);const adj=RIDS.map(()=>[]);DEF_MAP.adj.forEach(s=>{const[a,b]=s.split('-');adj[ix[a]].push(ix[b]);adj[ix[b]].push(ix[a]);});
-    const cl=growClusters(adj,sizes);if(!cl)return makeWorld(opt);
+    fids.forEach((f,fi)=>{lands[f]=byDeg(cl.map((o,i)=>o===fi?i:-1).filter(i=>i>=0),adj).map(p=>ids[p]);});
+    const r1=v=>Math.round(v*10)/10,R1=p=>[r1(p[0]),r1(p[1])];
+    const pos=Object.fromEntries(C.pts.map((p,i)=>[ids[i],R1(p)]));const adjL=C.edges.map(([a,b])=>ids[a]+'-'+ids[b]);const seaL=C.seaE.map(([a,b])=>ids[a]+'-'+ids[b]);
+    const reg={};C.pts.forEach((p,i)=>{const coast=!landAt(C.L,p[0]+7,p[1])||!landAt(C.L,p[0]-7,p[1])||!landAt(C.L,p[0],p[1]+7)||!landAt(C.L,p[0],p[1]-7);reg[ids[i]]=Object.assign(terrainOf(p,C,coast),{o:{}});});
+    // 大きな城と関所
+    RIDS.slice().sort((a,b)=>DEF_REG[b].cap-DEF_REG[a].cap).slice(0,5).forEach(r=>{if(reg[r].t==='plain'||reg[r].t==='river')Object.assign(reg[r],{t:'castle',k:reg[r].k,d:reg[r].d});});
+    map={seeds:C.pts.map((p,i)=>[ids[i]].concat(R1(p))),out:C.L.blobs[0].map(R1),land:{blobs:C.L.blobs.map(b=>b.map(R1)),lakes:C.L.lakes.map(b=>b.map(R1))},riv:C.riv.map(pl=>pl.map(R1)),mtn:C.mtn.map(pl=>pl.map(R1)),forest:C.forest.map(f=>f.map(r1)),
+      adj:adjL,pos,reg,shape:SHAPES[C.kind]};
+    map.et=edgeTypes(adjL,pos,map.riv,map.mtn,seaL);
+    adjL.forEach(k=>{const[a,b]=k.split('-');if(map.et[k]==='road'&&(reg[a].t==='mountain'&&reg[b].t==='mountain'))map.et[k]='mount';});}
+  else if(!historic){const ix={};RIDS.forEach((r,i)=>ix[r]=i);const adj=RIDS.map(()=>[]);DEF_MAP.adj.forEach(s=>{const[a,b]=s.split('-');adj[ix[a]].push(ix[b]);adj[ix[b]].push(ix[a]);});
+    const cl=growClusters(adj,sizes,opt.blank==='none');if(!cl)return makeWorld(opt);
     fids.forEach((f,fi)=>{lands[f]=byDeg(cl.map((o,i)=>o===fi?i:-1).filter(i=>i>=0),adj).map(i=>RIDS[i]);});}
-  else fids.forEach(f=>lands[f]=groups[assign[f]].slice());
+  else fids.forEach(f=>lands[f]=groups[f].slice());
   fids.forEach(f=>lands[f].forEach(r=>own[r]=f));
-  // 新大陸＋：城の豊かさと地形
-  if(lv('newland')===2){const TT=[{t:'castle',k:'plain',d:'plain'},{t:'plain',k:'plain',d:'plain'},{t:'forest',k:'forest',d:'night'},{t:'river',k:'river',d:'river'},{t:'yangtze',k:'river',d:'river'},{t:'hills',k:'hills',d:'desert'},{t:'mountain',k:'mountain',d:'mountain'},{t:'gate',k:'valley',d:'night'},{t:'plain',k:'plain',d:'snow'}];
-    map=Object.assign({},map,{reg:Object.fromEntries(RIDS.map(r=>{const T=pick(TT);return [r,{cap:Math.round(DEF_REG[r].cap*rf(.55,1.6)/1000)*1000,t:T.t,k:T.k,d:T.d,o:{}}];}))});}
-  // 武将の配置
+  // 都市規模
+  if(opt.scale==='rand'){map=Object.assign({},map,{reg:Object.assign({},map.reg||{})});RIDS.forEach(r=>{map.reg[r]=Object.assign({},map.reg[r]||{},{cap:Math.round(DEF_REG[r].cap*rf(.55,1.6)/1000)*1000});});}
+  // 武将
   const neu=()=>RIDS.filter(r=>!own[r]);const rulers=new Set(fids.map(f=>FAC[f].ruler));
   const place={};fids.forEach(f=>place[FAC[f].ruler]=[f,lands[f][0]]);
   START.hero.forEach(([id,f,loc])=>{if(rulers.has(id))return;
     if(f&&fids.includes(f)){const k=Math.max(0,groups[f].indexOf(loc));const L=lands[f];place[id]=[f,L[k%L.length]];}
     else if(f){const n=neu();place[id]=n.length&&R()<.5?['none',pick(n)]:[null,pick(RIDS)];}
-    else{const n=neu();place[id]=own[loc]?(n.length?['none',pick(n)]:[null,loc]):['none',loc];}});
+    else{const n=neu();place[id]=own[loc]?(n.length?['none',pick(n)]:[null,pick(RIDS)]):['none',loc];}});
   START.free.forEach(([id,loc])=>{if(!rulers.has(id))place[id]=[null,loc];});
-  // 新しく旗を揚げた勢力には、在野から何人か仕える
   fids.filter(f=>EXFAC[f]).forEach(f=>{const fr=shuffle(Object.keys(place).filter(id=>place[id][0]===null));fr.slice(0,ri(1,3)).forEach(id=>place[id]=[f,pick(lands[f])]);});
-  if(lv('mix')===1){const ids=Object.keys(place).filter(id=>!rulers.has(id));const slots=ids.map(id=>place[id]);const sh=shuffle(ids.slice());sh.forEach((id,i)=>place[id]=slots[i]);}
-  else if(lv('mix')===2){const pool=shuffle(Object.keys(place).filter(id=>!rulers.has(id)));
+  if(opt.sub==='rand'&&opt.subn==='def'){const ids=Object.keys(place).filter(id=>!rulers.has(id));const slots=ids.map(id=>place[id]);const sh=shuffle(ids.slice());sh.forEach((id,i)=>place[id]=slots[i]);}
+  else if(opt.sub==='rand'){const pool=shuffle(Object.keys(place).filter(id=>!rulers.has(id)));
     fids.forEach(f=>{const n=ri(0,6);for(let i=0;i<n&&pool.length;i++)place[pool.pop()]=[f,pick(lands[f])];});
     neu().forEach(r=>{const n=ri(0,2);for(let i=0;i<n&&pool.length;i++)place[pool.pop()]=['none',r];});
     while(pool.length)place[pool.pop()]=[null,pick(RIDS)];}
-  return {opt:Object.assign({},opt),fids,map,own,place};}
+  // 物語の文言用
+  opt.newland=opt.map==='new';opt.swap=!historic;opt.mix=opt.sub==='rand';
+  return {opt,fids,map,own,place};}
 
 /* ================= 状態 ================= */
 const SKEY='sangoku-haou-v1';
@@ -241,7 +290,7 @@ const BW=1000,BH=900;
 let GRID=null,BASE=null,BCTX=null,RIDX={};
 const view={s:1,ox:0,oy:0,fit:1};
 const UIS={mode:'',sel:null,targets:[],arrows:[],pulse:0};
-function mapInOut(x,y){let c=false;const P=MAP_OUT;for(let i=0,j=P.length-1;i<P.length;j=i++){const a=P[i],b=P[j];if((a[1]>y)!==(b[1]>y)&&x<(b[0]-a[0])*(y-a[1])/(b[1]-a[1])+a[0])c=!c;}return c;}
+function mapInOut(x,y){return landAt(LAND,x,y);}
 function buildGrid(){GRID=new Int8Array(BW*BH);RIDS.forEach((r,i)=>RIDX[r]=i);
   for(let py=0;py<BH;py++)for(let px=0;px<BW;px++){const x=px/BW*100,y=py/BH*90;if(!mapInOut(x,y)){GRID[py*BW+px]=-1;continue;}
     const nx=x+2.2*Math.sin(y*.45)+1.3*Math.sin(y*1.3+x*.2),ny=y+2.2*Math.cos(x*.4)+1.2*Math.sin(x*1.1);let b=0,bd=1e9;
@@ -249,19 +298,31 @@ function buildGrid(){GRID=new Int8Array(BW*BH);RIDS.forEach((r,i)=>RIDX[r]=i);
     GRID[py*BW+px]=RIDX[MAP_SEEDS[b][0]];}
   BASE=document.createElement('canvas');BASE.width=BW;BASE.height=BH;BCTX=BASE.getContext('2d');}
 function hexRgb(h){const n=parseInt(h.slice(1),16);return [n>>16,n>>8&255,n&255];}
+const TGL={castle:'城',gate:'関',plain:'平',river:'川',yangtze:'江',hills:'丘',mountain:'山',forest:'森'};
+function glyphMtn(x,cx,cy,s_){x.fillStyle='#8a7a62';x.strokeStyle='#4a3a28';x.lineWidth=1.6;x.beginPath();x.moveTo(cx-s_,cy+s_*.6);x.lineTo(cx,cy-s_);x.lineTo(cx+s_,cy+s_*.6);x.closePath();x.fill();x.stroke();
+  x.fillStyle='#f0ece0';x.beginPath();x.moveTo(cx-s_*.32,cy-s_*.36);x.lineTo(cx,cy-s_);x.lineTo(cx+s_*.32,cy-s_*.36);x.closePath();x.fill();}
+function glyphTree(x,cx,cy,s_){x.fillStyle='#4a3020';x.fillRect(cx-1.2,cy,2.4,s_*.7);x.fillStyle='#3f6a32';x.strokeStyle='#22401c';x.lineWidth=1.2;x.beginPath();x.arc(cx,cy-s_*.2,s_*.62,0,7);x.fill();x.stroke();}
+function glyphHill(x,cx,cy,s_){x.fillStyle='#a89060';x.strokeStyle='#5a4a2a';x.lineWidth=1.4;x.beginPath();x.moveTo(cx-s_,cy+s_*.4);x.quadraticCurveTo(cx,cy-s_*.9,cx+s_,cy+s_*.4);x.closePath();x.fill();x.stroke();}
 function paintBase(){const W=BW,Hh=BH,x=BCTX,g=GRID;const img=x.createImageData(W,Hh),a=img.data;
   const cols=RIDS.map(r=>{const c=hexRgb(facCol(S.reg[r].o));const p=[228,214,180];const k=S.reg[r].o?.62:0;return [c[0]*k+p[0]*(1-k),c[1]*k+p[1]*(1-k),c[2]*k+p[2]*(1-k)];});
-  for(let i=0;i<W*Hh;i++){const s=g[i],o=i*4;const px=i%W,py=i/W|0;const n=((px*13+py*7)%11)/11*12+((px*7+py*3)%5)*1.5;
-    if(s<0){a[o]=150+n;a[o+1]=176+n;a[o+2]=178+n;a[o+3]=255;continue;}
-    const c=cols[s];const l=px>0?g[i-1]:s,u=py>0?g[i-W]:s;
-    let k=1;if((l>=0&&l!==s)||(u>=0&&u!==s)){k=S.reg[RIDS[l>=0&&l!==s?l:u]].o!==S.reg[RIDS[s]].o?.4:.78;}
+  for(let i=0;i<W*Hh;i++){const s_=g[i],o=i*4;const px=i%W,py=i/W|0;const n=((px*13+py*7)%11)/11*12+((px*7+py*3)%5)*1.5;
+    if(s_<0){const near=(px>1&&g[i-2]>=0)||(px<W-2&&g[i+2]>=0)||(py>1&&g[i-2*W]>=0)||(py<Hh-2&&g[i+2*W]>=0);a[o]=(near?120:150)+n;a[o+1]=(near?160:176)+n;a[o+2]=(near?176:178)+n;a[o+3]=255;continue;}
+    const c=cols[s_];const l=px>0?g[i-1]:s_,u=py>0?g[i-W]:s_,rr=px<W-1?g[i+1]:s_,d=py<Hh-1?g[i+W]:s_;
+    let k=1;if(l<0||u<0||rr<0||d<0)k=.3;else if(l!==s_||u!==s_){k=S.reg[RIDS[l!==s_?l:u]].o!==S.reg[RIDS[s_]].o?.4:.78;}
     a[o]=c[0]*k+n;a[o+1]=c[1]*k+n;a[o+2]=c[2]*k+n;a[o+3]=255;}
   x.putImageData(img,0,0);
   const sx=W/100,sy=Hh/90;x.lineCap='round';x.lineJoin='round';
-  MAP_RIV.forEach(r=>{x.strokeStyle='rgba(40,90,140,.7)';x.lineWidth=5;x.beginPath();r.forEach((p,i)=>i?x.lineTo(p[0]*sx,p[1]*sy):x.moveTo(p[0]*sx,p[1]*sy));x.stroke();});
-  x.strokeStyle='#3a2410';x.lineWidth=3;x.beginPath();MAP_OUT.forEach((p,i)=>i?x.lineTo(p[0]*sx,p[1]*sy):x.moveTo(p[0]*sx,p[1]*sy));x.closePath();x.stroke();
+  MAP_RIV.forEach(r=>{x.strokeStyle='rgba(30,80,140,.8)';x.lineWidth=6;x.beginPath();r.forEach((p,i)=>i?x.lineTo(p[0]*sx,p[1]*sy):x.moveTo(p[0]*sx,p[1]*sy));x.stroke();});
+  // 地形の絵
+  const R0=mulb(7);
+  if(MAP_MTN.length||MAP_FOR.length){MAP_FOR.forEach(f=>{for(let k=0;k<Math.round(f[2]*1.6);k++){const a_=R0()*6.28,d=Math.sqrt(R0())*f[2];const X=f[0]+Math.cos(a_)*d,Y=f[1]+Math.sin(a_)*d;if(mapInOut(X,Y)&&RIDS.every(r=>Math.hypot(REG[r].x-X,REG[r].y-Y)>4.5))glyphTree(x,X*sx,Y*sy,9);}});
+    MAP_MTN.forEach(pl=>{for(let i=0;i<pl.length-1;i++){const A=pl[i],B=pl[i+1],n=Math.max(2,Math.round(Math.hypot(B[0]-A[0],B[1]-A[1])/2.6));for(let j=0;j<=n;j++){const t=j/n,X=A[0]+(B[0]-A[0])*t+(R0()-.5)*2,Y=A[1]+(B[1]-A[1])*t+(R0()-.5)*2;if(mapInOut(X,Y)&&RIDS.every(r=>Math.hypot(REG[r].x-X,REG[r].y-Y)>4))glyphMtn(x,X*sx,Y*sy,13+R0()*5);}}});}
+  RIDS.forEach(r=>{const t=REG[r].t,cx=REG[r].x,cy=REG[r].y;const spots=[[-5.5,-2.5],[5.5,-2.5],[-6,2],[6,2]];
+    spots.forEach(([dx,dy],k)=>{const X=cx+dx,Y=cy+dy;if(!mapInOut(X,Y)||k>=(t==='plain'||t==='castle'?0:t==='river'||t==='yangtze'?0:4))return;
+      if(t==='mountain'||t==='gate')glyphMtn(x,X*sx,Y*sy,12);else if(t==='hills')glyphHill(x,X*sx,Y*sy,11);else if(t==='forest')glyphTree(x,X*sx,Y*sy,9);});});
   x.textAlign='center';x.textBaseline='middle';x.font='700 22px "Yuji Syuku",serif';
-  RIDS.forEach(r=>{const R_=REG[r];x.fillStyle='rgba(40,24,10,.38)';x.fillText(R_.n,R_.x*sx,(R_.y-5.2)*sy);});}
+  if(!(S.map&&S.map.land))RIDS.forEach(r=>{const R_=REG[r];x.fillStyle='rgba(40,24,10,.38)';x.fillText(R_.n,R_.x*sx,(R_.y-5.2)*sy);});}
+function mulb(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
 function fitView(){const cv=$('#map');const w=cv.clientWidth,h=cv.clientHeight;view.fit=Math.min(w/BW,h/BH);if(!view.init){view.s=1;view.ox=(w-BW*view.fit)/2;view.oy=(h-BH*view.fit)/2;view.init=1;}}
 function toScr(x,y){const k=view.fit*view.s;return [view.ox+x*k,view.oy+y*k];}
 function toBase(X,Y){const k=view.fit*view.s;return [(X-view.ox)/k,(Y-view.oy)/k];}
@@ -272,8 +333,12 @@ function draw(){const cv=$('#map');const dpr=Math.min(2,devicePixelRatio||1);con
   const k=view.fit*view.s;x.save();x.translate(view.ox,view.oy);x.scale(k,k);x.imageSmoothingEnabled=true;x.drawImage(BASE,0,0);
   const sx=BW/100,sy=BH/90;
   // roads
-  x.setLineDash([6,7]);x.lineWidth=2.2;x.strokeStyle='rgba(70,44,20,.45)';
-  ADJ_L.forEach(s=>{const[a,b]=s.split('-');x.beginPath();x.moveTo(REG[a].x*sx,REG[a].y*sy);x.lineTo(REG[b].x*sx,REG[b].y*sy);x.stroke();});x.setLineDash([]);
+  const RS={road:['#5a3a1a',[12,7]],river:['#1f5f9e',[12,7]],mount:['#5a5a5a',[5,5]],sea:['#0f4a8a',[3,9]]};
+  ADJ_L.forEach(s_=>{const[a,b]=s_.split('-');const tp=ET[s_]||'road';const hi=UIS.sel&&(a===UIS.sel||b===UIS.sel);const A=[REG[a].x*sx,REG[a].y*sy],B=[REG[b].x*sx,REG[b].y*sy];
+    x.setLineDash([]);x.strokeStyle=hi?'rgba(255,240,180,.95)':'rgba(255,248,230,.55)';x.lineWidth=hi?12:8;x.beginPath();x.moveTo(A[0],A[1]);x.lineTo(B[0],B[1]);x.stroke();
+    x.setLineDash(RS[tp][1]);x.strokeStyle=RS[tp][0];x.lineWidth=hi?6:4.2;x.beginPath();x.moveTo(A[0],A[1]);x.lineTo(B[0],B[1]);x.stroke();x.setLineDash([]);
+    if(tp!=='road'){const mx=(A[0]+B[0])/2,my=(A[1]+B[1])/2;x.fillStyle='rgba(255,250,235,.92)';x.strokeStyle=RS[tp][0];x.lineWidth=2;x.beginPath();x.arc(mx,my,14,0,7);x.fill();x.stroke();
+      x.fillStyle=RS[tp][0];x.font='700 17px "BIZ UDPGothic",sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText(tp==='sea'?'舟':tp==='river'?'渡':'峠',mx,my+.5);}});
   const t=performance.now()/1000;
   // targets
   UIS.targets.forEach(r=>{const p=[REG[r].x*sx,REG[r].y*sy];x.strokeStyle='rgba(220,40,20,'+(.6+.4*Math.sin(t*5))+')';x.lineWidth=5;x.beginPath();x.arc(p[0],p[1],34+3*Math.sin(t*5),0,7);x.stroke();});
@@ -289,6 +354,7 @@ function draw(){const cv=$('#map');const dpr=Math.min(2,devicePixelRatio||1);con
     x.fillStyle=o?facCol(o):'#9a8a68';x.strokeStyle=mine?'#ffe08a':'#20140a';x.lineWidth=mine?4:2.5;x.beginPath();x.arc(cx,cy,19,0,7);x.fill();x.stroke();
     x.fillStyle='#fff';x.font='400 24px "Yuji Syuku",serif';x.textAlign='center';x.textBaseline='middle';x.fillText(o?FAC[o].ch:'城',cx,cy+1);
     x.font='700 17px "BIZ UDPGothic",sans-serif';x.lineWidth=4;x.strokeStyle='rgba(255,250,235,.92)';x.strokeText(R_.c,cx,cy+33);x.fillStyle='#24160a';x.fillText(R_.c,cx,cy+33);
+    {const tc={castle:'#7a1c12',gate:'#4a4a52',plain:'#6a5a2a',river:'#1f5f9e',yangtze:'#0f4a8a',hills:'#7a5a2a',mountain:'#4a4a4a',forest:'#2f5a2a'}[R_.t]||'#555';x.fillStyle=tc;x.strokeStyle='#fff';x.lineWidth=2;x.fillRect(cx-44,cy-27,24,24);x.strokeRect(cx-44,cy-27,24,24);x.fillStyle='#fff';x.font='700 17px "BIZ UDPGothic",sans-serif';x.fillText(TGL[R_.t]||'',cx-32,cy-14.5);}
     const nh=heroesAt(r).length;const lab=man(S.reg[r].tr)+(nh?' 将'+nh:'')+' 壁'+(S.reg[r].wall||0);x.font='700 14px "BIZ UDPGothic",sans-serif';const tw=x.measureText(lab).width+12;
     x.fillStyle='rgba(20,12,6,.78)';x.fillRect(cx-tw/2,cy+43,tw,19);x.fillStyle=mine?'#ffe08a':'#f2e6c8';x.fillText(lab,cx,cy+53);
     if(freeAt(r).length&&mine){x.fillStyle='#7fd08e';x.beginPath();x.arc(cx+20,cy-16,7,0,7);x.fill();x.fillStyle='#062';x.font='700 11px sans-serif';x.fillText('才',cx+20,cy-15.5);}});
@@ -356,7 +422,7 @@ function tapRegion(r){if(!r||!S)return;try{SND.click();}catch(_){}
 function regionSheet(r){const R_=REG[r],o=S.reg[r].o,mine=o===S.me;
   const hs=heroesAt(r);const fr=freeAt(r);
   let b='<div class="card"><div class="row" style="justify-content:space-between"><h3 style="margin:0">'+R_.n+' ・ '+R_.c+'</h3><span class="pill" style="border-color:'+facCol(o)+'"><i>'+(o?FAC[o].ch:'')+'</i>'+facName(o)+'</span></div>'+
-    '<dl class="kv" style="margin-top:6px"><dt>兵</dt><dd>'+man(S.reg[r].tr)+' / '+man(R_.cap)+(mine&&S.reg[r].inj?' <small class="muted">（負傷 '+man(S.reg[r].inj)+' が次の季節に戻る）</small>':'')+'</dd><dt>地形</dt><dd>'+({castle:'城',gate:'関所',plain:'平原',river:'川',yangtze:'長江',hills:'丘',mountain:'山',forest:'森'})[R_.t]+'</dd><dt>隣</dt><dd>'+ADJ[r].map(n=>'<span style="color:'+facCol(S.reg[n].o)+';filter:brightness(1.4)">'+REG[n].c+'</span>').join('・')+'</dd></dl></div>';
+    '<dl class="kv" style="margin-top:6px"><dt>兵</dt><dd>'+man(S.reg[r].tr)+' / '+man(R_.cap)+(mine&&S.reg[r].inj?' <small class="muted">（負傷 '+man(S.reg[r].inj)+' が次の季節に戻る）</small>':'')+'</dd><dt>地形</dt><dd>'+({castle:'城',gate:'関所',plain:'平原',river:'川',yangtze:'長江',hills:'丘',mountain:'山',forest:'森'})[R_.t]+'</dd><dt>隣</dt><dd>'+ADJ[r].map(n=>{const tp=edgeOf(r,n);return '<span style="color:'+facCol(S.reg[n].o)+';filter:brightness(1.4)">'+REG[n].c+'</span>'+(tp!=='road'?'<small class="muted">（'+({river:'渡河',mount:'峠',sea:'海路'})[tp]+'）</small>':'');}).join('・')+'</dd></dl></div>';
   b+='<h3 class="sec">武将</h3>'+(hs.length?'<div class="grid">'+hs.map(id=>heroCard(id,{tag:id===rulerOf(o)?'君主':S.hero[id].tired?'疲労':'',tagR:id===rulerOf(o)})).join('')+'</div>':'<p class="muted" style="margin:0">'+(o?'武将はいない':'土地の兵が守っている')+'</p>');
   b+=fortHtml(r,mine);
   if(mine&&fr.length)b+='<h3 class="sec">在野の人材</h3><div class="grid">'+fr.map(id=>heroCard(id,{btn:true,sub:'登用を試せる'})).join('')+'</div>';
@@ -437,7 +503,8 @@ function chooseMode(B,me,foe){return new Promise(res=>{
   const as=strength(B.atk,B.atkTr,false),ds=strength(B.def,B.defTr,true,B.target);const p=mySide==='atk'?winP(as,ds):1-winP(as,ds);
   const fF=mySide==='atk'?B.defF:B.atkF;const g=S.reg[B.target];
   const fortTxt='城壁Lv'+g.wall+(g.bld.length?' ・ '+g.bld.map(x=>FB[x.t].n+x.lv).join('・'):' ・ 施設なし');
-  const sit={field:['野戦','敵は城を出て迎え撃ってきた。'],siege:['攻城戦','敵は城に籠もった。'+fortTxt],def:['敵襲','籠城して守るか、打って出るか。'+fortTxt]}[B.kind];
+  const via=B.src?edgeOf(B.src,B.target):'road';const viaT={river:'川を挟んでの戦い。',mount:'峠道での戦い。',sea:'海を渡っての戦い。'}[via]||'';
+  const sit={field:['野戦','敵は城を出て迎え撃ってきた。'+viaT],siege:['攻城戦','敵は城に籠もった。'+fortTxt],def:['敵襲','籠城して守るか、打って出るか。'+fortTxt]}[B.kind];
   let b='<div class="card"><h3>'+REG[B.target].c+' ― '+sit[0]+'</h3><p style="margin:0 0 6px">'+sit[1]+'</p><div class="row" style="justify-content:space-between;align-items:flex-start;gap:12px">'+
     '<div style="flex:1;min-width:130px"><b style="color:var(--me)">'+FAC[S.me].n+'</b><br><small class="muted">兵 '+man(myTr)+'<br>'+(me.map(id=>HB(id).n).join('・')||'武将なし')+'</small></div>'+
     '<div style="flex:1;min-width:130px;text-align:right"><b style="color:var(--foe)">'+facName(fF)+'</b><br><small class="muted">兵 '+man(foeTr)+'<br>'+(foe.map(id=>HB(id).n).join('・')||'武将なし')+'</small></div></div>'+
@@ -514,7 +581,7 @@ async function runKessen(B,me,foe,kind){const myTr=B.player==='atk'?B.atkTr:B.de
   const g=S.reg[B.target];const fort=kind==='siege'||kind==='td'?{side:kind==='td'?0:1,wall:g.wall,hon:g.wall,blds:g.bld.map((x,i)=>({t:x.t,lv:x.lv,i}))}:null;
   const nm=REG[B.target].c+(kind==='siege'?'攻め':kind==='td'?'籠城戦':'の戦い');
   const desc=kind==='siege'?FAC[S.me].n+'は'+REG[B.target].c+'を囲んだ。城壁を破り、本陣を落とすか敵総大将を討て。':kind==='td'?facName(B.atkF)+'が'+REG[B.target].c+'に攻め寄せた。城壁と施設で4分守り抜くか、敵総大将を討て。本陣が落ちれば負け。':(B.player==='atk'?FAC[S.me].n+'が'+REG[B.target].c+'へ攻め込む。':facName(B.atkF)+'が'+REG[B.target].c+'へ攻め寄せてきた。')+'敵総大将を討てば勝ち。';
-  const msg={t:'war',id:++FID,n:nm,p:REG[B.target].n,y:S.year,fac:FAC[S.me].dk,ter:fort?'plain':REG[B.target].k,d:desc,total,maxU:Math.min(5,me.length),limit:kind==='td'?240:kind==='siege'?420:390,cond:kind==='td'?'survive':'kill',fg,fort,
+  const msg={t:'war',id:++FID,n:nm,p:REG[B.target].n,y:S.year,fac:FAC[S.me].dk,ter:fort?'plain':(({river:'river',mount:'mountain',sea:'river'})[B.src?edgeOf(B.src,B.target):'']||REG[B.target].k),d:desc,total,maxU:Math.min(5,me.length),limit:kind==='td'?240:kind==='siege'?420:390,cond:kind==='td'?'survive':'kill',fg,fort,
     me:me.slice().sort((a,b)=>(b===rulerOf(S.me))-(a===rulerOf(S.me))).map(id=>({id,lv:S.hero[id].lv})),foe:fl};
   const m=await frameRun('kessen.html','warReady',msg,['warEnd','warCancel'],(kind==='siege'?'攻城 ― ':kind==='td'?'籠城 ― ':'決戦 ― ')+REG[B.target].c,me[0],foe[0]);
   if(m.t==='warCancel')return null;
@@ -529,7 +596,7 @@ async function runTac(B,me,foe){const myTr=B.player==='atk'?B.atkTr:B.defTr,foeT
   const myA=alloc(party,myTr),foA=alloc(fs,foeTr);
   let fstr=fs.length?fs.map((id,i)=>(i===0?'*':'')+(HB(id).p>=98?'!':'')+id+':'+tjob(id)).join(' '):'*g:knight g:yumi g:senshi';
   const sold=fF&&FAC[fF]?FAC[fF].sold:NEUTRAL.sold;
-  const msg={t:'tac',id:++FID,n:REG[B.target].c,y:S.year,p:REG[B.target].n,map:({castle:REG[B.target].k==='river'?'river':'plain',gate:'hills'})[REG[B.target].t]||REG[B.target].t,opt:REG[B.target].t==='castle'||REG[B.target].t==='gate'?{}:(REG[B.target].o||{}),side:B.player==='atk'?'atk':'def',
+  const msg={t:'tac',id:++FID,n:REG[B.target].c,y:S.year,p:REG[B.target].n,map:(({river:'river',mount:'mountain',sea:'yangtze'})[B.src?edgeOf(B.src,B.target):''])||({castle:REG[B.target].k==='river'?'river':'plain',gate:'hills'})[REG[B.target].t]||REG[B.target].t,opt:REG[B.target].t==='castle'||REG[B.target].t==='gate'?{}:(REG[B.target].o||{}),side:B.player==='atk'?'atk':'def',
     fname:FAC[S.me].n,fcol:FAC[S.me].col,fch:FAC[S.me].ch,ef:sold,ech:fF&&FAC[fF]?FAC[fF].ch:'郷',ecol:facCol(fF),
     party:party.map(id=>({id,lv:S.hero[id].lv,tr:myA.per[id]})),foeTr:foA.per,foe:fstr,s:(B.player==='atk'?FAC[S.me].n+'は'+REG[B.target].c+'へ攻め込んだ。':facName(fF)+'が'+REG[B.target].c+'に攻め寄せた。')+'敵の総大将を倒せば勝ち。'};
   const m=await frameRun('tactics.html','tacReady',msg,['tacEnd','tacCancel'],'戦術戦 ― '+REG[B.target].c,party[0],fs[0]);
@@ -880,7 +947,7 @@ function rateWorld(W){const adj={};RIDS.forEach(r=>adj[r]=[]);W.map.adj.forEach(
   W.fids.forEach(f=>{const k=out[f].score/med;const L=k>=1.4?['やさしい','#3a7a2a',1]:k>=.85?['ふつう','#2a5a8a',2]:k>=.6?['むずかしい','#8a3a12',3]:['至難','#5a0a0a',4];
     out[f].lab=L[0];out[f].col=L[1];out[f].lv=L[2];});
   return out;}
-let DRAFT=null;const DOPT={swap:0,mix:0,newland:0};
+let DRAFT=null;const DOPT={map:'def',sub:'def',subn:'def',size:'def',blank:'def',nf:'def',scale:'def'};
 function drawPreview(cv,W){applyMap(W.map);const w=300,h=270;cv.width=w;cv.height=h;const x=cv.getContext('2d');const img=x.createImageData(w,h),a=img.data;const gd=new Int8Array(w*h);
   const RI={};RIDS.forEach((r,i)=>RI[r]=i);
   for(let py=0;py<h;py++)for(let px=0;px<w;px++){const X=px/w*100,Y=py/h*90;let g=-1;
@@ -888,18 +955,22 @@ function drawPreview(cv,W){applyMap(W.map);const w=300,h=270;cv.width=w;cv.heigh
     gd[py*w+px]=g;}
   for(let i=0;i<w*h;i++){const g=gd[i],o=i*4;if(g<0){a[o]=150;a[o+1]=176;a[o+2]=178;a[o+3]=255;continue;}
     const f=W.own[RIDS[g]];const c=hexRgb(facCol(f));const k=f?.68:0;const l=i%w?gd[i-1]:g,u=i>=w?gd[i-w]:g;const e=(l>=0&&l!==g)||(u>=0&&u!==g)?(W.own[RIDS[l>=0&&l!==g?l:u]]!==f?.45:.8):1;
-    a[o]=(c[0]*k+228*(1-k))*e;a[o+1]=(c[1]*k+214*(1-k))*e;a[o+2]=(c[2]*k+180*(1-k))*e;a[o+3]=255;}
+    const cst=(i%w&&gd[i-1]<0)||(i>=w&&gd[i-w]<0)||(i%w<w-1&&gd[i+1]<0)||(i<w*(h-1)&&gd[i+w]<0)?.35:1;
+    a[o]=(c[0]*k+228*(1-k))*e*cst;a[o+1]=(c[1]*k+214*(1-k))*e*cst;a[o+2]=(c[2]*k+180*(1-k))*e*cst;a[o+3]=255;}
   x.putImageData(img,0,0);const sx=w/100,sy=h/90;
   x.strokeStyle='rgba(40,90,140,.75)';x.lineWidth=2;MAP_RIV.forEach(r=>{x.beginPath();r.forEach((p,i)=>i?x.lineTo(p[0]*sx,p[1]*sy):x.moveTo(p[0]*sx,p[1]*sy));x.stroke();});
-  x.strokeStyle='#3a2410';x.lineWidth=1.5;x.beginPath();MAP_OUT.forEach((p,i)=>i?x.lineTo(p[0]*sx,p[1]*sy):x.moveTo(p[0]*sx,p[1]*sy));x.closePath();x.stroke();
   x.textAlign='center';x.textBaseline='middle';
+  MAP_MTN.forEach(pl=>{for(let i=0;i<pl.length-1;i++){const A=pl[i],B=pl[i+1];for(let t=0;t<=1;t+=.34){const X=(A[0]+(B[0]-A[0])*t)*sx,Y=(A[1]+(B[1]-A[1])*t)*sy;x.fillStyle='#7a6a52';x.beginPath();x.moveTo(X-5,Y+3);x.lineTo(X,Y-5);x.lineTo(X+5,Y+3);x.fill();}}});
+  ADJ_L.forEach(k=>{const[a,b]=k.split('-');const tp=ET[k]||'road';x.strokeStyle={road:'rgba(70,40,15,.8)',river:'#1f5f9e',mount:'#555',sea:'#0f4a8a'}[tp];x.lineWidth=1.6;x.setLineDash(tp==='sea'?[2,4]:tp==='mount'?[3,3]:[5,3]);x.beginPath();x.moveTo(REG[a].x*sx,REG[a].y*sy);x.lineTo(REG[b].x*sx,REG[b].y*sy);x.stroke();});x.setLineDash([]);
   RIDS.forEach(r=>{const f=W.own[r];const cx=REG[r].x*sx,cy=REG[r].y*sy;x.fillStyle=f?FAC[f].col:'#9a8a68';x.strokeStyle='#20140a';x.lineWidth=1.5;x.beginPath();x.arc(cx,cy,f?8:5,0,7);x.fill();x.stroke();
     if(f){x.fillStyle='#fff';x.font='12px "Yuji Syuku",serif';x.fillText(FAC[f].ch,cx,cy+.5);}x.font='700 9px sans-serif';x.lineWidth=3;x.strokeStyle='rgba(255,250,235,.9)';x.strokeText(REG[r].c,cx,cy+13);x.fillStyle='#24160a';x.fillText(REG[r].c,cx,cy+13);});}
 function lordSelect(reroll){const T=$('#title');if(!DRAFT||reroll)DRAFT=makeWorld(DOPT);const W=DRAFT;
-  const tg=(k,n,d,d2)=>{const v=DOPT[k];return '<button type="button" class="lordc" data-o="'+k+'" style="--c:'+(v?'#d8ac4c':'#6e4f26')+';--d:#8a1e12;grid-template-columns:1fr;padding:7px 10px;'+(v===2?'background:var(--tex-wood),linear-gradient(#a8281c,#5e100a);box-shadow:inset 0 0 0 1px #000,inset 0 0 0 2px #e6c06a':v?'background:var(--tex-wood),linear-gradient(#6a2318,#3a120c)':'')+'"><div><b style="font-size:18px">'+(v?'■ ':'□ ')+n+(v===2?'＋':'')+'</b><small>'+(v===2?d2:d)+'</small></div></button>';};
+  const row=o=>{const dis=o.need&&!o.need(DOPT);return '<div class="row" style="flex-wrap:nowrap;gap:6px;width:100%;opacity:'+(dis?'.4':'1')+'"><b style="flex:0 0 5.4em;font-family:var(--f-disp);font-weight:400;color:#f4e6c4;font-size:15px;text-shadow:0 1px 3px #000">'+o.n+'</b><div class="row" style="gap:4px;flex:1">'+
+    o.v.map(([v,l])=>'<button type="button" class="btn sm'+((DOPT[o.k]===v||(dis&&v==='def'))?' pri':'')+'" data-k="'+o.k+'" data-v="'+v+'"'+(dis?' disabled':'')+' style="flex:1;min-width:0;font-size:12px;padding:3px 2px;white-space:nowrap;letter-spacing:0">'+l+'</button>').join('')+'</div></div>';};
   let h='<canvas></canvas><div class="in" style="justify-content:flex-start"><div class="eye">西暦一九四年 ・ 群雄割拠</div><h1 style="font-size:clamp(36px,10vw,64px)">天下を引く</h1>'+
-    '<div class="lords" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));width:min(720px,100%)">'+tg('swap','国替','勢力どうしで初期の領地を入れ替える','勢力の数（5〜13）と領地の広さもランダム。張角・張繍・皇甫嵩・蹋頓・紀霊が旗を揚げることも')+tg('mix','配下シャッフル','君主以外の武将をすべて配り直す','配下の人数も勢力ごとにランダム（0〜6人）')+tg('newland','新大陸','毎回ちがう形の大陸に21都市が並ぶ','城ごとの豊かさ（兵の上限）と地形もランダム')+'</div><small style="color:#f4e6c4;text-shadow:0 1px 3px #000">もう一度押すと「＋」（ランダム追加）、三度押すとオフ。勢力 '+W.fids.length+'</small>'+
-    '<div style="display:flex;flex-direction:column;align-items:center;gap:8px"><canvas id="pv" style="width:min(340px,88vw);height:auto;aspect-ratio:300/270;border:3px solid #6a4a22;box-shadow:0 0 0 1px #c9a23c,0 8px 24px rgba(0,0,0,.6)"></canvas>'+
+    '<div class="card" style="width:min(560px,100%);display:flex;flex-direction:column;gap:6px;background:var(--tex-wood),rgba(30,18,9,.9)">'+WOPT.map(row).join('')+'</div>'+
+    '<div style="display:flex;flex-direction:column;align-items:center;gap:6px"><canvas id="pv" style="width:min(340px,88vw);height:auto;aspect-ratio:300/270;border:3px solid #6a4a22;box-shadow:0 0 0 1px #c9a23c,0 8px 24px rgba(0,0,0,.6)"></canvas>'+
+    '<small style="color:#f4e6c4;text-shadow:0 1px 3px #000">'+(W.map.shape?W.map.shape+' ・ ':'')+'勢力 '+W.fids.length+' ・ 空白地 '+RIDS.filter(r=>!W.own[r]).length+'</small>'+
     '<button class="btn pri big" type="button" id="gDraw">ガチャを引く</button></div>'+
     '<div class="eye" style="letter-spacing:.3em">君主を選ぶ</div><div class="lords">';
   const RT=rateWorld(W);
@@ -910,7 +981,7 @@ function lordSelect(reroll){const T=$('#title');if(!DRAFT||reroll)DRAFT=makeWorl
   drawPreview(T.querySelector('#pv'),W);
   T.querySelector('#lBack').onclick=()=>{applyMap(S&&S.map||DEF_MAP);title();};
   T.querySelector('#gDraw').onclick=()=>{try{SND.gong(.14);}catch(_){}const y=T.scrollTop;lordSelect(true);T.scrollTop=y;};
-  T.querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>{DOPT[b.dataset.o]=(DOPT[b.dataset.o]+1)%3;const y=T.scrollTop;lordSelect(true);T.scrollTop=y;});
+  T.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{DOPT[b.dataset.k]=b.dataset.v;if(DOPT.sub!=='rand')DOPT.subn='def';const y=T.scrollTop;lordSelect(true);T.scrollTop=y;});
   T.querySelectorAll('[data-f]').forEach(b=>b.onclick=async()=>{const f=b.dataset.f;newGame(f,W);DRAFT=null;T.hidden=true;enterMap();await playStory(OPENING(f),{bg:'dawn'});
     toast('自分の城（金の縁）をタップ、または「戦」で出陣');});}
 function enterMap(){applyMap(S.map||DEF_MAP);buildGrid();view.init=0;fitView();repaint();UIS.sel=null;try{BGM.play('camp');}catch(_){}
