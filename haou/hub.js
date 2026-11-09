@@ -107,44 +107,64 @@ const START={
 
 /* ================= 天下の組み立て：地図・配下・都市数・空白地・国数・都市規模 ================= */
 // 陸地（島の多角形の集まり − 湖）・山脈・森・道の種類
-const LAND={blobs:[MAP_OUT],lakes:[]};const MAP_MTN=[],MAP_FOR=[];let ET={};
+const LAND={blobs:[MAP_OUT],lakes:[],isles:[]};let CLIM_CUR=null;const MAP_MTN=[],MAP_FOR=[];let ET={};
 const segX=(a,b,c,d)=>{const o=(p,q,r)=>(q[0]-p[0])*(r[1]-p[1])-(q[1]-p[1])*(r[0]-p[0]);return o(a,b,c)*o(a,b,d)<0&&o(c,d,a)*o(c,d,b)<0;};
 const pdist=(p,a,b)=>{const dx=b[0]-a[0],dy=b[1]-a[1],l=dx*dx+dy*dy||1,t=clamp(((p[0]-a[0])*dx+(p[1]-a[1])*dy)/l,0,1);return Math.hypot(p[0]-a[0]-t*dx,p[1]-a[1]-t*dy);};
 const plDist=(p,pl)=>{let m=1e9;for(let i=0;i<pl.length-1;i++)m=Math.min(m,pdist(p,pl[i],pl[i+1]));return m;};
 function edgeTypes(adj,pos,riv,mtn,sea){const o={};adj.forEach(k=>{const[a,b]=k.split('-');const A=pos[a],B=pos[b];
     o[k]=sea&&sea.includes(k)?'sea':riv.some(pl=>pl.some((p,i)=>i<pl.length-1&&segX(A,B,p,pl[i+1])))?'river':mtn.some(pl=>plDist([(A[0]+B[0])/2,(A[1]+B[1])/2],pl)<4.5||pl.some((p,i)=>i<pl.length-1&&segX(A,B,p,pl[i+1])))?'mount':'road';});return o;}
-const DEF_REG=Object.fromEntries(RIDS.map(r=>[r,{cap:REG[r].cap,t:REG[r].t,k:REG[r].k,d:REG[r].d,o:REG[r].o}]));
+const DEF_REG=Object.fromEntries(RIDS.map(r=>[r,{cap:REG[r].cap,t:REG[r].t,k:REG[r].k,d:REG[r].d,o:REG[r].o,bio:null}]));
 const DEF_MAP={seeds:MAP_SEEDS.map(s=>s.slice()),out:MAP_OUT.map(p=>p.slice()),riv:MAP_RIV.map(r=>r.map(p=>p.slice())),adj:ADJ_L.slice(),pos:Object.fromEntries(RIDS.map(r=>[r,[REG[r].x,REG[r].y]]))};
 DEF_MAP.et=edgeTypes(DEF_MAP.adj,DEF_MAP.pos,DEF_MAP.riv,[],null);
 DEF_MAP.adj.forEach(k=>{const[a,b]=k.split('-');if(DEF_MAP.et[k]==='road'&&(REG[a].t==='mountain'||REG[b].t==='mountain'||REG[a].t==='gate'||REG[b].t==='gate'))DEF_MAP.et[k]='mount';});
 function applyMap(m){m=m||DEF_MAP;
   MAP_SEEDS.length=0;m.seeds.forEach(s=>MAP_SEEDS.push(s.slice()));MAP_OUT.length=0;m.out.forEach(p=>MAP_OUT.push(p.slice()));
   MAP_RIV.length=0;m.riv.forEach(r=>MAP_RIV.push(r.map(p=>p.slice())));ADJ_L.length=0;m.adj.forEach(a=>ADJ_L.push(a));
-  LAND.blobs=m.land?m.land.blobs:[m.out];LAND.lakes=m.land?m.land.lakes:[];MAP_MTN.length=0;(m.mtn||[]).forEach(p=>MAP_MTN.push(p));MAP_FOR.length=0;(m.forest||[]).forEach(p=>MAP_FOR.push(p));
+  LAND.blobs=m.land?m.land.blobs:[m.out];LAND.lakes=m.land?m.land.lakes:[];LAND.isles=m.land&&m.land.isles||[];CLIM_CUR=m.clim||null;MAP_MTN.length=0;(m.mtn||[]).forEach(p=>MAP_MTN.push(p));MAP_FOR.length=0;(m.forest||[]).forEach(p=>MAP_FOR.push(p));
   ET=m.et||edgeTypes(m.adj,m.pos,m.riv,m.mtn||[],null);
   RIDS.forEach(r=>{ADJ[r]=[];REG[r].x=m.pos[r][0];REG[r].y=m.pos[r][1];Object.assign(REG[r],DEF_REG[r],m.reg&&m.reg[r]||{});});ADJ_L.forEach(s=>{const[a,b]=s.split('-');ADJ[a].push(b);ADJ[b].push(a);});GRID=null;}
 const edgeOf=(a,b)=>ET[a+'-'+b]||ET[b+'-'+a]||'road';
 const rf=(a,b)=>a+R()*(b-a);
 function inPoly(P,x,y){let c=false;for(let i=0,j=P.length-1;i<P.length;j=i++){const a=P[i],b=P[j];if((a[1]>y)!==(b[1]>y)&&x<(b[0]-a[0])*(y-a[1])/(b[1]-a[1])+a[0])c=!c;}return c;}
-function landAt(L,x,y){return L.blobs.some(P=>inPoly(P,x,y))&&!L.lakes.some(P=>inPoly(P,x,y));}
+function landAt(L,x,y){return (L.blobs.some(P=>inPoly(P,x,y))&&!L.lakes.some(P=>inPoly(P,x,y)))||(L.isles||[]).some(P=>inPoly(P,x,y));}
 function blob(cx,cy,rx,ry,rot,rough,n){n=n||48;const H=[...Array(6)].map((_,k)=>[rf(.02,rough)/(k*.5+1),rf(0,6.28)]);const out=[];
   for(let i=0;i<n;i++){const a=i/n*Math.PI*2;let r=1;H.forEach(([amp,ph],k)=>r+=amp*Math.sin(a*(k+2)+ph));const X=Math.cos(a)*rx*r,Y=Math.sin(a)*ry*r;
     out.push([clamp(cx+X*Math.cos(rot)-Y*Math.sin(rot),2,98),clamp(cy+X*Math.sin(rot)+Y*Math.cos(rot),2,88)]);}return out;}
-const SHAPES={big:'大陸',twin:'双子大陸',arch:'群島',ring:'内海の大陸',pen:'半島の国',long:'細長い国',crescent:'三日月の国'};
-function genLand(kind){const L={blobs:[],lakes:[]};
-  if(kind==='big')L.blobs.push(blob(50,45,rf(40,46),rf(34,40),rf(-.3,.3),.28));
-  else if(kind==='twin'){const v=R()<.5;const gap=rf(4,10);if(v){L.blobs.push(blob(27,45,rf(20,24),rf(32,38),rf(-.3,.3),.3));L.blobs.push(blob(73,45,rf(20,24),rf(32,38),rf(-.3,.3),.3));L.blobs[0]=L.blobs[0].map(p=>[p[0]-gap/2,p[1]]);L.blobs[1]=L.blobs[1].map(p=>[p[0]+gap/2,p[1]]);}
-    else{L.blobs.push(blob(50,24,rf(40,46),rf(16,20),rf(-.2,.2),.3));L.blobs.push(blob(50,67,rf(40,46),rf(16,20),rf(-.2,.2),.3));L.blobs[0]=L.blobs[0].map(p=>[p[0],p[1]-gap/2]);L.blobs[1]=L.blobs[1].map(p=>[p[0],p[1]+gap/2]);}}
-  else if(kind==='arch'){const n=3+Math.floor(R()*3);const cs=[[28,26],[72,24],[30,66],[72,66],[50,45]];shuffle(cs).slice(0,n).forEach(c=>L.blobs.push(blob(c[0]+rf(-5,5),c[1]+rf(-4,4),rf(13,19),rf(12,17),rf(0,3),.35)));}
-  else if(kind==='ring'){L.blobs.push(blob(50,45,rf(43,47),rf(37,41),0,.2));L.lakes.push(blob(50+rf(-5,5),45+rf(-4,4),rf(14,19),rf(11,15),rf(0,3),.3));}
-  else if(kind==='pen'){L.blobs.push(blob(50,40,rf(32,38),rf(24,30),0,.25));const n=2+Math.floor(R()*2);for(let k=0;k<n;k++){const a=rf(.2,2.9)+k*1.9;L.blobs.push(blob(50+Math.cos(a)*30,40+Math.sin(a)*28,rf(16,22),rf(6,9),a,.25));}}
-  else if(kind==='long'){const a=rf(-.6,.6)+(R()<.5?0:Math.PI/2*.0);L.blobs.push(blob(50,45,rf(48,54),rf(17,22),a+(R()<.5?.5:-.5),.3));}
-  else if(kind==='crescent'){L.blobs.push(blob(50,45,rf(42,46),rf(36,40),0,.2));L.lakes.push(blob(50+rf(14,22)*(R()<.5?1:-1),45+rf(-8,8),rf(26,32),rf(24,30),0,.2));}
+const SHAPES={big:'大陸',twin:'双子大陸',arch:'群島',ring:'内海の大陸',pen:'半島の国',long:'細長い国',crescent:'三日月の国',fjord:'入り江の国',tri:'三つの島',cross:'十字の大陸',ysh:'三叉の大陸',lsh:'L字の国',mainisle:'大陸と離島',many:'多島海',lakeisle:'湖に浮かぶ島',twinlake:'二つの湖',gulf:'大きな湾'};
+function genLand(kind){const L={blobs:[],lakes:[],isles:[]};const B=(...a)=>L.blobs.push(blob(...a));
+  if(kind==='big')B(50,45,rf(40,46),rf(34,40),rf(-.3,.3),.28);
+  else if(kind==='twin'){const v=R()<.5;const gap=rf(4,10);if(v){B(27-gap/2,45,rf(20,24),rf(32,38),rf(-.3,.3),.3);B(73+gap/2,45,rf(20,24),rf(32,38),rf(-.3,.3),.3);}else{B(50,24-gap/2,rf(40,46),rf(16,20),rf(-.2,.2),.3);B(50,67+gap/2,rf(40,46),rf(16,20),rf(-.2,.2),.3);}}
+  else if(kind==='arch'){const n=3+Math.floor(R()*3);const cs=[[28,26],[72,24],[30,66],[72,66],[50,45]];shuffle(cs).slice(0,n).forEach(c=>B(c[0]+rf(-5,5),c[1]+rf(-4,4),rf(13,19),rf(12,17),rf(0,3),.35));}
+  else if(kind==='ring'){B(50,45,rf(43,47),rf(37,41),0,.2);L.lakes.push(blob(50+rf(-5,5),45+rf(-4,4),rf(14,19),rf(11,15),rf(0,3),.3));}
+  else if(kind==='pen'){B(50,40,rf(32,38),rf(24,30),0,.25);const n=2+Math.floor(R()*2);for(let k=0;k<n;k++){const a=rf(.2,2.9)+k*1.9;B(50+Math.cos(a)*30,40+Math.sin(a)*28,rf(16,22),rf(6,9),a,.25);}}
+  else if(kind==='long')B(50,45,rf(48,54),rf(17,22),(R()<.5?.5:-.5)+rf(-.15,.15),.3);
+  else if(kind==='crescent'){B(50,45,rf(42,46),rf(36,40),0,.2);L.lakes.push(blob(50+rf(14,22)*(R()<.5?1:-1),45+rf(-8,8),rf(26,32),rf(24,30),0,.2));}
+  else if(kind==='fjord'){L.blobs.push(blob(50,45,rf(42,46),rf(36,40),rf(-.3,.3),.5,90));for(let k=0;k<3+Math.floor(R()*3);k++){const a=rf(0,6.28);L.lakes.push(blob(50+Math.cos(a)*40,45+Math.sin(a)*35,rf(9,14),rf(2.5,4),a,.2));}}
+  else if(kind==='tri'){const a0=rf(0,6.28);for(let k=0;k<3;k++){const a=a0+k*2.09;B(50+Math.cos(a)*25,45+Math.sin(a)*22,rf(17,21),rf(15,19),rf(0,3),.3);}}
+  else if(kind==='cross'){const r=rf(-.3,.3);B(50,45,rf(46,50),rf(12,15),r,.25);B(50,45,rf(12,15),rf(40,44),r,.25);}
+  else if(kind==='ysh'){const a0=rf(0,6.28);B(50,45,rf(13,16),rf(13,16),0,.2);for(let k=0;k<3;k++){const a=a0+k*2.09;B(50+Math.cos(a)*22,45+Math.sin(a)*20,rf(22,26),rf(9,12),a,.25);}}
+  else if(kind==='lsh'){const sx=R()<.5?1:-1,sy=R()<.5?1:-1;B(50,45+sy*24,rf(44,48),rf(13,16),0,.25);B(50+sx*32,45,rf(13,16),rf(38,42),0,.25);}
+  else if(kind==='mainisle'){B(44,45,rf(34,38),rf(32,37),rf(-.2,.2),.28);const n=1+Math.floor(R()*3);for(let k=0;k<n;k++)B(pick([86,88,84]),rf(12,78),rf(7,10),rf(7,11),rf(0,3),.3);}
+  else if(kind==='many'){for(let k=0;k<7+Math.floor(R()*3);k++)B(rf(12,88),rf(10,80),rf(9,13),rf(8,12),rf(0,3),.35);}
+  else if(kind==='lakeisle'){B(50,45,rf(44,47),rf(38,41),0,.2);L.lakes.push(blob(50,45,rf(26,30),rf(21,25),0,.15));L.isles.push(blob(50+rf(-3,3),45+rf(-3,3),rf(11,14),rf(9,12),rf(0,3),.25));}
+  else if(kind==='twinlake'){B(50,45,rf(44,47),rf(37,41),rf(-.2,.2),.25);L.lakes.push(blob(rf(30,38),rf(30,40),rf(9,12),rf(7,10),rf(0,3),.3));L.lakes.push(blob(rf(62,70),rf(50,60),rf(9,12),rf(7,10),rf(0,3),.3));}
+  else if(kind==='gulf'){B(50,45,rf(44,47),rf(38,41),0,.22);const a=rf(0,6.28);L.lakes.push(blob(50+Math.cos(a)*34,45+Math.sin(a)*30,rf(18,24),rf(14,18),a,.25));}
+  // どの形にも小さな湖を足すことがある
+  if(!['many','arch','tri'].includes(kind))for(let k=0;k<Math.floor(R()*3);k++)L.lakes.push(blob(rf(25,75),rf(20,70),rf(3,5),rf(2.5,4),rf(0,3),.3));
   return L;}
+// 気候
+const CLIM=[{n:'温暖な地'},{n:'北に雪原'},{n:'南に密林'},{n:'西に砂漠'},{n:'東に砂漠'},{n:'北は雪・南は密林'},{n:'乾いた大地'},{n:'寒冷の地'},{n:'砂漠と密林'},{n:'中央に砂漠'}];
+function bioAt(cl,x,y){if(!cl)return null;const w=4*Math.sin(x*.13+cl.a)+3*Math.sin(y*.21+cl.b);switch(cl.i){
+  case 1:return y<28+w?'snow':null;case 2:return y>60+w?'jungle':null;case 3:return x<32+w?'sand':null;case 4:return x>68+w?'sand':null;
+  case 5:return y<26+w?'snow':y>64+w?'jungle':null;case 6:return Math.sin(x*.09+cl.a)*Math.cos(y*.11+cl.b)>-.2?'sand':null;case 7:return y<70+w?'snow':null;
+  case 8:return x<38+w?'sand':x>64+w?'jungle':null;case 9:return Math.hypot(x-50,(y-45)*1.2)<20+w?'sand':null;}return null;}
 function genContinent(){
   for(let tryN=0;tryN<60;tryN++){const kind=pick(Object.keys(SHAPES));const L=genLand(kind);
     const ok=(x,y)=>landAt(L,x,y)&&landAt(L,x+2.5,y)&&landAt(L,x-2.5,y)&&landAt(L,x,y+2.5)&&landAt(L,x,y-2.5);
-    const pts=[];let md=13,g=0;while(pts.length<21&&g<9000){g++;const x=rf(4,96),y=rf(4,86);if(!ok(x,y))continue;if(pts.every(p=>Math.hypot(p[0]-x,p[1]-y)>=md))pts.push([x,y]);else if(g%500===0)md*=.93;}
+    const hot=R()<.35?[...Array(2+Math.floor(R()*2))].map(()=>[rf(15,85),rf(12,78)]):null;
+    const pts=[];let md=rf(11,15),g=0;while(pts.length<21&&g<12000){g++;const x=rf(4,96),y=rf(4,86);if(!ok(x,y))continue;
+      if(hot&&g<8000&&R()>.25+.75*Math.exp(-Math.min(...hot.map(h=>Math.hypot(h[0]-x,h[1]-y)))/16))continue;
+      if(pts.every(p=>Math.hypot(p[0]-x,p[1]-y)>=md))pts.push([x,y]);else if(g%500===0)md*=.93;}
     if(pts.length<21)continue;
     const W=200,Hh=180,gd=new Int8Array(W*Hh);
     for(let py=0;py<Hh;py++)for(let px=0;px<W;px++){const x=px/W*100,y=py/Hh*90;if(!landAt(L,x,y)){gd[py*W+px]=-1;continue;}
@@ -156,19 +176,23 @@ function genContinent(){
     const seaE=[];let C=comp();let guard=0;
     while(C.n>1&&guard++<10){let best=null,bd=1e9;for(let i=0;i<21;i++)for(let j=0;j<21;j++){if(C.c[i]===C.c[j])continue;const d=Math.hypot(pts[i][0]-pts[j][0],pts[i][1]-pts[j][1]);if(d<bd){bd=d;best=[i,j];}}edges.push(best);seaE.push(best);C=comp();}
     if(C.n>1)continue;
-    if(L.blobs.length>1&&R()<.7){// もう一本、別の海路
-      let best=null,bd=1e9;const has=new Set(edges.map(e=>e.slice().sort((a,b)=>a-b).join('-')));for(let i=0;i<21;i++)for(let j=i+1;j<21;j++){if(has.has(i+'-'+j))continue;const sameLand=L.blobs.findIndex(P=>inPoly(P,pts[i][0],pts[i][1]))===L.blobs.findIndex(P=>inPoly(P,pts[j][0],pts[j][1]));if(sameLand)continue;const d=Math.hypot(pts[i][0]-pts[j][0],pts[i][1]-pts[j][1]);if(d<bd&&d<34){bd=d;best=[i,j];}}if(best){edges.push(best);seaE.push(best);}}
+    if(L.blobs.length+(L.isles||[]).length>1&&R()<.7){// もう一本、別の海路
+      let best=null,bd=1e9;const has=new Set(edges.map(e=>e.slice().sort((a,b)=>a-b).join('-')));for(let i=0;i<21;i++)for(let j=i+1;j<21;j++){if(has.has(i+'-'+j))continue;const lid=q=>{const all=L.blobs.concat(L.isles||[]);return all.findIndex(P=>inPoly(P,q[0],q[1]));};const sameLand=lid(pts[i])===lid(pts[j]);if(sameLand)continue;const d=Math.hypot(pts[i][0]-pts[j][0],pts[i][1]-pts[j][1]);if(d<bd&&d<34){bd=d;best=[i,j];}}if(best){edges.push(best);seaE.push(best);}}
     // 山脈・川・森
-    const mtn=[];for(let k=0;k<1+Math.floor(R()*3);k++){let p=pick(pts).slice(),a=rf(0,6.28);p=[p[0]+rf(-6,6),p[1]+rf(-6,6)];const pl=[p];for(let s=0;s<4+Math.floor(R()*3);s++){a+=rf(-.6,.6);const q=[p[0]+Math.cos(a)*rf(8,12),p[1]+Math.sin(a)*rf(7,10)];if(!landAt(L,q[0],q[1]))break;pl.push(q);p=q;}if(pl.length>=3)mtn.push(pl);}
-    const riv=[];for(let k=0;k<1+Math.floor(R()*3);k++){const src=mtn.length&&R()<.75?pick(pick(mtn)):pick(pts);let x=src[0],y=src[1],a=rf(0,6.28);const pl=[[x,y]];for(let s=0;s<45&&landAt(L,x,y);s++){a+=rf(-.45,.45);x+=Math.cos(a)*4;y+=Math.sin(a)*4;pl.push([x,y]);}if(pl.length>4)riv.push(pl);}
-    const forest=[];for(let k=0;k<2+Math.floor(R()*4);k++){const p=pick(pts);forest.push([p[0]+rf(-5,5),p[1]+rf(-5,5),rf(5,10)]);}
-    return {pts,edges,seaE,L,kind,mtn,riv,forest};}
+    const mtn=[];for(let k=0;k<Math.floor(R()*5);k++){let p=pick(pts).slice(),a=rf(0,6.28);p=[p[0]+rf(-6,6),p[1]+rf(-6,6)];const pl=[p];for(let s=0;s<4+Math.floor(R()*3);s++){a+=rf(-.6,.6);const q=[p[0]+Math.cos(a)*rf(8,12),p[1]+Math.sin(a)*rf(7,10)];if(!landAt(L,q[0],q[1]))break;pl.push(q);p=q;}if(pl.length>=3)mtn.push(pl);}
+    const riv=[];for(let k=0;k<1+Math.floor(R()*4);k++){const src=mtn.length&&R()<.75?pick(pick(mtn)):pick(pts);let x=src[0],y=src[1],a=rf(0,6.28);const pl=[[x,y]];for(let s=0;s<45&&landAt(L,x,y);s++){a+=rf(-.45,.45);x+=Math.cos(a)*4;y+=Math.sin(a)*4;pl.push([x,y]);}if(pl.length>4)riv.push(pl);}
+    const clim={i:Math.floor(R()*CLIM.length),a:rf(0,6.28),b:rf(0,6.28)};
+    const forest=[];for(let k=0;k<1+Math.floor(R()*5);k++){const p=pick(pts);forest.push([p[0]+rf(-5,5),p[1]+rf(-5,5),rf(5,10)]);}
+    pts.forEach(p=>{if(bioAt(clim,p[0],p[1])==='jungle'&&R()<.6)forest.push([p[0]+rf(-3,3),p[1]+rf(-3,3),rf(6,9)]);});
+    return {pts,edges,seaE,L,kind,mtn,riv,forest,clim};}
   return null;}
 // 地形を地理から決める
 function terrainOf(p,C,coast){const dM=C.mtn.length?Math.min(...C.mtn.map(pl=>plDist(p,pl))):99,dR=C.riv.length?Math.min(...C.riv.map(pl=>plDist(p,pl))):99;const inF=C.forest.some(f=>Math.hypot(p[0]-f[0],p[1]-f[1])<f[2]);
-  if(dM<4)return {t:'mountain',k:'mountain',d:'mountain'};if(dM<8)return {t:'hills',k:'hills',d:'desert'};
-  if(dR<4)return coast?{t:'yangtze',k:'river',d:'river'}:{t:'river',k:'river',d:'river'};if(inF)return {t:'forest',k:'forest',d:'night'};
-  return {t:'plain',k:'plain',d:p[1]<16?'snow':'plain'};}
+  const bio=bioAt(C.clim,p[0],p[1]);let T;
+  if(dM<4)T={t:'mountain',k:'mountain',d:'mountain'};else if(dM<8)T={t:'hills',k:'hills',d:'desert'};
+  else if(dR<4)T=coast?{t:'yangtze',k:'river',d:'river'}:{t:'river',k:'river',d:'river'};else if(inF||bio==='jungle')T={t:'forest',k:'forest',d:'night'};
+  else T={t:bio==='sand'&&R()<.4?'hills':'plain',k:'plain',d:'plain'};
+  if(bio==='sand')T.d='desert';if(bio==='snow')T.d='snow';if(bio)T.bio=bio;return T;}
 function growClusters(adj,sizes,fill){const N=adj.length;
   for(let t=0;t<400;t++){const own=new Array(N).fill(-1);const order=shuffle(sizes.map((_,i)=>i));let ok=true;
     for(const f of order){let free=[...Array(N).keys()].filter(i=>own[i]<0&&adj[i].every(n=>own[n]<0));if(!free.length)free=[...Array(N).keys()].filter(i=>own[i]<0&&adj[i].some(n=>own[n]<0));if(!free.length)free=[...Array(N).keys()].filter(i=>own[i]<0);if(!free.length){ok=false;break;}own[pick(free)]=f;}
@@ -219,8 +243,8 @@ function makePlacement(opt){opt=Object.assign({map:'def',size:'def',blank:'def',
     const reg={};C.pts.forEach((p,i)=>{const coast=!landAt(C.L,p[0]+7,p[1])||!landAt(C.L,p[0]-7,p[1])||!landAt(C.L,p[0],p[1]+7)||!landAt(C.L,p[0],p[1]-7);reg[ids[i]]=Object.assign(terrainOf(p,C,coast),{o:{}});});
     // 大きな城と関所
     RIDS.slice().sort((a,b)=>DEF_REG[b].cap-DEF_REG[a].cap).slice(0,5).forEach(r=>{if(reg[r].t==='plain'||reg[r].t==='river')Object.assign(reg[r],{t:'castle',k:reg[r].k,d:reg[r].d});});
-    map={seeds:C.pts.map((p,i)=>[ids[i]].concat(R1(p))),out:C.L.blobs[0].map(R1),land:{blobs:C.L.blobs.map(b=>b.map(R1)),lakes:C.L.lakes.map(b=>b.map(R1))},riv:C.riv.map(pl=>pl.map(R1)),mtn:C.mtn.map(pl=>pl.map(R1)),forest:C.forest.map(f=>f.map(r1)),
-      adj:adjL,pos,reg,shape:SHAPES[C.kind]};
+    map={seeds:C.pts.map((p,i)=>[ids[i]].concat(R1(p))),out:C.L.blobs[0].map(R1),land:{blobs:C.L.blobs.map(b=>b.map(R1)),lakes:C.L.lakes.map(b=>b.map(R1)),isles:(C.L.isles||[]).map(b=>b.map(R1))},riv:C.riv.map(pl=>pl.map(R1)),mtn:C.mtn.map(pl=>pl.map(R1)),forest:C.forest.map(f=>f.map(r1)),
+      adj:adjL,pos,reg,shape:SHAPES[C.kind]+' ・ '+CLIM[C.clim.i].n,clim:C.clim};
     map.et=edgeTypes(adjL,pos,map.riv,map.mtn,seaL);
     adjL.forEach(k=>{const[a,b]=k.split('-');if(map.et[k]==='road'&&(reg[a].t==='mountain'&&reg[b].t==='mountain'))map.et[k]='mount';});}
   else if(!historic){const ix={};RIDS.forEach((r,i)=>ix[r]=i);const adj=RIDS.map(()=>[]);DEF_MAP.adj.forEach(s=>{const[a,b]=s.split('-');adj[ix[a]].push(ix[b]);adj[ix[b]].push(ix[a]);});
@@ -312,10 +336,13 @@ function glyphMtn(x,cx,cy,s_){x.fillStyle='#8a7a62';x.strokeStyle='#4a3a28';x.li
 function glyphTree(x,cx,cy,s_){x.fillStyle='#4a3020';x.fillRect(cx-1.2,cy,2.4,s_*.7);x.fillStyle='#3f6a32';x.strokeStyle='#22401c';x.lineWidth=1.2;x.beginPath();x.arc(cx,cy-s_*.2,s_*.62,0,7);x.fill();x.stroke();}
 function glyphHill(x,cx,cy,s_){x.fillStyle='#a89060';x.strokeStyle='#5a4a2a';x.lineWidth=1.4;x.beginPath();x.moveTo(cx-s_,cy+s_*.4);x.quadraticCurveTo(cx,cy-s_*.9,cx+s_,cy+s_*.4);x.closePath();x.fill();x.stroke();}
 function paintBase(){const W=BW,Hh=BH,x=BCTX,g=GRID;const img=x.createImageData(W,Hh),a=img.data;
-  const cols=RIDS.map(r=>{const c=hexRgb(facCol(S.reg[r].o));const p=[228,214,180];const k=S.reg[r].o?.62:0;return [c[0]*k+p[0]*(1-k),c[1]*k+p[1]*(1-k),c[2]*k+p[2]*(1-k)];});
+  const BIOC={sand:[236,206,140],snow:[244,246,250],jungle:[168,196,128]},PAR=[228,214,180];
+  const fc=RIDS.map(r=>hexRgb(facCol(S.reg[r].o))),fk=RIDS.map(r=>S.reg[r].o?.58:0);
+  const GW=W>>2,GH=Hh>>2,bg=new Array(GW*GH);for(let yy=0;yy<GH;yy++)for(let xx=0;xx<GW;xx++){const b=CLIM_CUR?bioAt(CLIM_CUR,xx*4/W*100,yy*4/Hh*90):null;bg[yy*GW+xx]=b?BIOC[b]:PAR;}
   for(let i=0;i<W*Hh;i++){const s_=g[i],o=i*4;const px=i%W,py=i/W|0;const n=((px*13+py*7)%11)/11*12+((px*7+py*3)%5)*1.5;
     if(s_<0){const near=(px>1&&g[i-2]>=0)||(px<W-2&&g[i+2]>=0)||(py>1&&g[i-2*W]>=0)||(py<Hh-2&&g[i+2*W]>=0);a[o]=(near?120:150)+n;a[o+1]=(near?160:176)+n;a[o+2]=(near?176:178)+n;a[o+3]=255;continue;}
-    const c=cols[s_];const l=px>0?g[i-1]:s_,u=py>0?g[i-W]:s_,rr=px<W-1?g[i+1]:s_,d=py<Hh-1?g[i+W]:s_;
+    const pc=bg[Math.min(GH-1,py>>2)*GW+Math.min(GW-1,px>>2)],f=fc[s_],k_=fk[s_];const c=[f[0]*k_+pc[0]*(1-k_),f[1]*k_+pc[1]*(1-k_),f[2]*k_+pc[2]*(1-k_)];
+    const l=px>0?g[i-1]:s_,u=py>0?g[i-W]:s_,rr=px<W-1?g[i+1]:s_,d=py<Hh-1?g[i+W]:s_;
     let k=1;if(l<0||u<0||rr<0||d<0)k=.3;else if(l!==s_||u!==s_){k=S.reg[RIDS[l!==s_?l:u]].o!==S.reg[RIDS[s_]].o?.4:.78;}
     a[o]=c[0]*k+n;a[o+1]=c[1]*k+n;a[o+2]=c[2]*k+n;a[o+3]=255;}
   x.putImageData(img,0,0);
@@ -328,6 +355,10 @@ function paintBase(){const W=BW,Hh=BH,x=BCTX,g=GRID;const img=x.createImageData(
   RIDS.forEach(r=>{const t=REG[r].t,cx=REG[r].x,cy=REG[r].y;const spots=[[-5.5,-2.5],[5.5,-2.5],[-6,2],[6,2]];
     spots.forEach(([dx,dy],k)=>{const X=cx+dx,Y=cy+dy;if(!mapInOut(X,Y)||k>=(t==='plain'||t==='castle'?0:t==='river'||t==='yangtze'?0:4))return;
       if(t==='mountain'||t==='gate')glyphMtn(x,X*sx,Y*sy,12);else if(t==='hills')glyphHill(x,X*sx,Y*sy,11);else if(t==='forest')glyphTree(x,X*sx,Y*sy,9);});});
+  if(CLIM_CUR){const R1=mulb(11);for(let yy=2;yy<90;yy+=2.6)for(let xx=2;xx<100;xx+=2.6){const X=xx+(R1()-.5)*1.6,Y=yy+(R1()-.5)*1.6;const b=bioAt(CLIM_CUR,X,Y);if(!b||!mapInOut(X,Y)||R1()>.32)continue;if(RIDS.some(r=>Math.hypot(REG[r].x-X,REG[r].y-Y)<4.5))continue;
+      const cx=X*sx,cy=Y*sy;if(b==='snow'){x.fillStyle='rgba(255,255,255,.95)';x.strokeStyle='rgba(120,140,160,.6)';x.lineWidth=1;x.beginPath();x.arc(cx,cy,2.6,0,7);x.fill();x.stroke();}
+      else if(b==='sand'){x.strokeStyle='rgba(150,110,50,.7)';x.lineWidth=2;x.beginPath();x.arc(cx,cy+4,7,Math.PI*1.15,Math.PI*1.85);x.stroke();}
+      else glyphTree(x,cx,cy,7);}}
   x.textAlign='center';x.textBaseline='middle';x.font='700 22px "Yuji Syuku",serif';
   if(!(S.map&&S.map.land))RIDS.forEach(r=>{const R_=REG[r];x.fillStyle='rgba(40,24,10,.38)';x.fillText(R_.n,R_.x*sx,(R_.y-5.2)*sy);});}
 function mulb(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
@@ -362,7 +393,7 @@ function draw(){const cv=$('#map');const dpr=Math.min(2,devicePixelRatio||1);con
     x.fillStyle=o?facCol(o):'#9a8a68';x.strokeStyle=mine?'#ffe08a':'#20140a';x.lineWidth=mine?4:2.5;x.beginPath();x.arc(cx,cy,19,0,7);x.fill();x.stroke();
     x.fillStyle='#fff';x.font='400 24px "Yuji Syuku",serif';x.textAlign='center';x.textBaseline='middle';x.fillText(o?FAC[o].ch:'城',cx,cy+1);
     x.font='700 17px "BIZ UDPGothic",sans-serif';x.lineWidth=4;x.strokeStyle='rgba(255,250,235,.92)';x.strokeText(R_.c,cx,cy+33);x.fillStyle='#24160a';x.fillText(R_.c,cx,cy+33);
-    {const tc={castle:'#7a1c12',gate:'#4a4a52',plain:'#6a5a2a',river:'#1f5f9e',yangtze:'#0f4a8a',hills:'#7a5a2a',mountain:'#4a4a4a',forest:'#2f5a2a'}[R_.t]||'#555';x.fillStyle=tc;x.strokeStyle='#fff';x.lineWidth=2;x.fillRect(cx-44,cy-27,24,24);x.strokeRect(cx-44,cy-27,24,24);x.fillStyle='#fff';x.font='700 17px "BIZ UDPGothic",sans-serif';x.fillText(TGL[R_.t]||'',cx-32,cy-14.5);}
+    {const tc=R_.bio&&R_.t!=='castle'?({sand:'#b08030',snow:'#7a90a8',jungle:'#1f6a2a'})[R_.bio]:({castle:'#7a1c12',gate:'#4a4a52',plain:'#6a5a2a',river:'#1f5f9e',yangtze:'#0f4a8a',hills:'#7a5a2a',mountain:'#4a4a4a',forest:'#2f5a2a'}[R_.t]||'#555');x.fillStyle=tc;x.strokeStyle='#fff';x.lineWidth=2;x.fillRect(cx-44,cy-27,24,24);x.strokeRect(cx-44,cy-27,24,24);x.fillStyle='#fff';x.font='700 17px "BIZ UDPGothic",sans-serif';x.fillText(R_.bio&&R_.t!=='castle'?({sand:'砂',snow:'雪',jungle:'密'})[R_.bio]:(TGL[R_.t]||''),cx-32,cy-14.5);}
     const nh=heroesAt(r).length;const lab=man(S.reg[r].tr)+(nh?' 将'+nh:'')+' 壁'+(S.reg[r].wall||0);x.font='700 14px "BIZ UDPGothic",sans-serif';const tw=x.measureText(lab).width+12;
     x.fillStyle='rgba(20,12,6,.78)';x.fillRect(cx-tw/2,cy+43,tw,19);x.fillStyle=mine?'#ffe08a':'#f2e6c8';x.fillText(lab,cx,cy+53);
     if(freeAt(r).length&&mine){x.fillStyle='#7fd08e';x.beginPath();x.arc(cx+20,cy-16,7,0,7);x.fill();x.fillStyle='#062';x.font='700 11px sans-serif';x.fillText('才',cx+20,cy-15.5);}});
@@ -962,9 +993,9 @@ function drawPreview(cv,W){applyMap(W.map);const w=300,h=270;cv.width=w;cv.heigh
     if(mapInOut(X,Y)){const nx=X+2.2*Math.sin(Y*.45)+1.3*Math.sin(Y*1.3+X*.2),ny=Y+2.2*Math.cos(X*.4)+1.2*Math.sin(X*1.1);let bd=1e9;for(const s_ of MAP_SEEDS){const d=(nx-s_[1])**2+(ny-s_[2])**2;if(d<bd){bd=d;g=RI[s_[0]];}}}
     gd[py*w+px]=g;}
   for(let i=0;i<w*h;i++){const g=gd[i],o=i*4;if(g<0){a[o]=150;a[o+1]=176;a[o+2]=178;a[o+3]=255;continue;}
-    const f=W.own[RIDS[g]];const c=hexRgb(facCol(f));const k=f?.68:0;const l=i%w?gd[i-1]:g,u=i>=w?gd[i-w]:g;const e=(l>=0&&l!==g)||(u>=0&&u!==g)?(W.own[RIDS[l>=0&&l!==g?l:u]]!==f?.45:.8):1;
+    const f=W.own[RIDS[g]];const c=hexRgb(facCol(f));const k=f?.6:0;const bi=CLIM_CUR?bioAt(CLIM_CUR,(i%w)/w*100,(i/w|0)/h*90):null;const P_=bi?{sand:[236,206,140],snow:[244,246,250],jungle:[168,196,128]}[bi]:[228,214,180];const l=i%w?gd[i-1]:g,u=i>=w?gd[i-w]:g;const e=(l>=0&&l!==g)||(u>=0&&u!==g)?(W.own[RIDS[l>=0&&l!==g?l:u]]!==f?.45:.8):1;
     const cst=(i%w&&gd[i-1]<0)||(i>=w&&gd[i-w]<0)||(i%w<w-1&&gd[i+1]<0)||(i<w*(h-1)&&gd[i+w]<0)?.35:1;
-    a[o]=(c[0]*k+228*(1-k))*e*cst;a[o+1]=(c[1]*k+214*(1-k))*e*cst;a[o+2]=(c[2]*k+180*(1-k))*e*cst;a[o+3]=255;}
+    a[o]=(c[0]*k+P_[0]*(1-k))*e*cst;a[o+1]=(c[1]*k+P_[1]*(1-k))*e*cst;a[o+2]=(c[2]*k+P_[2]*(1-k))*e*cst;a[o+3]=255;}
   x.putImageData(img,0,0);const sx=w/100,sy=h/90;
   x.strokeStyle='rgba(40,90,140,.75)';x.lineWidth=2;MAP_RIV.forEach(r=>{x.beginPath();r.forEach((p,i)=>i?x.lineTo(p[0]*sx,p[1]*sy):x.moveTo(p[0]*sx,p[1]*sy));x.stroke();});
   x.textAlign='center';x.textBaseline='middle';
