@@ -96,23 +96,93 @@ const START={
   ['lingt','jiangdong'],['xusheng','jiangdong'],['jiangw','yong'],['guohuai','bing'],['simashi','yu'],['guanxing','qing'],['zhangbao2','qing'],['tadun','you']]
 };
 
+/* ================= 天下の組み立て：国替・配下シャッフル・新大陸 ================= */
+const DEF_MAP={seeds:MAP_SEEDS.map(s=>s.slice()),out:MAP_OUT.map(p=>p.slice()),riv:MAP_RIV.map(r=>r.map(p=>p.slice())),adj:ADJ_L.slice(),pos:Object.fromEntries(RIDS.map(r=>[r,[REG[r].x,REG[r].y]]))};
+function applyMap(m){m=m||DEF_MAP;
+  MAP_SEEDS.length=0;m.seeds.forEach(s=>MAP_SEEDS.push(s.slice()));MAP_OUT.length=0;m.out.forEach(p=>MAP_OUT.push(p.slice()));
+  MAP_RIV.length=0;m.riv.forEach(r=>MAP_RIV.push(r.map(p=>p.slice())));ADJ_L.length=0;m.adj.forEach(a=>ADJ_L.push(a));
+  RIDS.forEach(r=>{ADJ[r]=[];REG[r].x=m.pos[r][0];REG[r].y=m.pos[r][1];});ADJ_L.forEach(s=>{const[a,b]=s.split('-');ADJ[a].push(b);ADJ[b].push(a);});GRID=null;}
+const rf=(a,b)=>a+R()*(b-a);
+function inPoly(P,x,y){let c=false;for(let i=0,j=P.length-1;i<P.length;j=i++){const a=P[i],b=P[j];if((a[1]>y)!==(b[1]>y)&&x<(b[0]-a[0])*(y-a[1])/(b[1]-a[1])+a[0])c=!c;}return c;}
+// 21都市の新しい大陸：海岸線・川・都市の位置・隣接を作る
+function genContinent(){
+  for(let tryN=0;tryN<40;tryN++){
+    const n=44,cx=50+rf(-4,4),cy=45+rf(-3,3);const H=[...Array(5)].map((_,k)=>[rf(.03,.2)/(k*.6+1),rf(0,6.28)]);const sx=rf(.85,1.05),sy=rf(.85,1.05);
+    const out=[];for(let i=0;i<n;i++){const a=i/n*Math.PI*2;let r=1;H.forEach(([amp,ph],k)=>r+=amp*Math.sin(a*(k+2)+ph));out.push([clamp(cx+Math.cos(a)*46*r*sx,2,98),clamp(cy+Math.sin(a)*41*r*sy,2,88)]);}
+    const pts=[];let md=13.5,g=0;
+    while(pts.length<21&&g<6000){g++;const x=rf(6,94),y=rf(5,85);if(!inPoly(out,x,y))continue;
+      // 海岸から少し離す
+      if(!inPoly(out,x+3,y)||!inPoly(out,x-3,y)||!inPoly(out,x,y+3)||!inPoly(out,x,y-3))continue;
+      if(pts.every(p=>Math.hypot(p[0]-x,p[1]-y)>=md))pts.push([x,y]);else if(g%400===0)md*=.93;}
+    if(pts.length<21)continue;
+    // 隣接：ボロノイの境界を数える
+    const W=200,Hh=180,gd=new Int8Array(W*Hh);
+    for(let py=0;py<Hh;py++)for(let px=0;px<W;px++){const x=px/W*100,y=py/Hh*90;if(!inPoly(out,x,y)){gd[py*W+px]=-1;continue;}
+      const nx=x+2.2*Math.sin(y*.45)+1.3*Math.sin(y*1.3+x*.2),ny=y+2.2*Math.cos(x*.4)+1.2*Math.sin(x*1.1);let b=0,bd=1e9;
+      for(let i=0;i<21;i++){const d=(nx-pts[i][0])**2+(ny-pts[i][1])**2;if(d<bd){bd=d;b=i;}}gd[py*W+px]=b;}
+    const cnt={};for(let py=0;py<Hh;py++)for(let px=0;px<W;px++){const a=gd[py*W+px];if(a<0)continue;[[1,0],[0,1]].forEach(([dx,dy])=>{const q=px+dx,r=py+dy;if(q>=W||r>=Hh)return;const b=gd[r*W+q];if(b<0||b===a)return;const k=a<b?a+'-'+b:b+'-'+a;cnt[k]=(cnt[k]||0)+1;});}
+    const edges=Object.keys(cnt).filter(k=>cnt[k]>=3).map(k=>k.split('-').map(Number));
+    const adj=pts.map(()=>[]);edges.forEach(([a,b])=>{adj[a].push(b);adj[b].push(a);});
+    const seen=new Set([0]),q=[0];while(q.length){const u=q.pop();adj[u].forEach(v=>{if(!seen.has(v)){seen.add(v);q.push(v);}});}
+    if(seen.size<21)continue;
+    // 川：内陸から海へ
+    const riv=[];for(let k=0;k<2;k++){let x=cx+rf(-15,15),y=cy+rf(-12,12),a=rf(0,6.28);const pl=[[x,y]];for(let s=0;s<40&&inPoly(out,x,y);s++){a+=rf(-.5,.5);x+=Math.cos(a)*5;y+=Math.sin(a)*5;pl.push([x,y]);}if(pl.length>4)riv.push(pl);}
+    return {pts,adj,edges,out,riv};}
+  return null;}
+// 勢力ごとの領地の固まりを、隣どうしで広げて作る
+function growClusters(adj,sizes){const N=adj.length;
+  for(let t=0;t<300;t++){const own=new Array(N).fill(-1);const seeds=[];const order=shuffle(sizes.map((_,i)=>i));let ok=true;
+    for(const f of order){let free=[...Array(N).keys()].filter(i=>own[i]<0&&adj[i].every(n=>own[n]<0));if(!free.length)free=[...Array(N).keys()].filter(i=>own[i]<0&&adj[i].some(n=>own[n]<0));if(!free.length){ok=false;break;}
+      const s=pick(free);own[s]=f;seeds.push(s);}
+    if(!ok)continue;const quota=sizes.map(s=>s-1);let guard=0;
+    while(quota.some(x=>x>0)&&guard++<500){const f=pick(quota.map((x,i)=>x>0?i:-1).filter(i=>i>=0));const fr=[];own.forEach((o,i)=>{if(o===f)adj[i].forEach(n=>{if(own[n]<0)fr.push(n);});});
+      if(!fr.length){ok=false;break;}own[pick(fr)]=f;quota[f]--;}
+    if(ok)return own;}
+  return null;}
+function makeWorld(opt){opt=opt||{};
+  // 勢力ごとの初期領地（既定）：先頭は君主のいる城
+  const groups={};FIDS.forEach(f=>{const cap=START.hero.find(x=>x[0]===FAC[f].ruler)[2];groups[f]=[cap].concat(RIDS.filter(r=>START.reg[r][0]===f&&r!==cap));});
+  let assign={};FIDS.forEach(f=>assign[f]=f); // 勢力 f は 誰の領地の形を使うか
+  if(opt.swap){const p=shuffle(FIDS.slice());FIDS.forEach((f,i)=>assign[f]=p[i]);}
+  let map=DEF_MAP,own={};RIDS.forEach(r=>own[r]=null);let lands={};
+  if(opt.newland){let C=null,cl=null;for(let k=0;k<20&&!cl;k++){C=genContinent();if(C)cl=growClusters(C.adj,FIDS.map(f=>groups[assign[f]].length));}
+    if(!cl){applyMap(DEF_MAP);return makeWorld(Object.assign({},opt,{newland:false}));}
+    // 都市名（地域）を各地点に割り当てる
+    const ids=new Array(21);const used=new Set();
+    FIDS.forEach((f,fi)=>{const pts=[];cl.forEach((o,i)=>{if(o===fi)pts.push(i);});pts.sort((a,b)=>C.adj[b].length-C.adj[a].length);
+      const names=opt.swap?null:groups[f];pts.forEach((p,k)=>{if(names){ids[p]=names[k];used.add(names[k]);}});});
+    const rest=shuffle(RIDS.filter(r=>!used.has(r)));cl.forEach((o,i)=>{if(!ids[i])ids[i]=rest.pop();});
+    FIDS.forEach((f,fi)=>{const pts=[];cl.forEach((o,i)=>{if(o===fi)pts.push(i);});pts.sort((a,b)=>C.adj[b].length-C.adj[a].length);lands[f]=pts.map(p=>ids[p]);});
+    map={seeds:C.pts.map((p,i)=>[ids[i],Math.round(p[0]*10)/10,Math.round(p[1]*10)/10]),out:C.out.map(p=>[Math.round(p[0]*10)/10,Math.round(p[1]*10)/10]),riv:C.riv,adj:C.edges.map(([a,b])=>ids[a]+'-'+ids[b]),
+      pos:Object.fromEntries(C.pts.map((p,i)=>[ids[i],[Math.round(p[0]*10)/10,Math.round(p[1]*10)/10]]))};}
+  else FIDS.forEach(f=>lands[f]=groups[assign[f]].slice());
+  FIDS.forEach(f=>lands[f].forEach(r=>own[r]=f));
+  // 武将の配置
+  const place={};
+  START.hero.forEach(([id,f,loc])=>{if(f){const k=Math.max(0,groups[f].indexOf(loc));const L=lands[f];place[id]=[f,id===FAC[f].ruler?L[0]:L[k%L.length]];}
+    else{const neu=RIDS.filter(r=>!own[r]);place[id]=own[loc]||!RIDS.includes(loc)?(neu.length?['none',pick(neu)]:[null,loc]):['none',loc];}});
+  START.free.forEach(([id,loc])=>place[id]=[null,loc]);
+  if(opt.mix){const rulers=new Set(FIDS.map(f=>FAC[f].ruler));const ids=Object.keys(place).filter(id=>!rulers.has(id));const slots=ids.map(id=>place[id]);const sh=shuffle(ids.slice());const np={};
+    FIDS.forEach(f=>np[FAC[f].ruler]=place[FAC[f].ruler]);sh.forEach((id,i)=>np[id]=slots[i]);Object.assign(place,np);}
+  return {opt:Object.assign({},opt),map,own,place};}
+
 /* ================= 状態 ================= */
 const SKEY='sangoku-haou-v1';
 let S=null;
 function save(){if(!S)return;try{localStorage.setItem(SKEY,JSON.stringify(S));}catch(e){}}
 function load(){try{const v=JSON.parse(localStorage.getItem(SKEY));if(v&&v.v===1)return migrate(v);}catch(e){}return null;}
-function newGame(me){
-  S={v:1,me,year:194,season:0,turn:0,ap:0,reg:{},hero:{},flags:{},visits:{},met:{},news:[],stats:{war:0,win:0,duel:0,dwon:0,recruit:0,capt:0},rulers:{}};
-  RIDS.forEach(r=>{const[o,t]=START.reg[r];S.reg[r]={o,tr:t};});
-  START.hero.forEach(([id,f,loc])=>{S.hero[id]={f:f||'none',loc,lv:f?1+Math.floor(R()*2):1,exp:0,tired:0};});
-  START.free.forEach(([id,loc])=>{S.hero[id]={f:null,loc,lv:1,exp:0,tired:0};});
+function newGame(me,W){W=W||makeWorld({});
+  S={v:1,me,year:194,season:0,turn:0,ap:0,reg:{},hero:{},flags:{},visits:{},met:{},news:[],stats:{war:0,win:0,duel:0,dwon:0,recruit:0,capt:0},rulers:{},map:W.map,opt:W.opt};
+  applyMap(S.map);
+  RIDS.forEach(r=>{const o=W.own[r]||null,t=START.reg[r][1];S.reg[r]={o,tr:o?Math.max(t,8000):Math.min(t,7000)};});
+  Object.keys(W.place).forEach(id=>{const[f,loc]=W.place[id];S.hero[id]={f:f===null?null:f,loc,lv:f&&f!=='none'?1+Math.floor(R()*2):1,exp:0,tired:0};});
   FIDS.forEach(f=>S.rulers[f]=FAC[f].ruler);
   Object.keys(S.hero).forEach(id=>{if(S.hero[id].f===me)S.met[id]=1;});
   S.ap=apMax();migrate(S);save();
 }
 /* 城の守り・金・負傷兵（後から足した項目） */
 function migrate(o){if(!o)return o;o.gold=o.gold==null?3000:o.gold;o.fgold=o.fgold||{};
-  const caps={};FIDS.forEach(f=>{const h=START.hero.find(x=>x[0]===FAC[f].ruler);if(h)caps[h[2]]=1;});
+  const caps={};FIDS.forEach(f=>{const h=o.hero&&o.hero[FAC[f].ruler];if(h&&h.f===f)caps[h.loc]=1;});
   RIDS.forEach(r=>{const g=o.reg[r];if(g.wall==null){g.wall=caps[r]?2:1;g.bld=caps[r]?[{t:'yumi',lv:1},{t:'yumi',lv:1}]:g.o?[{t:'yumi',lv:1}]:[];}g.inj=g.inj||0;});return o;}
 const H=id=>S.hero[id];
 const owner=r=>S.reg[r].o;
@@ -716,7 +786,7 @@ function playStory(text,opt){opt=opt||{};const lines=parseScript(text);if(!lines
       l.remove();done(choice);})();});}
 const NM=id=>HB(id).n;
 function OPENING(f){const r=rulerOf(f),R0=NM(r);
-  const base='@title 三国覇王伝\n#西暦一九四年。董卓は都を握り、漢の天下は崩れかけていた。\n#各地に群雄が割拠し、それぞれの旗を掲げる。\n';
+  const O=S&&S.opt||{};const base='@title 三国覇王伝\n#西暦一九四年。董卓は都を握り、漢の天下は崩れかけていた。\n'+(O.newland?'#……ここは見知らぬ大陸。二十一の城が、まだ誰も見たことのない形に並んでいる。\n':'')+(O.swap?'#国替えの令が下り、群雄はそれぞれ見知らぬ土地に移された。\n':'')+(O.mix?'#家臣たちも散りぢりとなり、思いもよらぬ主のもとに集った。\n':'')+'#各地に群雄が割拠し、それぞれの旗を掲げる。\n';
   const T={
    cao:'@bg palace\n曹操：天下の英雄は、この曹孟徳ただ一人。\n夏侯惇：孟徳、兵はそろった。どこから攻める?\n曹操：中原を制する者が天下を制す。……まずは、隣の呂布を叩け。',
    liu:'@bg garden\n#桃園で義兄弟の契りを結んでから十年。三人はいまだ小さな平原の地にいた。\n劉備：我ら三人、生まれた日は違えども、死ぬときは同じ日を願う。\n関羽：兄者、この関羽、どこまでもお供いたす。\n張飛：へへっ、天下なんぞ俺たち三人で取ってやらあ!\n劉備：まずは人を集めよう。襄陽の隆中には「臥龍」と呼ばれる賢人がいると聞く。',
@@ -759,15 +829,39 @@ function title(){closeSheet();const T=$('#title');T.hidden=false;try{BGM.play('c
   requestAnimationFrame(()=>paintBg(T.querySelector('canvas'),'dawn'));
   const c=T.querySelector('#tCont');if(c)c.onclick=()=>{try{SND.init();}catch(_){}S=sv;T.hidden=true;enterMap();};
   T.querySelector('#tNew').onclick=()=>{try{SND.init();}catch(_){}lordSelect();};}
-function lordSelect(){const T=$('#title');
-  let h='<canvas></canvas><div class="in" style="justify-content:flex-start"><div class="eye">西暦一九四年 ・ 群雄割拠</div><h1 style="font-size:clamp(36px,10vw,64px)">君主を選ぶ</h1><div class="lords">';
-  FIDS.forEach(f=>{const F=FAC[f];const regs=Object.keys(START.reg).filter(r=>START.reg[r][0]===f);const hs=START.hero.filter(x=>x[1]===f).map(x=>x[0]);
-    h+='<button class="lordc" type="button" data-f="'+f+'" style="--c:'+F.col+';--d:'+F.diff[1]+'"><img alt="" src="'+portrait(HB(F.ruler))+'"><div style="min-width:0"><b>'+F.n+'<em>'+F.diff[0]+'</em></b><small>'+regs.map(r=>REG[r].c).join('・')+' ・ 武将'+hs.length+'人</small><small>'+F.d+'</small></div></button>';});
+let DRAFT=null;const DOPT={swap:false,mix:false,newland:false};
+function drawPreview(cv,W){applyMap(W.map);const w=300,h=270;cv.width=w;cv.height=h;const x=cv.getContext('2d');const img=x.createImageData(w,h),a=img.data;const gd=new Int8Array(w*h);
+  const RI={};RIDS.forEach((r,i)=>RI[r]=i);
+  for(let py=0;py<h;py++)for(let px=0;px<w;px++){const X=px/w*100,Y=py/h*90;let g=-1;
+    if(mapInOut(X,Y)){const nx=X+2.2*Math.sin(Y*.45)+1.3*Math.sin(Y*1.3+X*.2),ny=Y+2.2*Math.cos(X*.4)+1.2*Math.sin(X*1.1);let bd=1e9;for(const s_ of MAP_SEEDS){const d=(nx-s_[1])**2+(ny-s_[2])**2;if(d<bd){bd=d;g=RI[s_[0]];}}}
+    gd[py*w+px]=g;}
+  for(let i=0;i<w*h;i++){const g=gd[i],o=i*4;if(g<0){a[o]=150;a[o+1]=176;a[o+2]=178;a[o+3]=255;continue;}
+    const f=W.own[RIDS[g]];const c=hexRgb(facCol(f));const k=f?.68:0;const l=i%w?gd[i-1]:g,u=i>=w?gd[i-w]:g;const e=(l>=0&&l!==g)||(u>=0&&u!==g)?(W.own[RIDS[l>=0&&l!==g?l:u]]!==f?.45:.8):1;
+    a[o]=(c[0]*k+228*(1-k))*e;a[o+1]=(c[1]*k+214*(1-k))*e;a[o+2]=(c[2]*k+180*(1-k))*e;a[o+3]=255;}
+  x.putImageData(img,0,0);const sx=w/100,sy=h/90;
+  x.strokeStyle='rgba(40,90,140,.75)';x.lineWidth=2;MAP_RIV.forEach(r=>{x.beginPath();r.forEach((p,i)=>i?x.lineTo(p[0]*sx,p[1]*sy):x.moveTo(p[0]*sx,p[1]*sy));x.stroke();});
+  x.strokeStyle='#3a2410';x.lineWidth=1.5;x.beginPath();MAP_OUT.forEach((p,i)=>i?x.lineTo(p[0]*sx,p[1]*sy):x.moveTo(p[0]*sx,p[1]*sy));x.closePath();x.stroke();
+  x.textAlign='center';x.textBaseline='middle';
+  RIDS.forEach(r=>{const f=W.own[r];const cx=REG[r].x*sx,cy=REG[r].y*sy;x.fillStyle=f?FAC[f].col:'#9a8a68';x.strokeStyle='#20140a';x.lineWidth=1.5;x.beginPath();x.arc(cx,cy,f?8:5,0,7);x.fill();x.stroke();
+    if(f){x.fillStyle='#fff';x.font='12px "Yuji Syuku",serif';x.fillText(FAC[f].ch,cx,cy+.5);}x.font='700 9px sans-serif';x.lineWidth=3;x.strokeStyle='rgba(255,250,235,.9)';x.strokeText(REG[r].c,cx,cy+13);x.fillStyle='#24160a';x.fillText(REG[r].c,cx,cy+13);});}
+function lordSelect(reroll){const T=$('#title');if(!DRAFT||reroll)DRAFT=makeWorld(DOPT);const W=DRAFT;
+  const tg=(k,n,d)=>'<button type="button" class="lordc" data-o="'+k+'" style="--c:'+(DOPT[k]?'#d8ac4c':'#6e4f26')+';--d:#8a1e12;grid-template-columns:1fr;padding:7px 10px;'+(DOPT[k]?'background:var(--tex-wood),linear-gradient(#6a2318,#3a120c)':'')+'"><div><b style="font-size:18px">'+(DOPT[k]?'■ ':'□ ')+n+'</b><small>'+d+'</small></div></button>';
+  let h='<canvas></canvas><div class="in" style="justify-content:flex-start"><div class="eye">西暦一九四年 ・ 群雄割拠</div><h1 style="font-size:clamp(36px,10vw,64px)">天下を引く</h1>'+
+    '<div class="lords" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));width:min(720px,100%)">'+tg('swap','国替','勢力どうしで初期の領地を入れ替える')+tg('mix','配下シャッフル','君主以外の武将をすべて配り直す')+tg('newland','新大陸','毎回ちがう形の大陸に21都市が並ぶ')+'</div>'+
+    '<div style="display:flex;flex-direction:column;align-items:center;gap:8px"><canvas id="pv" style="width:min(340px,88vw);height:auto;aspect-ratio:300/270;border:3px solid #6a4a22;box-shadow:0 0 0 1px #c9a23c,0 8px 24px rgba(0,0,0,.6)"></canvas>'+
+    '<button class="btn pri big" type="button" id="gDraw">ガチャを引く</button></div>'+
+    '<div class="eye" style="letter-spacing:.3em">君主を選ぶ</div><div class="lords">';
+  FIDS.forEach(f=>{const F=FAC[f];const regs=RIDS.filter(r=>W.own[r]===f);const cap=W.place[F.ruler][1];regs.sort((a,b)=>(b===cap)-(a===cap));const hs=Object.keys(W.place).filter(id=>W.place[id][0]===f);
+    const top=hs.filter(id=>id!==F.ruler).sort((a,b)=>HB(b).p+HB(b).i-HB(a).p-HB(a).i).slice(0,3).map(id=>HB(id).n);
+    h+='<button class="lordc" type="button" data-f="'+f+'" style="--c:'+F.col+';--d:'+F.diff[1]+'"><img alt="" src="'+portrait(HB(F.ruler))+'"><div style="min-width:0"><b>'+F.n+(W.opt.swap||W.opt.mix||W.opt.newland?'':'<em>'+F.diff[0]+'</em>')+'</b><small>'+regs.map(r=>REG[r].c).join('・')+' ・ 武将'+hs.length+'人</small><small>'+(W.opt.mix?'配下：'+top.join('・')+(hs.length>4?' ほか':''):F.d)+'</small></div></button>';});
   h+='</div><button class="btn" type="button" id="lBack">戻る</button></div>';T.innerHTML=h;requestAnimationFrame(()=>paintBg(T.querySelector('canvas'),'battle'));
-  T.querySelector('#lBack').onclick=title;
-  T.querySelectorAll('[data-f]').forEach(b=>b.onclick=async()=>{const f=b.dataset.f;newGame(f);T.hidden=true;enterMap();await playStory(OPENING(f),{bg:'dawn'});
+  drawPreview(T.querySelector('#pv'),W);
+  T.querySelector('#lBack').onclick=()=>{applyMap(S&&S.map||DEF_MAP);title();};
+  T.querySelector('#gDraw').onclick=()=>{try{SND.gong(.14);}catch(_){}const y=T.scrollTop;lordSelect(true);T.scrollTop=y;};
+  T.querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>{DOPT[b.dataset.o]=!DOPT[b.dataset.o];const y=T.scrollTop;lordSelect(true);T.scrollTop=y;});
+  T.querySelectorAll('[data-f]').forEach(b=>b.onclick=async()=>{const f=b.dataset.f;newGame(f,W);DRAFT=null;T.hidden=true;enterMap();await playStory(OPENING(f),{bg:'dawn'});
     toast('自分の城（金の縁）をタップ、または「戦」で出陣');});}
-function enterMap(){if(!GRID)buildGrid();view.init=0;fitView();repaint();UIS.sel=null;try{BGM.play('camp');}catch(_){}
+function enterMap(){applyMap(S.map||DEF_MAP);buildGrid();view.init=0;fitView();repaint();UIS.sel=null;try{BGM.play('camp');}catch(_){}
   const mine=regsOf(S.me);if(mine.length){/* 自国が見えるように少し寄る */const cv=$('#map');if(cv.clientWidth<700){view.s=1.6;const k=view.fit*view.s;const r=mine[0];view.ox=cv.clientWidth/2-REG[r].x*BW/100*k;view.oy=cv.clientHeight/2-REG[r].y*BH/90*k;clampView();}}
   dirty=true;checkEnd();}
 
