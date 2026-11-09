@@ -1495,7 +1495,7 @@ function renderPrep(){
   h+='<div class="pp pad"><h2 class="sec">'+C.n+' ― '+B.n+'の戦い（'+B.y+'年・'+B.p+'）</h2><p class="story">'+E.s+'</p>'+
      '<dl class="kv" style="margin-top:8px"><dt>勝利</dt><dd>'+(E.cond&&E.cond.k==='survive'?E.cond.t+'カウント耐え抜く、または':'')+(foeIds.find(f=>f.leader)?byIdH(foeIds.find(f=>f.leader).id).n:'敵の大将')+'を倒す、または敵の全滅</dd><dt>敗北</dt><dd>総大将が倒れる、または味方の全滅</dd>'+
      '<dt>戦場</dt><dd>'+MAPN[B.map]+(E.side==='def'?'（守る側）':'（攻める側）')+(E.ev?'・途中で「'+EVENTS[E.ev].n+'」が起きる':'')+'。地形は戦うたびに変わる</dd>'+
-     '<dt>敵将</dt><dd>'+foeIds.map(f=>byIdH(f.id).n+(f.leader?'（総大将）':'')).join('・')+'、ほかに兵'+Math.max(0,clamp(PREP.heroes.filter(p=>p.on).length+1+Math.floor(PREP.idx/4),4,8)-foeIds.length)+'人（出陣の人数で変わる）</dd></dl></div>';
+     '<dt>敵将</dt><dd>'+foeIds.map(f=>byIdH(f.id).n+(f.leader?'（総大将）':'')).join('・')+(n=>n>0?'、ほかに兵'+n+'人（出陣の人数で変わる）':'')(Math.max(0,clamp(PREP.heroes.filter(p=>p.on).length+1+Math.floor(PREP.idx/4),4,8)-foeIds.length))+'</dd></dl></div>';
   // プレイ方式
   h+='<div class="pp pad"><h2 class="sec">プレイ方式</h2><div class="row" style="margin-top:6px"><button type="button" class="tog'+(PREP.mode.k==='all'?' on':'')+'" data-m="all">全体プレイ（全員を操作）</button><button type="button" class="tog'+(PREP.mode.k==='hero'?' on':'')+'" data-m="hero">武将プレイ（1人だけ操作）</button>';
   if(PREP.mode.k==='hero')h+='<select id="mHero" aria-label="操作する武将">'+deployedHeroes.map(p=>'<option value="'+p.h.id+'"'+(p.h.id===PREP.mode.id?' selected':'')+'>'+p.h.n+'</option>').join('')+'</select>';

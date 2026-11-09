@@ -560,7 +560,7 @@ async function battle(B){
   while(!res){const mode=await chooseMode(B,me,foe);if(!mode){if(mySide==='atk'){refundMuster(B);return;}continue;}
     res=await runMode(mode,B,me,foe);
     // 出撃して負けても、兵なしで二の丸に籠もって戦える
-    if(res&&mode==='tac'&&mySide==='def'&&!res.win&&me.length){const go=await choiceSheet('二の丸の戦い','<div class="card"><h3>城の外の戦いに敗れた</h3><p>兵は散ったが、武将たちはまだ二の丸に籠もっている。兵なしで最後の戦いに挑むか。勝てば城は守られる。</p></div>',[{t:'二の丸で戦う',v:1,pri:true},{t:'城を明け渡す',v:0}]);
+    if(res&&(mode==='td'||mode==='sortie')&&mySide==='def'&&!res.win&&me.length){const go=await choiceSheet('二の丸の戦い','<div class="card"><h3>'+(mode==='td'?'本丸の守りが破られた':'城の外の戦いに敗れた')+'</h3><p>兵は散ったが、武将たちはまだ二の丸に籠もっている。兵なしで最後の戦いに挑むか。勝てば城は守られる。</p></div>',[{t:'二の丸で戦う',v:1,pri:true},{t:'城を明け渡す',v:0}]);
       if(go){toast('二の丸の戦い ― 兵なしの武将だけで迎え撃つ');const r2=await runTac(B,me,foe,{nino:true});if(r2){r2.down=Object.assign({},res.down,r2.down);r2.duels=(res.duels||[]).concat(r2.duels||[]);if(r2.win){r2.myLeft=Math.max(500,Math.round(res.myLeft*.5));r2.foeLeft=Math.round(res.foeLeft*.6);}else{r2.myLeft=res.myLeft;r2.foeLeft=res.foeLeft;}res=r2;}}}}
   if(res.pact){await applyPact(B,res);return;}
   await applyResult(B,res);
@@ -585,7 +585,7 @@ function chooseMode(B,me,foe){return new Promise(res=>{
   if(B.kind==='field')b+=card('kessen','決','決戦','野戦','大軍と大軍がぶつかる。兵を配分し陣形を組んで布陣し、戦場で指揮をとる。猛将は攻めの陣形で強い。武将の部隊が接すれば一騎打ち。',hasMe);
   else if(B.kind==='siege')b+=card('siege','城','攻城戦','城を囲む','城壁と城門を破り、本陣を落とすか敵総大将を討てば勝ち。弓楼や投石機が撃ってくる。衝車と衡軛の陣が城壁に強い。',hasMe);
   else{b+=card('td','籠','籠城戦','城で守る','城壁と防衛施設で迎え撃つ。4分守り抜くか、敵総大将を討てば勝ち。知将は守りに強いが、猛将は挑発に乗って打って出てしまうことがある。',hasMe);
-    b+=card('tac','出','出撃','一手ずつ戦う','城を出て迎え撃つ。'+shield+'負けても二の丸に籠もり、兵なしでもう一戦できる。',hasMe);}
+    b+=card('sortie','出','出撃','野戦で迎え撃つ','城を出て野戦で迎え撃つ。猛将が力を出しやすい。負けても二の丸に籠もり、兵なしでもう一戦できる。',hasMe);}
   if(mySide==='atk')b+=card('pact','騎','一騎打ち勝負を申し込む','三番勝負',canPact?'勝てば'+REG[B.target].c+'を得る。負ければ総大将'+HB(lead).n+'の城（'+REG[homeOf].c+'）を割譲。どちらも武将も兵も失わない。相手が受けるとは限らない。':B.refused?'断られた':!foe.length?'敵に武将がいない':'城が一つしかないので申し込めない',canPact);
   b+=card('auto','任','委任','すぐ終わる','部下に任せて結果だけを見る。勝率は上の見込みどおり。',true)+'</div>';
   if(hasMe)b+='<p class="dim" style="margin:0;font-size:12px">兵の配分（戦術・一騎打ち）：'+allocLine(me.slice().sort((a,c)=>(c===rulerOf(S.me))-(a===rulerOf(S.me))||heroPower(c)-heroPower(a)),myTr)+'</p>';
@@ -599,6 +599,7 @@ async function runMode(mode,B,me,foe){
   if(mode==='kessen')return runKessen(B,me,foe,'field');
   if(mode==='siege')return runKessen(B,me,foe,'siege');
   if(mode==='td')return runKessen(B,me,foe,'td');
+  if(mode==='sortie')return runKessen(B,me,foe,'field');
   if(mode==='tac')return runTac(B,me,foe);
   if(mode==='duel')return runDuel3(B,me,foe);
   if(mode==='pact')return proposePact(B,me,foe);
@@ -808,29 +809,86 @@ function chanceCap(id){const h=HB(id),cap=S.hero[id];const rc=HB(rulerOf(S.me)).
   if(id==='liub'||id==='caoc'||id==='sunj')p=.03;
   if(id==='lubu')p=.65;if(id==='menghuo')p=(cap.tries||0)>=6?1:0;
   return clamp(p,0,1);}
-async function recruitFree(id,r){if(S.ap<1){toast('令が足りない');return;}
+async function recruitFree(id,r){if(S.ap<1){toast('令が足りない');return;}if(id!=='zhugel'){recruitSheet(id,'free',r);return;}
   const v=(S.visits[id]=(S.visits[id]||0)+1);S.ap--;
   if(id==='zhugel'){if(v<3){await playStory(v===1?'#'+REG[r].c+'の西、隆中の草廬を訪ねた。\n童子：先生はお出かけでございます。\n#諸葛亮は留守だった。':'#雪の中、ふたたび草廬を訪ねた。\n童子：先生はまだお戻りになりませぬ。\n#またも会えなかった。だが、あきらめるにはまだ早い。',{bg:v===1?'garden':'snow',place:'隆中'});save();topBar();return;}
     await playStory(SANKO(S.me),{bg:'room',place:'隆中・草廬'});joinHero(id,r);return;}
-  const p=chanceFree(id);const ok=R()<p;
-  if(ok){joinHero(id,r);await playStory(HB(rulerOf(S.me)).n+'：'+HB(id).n+'殿、我が軍に力を貸してはくれぬか。\n'+HB(id).n+'：'+(HB(id).sp||line(id,'sp'))+'\n'+HB(id).n+'：……この身、お預けいたしましょう。',{bg:'room',place:REG[r].c});}
-  else{toast(HB(id).n+'は首を縦に振らなかった（もう一度訪ねてもよい）');}
-  save();repaint();regionSheet(r);}
+  S.ap++;S.visits[id]--;recruitSheet(id,'free',r);}
+/* ---------- 登用：説得・礼を尽くす・問答・一騎打ち、性格ごとの台詞 ---------- */
+const RC_IN={free:['{r}：{h}殿、我が軍に力を貸してはくれぬか。','{r}：そなたの噂はかねがね聞いておる。どうか、わしのもとへ。','{r}：乱世を終わらせるには、そなたの力が要る。','{r}：共に天下を見てみたいとは思わぬか。'],
+  cap:['{r}：縄を解け。……その武、わしのもとで振るってはくれぬか。','{r}：命は取らぬ。代わりに、力を貸してもらいたい。','{r}：敵であったことは忘れよう。共に天下を目指さぬか。','{r}：そなたほどの者を、ここで失うのは惜しい。']};
+const RC_OK={mou:['ははっ、おもしれえ！ 暴れさせてくれるなら仕えてやる！','{r}殿、気に入った！ この武、預けよう！','強い者に従うのが乱世の習い。よかろう！'],
+  doku:['……ふん、退屈はさせるなよ。','俺を使いこなせるか、見せてもらおうか。','いいだろう。ただし、俺のやり方でやる。'],
+  yuu:['その志、しかと受け取った。この身を捧げよう。','{r}殿の仁義に、心打たれ申した。','ここで会ったのも天命。お供いたす。'],
+  rei:['主の器、見極めさせていただいた。お仕えいたしましょう。','よろしい。私の知、あなたのために使いましょう。','天下を一つにする策、お授けいたす。'],
+  ken:['承知つかまつった。この命、尽きるまでお仕えいたす。','誓って、裏切りはいたしませぬ。','忠義の限りを尽くしましょう。'],
+  yuu2:['わ、わかった……仕えよう。','……これも運命か。','うむ……よろしく頼む。']};
+const RC_NG={mou:['ふん、弱い奴には従わねえ！','腕っぷしで俺を黙らせてみな！','話にならねえ。'],doku:['お前に俺は使えん。','俺の主は俺だけだ。'],
+  yuu:['申し訳ないが、まだ決めかねる。','義理がある。今は仕えられぬ。','その申し出、ありがたいが……。'],rei:['その程度の器では……。','まだ時ではありませぬな。','天下の行く末を、もう少し見極めたい。'],
+  ken:['旧主への恩がございます。','二君に仕えるわけには参りませぬ。'],yuu2:['こ、困る……','い、今は勘弁してくれ。']};
+const RC_CAPNG={mou:['さっさと斬れ！ 命乞いなどせん！'],doku:['首を刎ねるがいい。'],ken:['敗れた身なれど、心までは渡さぬ。'],yuu:['……今は、何も言えぬ。'],rei:['捕らわれの身で、何を語れと？'],yuu2:['た、助けてはくれるのか……？ だが仕えるのは……']};
+const RQ=[{q:'天下を取ったあと、民をどう治める？',a:[['徳をもって治め、民を慈しむ',['ken','yuu','yuu2']],['法を厳しく定め、乱れを許さぬ',['rei','doku']],['強き軍で外敵を退け、民を守る',['mou']]]},
+  {q:'敵の大軍が攻めてきた。どうする？',a:[['城に籠もり、敵の疲れを待つ',['ken','yuu2']],['奇策で敵の兵糧を断つ',['rei']],['真っ向から打ち破る',['mou','doku','yuu']]]},
+  {q:'わしに仕えて、そなたは何を得る？',a:[['存分に武を振るう場',['mou','doku']],['その才を天下のために使う道',['rei','yuu']],['乱世を終わらせる大義',['ken','yuu','yuu2']]]},
+  {q:'人を用いるうえで、最も大切なものは？',a:[['信義',['yuu','ken','yuu2']],['才覚',['rei','doku']],['勇気',['mou']]]},
+  {q:'主君が過ちを犯したら、どうする？',a:[['命を懸けて諫める',['ken','rei']],['黙って従う',['yuu2']],['自ら正しい道を示す',['doku','mou','yuu']]]}];
+const fill=(t,id)=>t.replace(/\{r\}/g,HB(rulerOf(S.me)).n).replace(/\{h\}/g,HB(id).n);
+const locked=id=>(['guan','zhangf'].includes(id)&&S.me!=='liu'&&alive('liu'));
+function rcChance(id,kind){return kind==='cap'?chanceCap(id):chanceFree(id);}
+async function recruitSheet(id,kind,r){const p=rcChance(id,kind),ps=persOf(id),h=HB(id);
+  const qOk=h.i>=72||ps==='rei',dOk=h.p>=80||ps==='mou'||ps==='doku';
+  const b='<img alt="" src="'+face(id)+'" style="width:110px;height:124px;border:2px solid var(--gold);display:block;margin:0 auto">'+heroCard(id,{sub:kind==='cap'?'捕虜 ・ 説得 '+(S.hero[id].tries||0)+'回':'在野 ・ '+REG[r].c})+
+    '<p class="muted" style="margin:0">見込み：'+(p>=.8?'高い':p>=.45?'五分':p>=.15?'低い':'ほぼ無理')+'（'+({mou:'猛将',doku:'一匹狼',yuu:'義の人',rei:'知将',ken:'忠臣',yuu2:'迷いやすい'})[ps]+'）</p>'+
+    '<div class="modes">'+
+    '<button class="mode" type="button" data-w="talk"'+(S.ap<1?' disabled':'')+'><span class="k">説</span><div><b>説得する<small>令1</small></b><span>ふつうに口説く。</span></div></button>'+
+    '<button class="mode" type="button" data-w="gift"'+(S.ap<1||S.gold<500?' disabled':'')+'><span class="k">礼</span><div><b>礼を尽くす<small>令1・金500</small></b><span>贈り物と礼で心を動かす。見込みが上がる。</span></div></button>'+
+    '<button class="mode" type="button" data-w="ask"'+(S.ap<1||!qOk?' disabled':'')+'><span class="k">問</span><div><b>問答する<small>令1</small></b><span>'+(qOk?'問いに答えて器を示す。相手の考えに合えば大きく心が動き、外せば遠のく。':'知恵者でないので問答には乗らない')+'</span></div></button>'+
+    '<button class="mode" type="button" data-w="duel"'+(S.ap<1||!dOk||!heroesOf(S.me).length?' disabled':'')+'><span class="k">騎</span><div><b>一騎打ちで認めさせる<small>令1</small></b><span>'+(dOk?'こちらの武将が一騎打ちで勝てば仕える。':'武人でないので一騎打ちには乗らない')+'</span></div></button></div>';
+  const foot=kind==='cap'?'<button class="btn" type="button" id="cFree">解き放つ</button>':'';
+  const d=sheet(h.n+(kind==='cap'?'（捕虜）':'（在野）'),b,foot);
+  if(d.querySelector('#cFree'))d.querySelector('#cFree').onclick=()=>{const x=S.hero[id];x.cap=null;x.f=null;x.loc=pick(RIDS);toast(h.n+'を解き放った');save();repaint();talentSheet();};
+  d.querySelectorAll('[data-w]').forEach(e=>e.onclick=()=>{d.remove();tryRecruit(id,kind,r,e.dataset.w);});}
+async function tryRecruit(id,kind,r,way){if(S.ap<1)return;S.ap--;const h=HB(id),ps=persOf(id);const x=S.hero[id];if(kind==='cap')x.tries=(x.tries||0)+1;else S.visits[id]=(S.visits[id]||0)+1;
+  let p=rcChance(id,kind),intro=fill(pick(RC_IN[kind]),id)+'\n';
+  if(id==='menghuo'&&kind==='cap'&&x.tries<7){await playStory('孟獲：まだだ! まだ心は服さぬぞ!\n#孟獲は首を振った。（'+x.tries+'度目）七度でも説けば、あるいは……');save();topBar();talentSheet();return;}
+  if(way==='gift'){S.gold-=500;p=Math.min(.95,p+.2);intro+='#金銀と名馬を贈り、礼を尽くした。\n';}
+  if(way==='ask'){const Q=pick(RQ);const ans=await askQuestion(id,Q);const good=Q.a[ans][1].includes(ps);p=good?Math.min(.97,p+.35):Math.max(0,p-.15);intro+=h.n+'：'+(good?'……なるほど。そのお考え、気に入りました。':'……そうお考えですか。')+'\n';}
+  if(way==='duel'){const champ=heroesOf(S.me).sort((a,c)=>st(c).p-st(a).p)[0];const v=speak(id,'duel');
+    await choiceSheet('一騎打ちで認めさせる','<div class="row" style="justify-content:center;gap:16px"><div style="text-align:center"><img alt="" src="'+face(champ)+'" style="width:84px;height:95px;border:2px solid var(--me)"><br>'+HB(champ).n+'</div><b style="font-family:var(--f-disp);font-size:28px;color:var(--gold)">対</b><div style="text-align:center"><img alt="" src="'+face(id)+'" style="width:84px;height:95px;border:2px solid var(--foe)"><br>'+h.n+'</div></div><p style="margin:0;text-align:center">'+h.n+'「'+esc(v||'俺に勝てたら、従ってやる！')+'」</p>',[{t:'いざ勝負',v:1,pri:true}]);
+    const D=duelSession();const ld=loadingCard('一騎打ち',champ,id);const m=await D.fight(champ,id,'plain',()=>ld.remove(),0,0);ld.remove();D.close();try{BGM.play('camp',true);}catch(_){}
+    p=m.win?(locked(id)?0:1):0;intro+=m.win?h.n+'：……見事だ。負けを認めよう。\n':h.n+'：はっはっは！ 出直してこい！\n';if(m.win)giveExp(champ,40);}
+  if(R()<p&&!(locked(id)&&way!=='duel')){joinHero(id,kind==='cap'?(ADJ[x.loc]&&S.reg[x.loc].o===S.me?x.loc:regsOf(S.me)[0]):r);const ok=fill(pick(RC_OK[ps]||RC_OK.yuu),id);
+    await playStory('@bg '+(kind==='cap'?'palace':'room')+'\n'+intro+h.n+'：'+ok+'\n#'+h.n+'が仲間に加わった。',{bg:kind==='cap'?'palace':'room',place:REG[(r||x.loc)]?REG[r||x.loc].c:''});speak(id,'accept');}
+  else{const ng=fill(pick((kind==='cap'?RC_CAPNG[ps]:null)||RC_NG[ps]||RC_NG.yuu),id);
+    if(locked(id))intro+=h.n+'：わしは兄者以外には仕えぬ。\n';
+    await playStory(intro+h.n+'：'+ng+'\n#'+h.n+'は首を縦に振らなかった。'+(kind==='cap'?'（何度でも説ける）':'（また訪ねてもよい）'),{bg:kind==='cap'?'palace':'room'});}
+  save();repaint();talentSheet();}
+function askQuestion(id,Q){return new Promise(res=>{const d=sheet(HB(id).n+'の問い','<div class="card row" style="flex-wrap:nowrap"><img alt="" src="'+face(id)+'" style="width:64px;height:72px;border:1px solid var(--gold)"><div><b style="font-family:var(--f-disp);color:var(--gold2)">'+HB(id).n+'</b><p style="margin:0">「'+esc(Q.q)+'」</p></div></div>'+
+  '<div style="display:flex;flex-direction:column;gap:8px">'+Q.a.map((a,i)=>'<button class="btn" type="button" data-q="'+i+'" style="text-align:left">'+esc(a[0])+'</button>').join('')+'</div>','');d.querySelector('.x').hidden=true;
+  d.querySelectorAll('[data-q]').forEach(e=>e.onclick=()=>{d.remove();res(+e.dataset.q);});});}
+// 捕虜が大勢いるとき：戦術戦でまとめて勝負し、勝てば全員を登用
+async function captiveBattle(){const caps=captivesOf(S.me).sort((a,c)=>heroPower(c)-heroPower(a)).slice(0,6);if(caps.length<3||S.ap<1)return;S.ap--;
+  const mine=heroesOf(S.me).sort((a,c)=>(c===rulerOf(S.me))-(a===rulerOf(S.me))||heroPower(c)-heroPower(a)).slice(0,8);
+  await playStory('#捕虜たちが声を上げた。\n'+HB(caps[0]).n+'：縄目の恥は忍べぬ！ 我らと戦って勝てたなら、まとめて従ってやろう！\n'+HB(rulerOf(S.me)).n+'：よかろう。その言葉、忘れるな。',{bg:'camp'});
+  const fstr=caps.map((id,i)=>(i===0?'*':'')+id+':'+tjob(id)).join(' ');
+  const msg={t:'tac',id:++FID,n:'獄舎前',y:S.year,p:REG[regsOf(S.me)[0]].n,map:pick(['plain','hills','forest']),opt:{},side:'atk',fname:FAC[S.me].n,fcol:FAC[S.me].col,fch:FAC[S.me].ch,ef:'kokin',ech:'虜',ecol:'#6a6a6a',
+    party:mine.map(id=>({id,lv:S.hero[id].lv,tr:0})),foeTr:{},foe:fstr,s:'捕虜たちとの勝負。勝てば全員が仕える。'};
+  const m=await frameRun('tactics.html','tacReady',msg,['tacEnd','tacCancel'],'捕虜との勝負',mine[0],caps[0]);
+  if(m.t==='tacCancel'){S.ap++;save();topBar();talentSheet();return;}
+  if(m.win){const r=regsOf(S.me)[0];caps.forEach(id=>{const h=S.hero[id];h.f=S.me;h.cap=null;h.loc=r;h.tired=1;S.met[id]=1;S.stats.recruit++;});
+    await playStory('@title まとめて登用\n'+HB(caps[0]).n+'：……約束だ。我ら一同、従おう。\n#'+caps.map(id=>HB(id).n).join('・')+'が仲間に加わった。',{bg:'palace'});speak(caps[0],'accept');}
+  else{const run=pick(caps);const h=S.hero[run];h.cap=null;h.f=null;h.loc=pick(RIDS);await playStory(HB(caps[0]).n+'：口ほどにもない！\n#勝負に敗れた。どさくさにまぎれて'+HB(run).n+'が逃げ出した。',{bg:'camp'});}
+  save();repaint();talentSheet();}
 function joinHero(id,r){const h=S.hero[id];h.f=S.me;h.cap=null;h.loc=r||h.loc;h.tired=1;S.met[id]=1;S.stats.recruit++;banner(HB(id).n+'が仲間に','登用');try{SND.gong(.18);}catch(_){}save();repaint();}
 function talentSheet(){const caps=captivesOf(S.me);const fr=[];regsOf(S.me).forEach(r=>freeAt(r).forEach(id=>fr.push([id,r])));
-  let b='<p class="muted" style="margin:0">登用は令を1つ使う。君主の魅力が高いほど成功しやすい。捕虜は何度も説けば心が動くこともある。</p>';
+  let b='<p class="muted" style="margin:0">登用は令を1つ使う。説得・礼を尽くす・問答・一騎打ちから選べる。君主の魅力が高いほど成功しやすい。捕虜が3人以上いれば、戦術戦でまとめて勝負して勝てば全員を登用できる。</p>';
   b+='<h3 class="sec">捕虜 '+caps.length+'人</h3>'+(caps.length?'<div class="grid">'+caps.map(id=>heroCard(id,{btn:true,sub:'説得 '+(S.hero[id].tries||0)+'回'})).join('')+'</div>':'<p class="muted" style="margin:0">いない</p>');
   b+='<h3 class="sec">領内の在野 '+fr.length+'人</h3>'+(fr.length?'<div class="grid">'+fr.map(([id,r])=>heroCard(id,{btn:true,sub:REG[r].c+(S.visits[id]?' ・ 訪問'+S.visits[id]+'回':'')})).join('')+'</div>':'<p class="muted" style="margin:0">いない。他の地を取れば会えるかもしれない</p>');
   const met=Object.keys(S.met).length;b+='<p class="dim" style="margin:0;font-size:12px">これまで仕えた武将 '+met+' / '+HEROES.length+'人</p>';
-  const d=sheet('人材・捕虜',b,'');
+  const d=sheet('人材・捕虜',b,caps.length>=3?'<button class="btn pri" type="button" id="capBt"'+(S.ap<1?' disabled':'')+'>捕虜たちとまとめて勝負（戦術戦・令1）</button>':'');
+  if(d.querySelector('#capBt'))d.querySelector('#capBt').onclick=()=>{closeSheet();captiveBattle();};
   d.querySelectorAll('[data-h]').forEach(e=>e.onclick=()=>{const id=e.dataset.h;if(S.hero[id].cap===S.me)captiveSheet(id);else{const r=S.hero[id].loc;recruitFree(id,r);}});}
-function captiveSheet(id){const p=chanceCap(id);const b='<img alt="" src="'+face(id)+'" style="width:110px;height:124px;border:2px solid var(--gold);display:block;margin:0 auto">'+heroCard(id,{})+'<p style="margin:0">「'+esc(line(id,'lose'))+'」</p><p class="muted" style="margin:0">登用の見込み：'+(p>=.8?'高い':p>=.45?'五分':p>=.15?'低い':'ほぼ無理')+'</p>';
-  const d=sheet(HB(id).n+'（捕虜）',b,'<button class="btn pri" type="button" id="cTry"'+(S.ap<1?' disabled':'')+'>説得する（令1）</button><button class="btn" type="button" id="cFree">解き放つ</button>');
-  d.querySelector('#cTry').onclick=async()=>{S.ap--;const h=S.hero[id];h.tries=(h.tries||0)+1;
-    if(id==='menghuo'&&h.tries<7){await playStory('孟獲：まだだ! まだ心は服さぬぞ!\n#孟獲は首を振った。（'+h.tries+'度目）七度でも説けば、あるいは……');save();topBar();talentSheet();return;}
-    if(R()<p){joinHero(id,regsOf(S.me)[0]);await playStory(HB(rulerOf(S.me)).n+'：その武、わしのもとで振るってはくれぬか。\n'+HB(id).n+'：……負けた身。'+(id==='lubu'?'よかろう、この呂布の武、存分に使うがいい。':'この命、お預けいたす。'),{bg:'palace'});}
-    else toast(HB(id).n+'は応じなかった');save();repaint();talentSheet();};
-  d.querySelector('#cFree').onclick=()=>{const h=S.hero[id];h.cap=null;h.f=null;h.loc=pick(RIDS);toast(HB(id).n+'を解き放った');save();repaint();talentSheet();};}
+function captiveSheet(id){recruitSheet(id,'cap',S.hero[id].loc);}
 function heroSheet(){const ids=heroesOf(S.me).sort((a,b)=>heroPower(b)-heroPower(a));
   let b='<div class="grid">'+ids.map(id=>heroCard(id,{tag:id===rulerOf(S.me)?'君主':S.hero[id].tired?'疲労':'',tagR:id===rulerOf(S.me),sub:REG[S.hero[id].loc].c+' ・ EXP '+S.hero[id].exp+'/'+expNeed(S.hero[id].lv)})).join('')+'</div>';
   sheet('武将 '+ids.length+'人',b,'');}
