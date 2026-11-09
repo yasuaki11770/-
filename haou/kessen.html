@@ -1,5 +1,5 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
-<title>三国決戦伝</title>
+<title>三国覇王伝 決戦</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
 /* layout: one-screen game. Top resource bar, full-bleed canvas, bottom command bar, sheets slide up over the canvas. */
@@ -233,7 +233,7 @@ select{font:inherit;color:var(--fg);background:var(--ink);border:1px solid var(-
 
 <div id="app">
   <div class="bar" id="topbar">
-    <span class="ttl">三国決戦伝</span>
+    <span class="ttl">三国覇王伝</span>
     <span class="res f"><i>平</i><span id="rC">0</span><small id="rCc"></small></span>
     <span class="res t"><i>将</i><span id="rH">0</span></span>
   </div>
@@ -1439,7 +1439,7 @@ function duelTarget(q){let best=null,bd=3.6;for(const e of BT.sq){if(!e.alive||e
 function maybeDuel(a,b,forced){
   if(!a.hero||!b.hero||a.heroDown||b.heroDown||!a.alive||!b.alive)return false;
   const key=Math.min(a.id,b.id)+'-'+Math.max(a.id,b.id);
-  if((BT.duelN||0)>=2){if(forced==='player')toast('この戦ではもう一騎打ちは起きない（1戦に2回まで）');return false;}
+  if((BT.duelN||0)>=3){if(forced==='player')toast('この戦ではもう一騎打ちは起きない（1戦に2回まで）');return false;}
   if(forced&&forced!=='player'&&(BT.pairs[key]||a.dueled>=1||b.dueled>=1))return false;
   if(!forced){if(BT.pairs[key])return false;BT.pairs[key]=1;if(a.dueled>=2||b.dueled>=2)return false;
     const me=a.side===0?a:b,foe=a.side===0?b:a;let p=.07*(FM[a.fm].duel||1)*(FM[b.fm].duel||1)*Math.sqrt(PERS[a.pers].duel*PERS[b.pers].duel)*gunMod(a,'duel')*gunMod(b,'duel');if(!me.duelOk)p=0;if(foe.hs.p>=95)p+=.08;if(rnd()>=p)return false;}
@@ -2621,66 +2621,100 @@ function councilFull(on){if(MODE==='battle')return;const tb0=$('#topbar');if(tb0
 })();
 </script>
 <script>
-/* ===== 三国覇王伝：攻城戦と籠城戦（城壁・本陣・防衛施設） ===== */
+/* ===== 三国覇王伝：攻城戦と籠城戦（城壁で囲った城・城門・本陣・防衛施設）、性格による得手不得手、接触したら一騎打ち ===== */
 (function(){
   if(!/ext/.test(location.hash))return;
   const TK=2.2;
+  const MOU=function(q){return q.hero&&(q.pers==='mou'||q.pers==='doku');},REI=function(q){return q.hero&&q.pers==='rei';};
+  const ATKFM={hoshi:1,gyorin:1,engetsu:1,kouyaku:1};
   const _sw=startWar;
-  startWar=function(i){_sw(i);const F=window.__FORT;if(F&&WARS[i]===F.w)setupFort(F);};
-  function setupFort(F){const s=F.side,W=WW,Hh=WH;const wy=s===0?Hh-9:9;const L=Math.max(1,F.wall||1);const list=[];
-    for(let x=1;x<W-1;x++){const gate=x===14||x===15;list.push({t:'wall',lv:L,x:x,y:wy,side:s,hp:Math.round(bHp('wall',L)*(gate?1.6:1)),wall:1,gate:gate});}
-    const hon={t:'honjin',lv:clamp(F.hon||1,1,6),x:W/2-1.5,y:s===0?Hh-3.4:.3,side:s,hon:1,cd:0};hon.hp=bHp('honjin',hon.lv);list.push(hon);
-    const xs=[3.5,25.5,8.5,20.5,11.5,17.5];let k=0;
-    (F.blds||[]).forEach(function(b){if(!BD[b.t])return;if(b.t==='trap'){for(let j=0;j<2;j++)list.push({t:'trap',lv:b.lv||1,x:3+Math.random()*24,y:s===0?wy-3-Math.random()*7:wy+3+Math.random()*7,side:s,hp:1,trap:1});return;}
-      const o={t:b.t,lv:b.lv||1,x:xs[k%xs.length]-1,y:s===0?wy+1:wy-3,side:s,cd:Math.random(),idx:b.i};k++;o.hp=bHp(b.t,o.lv);list.push(o);});
+  startWar=function(i){_sw(i);const F=window.__FORT;if(F&&WARS[i]===F.w)setupFort(F);else BT.fort=null;personal(F&&WARS[i]===F.w?F.side:null);};
+  // 性格：猛将は攻めに強い（攻めの陣形ならさらに）。知将は守りに強い
+  function personal(castle){for(const q of BT.sq){if(!q.hero)continue;const atk=castle===null?true:q.side!==castle;
+    if(MOU(q)&&atk){const k=ATKFM[q.fm]?1.25:1.15;q.buf.atk=[k,1e9];setTag(q,'猛攻 ×'+k,6,'#ff9a6a');}
+    if(REI(q)&&!atk){q.buf.def=[1.25,1e9];setTag(q,'堅守',6,'#9fd0ff');}}}
+  function setupFort(F){const s=F.side,W=WW,Hh=WH;const L=Math.max(1,F.wall||1);const list=[];
+    const R=s===0?{x0:6,x1:24,y0:Hh-10,y1:Hh-.5}:{x0:6,x1:24,y0:.5,y1:10};
+    const hpW=Math.round(bHp('wall',L));
+    const seg=function(x,y,edge,gate){list.push({t:'wall',lv:L,x:x,y:y,side:s,hp:hpW,wall:1,gate:!!gate,edge:edge});};
+    for(let x=R.x0;x<R.x1;x++){const mid=Math.abs(x+.5-W/2)<1.1;seg(x,R.y0-.5,'n',s===1?false:mid);seg(x,R.y1-.5,'s',s===1?mid:false);}
+    for(let y=Math.ceil(R.y0);y<R.y1-.6;y++){const mid=Math.abs(y+.5-(R.y0+R.y1)/2)<.6;seg(R.x0-.5,y,'w',mid);seg(R.x1-.5,y,'e',mid);}
+    const cy=(R.y0+R.y1)/2;const hon={t:'honjin',lv:clamp(F.hon||1,1,6),x:W/2-1.5,y:s===0?R.y1-3.6:R.y0+.4,side:s,hon:1,cd:0};hon.hp=bHp('honjin',hon.lv);list.push(hon);
+    const spots=s===0?[[8,R.y0+1],[20,R.y0+1],[8,R.y1-3],[20,R.y1-3],[11.5,R.y0+1],[16.5,R.y0+1]]:[[8,R.y1-3],[20,R.y1-3],[8,R.y0+1],[20,R.y0+1],[11.5,R.y1-3],[16.5,R.y1-3]];let k=0;
+    (F.blds||[]).forEach(function(b){if(!BD[b.t])return;if(b.t==='trap'){for(let j=0;j<2;j++)list.push({t:'trap',lv:b.lv||1,x:3+Math.random()*24,y:s===0?R.y0-3-Math.random()*7:R.y1+3+Math.random()*7,side:s,hp:1,trap:1});return;}
+      const sp=spots[k%spots.length];const o={t:b.t,lv:b.lv||1,x:sp[0],y:sp[1],side:s,cd:Math.random(),idx:b.i};k++;o.hp=bHp(b.t,o.lv);list.push(o);});
     list.forEach(function(b){b.mhp=b.hp;});
-    BT.fort={side:s,wy:wy,list:list,hon:hon,walls:list.filter(function(b){return b.wall;}).length};
-    if(s===1)for(const q of BT.sq)if(q.side===1){q.y=clamp(q.y,1.6,wy-1.4);q.post=[q.x,q.y];q.home=[q.x,q.y];}
+    BT.fort={side:s,R:R,list:list,hon:hon,walls:list.filter(function(b){return b.wall;}).length,pairs:{}};
+    for(const q of BT.sq){if(q.side!==s)continue;q.x=clamp(q.x,R.x0+1.2,R.x1-1.2);q.y=clamp(q.y,R.y0+1.2,R.y1-1.2);q.post=[q.x,q.y];q.home=[q.x,q.y];}
   }
+  // 守る側の布陣は城の中だけ
+  const _dm=deployMove;deployMove=function(q,X,Y){_dm(q,X,Y);const F=BT&&BT.fort;if(F&&F.side===0){q.x=clamp(q.x,F.R.x0+1.2,F.R.x1-1.2);q.y=clamp(q.y,F.R.y0+1.2,F.R.y1-1.2);q.order={k:'hold',x:q.x,y:q.y};q.home=[q.x,q.y];if(q.gen)q.post=[q.x,q.y];}};
   const ctr=function(b){const z=BD[b.t].sz;return [b.x+z/2,b.y+z/2];};
   const alive_=function(q){return q.alive&&!q.routed&&!q.hidden;};
-  function wallDmg(q){const T=TR[q.type],fm=FM[q.fm]||{};return men(q)/100*T.atk*(T.bld||1)*(fm.bld||1)*(T.onlyBld?1.6:1)*.42*clamp(q.morale,20,120)/100;}
+  function wallDmg(q){const T=TR[q.type],fm=FM[q.fm]||{};return men(q)/100*T.atk*(T.bld||1)*(fm.bld||1)*(T.onlyBld?1.6:1)*.42*clamp(q.morale,20,120)/100*(MOU(q)?1.2:1);}
   function endFort(res,why){if(BT.over)return;BT.over=true;banner(res?'勝利':'敗北',why);(res?SND.win:SND.lose).call(SND);setTimeout(function(){finishWar(res,why);},2200);}
-  function fortStep(dt){const F=BT.fort;if(!F)return;const s=F.side,wy=F.wy,as=1-s;
-    const lim=s===0?wy-.8:wy+1.8;
-    // 城を守る側は、城壁が残っているところからは外へ出ない（破られた所からは出られる）
-    const inLim=s===0?wy+1.6:wy-.6;
-    for(const q of BT.sq){if(q.side!==s||!q.alive||q.routed)continue;const out=s===0?q.y<inLim:q.y>inLim;if(!out||q._out)continue;
-      const segAlive=F.list.some(function(b){return b.wall&&!b.dead&&Math.abs(b.x+.5-q.x)<1.1;});if(segAlive)q.y=inLim;else if(s===0?q.y<wy-.5:q.y>wy+1.5)q._out=1;}
-    for(const q of BT.sq){if(q.side!==as||!q.alive||q.routed)continue;
-      if(!q._in){const past=s===0?q.y>wy+1.2:q.y<wy-.2;if(past){q._in=1;}
-        else if(s===0?q.y>lim:q.y<lim){let seg=null,bd=1.1;for(const b of F.list){if(!b.wall||b.dead)continue;const d=Math.abs(b.x+.5-q.x);if(d<bd){bd=d;seg=b;}}
-          if(seg){q.y=lim;q.atWall=1;seg.hp-=wallDmg(q)*dt;if(Math.random()<dt*2)fxBurst(seg.x+.5,seg.y+.5,'#b8a080',3);if(Math.random()<dt*1.5)SND.clash();
-            if(seg.hp<=0){seg.dead=true;addTxt(seg.x+.5,seg.y,seg.gate?'城門 突破!':'城壁 崩落!','#ffb06a',true);SND.boom();BT.shake=6;}}
-          else q._in=1;}}
-      if(q._in){// 中に入った部隊は施設を壊す。敵の部隊なら本陣を目指す
-        let near=null,nd=1e9;for(const b of F.list){if(b.dead||b.wall||b.trap)continue;const c=ctr(b);const d=Math.hypot(c[0]-q.x,c[1]-q.y);if(d<nd){nd=d;near=b;}}
-        if(near){const reach=near.hon?2.6:1.9;if(nd<reach){near.hp-=wallDmg(q)*dt*1.1;if(Math.random()<dt*2)fxBurst(ctr(near)[0],ctr(near)[1],'#c08050',3);
-            if(near.hp<=0){near.dead=true;addTxt(ctr(near)[0],ctr(near)[1],near.hon?'本陣 陥落!':BD[near.t].n+' 破壊','#ffd36a',true);SND.boom();BT.shake=8;
-              if(near.hon){endFort(s===1,s===1?'敵の本陣を落とした':'本陣が落ちた');return;}}}
-          else if(q.side===1&&q.state!=='fight'){const tg=F.hon.dead?near:F.hon;const c=ctr(tg);moveToward(q,c[0],c[1],dt,.9);}}}}
-    // 施設の攻撃
+  // 城壁のどの辺に近いか
+  function edgeOf(R,q){const d={w:Math.abs(q.x-R.x0),e:Math.abs(q.x-R.x1),n:Math.abs(q.y-R.y0),s:Math.abs(q.y-R.y1)};let k='w';for(const e in d)if(d[e]<d[k])k=e;return k;}
+  function segNear(F,edge,q){let best=null,bd=1.15;for(const b of F.list){if(!b.wall||b.edge!==edge)continue;const c=edge==='n'||edge==='s'?Math.abs(b.x+.5-q.x):Math.abs(b.y+.5-q.y);if(c<bd){bd=c;best=b;}}return best;}
+  function pushTo(R,q,edge,out){const m=out?.85:.7;if(edge==='w')q.x=out?R.x0-m:R.x0+m;else if(edge==='e')q.x=out?R.x1+m:R.x1-m;else if(edge==='n')q.y=out?R.y0-m:R.y0+m;else q.y=out?R.y1+m:R.y1-m;}
+  const inside=function(R,q,m){return q.x>R.x0+m&&q.x<R.x1-m&&q.y>R.y0+m&&q.y<R.y1-m;};
+  function fortStep(dt){const F=BT.fort;if(!F)return;const s=F.side,as=1-s,R=F.R;
+    for(const q of BT.sq){if(!q.alive||q.routed)continue;
+      if(q.side===as){// 攻め手：城壁・城門にぶつかったら止まって壊す
+        if(inside(R,q,-.85)&&!q._in){const e=edgeOf(R,q);const sg=segNear(F,e,q);
+          if(sg&&!sg.dead){pushTo(R,q,e,true);q.atWall=1;sg.hp-=wallDmg(q)*dt;if(Math.random()<dt*2)fxBurst(sg.x+.5,sg.y+.5,'#b8a080',3);if(Math.random()<dt*1.5)SND.clash();
+            if(sg.hp<=0){sg.dead=true;addTxt(sg.x+.5,sg.y,sg.gate?'城門 突破!':'城壁 崩落!','#ffb06a',true);SND.boom();BT.shake=6;}}
+          else if(inside(R,q,.2))q._in=1;}
+        if(q._in&&!inside(R,q,-.9))q._in=0;}
+      else{// 守り手：城門か崩れた所からだけ外へ出られる
+        if(inside(R,q,.6)){q._out=0;}
+        else if(!q._out){const e=edgeOf(R,q);const sg=segNear(F,e,q);
+          if(sg&&!sg.dead&&!(sg.gate&&(q.side===0||q._lured)))pushTo(R,q,e,false);else if(!inside(R,q,-.9))q._out=1;}
+        // 猛将は守りが苦手：近くに敵が来ると挑発に乗って打って出てしまうことがある
+        if(MOU(q)&&!q._lured&&!q.gen){let near=false;for(const e of BT.sq){if(e.side===as&&alive_(e)&&Math.hypot(e.x-q.x,e.y-q.y)<7){near=true;break;}}
+          if(near&&Math.random()<dt*.05){q._lured=1;let t=null,bd=99;for(const e of BT.sq){if(e.side!==as||!alive_(e))continue;const d=Math.hypot(e.x-q.x,e.y-q.y);if(d<bd){bd=d;t=e;}}
+            if(t){q.order={k:'attack',tgt:t};q.pend=null;addTxt(q.x,q.y-1.2,q.hs.n+' 挑発に乗って打って出た!','#ffb06a',true);setTag(q,'釣り出し',8,'#ff8a6a');if(q.side===0)toast(q.hs.n+'が挑発に乗って城を出た！（猛将は守りが苦手）');}}}
+        if(q._lured&&q.order&&q.order.k==='attack'&&q.order.tgt&&q.order.tgt.alive&&q.side===1)q.order={k:'attack',tgt:q.order.tgt};}
+    }
+    // 城門や城壁を挟んでも、武将の部隊どうしが接すれば一騎打ち
+    for(const a of BT.sq){if(a.side!==0||!a.hero||!alive_(a)||a.heroDown)continue;for(const b of BT.sq){if(b.side!==1||!b.hero||!alive_(b)||b.heroDown)continue;
+      if(Math.hypot(a.x-b.x,a.y-b.y)<2.8){const k=a.id+'-'+b.id;if(F.pairs[k])continue;F.pairs[k]=1;if(maybeDuel(a,b))return;}}}
+    // 中に入った部隊は施設を壊す。敵の部隊なら本陣を目指す
+    for(const q of BT.sq){if(q.side!==as||!q.alive||q.routed||!q._in)continue;
+      let near=null,nd=1e9;for(const b of F.list){if(b.dead||b.wall||b.trap)continue;const c=ctr(b);const d=Math.hypot(c[0]-q.x,c[1]-q.y);if(d<nd){nd=d;near=b;}}
+      if(!near)continue;const reach=near.hon?2.6:1.9;
+      if(nd<reach){near.hp-=wallDmg(q)*dt*1.1;if(Math.random()<dt*2)fxBurst(ctr(near)[0],ctr(near)[1],'#c08050',3);
+        if(near.hp<=0){near.dead=true;addTxt(ctr(near)[0],ctr(near)[1],near.hon?'本陣 陥落!':BD[near.t].n+' 破壊','#ffd36a',true);SND.boom();BT.shake=8;if(near.hon){endFort(s===1,s===1?'敵の本陣を落とした':'本陣が落ちた');return;}}}
+      else if(q.side===1&&q.state!=='fight'){const tg=F.hon.dead?near:F.hon;const c=ctr(tg);moveToward(q,c[0],c[1],dt,.9);}}
+    // 施設の攻撃（知将が守っていれば射撃が鋭くなる）
+    const wise=1+.12*BT.sq.filter(function(q){return q.side===s&&alive_(q)&&REI(q);}).length;
     for(const b of F.list){if(b.dead||b.wall)continue;const d=BD[b.t];const c=ctr(b);
       if(b.trap){for(const q of BT.sq){if(q.side!==as||!q.alive)continue;if(Math.hypot(q.x-c[0],q.y-c[1])<d.rad){b.dead=true;SND.boom();BT.shake=8;fxBurst(c[0],c[1],'#ff8a2a',24);addTxt(c[0],c[1],'地雷火!','#ff8a4a',true);
-          for(const e of BT.sq)if(e.side===as&&e.alive&&Math.hypot(e.x-c[0],e.y-c[1])<d.rad*1.4)hurtSq(e,d.dmg*bDmg('trap',b.lv)/d.dmg*.9,null);break;}}continue;}
+          for(const e of BT.sq)if(e.side===as&&e.alive&&Math.hypot(e.x-c[0],e.y-c[1])<d.rad*1.4)hurtSq(e,bDmg('trap',b.lv)*.9,null);break;}}continue;}
       if(!d.rng)continue;b.cd-=dt;if(b.cd>0)continue;
-      if(b.t==='kaen'){b.cd=d.cd;let any=false;for(const q of BT.sq){if(q.side!==as||!alive_(q))continue;if(Math.hypot(q.x-c[0],q.y-c[1])<d.rng){any=true;hurtSq(q,bDmg('kaen',b.lv)*TK*d.cd,null);if(Math.random()<.4)BT.fx.push({x:q.x+(Math.random()-.5),y:q.y+(Math.random()-.5),vx:0,vy:-.8,t:0,d:.8,col:'#ff8a2a',k:'f'});}}continue;}
+      if(b.t==='kaen'){b.cd=d.cd;for(const q of BT.sq){if(q.side!==as||!alive_(q))continue;if(Math.hypot(q.x-c[0],q.y-c[1])<d.rng){hurtSq(q,bDmg('kaen',b.lv)*TK*d.cd*wise,null);if(Math.random()<.4)BT.fx.push({x:q.x+(Math.random()-.5),y:q.y+(Math.random()-.5),vx:0,vy:-.8,t:0,d:.8,col:'#ff8a2a',k:'f'});}}continue;}
       let tg=null,td=1e9;for(const q of BT.sq){if(q.side!==as||!alive_(q))continue;const dd=Math.hypot(q.x-c[0],q.y-c[1]);if(dd<=d.rng&&dd>=(d.minr||0)&&dd<td){td=dd;tg=q;}}
       if(!tg){b.cd=.3;continue;}b.cd=d.cd;b.aim=Math.atan2(tg.y-c[1],tg.x-c[0]);
-      const dmg=bDmg(b.t,b.lv)*TK*(b.hon?1.4:1),tx=tg.x,ty=tg.y,t0=tg;
+      const dmg=bDmg(b.t,b.lv)*TK*(b.hon?1.4:1)*wise,tx=tg.x,ty=tg.y,t0=tg;
       if(b.t==='toseki')shoot('stone',c[0],c[1],tx,ty,1.1,function(){fxBurst(tx,ty,'#a08060',8);SND.rock&&SND.rock();for(const e of BT.sq)if(e.side===as&&e.alive&&Math.hypot(e.x-tx,e.y-ty)<d.splash)hurtSq(e,dmg,null);});
       else{if(Math.random()<.4)SND.arrow();shoot('arrow',c[0],c[1],tx,ty,.45,function(){if(t0.alive)hurtSq(t0,dmg,null);});}}
   }
+  // 一騎打ちは部隊が接したら起きる（「避ける」にした部隊は除く）
+  const _md=maybeDuel;maybeDuel=function(a,b,forced){const me=a.side===0?a:b;if(!forced&&me.duelOk!==false)forced=true;return _md(a,b,forced);};
   const _st=stepBattle;
-  stepBattle=function(dt){const run=BT&&BT.fort&&!BT.paused&&!BT.over&&BT.started;_st(dt);if(run&&BT&&!BT.over)fortStep(dt);};
+  stepBattle=function(dt){const run=BT&&BT.fort&&!BT.paused&&!BT.over&&BT.started;_st(dt);if(run&&BT&&!BT.over&&!BT.paused)fortStep(dt);};
   const _db=drawBattle;
   drawBattle=function(t){if(BT&&BT.fort&&BT._world){try{R3.syncBld(BT.fort.list.filter(function(b){return !b.trap||b.side===0||b.dead;}),{fx:true});}catch(e){}}
     _db(t);if(!BT||!BT.fort)return;const x=cx;const F=BT.fort;
     x.textAlign='center';x.textBaseline='middle';
-    for(const b of F.list){if(b.dead||b.trap||b.hp>=b.mhp)continue;const c=ctr(b);const p=R3.project(c[0],b.wall?1.3:2.2,c[1]);if(!p[2])continue;const w=b.wall?18:34;drawHpBar(x,p[0]-w/2,p[1],w,b.hp/b.mhp,b.side===0?'#6cc48a':'#e05a48');}
+    for(const b of F.list){if(b.dead||b.trap)continue;const c=ctr(b);
+      if(b.gate){const p=R3.project(c[0],1.6,c[1]);if(p[2]){x.font='bold 11px sans-serif';x.fillStyle='rgba(20,10,4,.8)';x.fillRect(p[0]-11,p[1]-18,22,14);x.fillStyle='#ffe08a';x.fillText('門',p[0],p[1]-11);}}
+      if(b.hp>=b.mhp)continue;const p=R3.project(c[0],b.wall?1.3:2.2,c[1]);if(!p[2])continue;const w=b.wall?18:34;drawHpBar(x,p[0]-w/2,p[1],w,b.hp/b.mhp,b.side===0?'#6cc48a':'#e05a48');}
     const h=F.hon;const wl=F.list.filter(function(b){return b.wall&&!b.dead;}).length;
     const s=(F.side===0?'我が城':'敵の城')+' 本陣 '+Math.max(0,Math.round(h.hp/h.mhp*100))+'% ・ 城壁 '+wl+'/'+F.walls;
     x.font='bold 13px sans-serif';const tw=x.measureText(s).width+18;x.fillStyle='rgba(10,6,3,.78)';x.fillRect(VW/2-tw/2,VH-112,tw,22);x.fillStyle=F.side===0?'#b8dcff':'#ffb4a6';x.fillText(s,VW/2,VH-101);};
+  // 野戦でも性格の得手不得手を付ける
+  const _sw2=startWar;startWar=function(i){_sw2(i);};
 })();
 </script>
 </body></html>

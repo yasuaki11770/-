@@ -329,7 +329,7 @@ const captivesOf=f=>Object.keys(S.hero).filter(id=>S.hero[id].cap===f);
 const facCol=f=>f&&FAC[f]?FAC[f].col:NEUTRAL.col;
 const facName=f=>f&&FAC[f]?FAC[f].n:NEUTRAL.n;
 const rulerOf=f=>S.rulers[f];
-function apMax(){const n=regsOf(S.me).length;return Math.min(6,3+Math.floor(n/4)+(S.flags.emperor===S.me?1:0));}
+function apMax(){return Math.min(7,3+RANKS[rankOf()].ap+(S.flags.emperor===S.me?1:0));}
 function lvMul(id){return 1+.02*((S.hero[id]?S.hero[id].lv:1)-1);}
 function st(id){const h=HB(id),m=lvMul(id);return {p:Math.round(h.p*m),i:Math.round(h.i*m),cmd:Math.round((h.cmd||60)*m),cha:h.cha||60,pol:h.pol||50};}
 const expNeed=lv=>80+lv*40;
@@ -446,7 +446,7 @@ function repaint(){paintBase();dirty=true;topBar();}
 /* ================= 画面の部品 ================= */
 function topBar(){if(!S)return;const f=FAC[S.me];const rid=rulerOf(S.me);
   let ap='';for(let i=0;i<apMax();i++)ap+='<u class="'+(i<S.ap?'on':'')+'"></u>';
-  $('#top').innerHTML='<span class="when">'+S.year+'年 '+SEASON[S.season]+'</span><span class="lord"><img alt="" src="'+portrait(HB(rid))+'"><b style="color:'+f.col+';filter:brightness(1.5)">'+f.n+'</b></span><span class="sp"></span>'+
+  $('#top').innerHTML='<span class="when">'+S.year+'年 '+SEASON[S.season]+'</span><span class="lord"><img alt="" src="'+portrait(HB(rid))+'"><b style="color:'+f.col+';filter:brightness(1.5)">'+f.n+'</b><small class="pill">'+RANKS[rankOf()].n+'</small></span><span class="sp"></span>'+
     '<span class="pill"><i>金</i>'+man(S.gold)+'</span><span class="pill"><i>領</i>'+regsOf(S.me).length+'/21</span><span class="pill"><i>将</i>'+heroesOf(S.me).length+'</span><span class="pill"><i>令</i><span class="ap">'+ap+'</span></span>';
   $('#cEnd').classList.toggle('hot',S.ap<=0);$('#cWar').classList.toggle('hot',S.ap>0);}
 function toast(s,ms){const d=el('div','',esc(s));$('#toast').appendChild(d);setTimeout(()=>d.remove(),ms||2600);}
@@ -474,7 +474,7 @@ function alloc(ids,tr){const o={};const caps=ids.map(trCap),sum=caps.reduce((a,b
   let left=tr;ids.forEach((id,i)=>{o[id]=Math.floor(caps[i]*tr/sum/1000)*1000;left-=o[id];});
   for(let k=0;left>=1000&&k<20;k++)ids.forEach((id,i)=>{if(left>=1000&&o[id]<caps[i]){o[id]+=1000;left-=1000;}});
   return {per:o,reserve:Math.max(0,left)};}
-function strength(ids,tr,def,r){let top=0,sum=0;ids.forEach(id=>{const s=st(id);top=Math.max(top,s.cmd);sum+=s.p*.05+s.i*.035;});
+function strength(ids,tr,def,r){let top=0,sum=0;ids.forEach(id=>{const s=st(id);top=Math.max(top,s.cmd);sum+=s.p*.05+s.i*.035;const ps=persOf(id);if(!def&&(ps==='mou'||ps==='doku'))sum+=s.p*.03;if(def&&ps==='rei')sum+=s.i*.04;if(def&&ps==='mou')sum-=s.p*.01;});
   let v=(tr/1000)*(.55+top/180)+sum+(ids.length?0:-.5);if(def)v*=(REG[r]&&(REG[r].t==='castle'||REG[r].t==='gate')?1.15:1.05)*fortMul(r);return Math.max(.3,v);}
 function winP(a,d){return a*a/(a*a+d*d);}
 
@@ -492,13 +492,14 @@ function regionSheet(r){const R_=REG[r],o=S.reg[r].o,mine=o===S.me;
   let f='';
   if(mine){f+='<button class="btn" type="button" id="rDraft"'+(S.ap<1||S.reg[r].tr>=R_.cap?' disabled':'')+'>徴兵（令1）</button><button class="btn" type="button" id="rMove">移動</button>';
     if(ADJ[r].some(n=>S.reg[n].o!==S.me))f+='<button class="btn pri" type="button" id="rAtk"'+(S.ap<1?' disabled':'')+'>ここから出陣</button>';}
-  else if(ADJ[r].some(n=>S.reg[n].o===S.me))f+='<button class="btn pri" type="button" id="rAtk2"'+(S.ap<1?' disabled':'')+'>攻める（令1）</button>';
+  else if(ADJ[r].some(n=>S.reg[n].o===S.me)){if(allied(S.me,o))f+='<button class="btn" type="button" disabled>同盟国</button>';else{f+='<button class="btn pri" type="button" id="rAtk2"'+(S.ap<1?' disabled':'')+'>攻める（令1）</button>';if(o&&heroesAt(r).some(id=>id!==rulerOf(o)))f+='<button class="btn" type="button" id="rPoach">引き抜き</button>';}}
   const d=sheet(R_.c,b,f);
   const q=s=>d.querySelector(s);
   if(q('#rDraft'))q('#rDraft').onclick=()=>{draft(r);regionSheet(r);};
   if(q('#rMove'))q('#rMove').onclick=()=>moveSheet(r);
   if(q('#rAtk'))q('#rAtk').onclick=()=>startTarget(ADJ[r].filter(n=>S.reg[n].o!==S.me));
   if(q('#rAtk2'))q('#rAtk2').onclick=()=>{closeSheet();muster(r);};
+  if(q('#rPoach'))q('#rPoach').onclick=()=>poachSheet(r);
   d.querySelectorAll('[data-h]').forEach(e=>e.onclick=()=>recruitFree(e.dataset.h,r));
   d.querySelectorAll('[data-fw]').forEach(e=>e.onclick=()=>{const g=S.reg[r];const c=wallCost(g.wall);if(S.gold<c){toast('金が足りない');return;}S.gold-=c;g.wall++;toast('城壁をLv'+g.wall+'に強化した');try{SND.coin();}catch(_){}save();repaint();regionSheet(r);});
   d.querySelectorAll('[data-fu]').forEach(e=>e.onclick=()=>{const g=S.reg[r];const b=g.bld[+e.dataset.fu];const c=FB[b.t].c*b.lv;if(S.gold<c){toast('金が足りない');return;}S.gold-=c;b.lv++;toast(FB[b.t].n+'をLv'+b.lv+'にした');try{SND.coin();}catch(_){}save();repaint();regionSheet(r);});
@@ -523,7 +524,8 @@ function moveSheet(r){const nb=ADJ[r].filter(n=>S.reg[n].o===S.me);if(!nb.length
 
 /* ================= 出陣 ================= */
 function startTarget(list){closeSheet();if(S.ap<1){toast('令が足りない。季節を進めよう');return;}
-  if(!list){const set={};regsOf(S.me).forEach(r=>ADJ[r].forEach(n=>{if(S.reg[n].o!==S.me)set[n]=1;}));list=Object.keys(set);}
+  if(!list){const set={};regsOf(S.me).forEach(r=>ADJ[r].forEach(n=>{if(S.reg[n].o!==S.me&&!allied(S.me,S.reg[n].o))set[n]=1;}));list=Object.keys(set);}
+  else list=list.filter(n=>!allied(S.me,S.reg[n].o));
   if(!list.length){toast('攻められる地域がない');return;}
   UIS.mode='target';UIS.targets=list;UIS.cb=r=>muster(r);hint('攻める地域をタップ（赤い輪）');
   const b=el('button','btn sm','やめる');b.style.cssText='position:absolute;left:10px;top:10px;z-index:5';b.id='tCancel';b.onclick=()=>endTargetMode();$('#stage').appendChild(b);}
@@ -556,7 +558,11 @@ async function battle(B){
   if(!B.kind){if(mySide==='atk'){const fs=strength(B.def,B.defTr,false),as=strength(B.atk,B.atkTr,false);B.kind=B.def.length&&fs>=as*.8&&R()<.8?'field':'siege';}else B.kind='def';}
   let res=null;
   while(!res){const mode=await chooseMode(B,me,foe);if(!mode){if(mySide==='atk'){refundMuster(B);return;}continue;}
-    res=await runMode(mode,B,me,foe);}
+    res=await runMode(mode,B,me,foe);
+    // 出撃して負けても、兵なしで二の丸に籠もって戦える
+    if(res&&mode==='tac'&&mySide==='def'&&!res.win&&me.length){const go=await choiceSheet('二の丸の戦い','<div class="card"><h3>城の外の戦いに敗れた</h3><p>兵は散ったが、武将たちはまだ二の丸に籠もっている。兵なしで最後の戦いに挑むか。勝てば城は守られる。</p></div>',[{t:'二の丸で戦う',v:1,pri:true},{t:'城を明け渡す',v:0}]);
+      if(go){toast('二の丸の戦い ― 兵なしの武将だけで迎え撃つ');const r2=await runTac(B,me,foe,{nino:true});if(r2){r2.down=Object.assign({},res.down,r2.down);r2.duels=(res.duels||[]).concat(r2.duels||[]);if(r2.win){r2.myLeft=Math.max(500,Math.round(res.myLeft*.5));r2.foeLeft=Math.round(res.foeLeft*.6);}else{r2.myLeft=res.myLeft;r2.foeLeft=res.foeLeft;}res=r2;}}}}
+  if(res.pact){await applyPact(B,res);return;}
   await applyResult(B,res);
 }
 function refundMuster(B){S.reg[B.src].tr+=B.atkTr;S.ap++;save();repaint();toast('出陣を取りやめた');}
@@ -575,16 +581,12 @@ function chooseMode(B,me,foe){return new Promise(res=>{
   const card=(m,k,t,sub,d,ok)=>'<button class="mode" type="button" data-m="'+m+'"'+(ok?'':' disabled')+'><span class="k">'+k+'</span><div><b>'+t+'<small>'+sub+'</small></b><span>'+d+'</span></div></button>';
   const hasMe=me.length>0,shield='兵は武将ごとに統率まで配り、1000につき体力+10%（先に減り、回復しない）。';
   b+='<h3 class="sec">戦い方を選ぶ</h3><div class="modes">';
-  if(B.kind==='field'){
-    b+=card('kessen','決','決戦','三国決戦伝','大軍と大軍がぶつかる野戦。兵を配分し陣形を組んで布陣、戦場で指揮をとる。',hasMe);
-    b+=card('tac','戦','戦術','三国タクティクス','一手ずつ動かす野戦。'+shield+'隣の敵将には一騎打ちを挑める。',hasMe);
-    b+=card('duel','騎','一騎打ち','一騎打ち英雄伝',foe.length?'代表の武将どうしの三番勝負。'+shield:'敵に武将がいないので選べない',hasMe&&foe.length);
-  }else if(B.kind==='siege'){
-    b+=card('siege','城','攻城','三国決戦伝','城壁を破り、本陣を落とすか敵総大将を討てば勝ち。弓楼や投石機が撃ってくる。衝車と衡軛の陣が城壁に強い。',hasMe);
-  }else{
-    b+=card('td','籠','籠城','三国決戦伝','城壁と防衛施設で迎え撃つ。'+'4分守り抜くか、敵総大将を討てば勝ち。本陣が落ちれば負け。',hasMe);
-    b+=card('tac','出','出撃','三国タクティクス','城を出て迎え撃つ。'+shield,hasMe);
-  }
+  const lead=B.atk[0],homeOf=lead&&B.home&&B.home[lead];const canPact=mySide==='atk'&&hasMe&&foe.length&&!B.refused&&regsOf(S.me).length>=2&&homeOf;
+  if(B.kind==='field')b+=card('kessen','決','決戦','野戦','大軍と大軍がぶつかる。兵を配分し陣形を組んで布陣し、戦場で指揮をとる。猛将は攻めの陣形で強い。武将の部隊が接すれば一騎打ち。',hasMe);
+  else if(B.kind==='siege')b+=card('siege','城','攻城戦','城を囲む','城壁と城門を破り、本陣を落とすか敵総大将を討てば勝ち。弓楼や投石機が撃ってくる。衝車と衡軛の陣が城壁に強い。',hasMe);
+  else{b+=card('td','籠','籠城戦','城で守る','城壁と防衛施設で迎え撃つ。4分守り抜くか、敵総大将を討てば勝ち。知将は守りに強いが、猛将は挑発に乗って打って出てしまうことがある。',hasMe);
+    b+=card('tac','出','出撃','一手ずつ戦う','城を出て迎え撃つ。'+shield+'負けても二の丸に籠もり、兵なしでもう一戦できる。',hasMe);}
+  if(mySide==='atk')b+=card('pact','騎','一騎打ち勝負を申し込む','三番勝負',canPact?'勝てば'+REG[B.target].c+'を得る。負ければ総大将'+HB(lead).n+'の城（'+REG[homeOf].c+'）を割譲。どちらも武将も兵も失わない。相手が受けるとは限らない。':B.refused?'断られた':!foe.length?'敵に武将がいない':'城が一つしかないので申し込めない',canPact);
   b+=card('auto','任','委任','すぐ終わる','部下に任せて結果だけを見る。勝率は上の見込みどおり。',true)+'</div>';
   if(hasMe)b+='<p class="dim" style="margin:0;font-size:12px">兵の配分（戦術・一騎打ち）：'+allocLine(me.slice().sort((a,c)=>(c===rulerOf(S.me))-(a===rulerOf(S.me))||heroPower(c)-heroPower(a)),myTr)+'</p>';
   else b+='<p class="muted" style="margin:0;font-size:12.5px">武将がいないので、委任しか選べない。</p>';
@@ -599,7 +601,32 @@ async function runMode(mode,B,me,foe){
   if(mode==='td')return runKessen(B,me,foe,'td');
   if(mode==='tac')return runTac(B,me,foe);
   if(mode==='duel')return runDuel3(B,me,foe);
+  if(mode==='pact')return proposePact(B,me,foe);
 }
+// 一騎打ち勝負の申し込み：相手は自分の代表が強いか、戦で不利なら受ける
+async function proposePact(B,me,foe){const top=ids=>ids.map(id=>st(id).p).sort((a,b)=>b-a).slice(0,3).reduce((a,b)=>a+b,0)/Math.max(1,Math.min(3,ids.length));
+  const mine=top(me),theirs=top(foe);const as=strength(B.atk,B.atkTr,false),ds=strength(B.def,B.defTr,true,B.target);
+  let p=.35+(theirs-mine)/40+(winP(as,ds)-.5)*.8;if(!B.defF)p+=.15;p=clamp(p,.08,.92);
+  const fl=foe.slice().sort((a,b)=>st(b).p-st(a).p)[0];const ok=R()<p;
+  const v=ok?speak(fl,'duel'):speak(fl,'lose');
+  await choiceSheet(ok?'申し込みを受けた':'申し込みを断られた','<div class="card row" style="flex-wrap:nowrap"><img alt="" src="'+face(fl)+'" style="width:72px;height:81px;border:1px solid var(--gold)"><div><b style="font-family:var(--f-disp);color:var(--gold2)">'+HB(fl).n+'</b><p style="margin:0">「'+esc(v||(ok?'よかろう、受けて立つ!':'その手には乗らぬ。'))+'」</p></div></div><p class="muted" style="margin:0">'+(ok?'三番勝負で城の行方を決める。':'このまま戦で決着をつけるしかない。')+'</p>',[{t:ok?'勝負!':'戦い方を選び直す',v:1,pri:true}]);
+  if(!ok){B.refused=true;return null;}
+  const r=await runDuel3(B,me,foe,{pact:true});r.pact=true;return r;}
+// 勝てば相手の城を、負ければ総大将の城を渡す（武将も兵も失わない）
+async function applyPact(B,res){const T=B.target,lead=B.atk[0],home=B.home[lead];const news=[];
+  (res.duels||[]).forEach(d=>{S.stats.duel++;if(d.res===0){S.stats.dwon++;giveExp(d.me,40);}});
+  const moveAll=(from,f,to)=>{Object.keys(S.hero).forEach(id=>{const h=S.hero[id];if(h.loc===from&&h.f===f&&!h.cap)h.loc=to;});};
+  const nearestOwn=(f,from)=>{const a=ADJ[from].filter(n=>S.reg[n].o===f);return a[0]||regsOf(f).find(r=>r!==from)||null;};
+  if(res.win){const oldF=S.reg[T].o;const esc=oldF?nearestOwn(oldF,T):null;
+    if(esc){moveAll(T,oldF,esc);S.reg[esc].tr=Math.min(REG[esc].cap,S.reg[esc].tr+S.reg[T].tr);}else Object.keys(S.hero).forEach(id=>{const h=S.hero[id];if(h.loc===T&&!h.cap&&h.f!==S.me){h.f=null;}});
+    S.reg[T].o=S.me;S.reg[T].tr=B.atkTr;B.atk.forEach(id=>S.hero[id].loc=T);news.push('一騎打ち勝負に勝ち、'+REG[T].c+'を譲り受けた');if(oldF&&FAC[oldF])checkFall(oldF,news);}
+  else{const to=nearestOwn(S.me,home)||regsOf(S.me).find(r=>r!==home);const df=S.reg[T].o;
+    if(to){moveAll(home,S.me,to);S.reg[to].tr=Math.min(REG[to].cap,S.reg[to].tr+S.reg[home].tr+B.atkTr);B.atk.forEach(id=>S.hero[id].loc=to);}
+    const give=df?Math.round(S.reg[T].tr*.3):0;if(df)S.reg[T].tr-=give;S.reg[home].o=df||null;S.reg[home].tr=Math.max(1000,give);news.push('一騎打ち勝負に敗れ、'+REG[home].c+'を'+facName(df)+'に割譲した');}
+  B.atk.forEach(id=>{if(S.hero[id])S.hero[id].tired=1;});save();repaint();
+  const b='<div style="text-align:center;font-family:var(--f-disp);font-size:clamp(44px,13vw,76px);line-height:1.1;color:'+(res.win?'var(--gold2)':'var(--foe)')+'">'+(res.win?'城を得た':'城を割譲')+'</div><div class="news">'+news.map(x=>'<div class="'+(res.win?'me':'bad')+'">'+esc(x)+'</div>').join('')+'</div><p class="muted" style="margin:0">約束どおり、どちらの武将も兵も失われなかった。</p>';
+  await new Promise(r=>{const d=sheet('一騎打ち勝負',b,'<button class="btn pri" type="button" id="pOk">天下図へ</button>');d.querySelector('.x').hidden=true;d.querySelector('#pOk').onclick=()=>{d.remove();r();};});
+  checkEnd();}
 // 結果の形: {win(プレイヤー視点), myLeft, foeLeft, myDown:{id:1}, foeDown:{id:1}, duels:[]}
 function autoBattle(B,quiet){const as=strength(B.atk,B.atkTr,false),ds=strength(B.def,B.defTr,true,B.target);const p=winP(as,ds);const aw=R()<p;
   const ratio=aw?ds/as:as/ds;const wl=clamp(.12+.35*ratio,.08,.6),ll=clamp(.55+.25*R(),.45,.85);
@@ -653,7 +680,7 @@ async function runKessen(B,me,foe,kind){const myTr=B.player==='atk'?B.atkTr:B.de
   const foeLeft=Math.round((m.foes||[]).reduce((a,o)=>a+o.men,0)*foeTr/Math.max(1,foeSent));
   return {win:!!m.win,myLeft:Math.round(mineLeft),foeLeft:clamp(foeLeft,0,foeTr),down,duels:(m.duels||[]).map(d=>({me:d.me,foe:d.foe,res:d.res})),fort:m.fort||null};}
 function tjob(id){const h=HB(id);if(h.i>=88&&h.p<80)return 'kuro';if(h.w==='弓'||h.w==='弩')return 'yumi';if(['トンファー','拳','大鎚','爪','三節棍'].includes(h.w))return 'monk';if(h.p>=96)return 'samurai';if(['方天画戟','蛇矛','槍','戟','鉄脊蛇矛'].includes(h.w))return 'ryu';if(h.i>=80)return 'shiro';return 'knight';}
-async function runTac(B,me,foe){const myTr=B.player==='atk'?B.atkTr:B.defTr,foeTr=B.player==='atk'?B.defTr:B.atkTr;const fF=B.player==='atk'?B.defF:B.atkF;
+async function runTac(B,me,foe,o){o=o||{};const myTr=o.nino?0:B.player==='atk'?B.atkTr:B.defTr,foeTr=B.player==='atk'?B.defTr:B.atkTr;const fF=B.player==='atk'?B.defF:B.atkF;
   const party=me.slice().sort((a,b)=>(b===rulerOf(S.me))-(a===rulerOf(S.me))||heroPower(b)-heroPower(a)).slice(0,5);
   const fs=foe.slice().sort((a,b)=>(b===rulerOf(fF))-(a===rulerOf(fF))||heroPower(b)-heroPower(a)).slice(0,6);
   const myA=alloc(party,myTr),foA=alloc(fs,foeTr);
@@ -661,8 +688,9 @@ async function runTac(B,me,foe){const myTr=B.player==='atk'?B.atkTr:B.defTr,foeT
   const sold=fF&&FAC[fF]?FAC[fF].sold:NEUTRAL.sold;
   const msg={t:'tac',id:++FID,n:REG[B.target].c,y:S.year,p:REG[B.target].n,map:(({river:'river',mount:'mountain',sea:'yangtze'})[B.src?edgeOf(B.src,B.target):''])||({castle:REG[B.target].k==='river'?'river':'plain',gate:'hills'})[REG[B.target].t]||REG[B.target].t,opt:REG[B.target].t==='castle'||REG[B.target].t==='gate'?{}:(REG[B.target].o||{}),side:B.player==='atk'?'atk':'def',
     fname:FAC[S.me].n,fcol:FAC[S.me].col,fch:FAC[S.me].ch,ef:sold,ech:fF&&FAC[fF]?FAC[fF].ch:'郷',ecol:facCol(fF),
-    party:party.map(id=>({id,lv:S.hero[id].lv,tr:myA.per[id]})),foeTr:foA.per,foe:fstr,s:(B.player==='atk'?FAC[S.me].n+'は'+REG[B.target].c+'へ攻め込んだ。':facName(fF)+'が'+REG[B.target].c+'に攻め寄せた。')+'敵の総大将を倒せば勝ち。'};
-  const m=await frameRun('tactics.html','tacReady',msg,['tacEnd','tacCancel'],'戦術戦 ― '+REG[B.target].c,party[0],fs[0]);
+    party:party.map(id=>({id,lv:S.hero[id].lv,tr:o.nino?0:myA.per[id]})),foeTr:foA.per,foe:fstr,s:(B.player==='atk'?FAC[S.me].n+'は'+REG[B.target].c+'へ攻め込んだ。':facName(fF)+'が'+REG[B.target].c+'に攻め寄せた。')+'敵の総大将を倒せば勝ち。'};
+  if(o.nino){msg.map='castle';msg.opt={};msg.n=REG[B.target].c+' 二の丸';msg.s='城の外の戦いに敗れ、二の丸に籠もった。兵はもういない。武将だけで最後の戦いに挑む。';}
+  const m=await frameRun('tactics.html','tacReady',msg,['tacEnd','tacCancel'],(o.nino?'二の丸 ― ':'出撃 ― ')+REG[B.target].c,party[0],fs[0]);
   if(m.t==='tacCancel')return null;
   const down={};(m.mine||[]).forEach(o=>{if(o.down)down[o.id]=1;});(m.foes||[]).forEach(o=>{if(o.id&&o.down)down[o.id]=1;});
   const myLeft=(m.mine||[]).reduce((a,o)=>a+(o.tr||0),0)+Math.round(myA.reserve*(m.win?.95:.6)),foeLeft=(m.foes||[]).reduce((a,o)=>a+(o.tr||0),0)+Math.round(foA.reserve*(m.win?.6:.95));
@@ -683,7 +711,7 @@ function pickOrder(me,n){return new Promise(res=>{const order=me.slice().sort((a
     const d=sheet('三番勝負の顔ぶれ',b,'<button class="btn pri" type="button" id="oGo"'+(order.length===n?'':' disabled')+'>勝負!</button>');d.querySelector('.x').hidden=true;
     d.querySelectorAll('[data-h]').forEach(e=>e.onclick=()=>{const id=e.dataset.h,k=order.indexOf(id);if(k>=0)order.splice(k,1);else if(order.length<n)order.push(id);render();});
     d.querySelector('#oGo').onclick=()=>{d.remove();res(order);};};render();});}
-async function runDuel3(B,me,foe){const n=Math.min(3,me.length,foe.length);const fF=B.player==='atk'?B.defF:B.atkF;
+async function runDuel3(B,me,foe,o){o=o||{};const n=Math.min(3,me.length,foe.length);const fF=B.player==='atk'?B.defF:B.atkF;
   const mine=n>1?await pickOrder(me,n):[me.slice().sort((a,b)=>st(b).p-st(a).p)[0]];
   const theirs=foe.slice().sort((a,b)=>st(b).p-st(a).p).slice(0,n);if(n>1){const t=theirs.shift();theirs.splice(n===3?1:0,0,t);} // 大将格は二番手に
   const myTr0=B.player==='atk'?B.atkTr:B.defTr,foeTr0=B.player==='atk'?B.defTr:B.atkTr;
@@ -697,7 +725,7 @@ async function runDuel3(B,me,foe){const n=Math.min(3,me.length,foe.length);const
     const win=!!m.win;duels.push({me:a,foe:b,res:win?0:1});if(win){w++;down[b]=1;}else{l++;down[a]=1;}}
   D.close();try{BGM.play('camp',true);}catch(_){}
   const win=w>l;const myTr=B.player==='atk'?B.atkTr:B.defTr,foeTr=B.player==='atk'?B.defTr:B.atkTr;
-  await new Promise(res=>{const b='<div style="text-align:center;font-family:var(--f-disp);font-size:clamp(46px,13vw,78px);line-height:1.1;color:'+(win?'var(--gold2)':'var(--foe)')+'">'+w+' 対 '+l+'</div><div class="news">'+duels.map(d=>'<div class="'+(d.res===0?'me':'bad')+'">'+HB(d.me).n+' 対 '+HB(d.foe).n+' ― '+(d.res===0?'勝ち':'負け')+'</div>').join('')+'</div><p class="muted" style="margin:0;text-align:center">'+(win?'一騎打ちを制した。敵兵は戦意を失い崩れた。':'一騎打ちに敗れ、兵の士気は地に落ちた。')+'</p>';
+  await new Promise(res=>{const b='<div style="text-align:center;font-family:var(--f-disp);font-size:clamp(46px,13vw,78px);line-height:1.1;color:'+(win?'var(--gold2)':'var(--foe)')+'">'+w+' 対 '+l+'</div><div class="news">'+duels.map(d=>'<div class="'+(d.res===0?'me':'bad')+'">'+HB(d.me).n+' 対 '+HB(d.foe).n+' ― '+(d.res===0?'勝ち':'負け')+'</div>').join('')+'</div><p class="muted" style="margin:0;text-align:center">'+(o.pact?(win?'三番勝負を制した。':'三番勝負に敗れた。'):win?'一騎打ちを制した。敵兵は戦意を失い崩れた。':'一騎打ちに敗れ、兵の士気は地に落ちた。')+'</p>';
     const d=sheet('三番勝負 決着',b,'<button class="btn pri" type="button" id="dOk">続ける</button>');d.querySelector('.x').hidden=true;d.querySelector('#dOk').onclick=()=>{d.remove();res();};});
   const sumU=(A,T,f)=>Object.keys(A.per).reduce((a,id)=>a+(T[id]!==undefined?T[id]:Math.round(A.per[id]*f)),0)+Math.round(A.reserve*f);
   return {win,myLeft:sumU(myA,myT,win?.95:.6),foeLeft:sumU(foA,foT,win?.6:.95),down,duels};}
@@ -812,13 +840,72 @@ function infoSheet(){let b='';FIDS.filter(alive).sort((a,b)=>regsOf(b).length-re
   if(S.news.length)b+='<h3 class="sec">最近の軍報</h3><div class="news">'+S.news.slice(-12).reverse().map(s=>'<div>'+esc(s)+'</div>').join('')+'</div>';
   sheet('諸侯の勢力',b,'');}
 function menuSheet(){const s=S.stats;let b='<dl class="kv"><dt>合戦</dt><dd>'+s.war+'戦 '+s.win+'勝</dd><dt>一騎打ち</dt><dd>'+s.duel+'回 '+s.dwon+'勝</dd><dt>登用</dt><dd>'+s.recruit+'人</dd><dt>捕縛</dt><dd>'+s.capt+'人</dd><dt>仕えた武将</dt><dd>'+Object.keys(S.met).length+' / '+HEROES.length+'</dd></dl>';
-  b+='<div class="card"><h3>遊び方</h3><p>・季節ごとに「令」がある。出陣・徴兵・登用で1つ使う。金は季節ごとに領地から入る。<br>・赤い輪の地域を攻める。<br>・勝てば城を取り、敵将を捕らえられる。捕虜や在野の人材を登用して軍を大きくしよう。<br>・季節を進めると諸侯が動く。攻められたら迎え撃つ。<br>・敵が城を出てくれば<b>野戦</b>（決戦か戦術）、城に籠もれば<b>攻城戦</b>（決戦）。攻められたら<b>籠城</b>（城壁と施設で守る）か<b>出撃</b>（戦術）。<br>・兵は武将ごとに統率まで配られ、戦術・一騎打ちでは1000につき体力+10%の上乗せになる（先に減り、回復しない）。<br>・失った兵の一部は負傷兵として次の季節に戻る（勝てば半分、負ければ2割）。<br>・金で城壁を強化し、弓楼・連弩台・投石機・火計台・地雷火を建てられる。<br>・洛陽を取ると帝を迎え、令が1つ増える。<br>・21の地域をすべて治めれば天下統一。</p></div>';
-  b+='<p class="dim" style="font-size:12px;margin:0">素材：武将の顔・3Dモデル・合戦・戦術戦・一騎打ちは「三国決戦伝」「三国タクティクス」「一騎打ち英雄伝」、物語画面と勢力図は「三国英雄伝」から。武器の音の一部は Battle for Wesnoth（GPL-2.0以降）、術のエフェクトとボタン音は Kenney（CC0）。</p>';
+  b+='<div class="card"><h3>遊び方</h3><p>・季節ごとに「令」がある。出陣・徴兵・登用・外交で1つ使う。金は季節ごとに領地から入る。治める城が増えると官位が上がり、令が増える。<br>・攻めるとき、敵が城を出てくれば<b>野戦</b>、籠もれば<b>攻城戦</b>。城壁と城門を破り本陣を落とすか、敵総大将を討つ。<br>・攻める代わりに<b>一騎打ち勝負</b>を申し込める。勝てば城を得て、負ければ総大将の城を割譲。武将も兵も失わない。<br>・攻められたら<b>籠城</b>（城壁と防衛施設で守る）か<b>出撃</b>。出撃で負けても、兵なしで二の丸に籠もってもう一戦できる。<br>・知将は守りに強い。猛将は攻めに強く攻めの陣形でさらに強いが、守ると挑発に乗って打って出てしまうことがある。<br>・武将の部隊が接すれば一騎打ち（城門を挟んでも）。<br>・兵は武将ごとに統率まで配られ、戦術戦・一騎打ちでは1000につき体力+10%（先に減り、回復しない）。失った兵の一部は次の季節に戻る。<br>・<b>外交</b>：金を贈って友好を深め、同盟を結ぶ。同盟国は攻めてこず、援軍も送ってくれる。隣の敵将は<b>引き抜き</b>で寝返らせられる。<br>・季節ごとに軍師が<b>献策</b>する。<br>・21の地域をすべて治めれば天下統一。</p></div>';
+  b+='<p class="dim" style="font-size:12px;margin:0">素材：武器の音の一部は Battle for Wesnoth（GPL-2.0以降）、術のエフェクトとボタン音は Kenney（CC0）。声：VOICEVOX:青山龍星 ／ VOICEVOX:玄野武宏 ／ VOICEVOX:剣崎雌雄 ／ VOICEVOX:雀松朱司 ／ VOICEVOX:麒ヶ島宗麟 ／ VOICEVOX:ちび式じい ／ VOICEVOX:白上虎太郎 ／ VOICEVOX:栗田まろん ／ VOICEVOX:冥鳴ひまり ／ VOICEVOX:九州そら</p>';
   const d=sheet('記録',b,'<button class="btn" type="button" id="mBgm">BGM '+(SND.bgmOn?'オン':'オフ')+'</button><button class="btn" type="button" id="mTitle">タイトルへ</button><button class="btn" type="button" id="mNew">最初から</button>');
   d.querySelector('#mBgm').onclick=()=>{try{SND.init();BGM.setOn(!SND.bgmOn);}catch(_){}menuSheet();};
   d.querySelector('#mTitle').onclick=()=>{closeSheet();title();};
   let armed=false;d.querySelector('#mNew').onclick=e=>{if(!armed){armed=true;e.target.textContent='もう一度押すと消える';return;}localStorage.removeItem(SKEY);S=null;closeSheet();title();};}
 
+/* ================= 外交（親善・同盟）・引き抜き・献策・官位 ================= */
+const relOf=f=>{S.rel=S.rel||{};return S.rel[f]==null?40:S.rel[f];};
+const addRel=(f,d)=>{S.rel=S.rel||{};S.rel[f]=clamp(relOf(f)+d,0,100);};
+const akey=(a,b)=>a<b?a+'|'+b:b+'|'+a;
+function allied(a,b){if(!a||!b||a===b)return false;S.ally=S.ally||{};S.aiAlly=S.aiAlly||{};if(a===S.me)return !!S.ally[b];if(b===S.me)return !!S.ally[a];return !!S.aiAlly[akey(a,b)];}
+function facPow(f){return regsOf(f).reduce((a,r)=>a+strength(heroesAt(r,f),S.reg[r].tr,false),0);}
+function diploSheet(){let b='<p class="muted" style="margin:0">親善で金を贈ると友好度が上がる。友好度60以上で同盟を申し込める。同盟中はお互いに攻めず、攻められたときは隣にいる同盟国が援軍を送ってくれる。同盟を破ると、ほかの諸侯の信用も落ちる。</p>';
+  FIDS.filter(f=>f!==S.me&&alive(f)).sort((a,c)=>regsOf(c).length-regsOf(a).length).forEach(f=>{const r=rulerOf(f),rl=relOf(f),al=allied(S.me,f);
+    const nb=regsOf(S.me).some(x=>ADJ[x].some(n=>S.reg[n].o===f));
+    b+='<div class="card" style="border-left:4px solid '+FAC[f].col+';display:flex;flex-direction:column;gap:6px"><div class="row" style="flex-wrap:nowrap"><img alt="" src="'+portrait(HB(r))+'" style="width:44px;height:50px;border:1px solid var(--line2)"><div style="min-width:0;flex:1"><b style="font-family:var(--f-disp);font-size:18px">'+FAC[f].n+(al?' <span class="pill" style="border-color:var(--good);color:var(--good)">同盟</span>':'')+(nb?' <span class="pill">隣国</span>':'')+'</b><br><small class="muted">君主 '+HB(r).n+' ・ 領地 '+regsOf(f).length+' ・ 武将 '+heroesOf(f).length+' ・ 兵 '+man(regsOf(f).reduce((a,x)=>a+S.reg[x].tr,0))+'</small>'+
+      '<div class="vsbar" style="margin-top:3px"><span class="muted" style="font-weight:400">友好</span><u style="background:#3a2a1a"><i style="width:'+rl+'%;background:'+(rl>=60?'var(--good)':rl>=30?'var(--gold)':'var(--foe)')+'"></i></u><span>'+rl+'</span></div></div></div>'+
+      '<div class="row"><button class="btn sm" type="button" data-g="'+f+'"'+(S.ap<1||S.gold<500?' disabled':'')+'>親善（令1・金500）</button>'+(al?'<button class="btn sm" type="button" data-x="'+f+'">同盟を破る</button>':'<button class="btn sm pri" type="button" data-a="'+f+'"'+(S.ap<1||rl<60?' disabled':'')+'>同盟を申し込む（令1）</button>')+'</div></div>';});
+  const AA=Object.keys(S.aiAlly||{}).filter(k=>{const[a,c]=k.split('|');return alive(a)&&alive(c);});if(AA.length)b+='<h3 class="sec">諸侯の同盟</h3><div class="news">'+AA.map(k=>{const[a,c]=k.split('|');return '<div>'+FAC[a].n+' ⇔ '+FAC[c].n+'</div>';}).join('')+'</div>';
+  const gone=FIDS.filter(f=>!alive(f));if(gone.length)b+='<p class="muted" style="margin:0">滅亡：'+gone.map(f=>FAC[f].n).join('・')+'</p>';
+  if(S.news.length)b+='<h3 class="sec">最近の軍報</h3><div class="news">'+S.news.slice(-12).reverse().map(x=>'<div>'+esc(x)+'</div>').join('')+'</div>';
+  const d=sheet('外交',b,'');
+  d.querySelectorAll('[data-g]').forEach(e=>e.onclick=()=>{const f=e.dataset.g;S.gold-=500;S.ap--;const up=Math.round(10+(HB(rulerOf(S.me)).cha||60)/10);addRel(f,up);toast(FAC[f].n+'に金500を贈った（友好+'+up+'）');try{SND.coin();}catch(_){}save();topBar();diploSheet();});
+  d.querySelectorAll('[data-a]').forEach(e=>e.onclick=()=>{const f=e.dataset.a;S.ap--;const p=clamp((relOf(f)-50)/45+(facPow(f)<facPow(S.me)?.15:-.05),.05,.95);
+    if(R()<p){S.ally[f]=1;banner(FAC[f].n+'と同盟','外交');try{SND.gong(.18);}catch(_){}S.news.push(FAC[f].n+'と同盟を結んだ');}else{addRel(f,-4);toast(FAC[f].n+'は同盟を断った');}save();topBar();diploSheet();});
+  d.querySelectorAll('[data-x]').forEach(e=>e.onclick=()=>{const f=e.dataset.x;delete S.ally[f];S.rel[f]=5;FIDS.forEach(o=>{if(o!==S.me&&o!==f)addRel(o,-10);});toast(FAC[f].n+'との同盟を破った（諸侯の信用が落ちた）');save();diploSheet();});}
+// 季節ごとの外交の動き
+async function diploSeason(){S.ally=S.ally||{};S.aiAlly=S.aiAlly||{};
+  FIDS.forEach(f=>{if(f===S.me||!alive(f))return;const v=relOf(f);addRel(f,v>40?-2:v<40?1:0);if(S.ally[f]&&relOf(f)<30){delete S.ally[f];S.news.push(FAC[f].n+'との同盟は切れた');}});
+  Object.keys(S.ally).forEach(f=>{if(!alive(f))delete S.ally[f];});
+  // 諸侯どうしの同盟
+  const ai=FIDS.filter(f=>f!==S.me&&alive(f));ai.forEach(a=>ai.forEach(c=>{if(a>=c)return;const k=akey(a,c);const nb=regsOf(a).some(r=>ADJ[r].some(n=>S.reg[n].o===c));
+    if(S.aiAlly[k]){if(R()<.04){delete S.aiAlly[k];S.news.push(FAC[a].n+'と'+FAC[c].n+'の同盟が破れた');}}
+    else if(nb&&R()<.03){S.aiAlly[k]=1;S.news.push(FAC[a].n+'と'+FAC[c].n+'が同盟を結んだ');}}));
+  // 友好の深い国から同盟の申し出
+  for(const f of ai){if(S.ally[f]||relOf(f)<70||R()>.25)continue;
+    const ok=await choiceSheet('同盟の申し出','<div class="card row" style="flex-wrap:nowrap"><img alt="" src="'+face(rulerOf(f))+'" style="width:64px;height:72px;border:1px solid var(--gold)"><div><b style="font-family:var(--f-disp);color:var(--gold2)">'+FAC[f].n+'の使者</b><p style="margin:0">「我が主'+HB(rulerOf(f)).n+'は、貴国と手を結びたいと申しております。」</p></div></div>',[{t:'同盟を結ぶ',v:1,pri:true},{t:'断る',v:0}]);
+    if(ok){S.ally[f]=1;S.news.push(FAC[f].n+'と同盟を結んだ');}else addRel(f,-6);break;}}
+// 攻められたとき、隣の同盟国が援軍を送る
+function allyAid(B){const T=B.target;let got=0;const who=[];Object.keys(S.ally||{}).forEach(f=>{if(!alive(f)||f===B.atkF)return;const src=ADJ[T].find(n=>S.reg[n].o===f&&S.reg[n].tr>4000);if(!src)return;const v=Math.round(S.reg[src].tr*.3);S.reg[src].tr-=v;got+=v;who.push(FAC[f].n);});
+  if(got){B.defTr+=got;S.reg[T].tr+=got;toast(who.join('・')+'から援軍 '+man(got)+'！',3200);}}
+// 引き抜き：隣の敵の武将を金で誘う
+function poachSheet(r){const f=S.reg[r].o;const hs=heroesAt(r).filter(id=>id!==rulerOf(f));
+  const pc=id=>{let p=.14+((HB(rulerOf(S.me)).cha||60)-(HB(rulerOf(f)).cha||60))/160-(st(id).p+st(id).i>170?.08:0)+(relOf(f)<25?.05:0);if(['guan','zhangf'].includes(id)&&rulerOf(f)==='liub')p=0;return clamp(p,0,.6);};
+  let b='<p class="muted" style="margin:0">金800と令1で、'+REG[r].c+'の武将を寝返らせる。君主の魅力が高いほど成功しやすい。成功しても失敗しても、相手との友好は下がる。</p><div class="grid">'+hs.map(id=>heroCard(id,{btn:true,sub:'見込み '+(pc(id)>=.35?'五分':pc(id)>=.18?'低い':pc(id)>0?'わずか':'無理')})).join('')+'</div>';
+  const d=sheet('引き抜き ― '+REG[r].c,b,'');
+  d.querySelectorAll('[data-h]').forEach(e=>e.onclick=()=>{if(S.ap<1||S.gold<800){toast('令か金が足りない');return;}const id=e.dataset.h;S.ap--;S.gold-=800;
+    const to=ADJ[r].find(n=>S.reg[n].o===S.me)||regsOf(S.me)[0];
+    if(R()<pc(id)){S.hero[id].f=S.me;S.hero[id].loc=to;S.hero[id].tired=1;S.met[id]=1;addRel(f,-15);banner(HB(id).n+'が寝返った','引き抜き');const v=speak(id,'accept');if(v)toast(HB(id).n+'「'+v+'」');S.stats.recruit++;}
+    else{addRel(f,-6);toast(HB(id).n+'は誘いを断った');}save();repaint();regionSheet(r);});}
+// 献策：軍師が次の一手を進言する
+function advice(){const ad=heroesOf(S.me).filter(id=>st(id).i>=75).sort((a,c)=>st(c).i-st(a).i)[0];if(!ad)return null;const tips=[];
+  let best=null,bs=0;regsOf(S.me).forEach(r=>{const hs=heroesAt(r,S.me);ADJ[r].forEach(t=>{const o=S.reg[t].o;if(o===S.me||allied(S.me,o))return;const sc=strength(hs,S.reg[r].tr*.8,false)/strength(heroesAt(t),S.reg[t].tr,true,t);if(sc>bs){bs=sc;best=t;}});});
+  if(best&&bs>1.1)tips.push(REG[best].c+'は手薄です。今こそ攻め時かと。');
+  let th=null,tv=0;regsOf(S.me).forEach(r=>ADJ[r].forEach(t=>{const o=S.reg[t].o;if(!o||o===S.me||allied(S.me,o))return;const v=strength(heroesAt(t),S.reg[t].tr,false)/strength(heroesAt(r),S.reg[r].tr,true,r);if(v>tv){tv=v;th=[t,r,o];}}));
+  if(th&&tv>1.2)tips.push(FAC[th[2]].n+'が'+REG[th[1]].c+'を狙っております。城壁を固めるか、兵を集めましょう。');
+  const fr=[];regsOf(S.me).forEach(r=>freeAt(r).forEach(id=>fr.push([id,r])));if(fr.length)tips.push(REG[fr[0][1]].c+'に'+HB(fr[0][0]).n+'という人物がいるとか。召し抱えては。');
+  const strong=FIDS.filter(f=>f!==S.me&&alive(f)&&!allied(S.me,f)).sort((a,c)=>facPow(c)-facPow(a))[0];if(strong&&facPow(strong)>facPow(S.me)*1.4){const nb=FIDS.find(f=>f!==S.me&&f!==strong&&alive(f)&&!allied(S.me,f)&&relOf(f)>=45);if(nb)tips.push(FAC[strong].n+'が強大です。'+FAC[nb].n+'と結んで備えましょう。');}
+  if(S.gold>=wallCost(2)*2)tips.push('金に余裕があります。前線の城に弓楼や投石機を。');
+  return tips.length?{id:ad,t:pick(tips)}:null;}
+// 官位：治める城の数で上がり、令が増える
+const RANKS=[{n:'太守',c:0,ap:0},{n:'州牧',c:4,ap:1},{n:'公',c:8,ap:2},{n:'王',c:12,ap:2},{n:'皇帝',c:17,ap:3}];
+const rankOf=()=>{const n=regsOf(S.me).length;let k=0;RANKS.forEach((R_,i)=>{if(n>=R_.c)k=i;});return Math.max(k,S.rank||0);};
+async function rankCheck(){const k=rankOf();if(k>(S.rank||0)){S.rank=k;save();const r=rulerOf(S.me);
+  await playStory('@title '+RANKS[k].n+'に昇る\n#'+HB(r).n+'は'+RANKS[k].n+'の位を得た。'+(RANKS[k].ap?'（令が増える）':'')+'\n'+HB(r).n+'：'+(HB(r).sp||'天下はまだ遠い。')+'',{bg:'palace'});topBar();}}
 /* ================= 季節を進める（諸侯の番） ================= */
 let BUSY=false;
 async function endTurn(){if(BUSY)return;BUSY=true;closeSheet();endTargetMode();const cmd=$('#cmd');cmd.querySelectorAll('button').forEach(b=>b.disabled=true);
@@ -840,11 +927,13 @@ async function endTurn(){if(BUSY)return;BUSY=true;closeSheet();endTargetMode();c
     FIDS.filter(f=>f!==S.me).forEach(f=>captivesOf(f).forEach(id=>{const h=S.hero[id];if(R()<.3){h.f=f;h.cap=null;h.loc=regsOf(f)[0]||h.loc;S.news.push(HB(id).n+'は'+FAC[f].n+'に降った');}else if(R()<.15){h.cap=null;h.f=null;h.loc=pick(RIDS);}}));
     S.ap=apMax();save();repaint();
     hint('');banner(S.year+'年 '+SEASON[S.season],S.news.length?S.news.length+'件の軍報':'');
-    if(S.news.length)await newsSheet();
+    await diploSeason();S.adv=advice();
+    if(S.news.length||S.adv)await newsSheet();
+    await rankCheck();
     await storyHook('season');
   }finally{BUSY=false;cmd.querySelectorAll('button').forEach(b=>b.disabled=false);hint('');topBar();}
   checkEnd();}
-function newsSheet(){return new Promise(r=>{const b='<div class="news">'+S.news.map(s=>'<div class="'+(s.indexOf(FAC[S.me].n)>=0?'me':'')+'">'+esc(s)+'</div>').join('')+'</div>';
+function newsSheet(){return new Promise(r=>{const A=S.adv;const b=(A?'<div class="card row" style="flex-wrap:nowrap"><img alt="" src="'+face(A.id)+'" style="width:64px;height:72px;border:1px solid var(--gold)"><div><small class="muted">軍師の献策</small><br><b style="font-family:var(--f-disp);color:var(--gold2)">'+HB(A.id).n+'</b><p style="margin:0">「'+esc(A.t)+'」</p></div></div>':'')+'<div class="news">'+S.news.map(s=>'<div class="'+(s.indexOf(FAC[S.me].n)>=0?'me':'')+'">'+esc(s)+'</div>').join('')+'</div>';
   const d=sheet('軍報 ― '+S.year+'年'+SEASON[S.season],b,'<button class="btn pri" type="button" id="nOk">わかった</button>');d.querySelector('#nOk').onclick=()=>{d.remove();r();};d.onclose=r;});}
 async function aiFaction(f){const F=FAC[f];
   // 在野を登用
@@ -856,7 +945,7 @@ async function aiFaction(f){const F=FAC[f];
   const n=regsOf(f).length;let tries=n>=6?2:1;
   const grace=S.turn<2;
   const cand=[];regsOf(f).forEach(r=>{const hs=heroesAt(r,f).filter(id=>!S.hero[id].tired);if(!hs.length||S.reg[r].tr<4000)return;
-    ADJ[r].forEach(t=>{const o=S.reg[t].o;if(o===f)return;if(o===S.me&&grace)return;const as=strength(hs,S.reg[r].tr*.75,false),ds=strength(heroesAt(t),S.reg[t].tr,true,t);
+    ADJ[r].forEach(t=>{const o=S.reg[t].o;if(o===f||allied(f,o))return;if(o===S.me&&grace)return;const as=strength(hs,S.reg[r].tr*.75,false),ds=strength(heroesAt(t),S.reg[t].tr,true,t);
       let sc=as/ds;if(!o)sc*=1.1;if(o===S.me)sc*=1.05;cand.push({r,t,hs,sc});});});
   cand.sort((a,b)=>b.sc-a.sc);
   for(const c of cand){if(tries<=0)break;if(S.reg[c.r].o!==f||S.reg[c.t].o===f)continue;if(c.sc<1.2||R()>F.ag+.15)continue;tries--;
@@ -864,7 +953,7 @@ async function aiFaction(f){const F=FAC[f];
     const tr=Math.round(S.reg[c.r].tr*.75);S.reg[c.r].tr-=tr;
     const B={atkF:f,defF:S.reg[c.t].o,target:c.t,atk:hs,def:heroesAt(c.t),atkTr:tr,defTr:S.reg[c.t].tr,player:S.reg[c.t].o===S.me?'def':null,home:hs.reduce((o,id)=>{o[id]=c.r;return o;},{}),src:c.r};
     UIS.arrows=[{a:c.r,b:c.t,col:F.col,t0:performance.now()/1000}];dirty=true;focusReg(c.t);await sleep(B.player?900:550);
-    if(B.player){try{SND.horn();}catch(_){}banner('敵襲!',F.n+'が'+REG[c.t].c+'へ');if(hs[0]){const v=speak(hs[0],pick(['charge','duel']),500);if(v)toast(HB(hs[0]).n+'「'+v+'」',3200);}await sleep(900);UIS.arrows=[];
+    if(B.player){allyAid(B);try{SND.horn();}catch(_){}banner('敵襲!',F.n+'が'+REG[c.t].c+'へ');if(hs[0]){const v=speak(hs[0],pick(['charge','duel']),500);if(v)toast(HB(hs[0]).n+'「'+v+'」',3200);}await sleep(900);UIS.arrows=[];
       if(!B.def.length){const r0=autoBattle(B,false);await applyResult(B,await r0);}else await battle(B);}
     else{const r0=autoBattle(B,true);UIS.arrows=[];await applyResult(B,toPlayerless(r0));}
     if(!alive(S.me))return;}
@@ -1016,13 +1105,30 @@ async function storyHook(k,a,b){if(!S)return;
 }
 
 /* ================= タイトル ================= */
+function drawTitleMap(cv){applyMap(DEF_MAP);const w=cv.width=Math.round(cv.clientWidth||400),h=cv.height=Math.round(cv.clientHeight||800);const x=cv.getContext('2d');
+  // 古地図：海は墨、陸は絹、勢力ごとに淡い色
+  x.fillStyle='#0d0a07';x.fillRect(0,0,w,h);const k=Math.max(w/100*1.08,h*.62/90),ox=(w-100*k)/2,oy=h*.5-45*k;
+  const own={};RIDS.forEach(r=>own[r]=START.reg[r][0]);const RI={};RIDS.forEach((r,i)=>RI[r]=i);
+  const iw=Math.round(w/3),ih=Math.round(h/3);const img=x.createImageData(iw,ih),a=img.data;
+  for(let py=0;py<ih;py++)for(let px=0;px<iw;px++){const X=(px*3-ox)/k,Y=(py*3-oy)/k,o=(py*iw+px)*4;let c=[26,20,14];
+    if(X>=0&&X<=100&&Y>=0&&Y<=90&&mapInOut(X,Y)){const nx=X+2.2*Math.sin(Y*.45)+1.3*Math.sin(Y*1.3+X*.2),ny=Y+2.2*Math.cos(X*.4)+1.2*Math.sin(X*1.1);let g=null,bd=1e9;for(const s_ of MAP_SEEDS){const d=(nx-s_[1])**2+(ny-s_[2])**2;if(d<bd){bd=d;g=s_[0];}}
+      const f=own[g];const fc=f?hexRgb(FAC[f].col):[150,130,96];const kk=f?.32:.1;c=[fc[0]*kk+178*(1-kk),fc[1]*kk+156*(1-kk),fc[2]*kk+112*(1-kk)];}
+    const n=((px*13+py*7)%9)*1.4;a[o]=c[0]+n;a[o+1]=c[1]+n;a[o+2]=c[2]+n;a[o+3]=255;}
+  const tmp=document.createElement('canvas');tmp.width=iw;tmp.height=ih;tmp.getContext('2d').putImageData(img,0,0);x.imageSmoothingEnabled=true;x.drawImage(tmp,0,0,w,h);
+  x.strokeStyle='rgba(30,80,130,.55)';x.lineWidth=Math.max(2,k*.6);MAP_RIV.forEach(r=>{x.beginPath();r.forEach((p_,i)=>i?x.lineTo(ox+p_[0]*k,oy+p_[1]*k):x.moveTo(ox+p_[0]*k,oy+p_[1]*k));x.stroke();});
+  x.textAlign='center';x.textBaseline='middle';x.font=Math.round(k*2.4)+'px "Yuji Syuku",serif';
+  RIDS.forEach(r=>{const f=own[r];const X=ox+REG[r].x*k,Y=oy+REG[r].y*k;x.fillStyle=f?FAC[f].col:'#6a5a3a';x.globalAlpha=.85;x.beginPath();x.arc(X,Y,k*1.5,0,7);x.fill();x.globalAlpha=1;x.fillStyle='rgba(255,246,220,.9)';x.fillText(f?FAC[f].ch:'',X,Y+1);});
+  const v=x.createRadialGradient(w/2,h*.42,Math.min(w,h)*.15,w/2,h*.45,Math.max(w,h)*.7);v.addColorStop(0,'rgba(10,6,3,.15)');v.addColorStop(1,'rgba(10,6,3,.92)');x.fillStyle=v;x.fillRect(0,0,w,h);
+  const g2=x.createLinearGradient(0,h*.55,0,h);g2.addColorStop(0,'rgba(10,6,3,0)');g2.addColorStop(1,'rgba(10,6,3,.95)');x.fillStyle=g2;x.fillRect(0,0,w,h);}
 function title(){closeSheet();const T=$('#title');T.hidden=false;try{BGM.play('camp');}catch(_){}
   const sv=load();
-  T.innerHTML='<canvas></canvas><div class="in"><div class="eye">決戦 ・ 戦術 ・ 一騎打ち ・ 物語</div><h1>三国覇王伝</h1>'+
-    '<p>二十一の地に分かれた天下を、ひとつにせよ。<br>城を攻めるたびに戦い方を選ぶ ― 大軍の<b>決戦</b>か、一手ずつの<b>戦術</b>か、武将どうしの<b>一騎打ち</b>か。<br>倒した敵将を捕らえ、在野の英雄を口説き、君主の物語を紡げ。</p>'+
-    '<div class="four"><div><b>決</b>三国決戦伝</div><div><b>戦</b>三国タクティクス</div><div><b>騎</b>一騎打ち英雄伝</div><div><b>物</b>三国英雄伝</div></div>'+
-    '<div class="row" style="justify-content:center">'+(sv&&!sv.over?'<button class="btn pri big" type="button" id="tCont">続きから<small style="display:block;font-family:var(--f-body);font-size:11px;letter-spacing:0">'+FAC[sv.me].n+' '+sv.year+'年'+SEASON[sv.season]+'</small></button>':'')+'<button class="btn big'+(sv&&!sv.over?'':' pri')+'" type="button" id="tNew">新しい天下</button></div></div>';
-  requestAnimationFrame(()=>paintBg(T.querySelector('canvas'),'dawn'));
+  T.innerHTML='<canvas></canvas><div class="in" style="justify-content:space-between;gap:22px">'+
+    '<div style="display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:6vh"><div class="eye">西暦一九四年 ・ 群雄割拠</div><h1>三国覇王伝</h1>'+
+    '<div style="display:grid;place-items:center;width:58px;height:58px;background:#a8281c;color:#fbe9c0;font-family:var(--f-disp);font-size:38px;border:2px solid #e6c06a;box-shadow:0 3px 10px rgba(0,0,0,.6);transform:rotate(-6deg)">覇</div></div>'+
+    '<p style="max-width:24em">天下二十一城、覇を競え。<br>城を奪い、英雄を従え、天下を一つに。</p>'+
+    '<div style="display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:4vh">'+(sv&&!sv.over?'<button class="btn pri big" type="button" id="tCont" style="min-width:240px">続きから<small style="display:block;font-family:var(--f-body);font-size:11px;letter-spacing:0">'+FAC[sv.me].n+' ・ '+sv.year+'年'+SEASON[sv.season]+'</small></button>':'')+
+    '<button class="btn big'+(sv&&!sv.over?'':' pri')+'" type="button" id="tNew" style="min-width:240px">新しい天下</button></div></div>';
+  requestAnimationFrame(()=>{drawTitleMap(T.querySelector('canvas'));if(sv)applyMap(sv.map||DEF_MAP);});
   const c=T.querySelector('#tCont');if(c)c.onclick=()=>{try{SND.init();}catch(_){}S=sv;T.hidden=true;enterMap();};
   T.querySelector('#tNew').onclick=()=>{try{SND.init();}catch(_){}lordSelect();};}
 /* 引いた天下を見て、勢力ごとの難しさを判定する */
@@ -1123,7 +1229,7 @@ function enterMap(){applyMap(S.map||DEF_MAP);buildGrid();vrecLoad();view.init=0;
 /* ================= 起動 ================= */
 function boot(){buildGrid();bindMap();
   $('#cWar').onclick=()=>startTarget();
-  $('#cHero').onclick=heroSheet;$('#cTal').onclick=talentSheet;$('#cInfo').onclick=infoSheet;$('#cMenu').onclick=menuSheet;
+  $('#cHero').onclick=heroSheet;$('#cTal').onclick=talentSheet;$('#cInfo').onclick=diploSheet;$('#cMenu').onclick=menuSheet;
   $('#cEnd').onclick=()=>{if(S.ap>0&&!$('#cEnd').dataset.arm){$('#cEnd').dataset.arm=1;toast('令が'+S.ap+'つ残っている。もう一度押すと季節を進める');setTimeout(()=>delete $('#cEnd').dataset.arm,2500);return;}delete $('#cEnd').dataset.arm;endTurn();};
   document.addEventListener('pointerdown',()=>{try{SND.init();}catch(_){}},true);
   requestAnimationFrame(loop);title();

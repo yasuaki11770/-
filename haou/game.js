@@ -1491,7 +1491,7 @@ function renderPrep(){
   const deployedHeroes=PREP.heroes.filter(p=>p.on);
   if(PREP.mode.k==='hero'&&!deployedHeroes.some(p=>p.h.id===PREP.mode.id))PREP.mode.id=(deployedHeroes[0]||{h:{id:null}}).h.id;
   const foeIds=parseFoe(E.foe).filter(f=>f.id!=='g');
-  let h='<div class="wrap"><div class="row" style="justify-content:space-between"><button type="button" class="btn sm" id="pBack">← 戦の一覧</button><span class="note" style="color:#d8cbb0">第'+(PREP.idx+1)+'戦 / 全'+C.list.length+'戦</span></div>';
+  let h='<div class="wrap"><div class="row" style="justify-content:space-between"><button type="button" class="btn sm" id="pBack">'+(EXT?'← 戦い方を選び直す':'← 戦の一覧')+'</button>'+(EXT?'':'<span class="note" style="color:#d8cbb0">第'+(PREP.idx+1)+'戦 / 全'+C.list.length+'戦</span>')+'</div>';
   h+='<div class="pp pad"><h2 class="sec">'+C.n+' ― '+B.n+'の戦い（'+B.y+'年・'+B.p+'）</h2><p class="story">'+E.s+'</p>'+
      '<dl class="kv" style="margin-top:8px"><dt>勝利</dt><dd>'+(E.cond&&E.cond.k==='survive'?E.cond.t+'カウント耐え抜く、または':'')+(foeIds.find(f=>f.leader)?byIdH(foeIds.find(f=>f.leader).id).n:'敵の大将')+'を倒す、または敵の全滅</dd><dt>敗北</dt><dd>総大将が倒れる、または味方の全滅</dd>'+
      '<dt>戦場</dt><dd>'+MAPN[B.map]+(E.side==='def'?'（守る側）':'（攻める側）')+(E.ev?'・途中で「'+EVENTS[E.ev].n+'」が起きる':'')+'。地形は戦うたびに変わる</dd>'+
