@@ -73,7 +73,16 @@ const EXFAC={
  hf:{n:'皇甫嵩軍',k:'皇',ruler:'huangfu',col:'#d86a8a',ch:'皇',sold:'rengo',dk:'漢',ag:.45,diff:['ふつう','#a83a5a'],d:'漢を支えた老将が自ら立つ。'},
  uh:{n:'烏桓軍',k:'烏',ruler:'tadun',col:'#4a5a7a',ch:'烏',sold:'uhan',dk:'群',ag:.65,diff:['ふつう','#2a3a5a'],d:'草原の騎馬の民。'},
  jl:{n:'紀霊軍',k:'紀',ruler:'jil',col:'#5ac8e0',ch:'紀',sold:'yuan',dk:'群',ag:.55,diff:['ふつう','#2a7a9a'],d:'袁術の大将が旗を奪って立つ。'}};
-Object.assign(FAC,EXFAC);
+// 国数21のときだけ旗を揚げる勢力
+const EXFAC2={
+ ss:{n:'孫策軍',k:'策',ruler:'suns',col:'#e0702a',ch:'策',sold:'wu',dk:'呉',ag:.7,diff:['ふつう','#a84a10'],d:'江東の小覇王が父から独り立つ。'},
+ zy:{n:'趙雲軍',k:'趙',ruler:'zhaoy',col:'#7ab8e8',ch:'趙',sold:'gongsun',dk:'群',ag:.5,diff:['ふつう','#3a78a8'],d:'常山の龍が自ら旗を掲げる。'},
+ mc:{n:'馬超軍',k:'超',ruler:'mac',col:'#b8a0e0',ch:'超',sold:'rengo',dk:'群',ag:.75,diff:['ふつう','#6a50a0'],d:'錦馬超、西涼の騎兵を率いる。'},
+ zl:{n:'張遼軍',k:'遼',ruler:'zhangl',col:'#5a6a90',ch:'遼',sold:'lu',dk:'群',ag:.6,diff:['ふつう','#2a3a60'],d:'遼来来。八百騎で天下を狙う。'},
+ sy:{n:'司馬懿軍',k:'司',ruler:'sima',col:'#5a2a5a',ch:'司',sold:'wei',dk:'魏',ag:.45,diff:['ふつう','#3a0a3a'],d:'機をうかがう深謀の人。'},
+ zg:{n:'諸葛亮軍',k:'亮',ruler:'zhugel',col:'#2ab890',ch:'亮',sold:'shu',dk:'蜀',ag:.4,diff:['ふつう','#0a7a5a'],d:'臥龍が草廬を出て自ら立つ。'},
+ gn:{n:'甘寧軍',k:'寧',ruler:'gann',col:'#e890a8',ch:'寧',sold:'wu',dk:'呉',ag:.7,diff:['ふつう','#a85070'],d:'錦帆賊の頭領が江を荒らす。'}};
+Object.assign(FAC,EXFAC,EXFAC2);
 function setFactions(list){FIDS.length=0;(list&&list.length?list:BASE_FIDS).forEach(f=>{if(FAC[f])FIDS.push(f);});}
 const NEUTRAL={n:'地方勢力',col:'#cdbf98',ch:'',sold:'kokin'};
 const SEASON=['春','夏','秋','冬'];
@@ -210,7 +219,7 @@ const WOPT=[
  {k:'subn',n:'配下数',v:[['def','デフォルト'],['rand','ランダム']],need:o=>o.sub==='rand'},
  {k:'size',n:'初期都市数',v:[['def','デフォルト'],['rand','ランダム']]},
  {k:'blank',n:'空白地',v:[['def','デフォルト'],['few','少ない'],['none','なし']]},
- {k:'nf',n:'国数',v:[['def','デフォルト'],['many','多い'],['max','最大']]},
+ {k:'nf',n:'国数',v:[['def','デフォルト'],['many','多い'],['max','14'],['all','21']]},
  {k:'scale',n:'都市規模',v:[['def','デフォルト'],['rand','ランダム']]}];
 function makeWorld(opt){return makeStaff(makePlacement(opt),opt);}
 // ① 勢力配置：マップ・初期都市数・空白地・国数・国替
@@ -219,7 +228,7 @@ function makePlacement(opt){opt=Object.assign({map:'def',size:'def',blank:'def',
   const groups={};BASE_FIDS.forEach(f=>{const cap=START.hero.find(x=>x[0]===FAC[f].ruler)[2];groups[f]=[cap].concat(RIDS.filter(r=>START.reg[r][0]===f&&r!==cap));});
   // 国数
   const EX=Object.keys(EXFAC);let fids=BASE_FIDS.slice();
-  if(opt.nf==='many')fids=fids.concat(shuffle(EX.slice()).slice(0,ri(2,3)));else if(opt.nf==='max')fids=fids.concat(EX);
+  if(opt.nf==='many')fids=fids.concat(shuffle(EX.slice()).slice(0,ri(2,3)));else if(opt.nf==='max')fids=fids.concat(EX);else if(opt.nf==='all')fids=fids.concat(EX,Object.keys(EXFAC2));
   // 初期都市数と空白地
   const assign={};fids.forEach(f=>assign[f]=f);
   if(opt.swap){const base=fids.filter(f=>groups[f]);const p=shuffle(base.slice());base.forEach((f,i)=>assign[f]=p[i]);}
@@ -231,12 +240,15 @@ function makePlacement(opt){opt=Object.assign({map:'def',size:'def',blank:'def',
   const historic=opt.size==='def'&&opt.blank==='def'&&opt.nf==='def';
   let map=DEF_MAP,own={};RIDS.forEach(r=>own[r]=null);const lands={};
   const byDeg=(pts,adj)=>pts.sort((a,b)=>adj[b].length-adj[a].length);
+  let geo=null;
   if(opt.map==='new'){let C=null,cl=null,adj=null;
-    for(let k=0;k<25&&!cl;k++){C=genContinent();if(!C)continue;adj=C.pts.map(()=>[]);C.edges.forEach(([a,b])=>{adj[a].push(b);adj[b].push(a);});cl=growClusters(adj,sizes,opt.blank==='none');}
+    for(let k=0;k<25&&!cl;k++){C=(k<3&&opt.geo)?opt.geo:genContinent();if(!C)continue;adj=C.pts.map(()=>[]);C.edges.forEach(([a,b])=>{adj[a].push(b);adj[b].push(a);});cl=growClusters(adj,sizes,opt.blank==='none');}
     if(!cl)return makePlacement(Object.assign({},opt,{map:'def'}));
+    geo=C;
     const ids=new Array(21);const used=new Set();
     if(historic&&!opt.swap)fids.forEach((f,fi)=>{const pts=byDeg(cl.map((o,i)=>o===fi?i:-1).filter(i=>i>=0),adj);pts.forEach((p,k)=>{ids[p]=groups[f][k];used.add(groups[f][k]);});});
-    const rest=shuffle(RIDS.filter(r=>!used.has(r)));cl.forEach((o,i)=>{if(!ids[i])ids[i]=rest.pop();});
+    if(!(historic&&!opt.swap)&&C.ids)C.ids.forEach((r,i)=>ids[i]=r);
+    const rest=shuffle(RIDS.filter(r=>!used.has(r)&&!ids.includes(r)));cl.forEach((o,i)=>{if(!ids[i])ids[i]=rest.pop();});C.ids=ids.slice();
     fids.forEach((f,fi)=>{lands[f]=byDeg(cl.map((o,i)=>o===fi?i:-1).filter(i=>i>=0),adj).map(p=>ids[p]);});
     const r1=v=>Math.round(v*10)/10,R1=p=>[r1(p[0]),r1(p[1])];
     const pos=Object.fromEntries(C.pts.map((p,i)=>[ids[i],R1(p)]));const adjL=C.edges.map(([a,b])=>ids[a]+'-'+ids[b]);const seaL=C.seaE.map(([a,b])=>ids[a]+'-'+ids[b]);
@@ -252,7 +264,8 @@ function makePlacement(opt){opt=Object.assign({map:'def',size:'def',blank:'def',
     fids.forEach((f,fi)=>{lands[f]=byDeg(cl.map((o,i)=>o===fi?i:-1).filter(i=>i>=0),adj).map(i=>RIDS[i]);});}
   else fids.forEach(f=>lands[f]=groups[assign[f]].slice());
   fids.forEach(f=>lands[f].forEach(r=>own[r]=f));
-  return {opt,fids,map,own,lands,groups,historic};}
+  const o_=Object.assign({},opt);delete o_.geo;
+  return {opt:o_,fids,map,own,lands,groups,historic,geo};}
 // ② 配下・配下数・都市規模（①の配置はそのまま）
 function makeStaff(P,opt){opt=Object.assign({sub:'def',subn:'def',scale:'def'},opt||{});if(opt.sub!=='rand')opt.subn='def';
   const ri=(a,b)=>a+Math.floor(R()*(b-a+1));const {fids,own,lands,groups,historic}=P;let map=P.map;
@@ -266,7 +279,7 @@ function makeStaff(P,opt){opt=Object.assign({sub:'def',subn:'def',scale:'def'},o
     else if(f){const n=neu();place[id]=n.length&&R()<.5?['none',pick(n)]:[null,pick(RIDS)];}
     else{const n=neu();place[id]=own[loc]?(n.length?['none',pick(n)]:[null,pick(RIDS)]):['none',loc];}});
   START.free.forEach(([id,loc])=>{if(!rulers.has(id))place[id]=[null,loc];});
-  fids.filter(f=>EXFAC[f]).forEach(f=>{const fr=shuffle(Object.keys(place).filter(id=>place[id][0]===null));fr.slice(0,ri(1,3)).forEach(id=>place[id]=[f,pick(lands[f])]);});
+  fids.filter(f=>EXFAC[f]||EXFAC2[f]).forEach(f=>{const fr=shuffle(Object.keys(place).filter(id=>place[id][0]===null));fr.slice(0,ri(1,3)).forEach(id=>place[id]=[f,pick(lands[f])]);});
   if(opt.sub==='rand'&&opt.subn==='def'){const ids=Object.keys(place).filter(id=>!rulers.has(id));const slots=ids.map(id=>place[id]);const sh=shuffle(ids.slice());sh.forEach((id,i)=>place[id]=slots[i]);}
   else if(opt.sub==='rand'){const pool=shuffle(Object.keys(place).filter(id=>!rulers.has(id)));
     fids.forEach(f=>{const n=ri(0,6);for(let i=0;i<n&&pool.length;i++)place[pool.pop()]=[f,pick(lands[f])];});
@@ -1013,7 +1026,7 @@ let CUST=null;
 function lordSelect(reroll){const T=$('#title');
   if(DOPT.custom){if(!DRAFTP||reroll==='all'){const base=makePlacement({map:DOPT.map});CUST=Object.assign({},base.own);DRAFTP=Object.assign(base,{});}
     if(reroll==='all'||reroll==='own'||!DRAFT||reroll==='staff'){DRAFTP=placementFromOwn(DRAFTP,CUST);DRAFT=makeStaff(DRAFTP,DOPT);}}
-  else{if(!DRAFTP||reroll==='all')DRAFTP=makePlacement(DOPT);if(!DRAFT||reroll)DRAFT=makeStaff(DRAFTP,DOPT);}
+  else{if(!DRAFTP||reroll==='all')DRAFTP=makePlacement(DOPT);else if(reroll==='place')DRAFTP=makePlacement(Object.assign({},DOPT,{geo:DRAFTP.geo}));if(!DRAFT||reroll)DRAFT=makeStaff(DRAFTP,DOPT);}
   const W=DRAFT;
   const row=o=>{const dis=(o.need&&!o.need(DOPT))||(DOPT.custom&&['size','blank','nf'].includes(o.k));return '<div class="row" style="flex-wrap:nowrap;gap:6px;width:100%;opacity:'+(dis?'.4':'1')+'"><b style="flex:0 0 5.4em;font-family:var(--f-disp);font-weight:400;color:#f4e6c4;font-size:15px;text-shadow:0 1px 3px #000">'+o.n+'</b><div class="row" style="gap:4px;flex:1">'+
     o.v.map(([v,l])=>'<button type="button" class="btn sm'+((DOPT[o.k]===v&&!dis)||(dis&&v==='def'&&!DOPT.custom)?' pri':'')+'" data-k="'+o.k+'" data-v="'+v+'"'+(dis?' disabled':'')+' style="flex:1;min-width:0;font-size:12px;padding:3px 2px;white-space:nowrap;letter-spacing:0">'+l+'</button>').join('')+'</div></div>';};
@@ -1041,7 +1054,7 @@ function lordSelect(reroll){const T=$('#title');
   T.querySelectorAll('[data-sw]').forEach(b=>b.onclick=()=>{const k=b.dataset.sw,v=b.dataset.v==='1';if(DOPT[k]===v)return;DOPT[k]=v;
     if(k==='custom'){if(v){CUST=Object.assign({},W.own);DRAFTP=Object.assign({},DRAFTP);again('own');}else again('all');}
     else if(k==='swap'){if(DOPT.custom){if(v)CUST=permuteOwn(CUST);again('own');}else again('all');}});
-  T.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{const k=b.dataset.k;DOPT[k]=b.dataset.v;if(DOPT.sub!=='rand')DOPT.subn='def';again(['sub','subn','scale'].includes(k)?'staff':'all');});
+  T.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{const k=b.dataset.k;DOPT[k]=b.dataset.v;if(DOPT.sub!=='rand')DOPT.subn='def';again(['sub','subn','scale'].includes(k)?'staff':['size','blank','nf'].includes(k)?'place':'all');});
   if(DOPT.custom)pv.onclick=e=>{const rc=pv.getBoundingClientRect();const X=(e.clientX-rc.left)/rc.width*100,Y=(e.clientY-rc.top)/rc.height*90;applyMap(W.map);
     let best=null,bd=8;RIDS.forEach(r=>{const d=Math.hypot(REG[r].x-X,REG[r].y-Y);if(d<bd){bd=d;best=r;}});if(best)ownerPicker(best,f=>{CUST[best]=f;again('own');});};
   T.querySelectorAll('[data-f]').forEach(b=>b.onclick=async()=>{const f=b.dataset.f;newGame(f,W);DRAFT=null;DRAFTP=null;CUST=null;T.hidden=true;enterMap();await playStory(OPENING(f),{bg:'dawn'});
