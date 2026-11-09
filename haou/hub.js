@@ -956,7 +956,6 @@ function rateWorld(W){const adj={};RIDS.forEach(r=>adj[r]=[]);W.map.adj.forEach(
     out[f].lab=L[0];out[f].col=L[1];out[f].lv=L[2];});
   return out;}
 let DRAFT=null,DRAFTP=null;const DOPT={custom:false,swap:false,map:'def',sub:'def',subn:'def',size:'def',blank:'def',nf:'def',scale:'def'};
-const effOpt=()=>DOPT.custom?DOPT:{swap:DOPT.swap};
 function drawPreview(cv,W){applyMap(W.map);const w=300,h=270;cv.width=w;cv.height=h;const x=cv.getContext('2d');const img=x.createImageData(w,h),a=img.data;const gd=new Int8Array(w*h);
   const RI={};RIDS.forEach((r,i)=>RI[r]=i);
   for(let py=0;py<h;py++)for(let px=0;px<w;px++){const X=px/w*100,Y=py/h*90;let g=-1;
@@ -973,32 +972,54 @@ function drawPreview(cv,W){applyMap(W.map);const w=300,h=270;cv.width=w;cv.heigh
   ADJ_L.forEach(k=>{const[a,b]=k.split('-');const tp=ET[k]||'road';x.strokeStyle={road:'rgba(70,40,15,.8)',river:'#1f5f9e',mount:'#555',sea:'#0f4a8a'}[tp];x.lineWidth=1.6;x.setLineDash(tp==='sea'?[2,4]:tp==='mount'?[3,3]:[5,3]);x.beginPath();x.moveTo(REG[a].x*sx,REG[a].y*sy);x.lineTo(REG[b].x*sx,REG[b].y*sy);x.stroke();});x.setLineDash([]);
   RIDS.forEach(r=>{const f=W.own[r];const cx=REG[r].x*sx,cy=REG[r].y*sy;x.fillStyle=f?FAC[f].col:'#9a8a68';x.strokeStyle='#20140a';x.lineWidth=1.5;x.beginPath();x.arc(cx,cy,f?8:5,0,7);x.fill();x.stroke();
     if(f){x.fillStyle='#fff';x.font='12px "Yuji Syuku",serif';x.fillText(FAC[f].ch,cx,cy+.5);}x.font='700 9px sans-serif';x.lineWidth=3;x.strokeStyle='rgba(255,250,235,.9)';x.strokeText(REG[r].c,cx,cy+13);x.fillStyle='#24160a';x.fillText(REG[r].c,cx,cy+13);});}
-function lordSelect(reroll){const T=$('#title');if(!DRAFTP||reroll==='all'||reroll===true)DRAFTP=makePlacement(effOpt());if(!DRAFT||reroll)DRAFT=makeStaff(DRAFTP,effOpt());const W=DRAFT;
-  const row=o=>{const dis=o.need&&!o.need(DOPT);return '<div class="row" style="flex-wrap:nowrap;gap:6px;width:100%;opacity:'+(dis?'.4':'1')+'"><b style="flex:0 0 5.4em;font-family:var(--f-disp);font-weight:400;color:#f4e6c4;font-size:15px;text-shadow:0 1px 3px #000">'+o.n+'</b><div class="row" style="gap:4px;flex:1">'+
-    o.v.map(([v,l])=>'<button type="button" class="btn sm'+((DOPT[o.k]===v||(dis&&v==='def'))?' pri':'')+'" data-k="'+o.k+'" data-v="'+v+'"'+(dis?' disabled':'')+' style="flex:1;min-width:0;font-size:12px;padding:3px 2px;white-space:nowrap;letter-spacing:0">'+l+'</button>').join('')+'</div></div>';};
-  const sw=(k,n,d)=>'<button type="button" class="btn'+(DOPT[k]?' pri':'')+'" data-sw="'+k+'" style="flex:1;min-width:0;text-align:left;line-height:1.3"><b style="font-family:var(--f-disp);font-weight:400;font-size:18px">'+(DOPT[k]?'■ ':'□ ')+n+'</b><small style="display:block;font-size:11px;font-weight:400;opacity:.85">'+d+'</small></button>';
-  const card=(t,body)=>'<div class="card" style="width:min(560px,100%);display:flex;flex-direction:column;gap:6px;background:var(--tex-wood),rgba(30,18,9,.9)"><b style="font-family:var(--f-disp);font-weight:400;color:var(--gold2);font-size:17px;letter-spacing:.1em">'+t+'</b>'+body+'</div>';
-  const pick_=k=>WOPT.filter(o=>k.includes(o.k)).map(row).join('');
+// カスタム：自分で決めた持ち主から勢力配置を作る
+function placementFromOwn(baseP,own){const groups={};BASE_FIDS.forEach(f=>{const cap=START.hero.find(x=>x[0]===FAC[f].ruler)[2];groups[f]=[cap].concat(RIDS.filter(r=>START.reg[r][0]===f&&r!==cap));});
+  const adj={};RIDS.forEach(r=>adj[r]=[]);baseP.map.adj.forEach(k=>{const[a,b]=k.split('-');adj[a].push(b);adj[b].push(a);});
+  const fids=Object.keys(FAC).filter(f=>RIDS.some(r=>own[r]===f));const lands={};fids.forEach(f=>{lands[f]=RIDS.filter(r=>own[r]===f).sort((a,b)=>adj[b].length-adj[a].length);});
+  return {opt:Object.assign({},baseP.opt,{custom:true}),fids,map:baseP.map,own:Object.assign({},own),lands,groups,historic:false};}
+function permuteOwn(own){const fs=Object.keys(FAC).filter(f=>RIDS.some(r=>own[r]===f));const p=shuffle(fs.slice());const m={};fs.forEach((f,i)=>m[f]=p[i]);const o={};RIDS.forEach(r=>o[r]=own[r]?m[own[r]]:null);return o;}
+let CUST=null;
+function lordSelect(reroll){const T=$('#title');
+  if(DOPT.custom){if(!DRAFTP||reroll==='all'){const base=makePlacement({map:DOPT.map});CUST=Object.assign({},base.own);DRAFTP=Object.assign(base,{});}
+    if(reroll==='all'||reroll==='own'||!DRAFT||reroll==='staff'){DRAFTP=placementFromOwn(DRAFTP,CUST);DRAFT=makeStaff(DRAFTP,DOPT);}}
+  else{if(!DRAFTP||reroll==='all')DRAFTP=makePlacement(DOPT);if(!DRAFT||reroll)DRAFT=makeStaff(DRAFTP,DOPT);}
+  const W=DRAFT;
+  const row=o=>{const dis=(o.need&&!o.need(DOPT))||(DOPT.custom&&['size','blank','nf'].includes(o.k));return '<div class="row" style="flex-wrap:nowrap;gap:6px;width:100%;opacity:'+(dis?'.4':'1')+'"><b style="flex:0 0 5.4em;font-family:var(--f-disp);font-weight:400;color:#f4e6c4;font-size:15px;text-shadow:0 1px 3px #000">'+o.n+'</b><div class="row" style="gap:4px;flex:1">'+
+    o.v.map(([v,l])=>'<button type="button" class="btn sm'+((DOPT[o.k]===v&&!dis)||(dis&&v==='def'&&!DOPT.custom)?' pri':'')+'" data-k="'+o.k+'" data-v="'+v+'"'+(dis?' disabled':'')+' style="flex:1;min-width:0;font-size:12px;padding:3px 2px;white-space:nowrap;letter-spacing:0">'+l+'</button>').join('')+'</div></div>';};
+  const sw=(k,n,d)=>'<div class="row" style="flex-wrap:nowrap;gap:6px;width:100%"><b style="flex:0 0 5.4em;font-family:var(--f-disp);font-weight:400;color:#f4e6c4;font-size:15px;text-shadow:0 1px 3px #000">'+n+'</b><div class="row" style="gap:4px;flex:1">'+
+    [[false,'オフ'],[true,'オン']].map(([v,l])=>'<button type="button" class="btn sm'+(DOPT[k]===v?' pri':'')+'" data-sw="'+k+'" data-v="'+(v?1:0)+'" style="flex:1;min-width:0;font-size:12px;padding:3px 2px">'+l+'</button>').join('')+'</div></div><small class="muted" style="font-size:11px;margin:-2px 0 2px 6.2em">'+d+'</small>';
+  const nb=RIDS.filter(r=>!W.own[r]).length,sizes=W.fids.map(f=>RIDS.filter(r=>W.own[r]===f).length);
   let h='<canvas></canvas><div class="in" style="justify-content:flex-start"><div class="eye">西暦一九四年 ・ 群雄割拠</div><h1 style="font-size:clamp(36px,10vw,64px)">天下を引く</h1>'+
-    '<div class="row" style="width:min(560px,100%);flex-wrap:nowrap">'+sw('swap','国替','勢力どうしで初期の領地を入れ替える')+sw('custom','カスタム','地図・配置・配下・城を細かく決める')+'</div>';
-  if(DOPT.custom)h+=card('① 勢力配置',pick_(['map','size','blank','nf'])+'<button class="btn pri" type="button" id="gP">① 配置を引く</button>')+card('② 配下と城',pick_(['sub','subn','scale'])+'<button class="btn pri" type="button" id="gS">② 配下を引く</button><small class="muted" style="font-size:11.5px">②を引き直しても、①の地図と配置は変わらない</small>');
-  h+='<div style="display:flex;flex-direction:column;align-items:center;gap:6px"><canvas id="pv" style="width:min(340px,88vw);height:auto;aspect-ratio:300/270;border:3px solid #6a4a22;box-shadow:0 0 0 1px #c9a23c,0 8px 24px rgba(0,0,0,.6)"></canvas>'+
-    '<small style="color:#f4e6c4;text-shadow:0 1px 3px #000">'+(W.map.shape?W.map.shape+' ・ ':'')+'勢力 '+W.fids.length+' ・ 空白地 '+RIDS.filter(r=>!W.own[r]).length+'</small>'+
-    (!DOPT.custom&&DOPT.swap?'<button class="btn pri big" type="button" id="gDraw">国替を引き直す</button>':'')+'</div>'+
+    '<div class="card" style="width:min(560px,100%);display:flex;flex-direction:column;gap:6px;background:var(--tex-wood),rgba(30,18,9,.9)">'+WOPT.map(row).join('')+
+    '<div style="border-top:1px solid var(--line);margin:2px 0"></div>'+sw('swap','国替','勢力どうしで領地を入れ替える')+sw('custom','カスタム','マップを選んだあと、城ごとに勢力を自分で配置する（初期都市数・空白地・国数は配置で決まる）')+'</div>'+
+    '<div style="display:flex;flex-direction:column;align-items:center;gap:6px"><canvas id="pv" style="width:min(340px,88vw);height:auto;aspect-ratio:300/270;border:3px solid #6a4a22;box-shadow:0 0 0 1px #c9a23c,0 8px 24px rgba(0,0,0,.6)'+(DOPT.custom?';cursor:pointer':'')+'"></canvas>'+
+    '<small style="color:#f4e6c4;text-shadow:0 1px 3px #000">'+(W.map.shape?W.map.shape+' ・ ':'')+'勢力 '+W.fids.length+(sizes.length?' ・ 都市数 '+Math.min(...sizes)+'〜'+Math.max(...sizes):'')+' ・ 空白地 '+nb+'</small>'+
+    (DOPT.custom?'<small style="color:#ffe08a;text-shadow:0 1px 3px #000">地図の城をタップして持ち主を決める</small><div class="row" style="justify-content:center">'+(DOPT.map==='new'?'<button class="btn" type="button" id="gMap">地図を引き直す</button>':'')+'<button class="btn" type="button" id="gClr">全部空白にする</button><button class="btn pri" type="button" id="gS">配下を引く</button></div>':'<button class="btn pri big" type="button" id="gDraw">ガチャを引く</button>')+'</div>'+
     '<div class="eye" style="letter-spacing:.3em">君主を選ぶ</div><div class="lords">';
-  const RT=rateWorld(W);
-  W.fids.forEach(f=>{const F=FAC[f];const rt=RT[f];const regs=RIDS.filter(r=>W.own[r]===f);const cap=W.place[F.ruler][1];regs.sort((a,b)=>(b===cap)-(a===cap));const hs=Object.keys(W.place).filter(id=>W.place[id][0]===f);
+  const RT=W.fids.length>1?rateWorld(W):{};
+  W.fids.forEach(f=>{const F=FAC[f];const rt=RT[f]||{lab:'ふつう',col:'#2a5a8a',why:[]};const regs=RIDS.filter(r=>W.own[r]===f);const cap=W.place[F.ruler][1];regs.sort((a,b)=>(b===cap)-(a===cap));const hs=Object.keys(W.place).filter(id=>W.place[id][0]===f);
     const top=hs.filter(id=>id!==F.ruler).sort((a,b)=>HB(b).p+HB(b).i-HB(a).p-HB(a).i).slice(0,3).map(id=>HB(id).n);
-    h+='<button class="lordc" type="button" data-f="'+f+'" style="--c:'+F.col+';--d:'+rt.col+'"><img alt="" src="'+portrait(HB(F.ruler))+'"><div style="min-width:0"><b>'+F.n+'<em>'+rt.lab+'</em></b><small>'+regs.map(r=>REG[r].c).join('・')+' ・ 武将'+hs.length+'人</small><small>'+(W.opt.mix?'配下：'+top.join('・')+(hs.length>4?' ほか':''):W.opt.swapped||W.opt.newland?'配下：'+(top.join('・')||'なし'):F.d)+'</small>'+(rt.why.length?'<small style="color:#e8c87a">'+rt.why.join('・')+'</small>':'')+'</div></button>';});
+    h+='<button class="lordc" type="button" data-f="'+f+'" style="--c:'+F.col+';--d:'+rt.col+'"><img alt="" src="'+portrait(HB(F.ruler))+'"><div style="min-width:0"><b>'+F.n+'<em>'+rt.lab+'</em></b><small>'+regs.map(r=>REG[r].c).join('・')+' ・ 武将'+hs.length+'人</small><small>'+(W.opt.mix||W.opt.swapped||W.opt.newland||W.opt.custom?'配下：'+(top.join('・')||'なし')+(hs.length>4?' ほか':''):F.d)+'</small>'+(rt.why.length?'<small style="color:#e8c87a">'+rt.why.join('・')+'</small>':'')+'</div></button>';});
+  if(!W.fids.length)h+='<p style="color:#f4e6c4">城をタップして、勢力を一つ以上置こう</p>';
   h+='</div><button class="btn" type="button" id="lBack">戻る</button></div>';T.innerHTML=h;requestAnimationFrame(()=>paintBg(T.querySelector('canvas'),'battle'));
-  drawPreview(T.querySelector('#pv'),W);
+  const pv=T.querySelector('#pv');drawPreview(pv,W);
   T.querySelector('#lBack').onclick=()=>{applyMap(S&&S.map||DEF_MAP);title();};
   const again=m=>{try{SND.gong(.14);}catch(_){}const y=T.scrollTop;lordSelect(m);T.scrollTop=y;};
-  [['#gDraw','all'],['#gP','all'],['#gS','staff']].forEach(([q,m])=>{const e=T.querySelector(q);if(e)e.onclick=()=>again(m);});
-  T.querySelectorAll('[data-sw]').forEach(b=>b.onclick=()=>{DOPT[b.dataset.sw]=!DOPT[b.dataset.sw];again('all');});
+  [['#gDraw','all'],['#gMap','all'],['#gS','staff']].forEach(([q,m])=>{const e=T.querySelector(q);if(e)e.onclick=()=>again(m);});
+  const clr=T.querySelector('#gClr');if(clr)clr.onclick=()=>{RIDS.forEach(r=>CUST[r]=null);again('own');};
+  T.querySelectorAll('[data-sw]').forEach(b=>b.onclick=()=>{const k=b.dataset.sw,v=b.dataset.v==='1';if(DOPT[k]===v)return;DOPT[k]=v;
+    if(k==='custom'){if(v){CUST=Object.assign({},W.own);DRAFTP=Object.assign({},DRAFTP);again('own');}else again('all');}
+    else if(k==='swap'){if(DOPT.custom){if(v)CUST=permuteOwn(CUST);again('own');}else again('all');}});
   T.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{const k=b.dataset.k;DOPT[k]=b.dataset.v;if(DOPT.sub!=='rand')DOPT.subn='def';again(['sub','subn','scale'].includes(k)?'staff':'all');});
-  T.querySelectorAll('[data-f]').forEach(b=>b.onclick=async()=>{const f=b.dataset.f;newGame(f,W);DRAFT=null;DRAFTP=null;T.hidden=true;enterMap();await playStory(OPENING(f),{bg:'dawn'});
+  if(DOPT.custom)pv.onclick=e=>{const rc=pv.getBoundingClientRect();const X=(e.clientX-rc.left)/rc.width*100,Y=(e.clientY-rc.top)/rc.height*90;applyMap(W.map);
+    let best=null,bd=8;RIDS.forEach(r=>{const d=Math.hypot(REG[r].x-X,REG[r].y-Y);if(d<bd){bd=d;best=r;}});if(best)ownerPicker(best,f=>{CUST[best]=f;again('own');});};
+  T.querySelectorAll('[data-f]').forEach(b=>b.onclick=async()=>{const f=b.dataset.f;newGame(f,W);DRAFT=null;DRAFTP=null;CUST=null;T.hidden=true;enterMap();await playStory(OPENING(f),{bg:'dawn'});
     toast('自分の城（金の縁）をタップ、または「戦」で出陣');});}
+function ownerPicker(r,cb){const d=el('div','');d.style.cssText='position:fixed;inset:0;z-index:120;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center';
+  const cur=CUST[r];const fs=Object.keys(FAC);
+  d.innerHTML='<div class="card" style="width:min(560px,100%);max-height:70vh;overflow:auto;background:var(--tex-wood),linear-gradient(#26180d,#140c06);border-top:3px double var(--gold)"><h3>'+REG[r].c+'の持ち主</h3><div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(100px,1fr))">'+
+    '<button class="btn sm'+(!cur?' pri':'')+'" type="button" data-o="">空白地</button>'+fs.map(f=>'<button class="btn sm'+(cur===f?' pri':'')+'" type="button" data-o="'+f+'" style="border-left:6px solid '+FAC[f].col+'">'+FAC[f].n+'</button>').join('')+'</div></div>';
+  document.body.appendChild(d);d.onclick=e=>{const b=e.target.closest('[data-o]');if(b){d.remove();cb(b.dataset.o||null);}else if(e.target===d)d.remove();};}
 function enterMap(){applyMap(S.map||DEF_MAP);buildGrid();view.init=0;fitView();repaint();UIS.sel=null;try{BGM.play('camp');}catch(_){}
   const mine=regsOf(S.me);if(mine.length){/* 自国が見えるように少し寄る */const cv=$('#map');if(cv.clientWidth<700){view.s=1.6;const k=view.fit*view.s;const r=mine[0];view.ox=cv.clientWidth/2-REG[r].x*BW/100*k;view.oy=cv.clientHeight/2-REG[r].y*BH/90*k;clampView();}}
   dirty=true;checkEnd();}
