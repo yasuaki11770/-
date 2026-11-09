@@ -1592,7 +1592,7 @@ function endBattle(res){
 let EXT=null;
 const extPost=m=>{try{parent.postMessage(m,'*');}catch(e){}};
 function extStart(m){
-  EXT={id:m.id,tr0:{},tr1:m.foeTr||{}};m.party.forEach(p=>{EXT.tr0[p.id]=p.tr||0;});
+  EXT={id:m.id,tr0:{},tr1:m.foeTr||{},m};m.party.forEach(p=>{EXT.tr0[p.id]=p.tr||0;});
   const ids=m.party.map(p=>p.id);
   CAMP.ext={n:m.fname,col:m.fcol,lead:ids[0],start:ids,gen:0,diff:['',''],d:'',list:[{b:'ext',side:m.side,ef:m.ef,foe:m.foe,s:m.s||'',w:m.w||'',roster:ids}]};
   BATTLES.ext={n:m.n,y:m.y||194,p:m.p||'',map:m.map,opt:m.opt||{}};
@@ -1617,8 +1617,10 @@ function extEnd(res){
     let h='<div class="wrap" style="max-width:680px"><div class="verdict '+(win?'win':'lose')+'">'+(win?'勝利':'敗北')+'</div>';
     if(spk&&quote)h+='<div class="pp pad" style="display:grid;grid-template-columns:56px minmax(0,1fr);gap:10px;align-items:center"><img alt="" src="'+portrait(spk.h)+'" style="width:56px;height:63px;border-radius:4px"><div><b style="font-family:var(--f-disp);color:var(--seal)">'+spk.h.n+'</b><p class="story" style="margin:2px 0 0">「'+quote+'」</p></div></div>';
     h+='<div class="pp pad"><h2 class="sec">得たもの（ジョブとJPはこの先の戦術戦でも残る）</h2><div class="terr" style="margin-top:6px">'+gains+'</div></div>';
-    h+='<div class="row" style="justify-content:center"><button type="button" class="btn pri" id="rBack">天下図へ戻る</button></div></div>';
+    if(!win)h+='<p class="story" style="font-size:13px;text-align:center">「もう一度戦う」なら、この負けはなかったことにして同じ戦いをやり直せる。</p>';
+    h+='<div class="row" style="justify-content:center">'+(win?'':'<button type="button" class="btn pri" id="rRetry">もう一度戦う</button>')+'<button type="button" class="btn'+(win?' pri':'')+'" id="rBack">'+(win?'天下図へ戻る':'敗北を受け入れる')+'</button></div></div>';
     showScreen(h);scr$().querySelector('#rBack').onclick=()=>{SND.play('ui-ok',.5);clearBattle();extPost(out);};
+    const rr=scr$().querySelector('#rRetry');if(rr)rr.onclick=()=>{SND.play('ui-ok',.5);clearBattle();extStart(EXT.m);};
   },2400);
 }
 window.addEventListener('message',e=>{const m=e.data||{};if(m.t==='tac')extStart(m);});

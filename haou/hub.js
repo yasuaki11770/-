@@ -317,7 +317,10 @@ function newGame(me,W){W=W||makeWorld({});
 /* 城の守り・金・負傷兵（後から足した項目） */
 function migrate(o){if(!o)return o;o.gold=o.gold==null?3000:o.gold;o.fgold=o.fgold||{};
   const caps={};FIDS.forEach(f=>{const h=o.hero&&o.hero[FAC[f].ruler];if(h&&h.f===f)caps[h.loc]=1;});
-  RIDS.forEach(r=>{const g=o.reg[r];if(g.wall==null){g.wall=caps[r]?2:1;g.bld=caps[r]?[{t:'yumi',lv:1},{t:'yumi',lv:1}]:g.o?[{t:'yumi',lv:1}]:[];}g.inj=g.inj||0;});return o;}
+  // 城壁は本拠地でも1。ほかの城はたいてい柵だけ（城壁0）
+  const old=!o.wf&&RIDS.some(r=>o.reg[r].wall!=null);
+  RIDS.forEach(r=>{const g=o.reg[r];if(g.wall==null){const big=REG[r].cap>=20000;g.wall=caps[r]||(big&&R()<.5)?1:0;g.bld=caps[r]?[{t:'yumi',lv:1}]:g.o&&R()<.5?[{t:'yumi',lv:1}]:[];}
+    else if(old){g.wall=Math.max(0,g.wall-1);if(g.bld.length>bldSlotsW(g.wall))g.bld.length=bldSlotsW(g.wall);}g.inj=g.inj||0;});o.wf=1;return o;}
 const H=id=>S.hero[id];
 const owner=r=>S.reg[r].o;
 const regsOf=f=>RIDS.filter(r=>S.reg[r].o===f);
@@ -418,7 +421,7 @@ function draw(){const cv=$('#map');const dpr=Math.min(2,devicePixelRatio||1);con
     x.fillStyle='#fff';x.font='400 24px "Yuji Syuku",serif';x.textAlign='center';x.textBaseline='middle';x.fillText(o?FAC[o].ch:'城',cx,cy+1);
     x.font='700 17px "BIZ UDPGothic",sans-serif';x.lineWidth=4;x.strokeStyle='rgba(255,250,235,.92)';x.strokeText(R_.c,cx,cy+33);x.fillStyle='#24160a';x.fillText(R_.c,cx,cy+33);
     {const tc=R_.bio&&R_.t!=='castle'?({sand:'#b08030',snow:'#7a90a8',jungle:'#1f6a2a'})[R_.bio]:({castle:'#7a1c12',gate:'#4a4a52',plain:'#6a5a2a',river:'#1f5f9e',yangtze:'#0f4a8a',hills:'#7a5a2a',mountain:'#4a4a4a',forest:'#2f5a2a'}[R_.t]||'#555');x.fillStyle=tc;x.strokeStyle='#fff';x.lineWidth=2;x.fillRect(cx-44,cy-27,24,24);x.strokeRect(cx-44,cy-27,24,24);x.fillStyle='#fff';x.font='700 17px "BIZ UDPGothic",sans-serif';x.fillText(R_.bio&&R_.t!=='castle'?({sand:'砂',snow:'雪',jungle:'密'})[R_.bio]:(TGL[R_.t]||''),cx-32,cy-14.5);}
-    const nh=heroesAt(r).length;const lab=man(S.reg[r].tr)+(nh?' 将'+nh:'')+' 壁'+(S.reg[r].wall||0);x.font='700 14px "BIZ UDPGothic",sans-serif';const tw=x.measureText(lab).width+12;
+    const nh=heroesAt(r).length;const lab=man(S.reg[r].tr)+(nh?' 将'+nh:'')+(S.reg[r].wall?' 壁'+S.reg[r].wall:' 柵');x.font='700 14px "BIZ UDPGothic",sans-serif';const tw=x.measureText(lab).width+12;
     x.fillStyle='rgba(20,12,6,.78)';x.fillRect(cx-tw/2,cy+43,tw,19);x.fillStyle=mine?'#ffe08a':'#f2e6c8';x.fillText(lab,cx,cy+53);
     if(freeAt(r).length&&mine){x.fillStyle='#7fd08e';x.beginPath();x.arc(cx+20,cy-16,7,0,7);x.fill();x.fillStyle='#062';x.font='700 11px sans-serif';x.fillText('才',cx+20,cy-15.5);}});
   x.restore();
@@ -463,9 +466,10 @@ function choiceSheet(title,html,btns){return new Promise(res=>{const foot=btns.m
   const d=sheet(title,html,foot);d.querySelector('.x').hidden=!btns.some(b=>b.cancel);d.querySelectorAll('[data-i]').forEach(e=>e.onclick=()=>{d.remove();res(btns[+e.dataset.i].v);});
   d.onclose=()=>res(null);});}
 /* ---- 城の守り ---- */
-const FB={yumi:{n:'弓楼',c:400,w:1,d:'矢で一部隊ずつ射る。射程が長い'},doki:{n:'連弩台',c:700,w:2,d:'近くの敵に矢を浴びせ続ける'},toseki:{n:'投石機',c:1200,w:3,d:'密集した敵をまとめて潰す。近くは狙えない'},kaen:{n:'火計台',c:1600,w:4,d:'周りの敵をまとめて焼く'},trap:{n:'地雷火',c:300,w:2,d:'城の外に埋める。踏んだ敵の周りを爆破'}};
-const wallCost=lv=>Math.round(700*Math.pow(lv,1.5));
-const bldSlots=r=>Math.min(6,S.reg[r].wall+1);
+const FB={yumi:{n:'弓楼',c:400,w:0,d:'矢で一部隊ずつ射る。射程が長い'},doki:{n:'連弩台',c:700,w:2,d:'近くの敵に矢を浴びせ続ける'},toseki:{n:'投石機',c:1200,w:3,d:'密集した敵をまとめて潰す。近くは狙えない'},kaen:{n:'火計台',c:1600,w:4,d:'周りの敵をまとめて焼く'},trap:{n:'地雷火',c:300,w:2,d:'城の外に埋める。踏んだ敵の周りを爆破'}};
+const wallCost=lv=>Math.round(700*Math.pow(Math.max(lv,.6),1.5));
+const wallName=w=>w>0?'城壁Lv'+w:'柵のみ';
+const bldSlotsW=w=>Math.min(6,w+1);const bldSlots=r=>bldSlotsW(S.reg[r].wall);
 function fortMul(r){const g=S.reg[r];if(!g||g.wall==null)return 1;return 1+.1*g.wall+.05*g.bld.reduce((a,b)=>a+b.lv,0);}
 function income(f){return regsOf(f).reduce((a,r)=>a+300+Math.round(REG[r].cap/40),0);}
 const trCap=id=>Math.max(1000,Math.floor(st(id).cmd/10)*1000);
@@ -504,8 +508,8 @@ function regionSheet(r){const R_=REG[r],o=S.reg[r].o,mine=o===S.me;
   d.querySelectorAll('[data-fw]').forEach(e=>e.onclick=()=>{const g=S.reg[r];const c=wallCost(g.wall);if(S.gold<c){toast('金が足りない');return;}S.gold-=c;g.wall++;toast('城壁をLv'+g.wall+'に強化した');try{SND.coin();}catch(_){}save();repaint();regionSheet(r);});
   d.querySelectorAll('[data-fu]').forEach(e=>e.onclick=()=>{const g=S.reg[r];const b=g.bld[+e.dataset.fu];const c=FB[b.t].c*b.lv;if(S.gold<c){toast('金が足りない');return;}S.gold-=c;b.lv++;toast(FB[b.t].n+'をLv'+b.lv+'にした');try{SND.coin();}catch(_){}save();repaint();regionSheet(r);});
   d.querySelectorAll('[data-fn]').forEach(e=>e.onclick=()=>{const g=S.reg[r];const t=e.dataset.fn;const c=FB[t].c;if(S.gold<c){toast('金が足りない');return;}S.gold-=c;g.bld.push({t,lv:1});toast(FB[t].n+'を建てた');try{SND.coin();}catch(_){}save();repaint();regionSheet(r);});}
-function fortHtml(r,mine){const g=S.reg[r];let b='<h3 class="sec">城の守り</h3><div class="card"><div class="row" style="justify-content:space-between"><b style="font-family:var(--f-disp);font-size:17px">城壁 Lv'+g.wall+' <small class="muted" style="font-family:var(--f-body);font-size:11.5px">守り+'+Math.round((fortMul(r)-1)*100)+'%</small></b>'+
-    (mine&&g.wall<5?'<button class="btn sm" type="button" data-fw="1"'+(S.gold<wallCost(g.wall)?' disabled':'')+'>強化 金'+wallCost(g.wall)+'</button>':'')+'</div>';
+function fortHtml(r,mine){const g=S.reg[r];let b='<h3 class="sec">城の守り</h3><div class="card"><div class="row" style="justify-content:space-between"><b style="font-family:var(--f-disp);font-size:17px">'+(g.wall>0?'城壁 Lv'+g.wall:'柵のみ（城壁なし）')+' <small class="muted" style="font-family:var(--f-body);font-size:11.5px">守り+'+Math.round((fortMul(r)-1)*100)+'%</small></b>'+
+    (mine&&g.wall<5?'<button class="btn sm" type="button" data-fw="1"'+(S.gold<wallCost(g.wall)?' disabled':'')+'>'+(g.wall>0?'強化':'城壁を築く')+' 金'+wallCost(g.wall)+'</button>':'')+'</div>';
   b+='<div class="news" style="margin-top:6px">'+(g.bld.length?g.bld.map((x,i)=>'<div class="row" style="justify-content:space-between;flex-wrap:nowrap"><span><b>'+FB[x.t].n+'</b> Lv'+x.lv+' <small class="muted">'+FB[x.t].d+'</small></span>'+(mine&&x.lv<5?'<button class="btn sm" type="button" data-fu="'+i+'"'+(S.gold<FB[x.t].c*x.lv?' disabled':'')+'>強化 金'+FB[x.t].c*x.lv+'</button>':'')+'</div>').join(''):'<div class="muted">防衛施設はない</div>')+'</div>';
   if(mine&&g.bld.length<bldSlots(r)){b+='<div class="row" style="margin-top:6px">'+Object.keys(FB).map(t=>{const ok=g.wall>=FB[t].w;return '<button class="btn sm" type="button" data-fn="'+t+'"'+(!ok||S.gold<FB[t].c?' disabled':'')+'>'+FB[t].n+(ok?' 金'+FB[t].c:'（壁Lv'+FB[t].w+'）')+'</button>';}).join('')+'</div>';}
   b+='<p class="dim" style="margin:4px 0 0;font-size:11.5px">施設 '+g.bld.length+'/'+bldSlots(r)+'（城壁Lv＋1まで）。籠城戦・攻城戦では城壁と施設がそのまま戦場に並ぶ。</p></div>';return b;}
@@ -571,7 +575,7 @@ function chooseMode(B,me,foe){return new Promise(res=>{
   const mySide=B.player;const myTr=mySide==='atk'?B.atkTr:B.defTr,foeTr=mySide==='atk'?B.defTr:B.atkTr;
   const as=strength(B.atk,B.atkTr,false),ds=strength(B.def,B.defTr,true,B.target);const p=mySide==='atk'?winP(as,ds):1-winP(as,ds);
   const fF=mySide==='atk'?B.defF:B.atkF;const g=S.reg[B.target];
-  const fortTxt='城壁Lv'+g.wall+(g.bld.length?' ・ '+g.bld.map(x=>FB[x.t].n+x.lv).join('・'):' ・ 施設なし');
+  const fortTxt=wallName(g.wall)+(g.bld.length?' ・ '+g.bld.map(x=>FB[x.t].n+x.lv).join('・'):' ・ 施設なし');
   const via=B.src?edgeOf(B.src,B.target):'road';const viaT={river:'川を挟んでの戦い。',mount:'峠道での戦い。',sea:'海を渡っての戦い。'}[via]||'';
   const sit={field:['野戦','敵は城を出て迎え撃ってきた。'+viaT],siege:['攻城戦','敵は城に籠もった。'+fortTxt],def:['敵襲','籠城して守るか、打って出るか。'+fortTxt]}[B.kind];
   let b='<div class="card"><h3>'+REG[B.target].c+' ― '+sit[0]+'</h3><p style="margin:0 0 6px">'+sit[1]+'</p><div class="row" style="justify-content:space-between;align-items:flex-start;gap:12px">'+
@@ -773,7 +777,7 @@ async function applyResult(B,res){
   }
   // 城の傷み
   {const g=S.reg[T];const fr=res.fort;if(fr&&fr.dead&&fr.dead.length){const dead=new Set(fr.dead);g.bld=g.bld.filter((x,i)=>!dead.has(i));}
-    if(atkWin){g.wall=Math.max(1,g.wall-1);if(!fr&&g.bld.length&&R()<.5)g.bld.splice(Math.floor(R()*g.bld.length),1);}else if(fr&&fr.wall<.5)g.wall=Math.max(1,g.wall-1);}
+    if(atkWin){g.wall=Math.max(0,g.wall-1);if(!fr&&g.bld.length&&R()<.5)g.bld.splice(Math.floor(R()*g.bld.length),1);}else if(fr&&fr.wall<.5)g.wall=Math.max(0,g.wall-1);}
   // 負傷兵：勝てば失った兵の半分、負ければ2割が次の季節に戻る
   const lostA=Math.max(0,B.atkTr-aLeft),lostD=Math.max(0,B.defTr-dLeft);const injA=Math.round(lostA*(atkWin?.5:.2)),injD=Math.round(lostD*(atkWin?.2:.5));
   {const atkHome=atkWin?T:(B.src&&S.reg[B.src].o===B.atkF?B.src:regsOf(B.atkF).find(r=>ADJ[r].includes(T)));if(atkHome)S.reg[atkHome].inj+=injA;
@@ -1018,10 +1022,10 @@ async function aiFaction(f){const F=FAC[f];
   UIS.arrows=[];dirty=true;}
 function aiBuild(f){let g=S.fgold[f];const fr=regsOf(f).filter(r=>ADJ[r].some(n=>S.reg[n].o!==f));const list=fr.length?fr:regsOf(f);
   for(let k=0;k<3&&list.length;k++){const r=pick(list),c=S.reg[r];
-    if(c.wall<3&&g>=wallCost(c.wall)){g-=wallCost(c.wall);c.wall++;continue;}
-    if(c.bld.length<bldSlots(r)){const ok=Object.keys(FB).filter(t=>c.wall>=FB[t].w&&g>=FB[t].c);if(ok.length){const t=pick(ok);g-=FB[t].c;c.bld.push({t,lv:1});continue;}}
+    if(c.wall<1&&g>=wallCost(0)&&R()<.35){g-=wallCost(0);c.wall++;continue;}
+    if(c.bld.length<bldSlots(r)&&R()<.7){const ok=Object.keys(FB).filter(t=>c.wall>=FB[t].w&&g>=FB[t].c);if(ok.length){const t=pick(ok);g-=FB[t].c;c.bld.push({t,lv:1});continue;}}
     const up=c.bld.filter(x=>x.lv<4&&g>=FB[x.t].c*x.lv);if(up.length){const x=pick(up);g-=FB[x.t].c*x.lv;x.lv++;continue;}
-    if(c.wall<5&&g>=wallCost(c.wall)){g-=wallCost(c.wall);c.wall++;}}
+    if(c.wall<4&&g>=wallCost(c.wall)*1.5&&R()<.15){g-=wallCost(c.wall);c.wall++;}}
   S.fgold[f]=g;}
 function toPlayerless(r){return {win:r.awin,myLeft:r.aLeft,foeLeft:r.dLeft,down:r.down,duels:[]};}
 
