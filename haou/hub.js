@@ -83,6 +83,17 @@ const EXFAC2={
  zg:{n:'諸葛亮軍',k:'亮',ruler:'zhugel',col:'#2ab890',ch:'亮',sold:'shu',dk:'蜀',ag:.4,diff:['ふつう','#0a7a5a'],d:'臥龍が草廬を出て自ら立つ。'},
  gn:{n:'甘寧軍',k:'寧',ruler:'gann',col:'#e890a8',ch:'寧',sold:'wu',dk:'呉',ag:.7,diff:['ふつう','#a85070'],d:'錦帆賊の頭領が江を荒らす。'}};
 Object.assign(FAC,EXFAC,EXFAC2);
+// デフォルトでない国の君主は、引くたびにランダムで決まる
+const EXIDS=Object.keys(EXFAC).concat(Object.keys(EXFAC2));
+const EXDEF0=Object.fromEntries(EXIDS.map(f=>[f,Object.assign({},FAC[f])]));
+const SOLD_OF={'魏':'wei','蜀':'shu','呉':'wu','群':'dong','南蛮':'nanban','烏桓':'uhan','漢':'rengo'};
+function setExDef(f,ruler){const h=HB(ruler);if(!h)return;const taken=new Set(BASE_FIDS.map(b=>FAC[b].ch).concat(EXIDS.filter(o=>o!==f).map(o=>FAC[o].ch)));
+  let ch=h.n.slice(-1);if(taken.has(ch))ch=h.n[0];if(taken.has(ch))ch=h.n.length>2?h.n[1]:ch;
+  Object.assign(FAC[f],{ruler,n:h.n+'軍',ch,k:ch,sold:SOLD_OF[h.f]||'kokin',dk:({'魏':'魏','蜀':'蜀','呉':'呉'})[h.f]||'群',d:h.n+'が新たに旗を揚げた。'});}
+function assignExRulers(){const used=new Set(BASE_FIDS.map(f=>FAC[f].ruler));
+  EXIDS.forEach(f=>{const pool=HEROES.filter(h=>!used.has(h.id));let t=0;const w=pool.map(h=>{const v=Math.pow(h.p+h.i+(h.cmd||60)+(h.cha||60),2.2);t+=v;return v;});let r=R()*t,i=0;for(;i<pool.length-1;i++){r-=w[i];if(r<=0)break;}
+    const id=pool[i].id;used.add(id);setExDef(f,id);});}
+function restoreExDefs(map){EXIDS.forEach(f=>{Object.assign(FAC[f],EXDEF0[f]);if(map&&map[f])setExDef(f,map[f]);});}
 function setFactions(list){FIDS.length=0;(list&&list.length?list:BASE_FIDS).forEach(f=>{if(FAC[f])FIDS.push(f);});}
 const NEUTRAL={n:'地方勢力',col:'#cdbf98',ch:'',sold:'kokin'};
 const SEASON=['春','夏','秋','冬'];
@@ -223,7 +234,7 @@ const WOPT=[
  {k:'scale',n:'都市規模',v:[['def','デフォルト'],['rand','ランダム']]}];
 function makeWorld(opt){return makeStaff(makePlacement(opt),opt);}
 // ① 勢力配置：マップ・初期都市数・空白地・国数・国替
-function makePlacement(opt){opt=Object.assign({map:'def',size:'def',blank:'def',nf:'def',swap:false},opt||{});
+function makePlacement(opt){opt=Object.assign({map:'def',size:'def',blank:'def',nf:'def',swap:false},opt||{});assignExRulers();
   const ri=(a,b)=>a+Math.floor(R()*(b-a+1));
   const groups={};BASE_FIDS.forEach(f=>{const cap=START.hero.find(x=>x[0]===FAC[f].ruler)[2];groups[f]=[cap].concat(RIDS.filter(r=>START.reg[r][0]===f&&r!==cap));});
   // 国数
@@ -293,9 +304,9 @@ function makeStaff(P,opt){opt=Object.assign({sub:'def',subn:'def',scale:'def'},o
 const SKEY='sangoku-haou-v1';
 let S=null;
 function save(){if(!S)return;try{localStorage.setItem(SKEY,JSON.stringify(S));}catch(e){}}
-function load(){try{const v=JSON.parse(localStorage.getItem(SKEY));if(v&&v.v===1){setFactions(v.fids);return migrate(v);}}catch(e){}return null;}
+function load(){try{const v=JSON.parse(localStorage.getItem(SKEY));if(v&&v.v===1){restoreExDefs(v.exdef);setFactions(v.fids);return migrate(v);}}catch(e){}return null;}
 function newGame(me,W){W=W||makeWorld({});
-  S={v:1,me,year:194,season:0,turn:0,ap:0,reg:{},hero:{},flags:{},visits:{},met:{},news:[],stats:{war:0,win:0,duel:0,dwon:0,recruit:0,capt:0},rulers:{},map:W.map,opt:W.opt,fids:W.fids};
+  S={v:1,me,year:194,season:0,turn:0,ap:0,reg:{},hero:{},flags:{},visits:{},met:{},news:[],stats:{war:0,win:0,duel:0,dwon:0,recruit:0,capt:0},rulers:{},map:W.map,opt:W.opt,fids:W.fids,exdef:Object.fromEntries(EXIDS.map(f=>[f,FAC[f].ruler]))};
   setFactions(W.fids);applyMap(S.map);
   RIDS.forEach(r=>{const o=W.own[r]||null,t=START.reg[r][1];S.reg[r]={o,tr:Math.min(REG[r].cap,o?Math.max(t,8000):Math.min(t,7000))};});
   Object.keys(W.place).forEach(id=>{const[f,loc]=W.place[id];S.hero[id]={f:f===null?null:f,loc,lv:f&&f!=='none'?1+Math.floor(R()*2):1,exp:0,tired:0};});
@@ -1021,12 +1032,16 @@ function placementFromOwn(baseP,own){const groups={};BASE_FIDS.forEach(f=>{const
   const adj={};RIDS.forEach(r=>adj[r]=[]);baseP.map.adj.forEach(k=>{const[a,b]=k.split('-');adj[a].push(b);adj[b].push(a);});
   const fids=Object.keys(FAC).filter(f=>RIDS.some(r=>own[r]===f));const lands={};fids.forEach(f=>{lands[f]=RIDS.filter(r=>own[r]===f).sort((a,b)=>adj[b].length-adj[a].length);});
   return {opt:Object.assign({},baseP.opt,{custom:true}),fids,map:baseP.map,own:Object.assign({},own),lands,groups,historic:false};}
+function permutePlacement(P){const o=placementFromOwn(P,permuteOwn(P.own));o.opt=Object.assign({},P.opt,{swap:true});o.geo=P.geo;o.historic=false;return o;}
 function permuteOwn(own){const fs=Object.keys(FAC).filter(f=>RIDS.some(r=>own[r]===f));const p=shuffle(fs.slice());const m={};fs.forEach((f,i)=>m[f]=p[i]);const o={};RIDS.forEach(r=>o[r]=own[r]?m[own[r]]:null);return o;}
-let CUST=null;
+let CUST=null,CUST0=null,DRAFTP0=null,SWAPN=0;
 function lordSelect(reroll){const T=$('#title');
-  if(DOPT.custom){if(!DRAFTP||reroll==='all'){const base=makePlacement({map:DOPT.map});CUST=Object.assign({},base.own);DRAFTP=Object.assign(base,{});}
-    if(reroll==='all'||reroll==='own'||!DRAFT||reroll==='staff'){DRAFTP=placementFromOwn(DRAFTP,CUST);DRAFT=makeStaff(DRAFTP,DOPT);}}
-  else{if(!DRAFTP||reroll==='all')DRAFTP=makePlacement(DOPT);else if(reroll==='place')DRAFTP=makePlacement(Object.assign({},DOPT,{geo:DRAFTP.geo}));if(!DRAFT||reroll)DRAFT=makeStaff(DRAFTP,DOPT);}
+  if(DOPT.custom){if(!DRAFTP||reroll==='all'){const base=makePlacement({map:DOPT.map});CUST=Object.assign({},base.own);DRAFTP=Object.assign(base,{});CUST0=null;SWAPN=0;}
+    if(reroll==='swap'){if(!CUST0)CUST0=Object.assign({},CUST);CUST=permuteOwn(CUST);SWAPN++;}else if(reroll==='unswap'&&CUST0){CUST=CUST0;CUST0=null;SWAPN=0;}
+    if(reroll==='all'||reroll==='own'||reroll==='swap'||reroll==='unswap'||!DRAFT||reroll==='staff'){DRAFTP=placementFromOwn(DRAFTP,CUST);DRAFT=makeStaff(DRAFTP,DOPT);}}
+  else{if(!DRAFTP||reroll==='all'){DRAFTP=makePlacement(DOPT);DRAFTP0=null;SWAPN=0;}else if(reroll==='place'){DRAFTP=makePlacement(Object.assign({},DOPT,{geo:DRAFTP.geo}));DRAFTP0=null;SWAPN=0;}
+    else if(reroll==='swap'){if(!DRAFTP0)DRAFTP0=DRAFTP;DRAFTP=permutePlacement(DRAFTP);SWAPN++;}else if(reroll==='unswap'&&DRAFTP0){DRAFTP=DRAFTP0;DRAFTP0=null;SWAPN=0;}
+    if(!DRAFT||reroll)DRAFT=makeStaff(DRAFTP,DOPT);}
   const W=DRAFT;
   const row=o=>{const dis=(o.need&&!o.need(DOPT))||(DOPT.custom&&['size','blank','nf'].includes(o.k));return '<div class="row" style="flex-wrap:nowrap;gap:6px;width:100%;opacity:'+(dis?'.4':'1')+'"><b style="flex:0 0 5.4em;font-family:var(--f-disp);font-weight:400;color:#f4e6c4;font-size:15px;text-shadow:0 1px 3px #000">'+o.n+'</b><div class="row" style="gap:4px;flex:1">'+
     o.v.map(([v,l])=>'<button type="button" class="btn sm'+((DOPT[o.k]===v&&!dis)||(dis&&v==='def'&&!DOPT.custom)?' pri':'')+'" data-k="'+o.k+'" data-v="'+v+'"'+(dis?' disabled':'')+' style="flex:1;min-width:0;font-size:12px;padding:3px 2px;white-space:nowrap;letter-spacing:0">'+l+'</button>').join('')+'</div></div>';};
@@ -1035,7 +1050,7 @@ function lordSelect(reroll){const T=$('#title');
   const nb=RIDS.filter(r=>!W.own[r]).length,sizes=W.fids.map(f=>RIDS.filter(r=>W.own[r]===f).length);
   let h='<canvas></canvas><div class="in" style="justify-content:flex-start"><div class="eye">西暦一九四年 ・ 群雄割拠</div><h1 style="font-size:clamp(36px,10vw,64px)">天下を引く</h1>'+
     '<div class="card" style="width:min(560px,100%);display:flex;flex-direction:column;gap:6px;background:var(--tex-wood),rgba(30,18,9,.9)">'+WOPT.map(row).join('')+
-    '<div style="border-top:1px solid var(--line);margin:2px 0"></div>'+sw('swap','国替','勢力どうしで領地を入れ替える')+sw('custom','カスタム','マップを選んだあと、城ごとに勢力を自分で配置する（初期都市数・空白地・国数は配置で決まる）')+'</div>'+
+    '<div style="border-top:1px solid var(--line);margin:2px 0"></div>'+'<div class="row" style="flex-wrap:nowrap;gap:6px;width:100%"><b style="flex:0 0 5.4em;font-family:var(--f-disp);font-weight:400;color:#f4e6c4;font-size:15px;text-shadow:0 1px 3px #000">国替</b><div class="row" style="gap:4px;flex:1"><button type="button" class="btn sm" id="gUnswap"'+(SWAPN?'':' disabled')+' style="flex:1;min-width:0;font-size:12px;padding:3px 2px">元に戻す</button><button type="button" class="btn sm pri" id="gSwap" style="flex:1;min-width:0;font-size:12px;padding:3px 2px">国替する'+(SWAPN?'（'+SWAPN+'回）':'')+'</button></div></div><small class="muted" style="font-size:11px;margin:-2px 0 2px 6.2em">押すたびに、地図と領地の形はそのままで持ち主の勢力を入れ替える</small>'+sw('custom','カスタム','マップを選んだあと、城ごとに勢力を自分で配置する（初期都市数・空白地・国数は配置で決まる）')+'</div>'+
     '<div style="display:flex;flex-direction:column;align-items:center;gap:6px"><canvas id="pv" style="width:min(340px,88vw);height:auto;aspect-ratio:300/270;border:3px solid #6a4a22;box-shadow:0 0 0 1px #c9a23c,0 8px 24px rgba(0,0,0,.6)'+(DOPT.custom?';cursor:pointer':'')+'"></canvas>'+
     '<small style="color:#f4e6c4;text-shadow:0 1px 3px #000">'+(W.map.shape?W.map.shape+' ・ ':'')+'勢力 '+W.fids.length+(sizes.length?' ・ 都市数 '+Math.min(...sizes)+'〜'+Math.max(...sizes):'')+' ・ 空白地 '+nb+'</small>'+
     (DOPT.custom?'<small style="color:#ffe08a;text-shadow:0 1px 3px #000">地図の城をタップして持ち主を決める</small><div class="row" style="justify-content:center">'+(DOPT.map==='new'?'<button class="btn" type="button" id="gMap">地図を引き直す</button>':'')+'<button class="btn" type="button" id="gClr">全部空白にする</button><button class="btn pri" type="button" id="gS">配下を引く</button></div>':'<button class="btn pri big" type="button" id="gDraw">ガチャを引く</button>')+'</div>'+
@@ -1049,11 +1064,11 @@ function lordSelect(reroll){const T=$('#title');
   const pv=T.querySelector('#pv');drawPreview(pv,W);
   T.querySelector('#lBack').onclick=()=>{applyMap(S&&S.map||DEF_MAP);title();};
   const again=m=>{try{SND.gong(.14);}catch(_){}const y=T.scrollTop;lordSelect(m);T.scrollTop=y;};
-  [['#gDraw','all'],['#gMap','all'],['#gS','staff']].forEach(([q,m])=>{const e=T.querySelector(q);if(e)e.onclick=()=>again(m);});
+  [['#gDraw','all'],['#gMap','all'],['#gS','staff'],['#gSwap','swap'],['#gUnswap','unswap']].forEach(([q,m])=>{const e=T.querySelector(q);if(e)e.onclick=()=>again(m);});
   const clr=T.querySelector('#gClr');if(clr)clr.onclick=()=>{RIDS.forEach(r=>CUST[r]=null);again('own');};
   T.querySelectorAll('[data-sw]').forEach(b=>b.onclick=()=>{const k=b.dataset.sw,v=b.dataset.v==='1';if(DOPT[k]===v)return;DOPT[k]=v;
     if(k==='custom'){if(v){CUST=Object.assign({},W.own);DRAFTP=Object.assign({},DRAFTP);again('own');}else again('all');}
-    else if(k==='swap'){if(DOPT.custom){if(v)CUST=permuteOwn(CUST);again('own');}else again('all');}});
+});
   T.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{const k=b.dataset.k;DOPT[k]=b.dataset.v;if(DOPT.sub!=='rand')DOPT.subn='def';again(['sub','subn','scale'].includes(k)?'staff':['size','blank','nf'].includes(k)?'place':'all');});
   if(DOPT.custom)pv.onclick=e=>{const rc=pv.getBoundingClientRect();const X=(e.clientX-rc.left)/rc.width*100,Y=(e.clientY-rc.top)/rc.height*90;applyMap(W.map);
     let best=null,bd=8;RIDS.forEach(r=>{const d=Math.hypot(REG[r].x-X,REG[r].y-Y);if(d<bd){bd=d;best=r;}});if(best)ownerPicker(best,f=>{CUST[best]=f;again('own');});};
