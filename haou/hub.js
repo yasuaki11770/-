@@ -586,9 +586,9 @@ function chooseMode(B,me,foe){return new Promise(res=>{
   const hasMe=me.length>0,shield='兵は武将ごとに統率まで配り、1000につき体力+10%（先に減り、回復しない）。';
   b+='<h3 class="sec">戦い方を選ぶ</h3><div class="modes">';
   const lead=B.atk[0],homeOf=lead&&B.home&&B.home[lead];const canPact=mySide==='atk'&&hasMe&&foe.length&&!B.refused&&regsOf(S.me).length>=2&&homeOf;
-  if(B.kind==='field')b+=card('kessen','決','決戦','野戦','大軍と大軍がぶつかる。兵を配分し陣形を組んで布陣し、戦場で指揮をとる。猛将は攻めの陣形で強い。武将の部隊が接すれば一騎打ち。',hasMe);
+  if(B.kind==='field')b+=card('kessen','決','決戦','野戦','大軍と大軍がぶつかる。戦は武将まかせで進み、30秒ごとの「指示の時間」に命令を出す。近くの武将の兵法は連鎖する。部隊が接すれば一騎打ち。',hasMe);
   else if(B.kind==='siege')b+=card('siege','城','攻城戦','城を囲む','城壁と城門を破り、本陣を落とすか敵総大将を討てば勝ち。弓楼や投石機が撃ってくる。衝車と衡軛の陣が城壁に強い。',hasMe);
-  else{b+=card('td','籠','籠城戦','城で守る','城壁と防衛施設で迎え撃つ。4分守り抜くか、敵総大将を討てば勝ち。知将は守りに強いが、猛将は挑発に乗って打って出てしまうことがある。',hasMe);
+  else{b+=card('td','籠','籠城戦','城で守る','城壁と防衛施設で迎え撃つ。5分守り抜くか、敵総大将を討てば勝ち。知将は守りに強いが、猛将は挑発に乗って打って出てしまうことがある。',hasMe);
     b+=card('sortie','出','出撃','野戦で迎え撃つ','城を出て野戦で迎え撃つ。猛将が力を出しやすい。負けても二の丸に籠もり、兵なしでもう一戦できる。',hasMe);}
   if(mySide==='atk')b+=card('pact','騎','一騎打ち勝負を申し込む','三番勝負',canPact?'勝てば'+REG[B.target].c+'を得る。負ければ総大将'+HB(lead).n+'の城（'+REG[homeOf].c+'）を割譲。どちらも武将も兵も失わない。相手が受けるとは限らない。':B.refused?'断られた':!foe.length?'敵に武将がいない':'城が一つしかないので申し込めない',canPact);
   b+=card('auto','任','委任','すぐ終わる','部下に任せて結果だけを見る。勝率は上の見込みどおり。',true)+'</div>';
@@ -675,8 +675,8 @@ async function runKessen(B,me,foe,kind){const myTr=B.player==='atk'?B.atkTr:B.de
   const lead=fsorted[0];const fg=lead?(HB(lead).i>=85?'kakei':HB(lead).p>=95?'toppa':B.player==='atk'?'kenshu':'shippu'):'kenshu';
   const g=S.reg[B.target];const fort=kind==='siege'||kind==='td'?{side:kind==='td'?0:1,wall:g.wall,hon:g.wall,blds:g.bld.map((x,i)=>({t:x.t,lv:x.lv,i}))}:null;
   const nm=REG[B.target].c+(kind==='siege'?'攻め':kind==='td'?'籠城戦':'の戦い');
-  const desc=kind==='siege'?FAC[S.me].n+'は'+REG[B.target].c+'を囲んだ。城壁を破り、本陣を落とすか敵総大将を討て。':kind==='td'?facName(B.atkF)+'が'+REG[B.target].c+'に攻め寄せた。城壁と施設で4分守り抜くか、敵総大将を討て。本陣が落ちれば負け。':(B.player==='atk'?FAC[S.me].n+'が'+REG[B.target].c+'へ攻め込む。':facName(B.atkF)+'が'+REG[B.target].c+'へ攻め寄せてきた。')+'敵総大将を討てば勝ち。';
-  const msg={t:'war',id:++FID,n:nm,p:REG[B.target].n,y:S.year,fac:FAC[S.me].dk,ter:fort?'plain':(({river:'river',mount:'mountain',sea:'river'})[B.src?edgeOf(B.src,B.target):'']||REG[B.target].k),d:desc,total,maxU:Math.min(5,me.length),limit:kind==='td'?240:kind==='siege'?420:390,cond:kind==='td'?'survive':'kill',fg,fort,
+  const desc=kind==='siege'?FAC[S.me].n+'は'+REG[B.target].c+'を囲んだ。城壁を破り、本陣を落とすか敵総大将を討て。':kind==='td'?facName(B.atkF)+'が'+REG[B.target].c+'に攻め寄せた。城壁と施設で5分守り抜くか、敵総大将を討て。本陣が落ちれば負け。':(B.player==='atk'?FAC[S.me].n+'が'+REG[B.target].c+'へ攻め込む。':facName(B.atkF)+'が'+REG[B.target].c+'へ攻め寄せてきた。')+'敵総大将を討てば勝ち。';
+  const msg={t:'war',id:++FID,n:nm,p:REG[B.target].n,y:S.year,fac:FAC[S.me].dk,ter:fort?'plain':(({river:'river',mount:'mountain',sea:'river'})[B.src?edgeOf(B.src,B.target):'']||REG[B.target].k),d:desc,total,maxU:Math.min(5,me.length),limit:kind==='td'?300:kind==='siege'?540:480,cond:kind==='td'?'survive':'kill',fg,fort,
     me:me.slice().sort((a,b)=>(b===rulerOf(S.me))-(a===rulerOf(S.me))).map(id=>({id,lv:S.hero[id].lv})),foe:fl};
   const m=await frameRun('kessen.html','warReady',msg,['warEnd','warCancel'],(kind==='siege'?'攻城 ― ':kind==='td'?'籠城 ― ':'決戦 ― ')+REG[B.target].c,me[0],foe[0]);
   if(m.t==='warCancel')return null;

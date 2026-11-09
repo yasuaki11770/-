@@ -2443,7 +2443,7 @@ function warHud(){
     const tl=Math.max(0,BT.limit-BT.time);const a=sideOf(0).filter(function(q){return q.alive&&!q.routed;}).reduce(function(s,q){return s+men(q);},0),b=sideOf(1).filter(function(q){return q.alive&&!q.routed;}).reduce(function(s,q){return s+men(q);},0);
     const stop=BT.sel||BT.pick;
     const am=BT.am||[100,100];if(!BT.over){if(am[0]<45&&BGM.cur==='battle')BGM.play('crisis');else if(am[0]>=58&&BGM.cur==='crisis')BGM.play('battle');}const tug='<div class="tugbar"><span style="color:var(--me)">我'+Math.round(am[0])+'</span><u><i style="width:'+(am[0]/Math.max(1,am[0]+am[1])*100)+'%"></i></u><span style="color:var(--foe)">'+Math.round(am[1])+'敵</span></div><div style="font-size:10px;color:var(--mute);text-align:center;margin-top:-2px">全軍士気</div>';
-    const info=tug+(stop?'<b style="color:#9fe4ff">指示中・スロー</b>':'<b>'+(BT.cond==='survive'?'耐久':'決戦')+'</b>')+' ・ 残り '+Math.floor(tl/60)+':'+('0'+Math.floor(tl%60)).slice(-2)+'<br><span style="color:var(--me)">味方 '+a.toLocaleString()+'</span> 対 <span style="color:var(--foe)">敵 '+b.toLocaleString()+'</span>';
+    const info=tug+(stop?'<b style="color:#9fe4ff">'+(BT.ix?'指示の時間':'指示中・スロー')+'</b>':'<b>'+(BT.cond==='survive'?'耐久':'決戦')+'</b>')+' ・ 残り '+Math.floor(tl/60)+':'+('0'+Math.floor(tl%60)).slice(-2)+'<br><span style="color:var(--me)">味方 '+a.toLocaleString()+'</span> 対 <span style="color:var(--foe)">敵 '+b.toLocaleString()+'</span>';
     const e=$('#hInfo');if(e&&e.innerHTML!==info)e.innerHTML=info;
     const c=$('#hCast');if(c){if(BT.cast.q&&BT.time-BT.cast.t<2.4){const s=(BT.cast.q.side?'敵 ':'')+BT.cast.q.hs.n+'の計略 <b style="color:var(--gold)">'+BT.cast.n+'</b>'+(BT.cast.line?'<br>「'+esc(BT.cast.line)+'」':'');if(c.innerHTML!==s)c.innerHTML=s;c.hidden=false;}else c.hidden=true;}
     const q=BT.sel;let bot='';
@@ -2745,6 +2745,104 @@ function councilFull(on){if(MODE==='battle')return;const tb0=$('#topbar');if(tb0
     x.font='bold 13px sans-serif';const tw=x.measureText(s).width+18;x.fillStyle='rgba(10,6,3,.78)';x.fillRect(VW/2-tw/2,VH-112,tw,22);x.fillStyle=F.side===0?'#b8dcff':'#ffb4a6';x.fillText(s,VW/2,VH-101);};
   // 野戦でも性格の得手不得手を付ける
   const _sw2=startWar;startWar=function(i){_sw2(i);};
+})();
+</script>
+<script>
+/* ===== 三国覇王伝：決戦は三國志IX風。軍議なし、30秒ごとに「指示の時間」、あとは武将まかせ。兵法は連鎖する ===== */
+(function(){
+  if(!/ext/.test(location.hash))return;
+  const PH=30;      // 指示の間隔（戦場の秒）
+  const EMG=2;      // 緊急の一声の回数
+  const st=document.createElement('style');st.textContent=
+    '#ixBar{position:absolute;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 92px);z-index:30;display:flex;gap:6px;align-items:center;background:rgba(14,10,6,.82);border:1px solid rgba(232,200,120,.45);border-radius:20px;padding:4px 6px 4px 12px;font-size:13px;color:#f3e6c4;white-space:nowrap;pointer-events:auto}'+
+    '#ixBar .btn{padding:4px 10px;font-size:12.5px}#ixBar u{display:inline-block;width:64px;height:6px;background:rgba(255,255,255,.15);border-radius:3px;overflow:hidden;text-decoration:none;vertical-align:middle}#ixBar u i{display:block;height:100%;background:#e8c878}'+
+    '#ixPh{position:absolute;left:8px;right:8px;bottom:calc(env(safe-area-inset-bottom,0px) + 132px);z-index:31;margin:0 auto;max-width:560px;background:rgba(20,14,8,.94);border:2px solid #e8c878;border-radius:12px;padding:10px 12px;color:#f3e6c4;box-shadow:0 6px 24px rgba(0,0,0,.6)}'+
+    '#ixPh h3{margin:0 0 2px;font-family:var(--f-disp);font-size:18px;color:#ffd77a;letter-spacing:.1em}#ixPh p{margin:0 0 6px;font-size:12.5px;color:#d8c8a0}#ixPh .row{gap:6px}'+
+    '#ixPh .ol{font-size:12px;line-height:1.5;max-height:16vh;overflow:auto;margin-bottom:6px}#ixPh .ol b{color:#fff}'+
+    '.chainTx{position:absolute;left:50%;top:34%;transform:translate(-50%,-50%);z-index:40;pointer-events:none;font-family:var(--f-disp);font-size:clamp(34px,10vw,64px);color:#ffd36a;text-shadow:0 0 12px #ff7a1a,0 3px 0 #5a2a08;animation:chainP 1.3s ease-out forwards}'+
+    '@keyframes chainP{0%{opacity:0;transform:translate(-50%,-50%) scale(1.8)}15%{opacity:1;transform:translate(-50%,-50%) scale(1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-60%) scale(1)}}'+
+    'body.ixRun #hGun,body.ixRun #hCards{display:none}';
+  document.head.appendChild(st);
+  const app=function(){return document.getElementById('app')||document.body;};
+  const live=function(q){return q.alive&&!q.routed;};
+  const ORDN={hold:'待機',attack:'攻撃',move:'移動',charge:'突撃',retreat:'後退',skill:'戦法',duel:'一騎打ち'};
+
+  // ---- 軍議なし：編成は自動、すぐ布陣へ ----
+  const _ps=prepSheet;prepSheet=function(i){_ps(i);
+    if(PREP&&(!PREP.gun||PREP.gun==='rinki'))PREP.gun=bestGun(i);
+    const sh=document.querySelector('.sheet');if(sh)sh.style.visibility='hidden';
+    setTimeout(function(){const b=document.querySelector('#pGo');if(b&&!b.disabled)b.click();else if(sh)sh.style.visibility='';},30);};
+  function bestGun(i){const ids=WARS[i].me;const ps=ids.map(function(id){return persOf(id);});let best='rinki',bs=0;
+    GUNORDER.forEach(function(k){if(k==='rinki'||k==='mizu'||!GUN[k].fit)return;const a=ps.reduce(function(s,p){return s+(GUN[k].fit[p]===undefined?.8:GUN[k].fit[p]);},0)/Math.max(1,ps.length);if(a>bs){bs=a;best=k;}});return best;}
+
+  // ---- 布陣画面の文言 ----
+  const _dh=deployHud;deployHud=function(){_dh();const q=document.getElementById('hQuit');if(q)q.remove();
+    const g=document.getElementById('hGo');if(g){const o=g.onclick;g.onclick=function(){o.call(this);startIX();};}};
+
+  function startIX(){BT.ix={n:0,emg:EMG,next:PH,phase:false};BT.speed=2;document.body.classList.add('ixRun');
+    const sp=document.getElementById('hSpd');if(sp){sp.textContent='速度×2';sp.onclick=function(){BT.speed=BT.speed===1?2:BT.speed===2?4:1;this.textContent='速度×'+BT.speed;};}
+    drawBar();setTimeout(function(){if(BT&&BT.ix)toast('戦は武将たちにまかせる。'+PH+'秒ごとに「指示の時間」が来る。急ぐときは「緊急の一声」');},5200);}
+
+  // ---- 走っている間：命令は出せない（見るだけ） ----
+  const _wt=warTap;warTap=function(X,Y){if(!BT||!BT.ix||BT.ix.phase)return _wt(X,Y);
+    const own=unitAt(X,Y,0),foe=unitAt(X,Y,1);const q=own||foe;if(q){focusUnit(q);const c=q.cmd&&q.cmd.until>BT.time?ORDN[q.cmd.k]:'おまかせ';
+      toast((q.side?'敵 ':'')+(q.gen?'★':'')+q.hs.n+'隊 ・ '+TR[q.type].n+men(q).toLocaleString()+' ・ 士気'+Math.round(q.morale)+(q.side===0?' ・ '+c:''));}};
+  const _io=issueOrder;issueOrder=function(q,o){if(!BT||!BT.ix)return _io(q,o);if(!BT.ix.phase){if(q.side===0){toast('命令は「指示の時間」に出せる。急ぐなら「緊急の一声」');BT.sel=null;BT.pick=null;}return;}if(!live(q))return;
+    if(o.k==='skill'||o.k==='duel'){q._ixOrd=o;}else{applyCmd(q,o);if(q.cmd)q.cmd.until=BT.ix.next+.5;}
+    q._ixTxt=ORDN[o.k]+(o.k==='attack'&&o.tgt?'：'+o.tgt.hs.n:'');say(q,'accept');drawPh();};
+  const _oc=obeyChance;obeyChance=function(q,k){if(BT&&BT.ix&&BT.ix.phase)return 1;return _oc(q,k);};
+  const _gp=gunPicker;gunPicker=function(){return _gp.apply(this,arguments);};
+
+  // ---- 時間で指示の時間に入る ----
+  const _sb=stepBattle;stepBattle=function(dt){if(BT&&BT.ix&&BT.ix.phase){BT.paused=true;return;}if(BT&&BT.ix&&(BT.sel||BT.pick)){BT.sel=null;BT.pick=null;}_sb(dt);
+    if(BT&&BT.ix&&!BT.over&&BT.started){if(BT.time>=BT.ix.next)enterPhase(false);else if(Math.random()<.2)drawBar();}};
+  function enterPhase(emg){const I=BT.ix;if(I.phase||BT.over)return;I.phase=true;I.emgNow=emg;if(!emg){I.n++;I.next=BT.time+PH;}
+    BT.paused=true;BT.sel=null;BT.pick=null;BT.cards=true;document.body.classList.remove('ixRun');
+    for(const q of sideOf(0))q._ixTxt=q.cmd&&q.cmd.until>BT.time?ORDN[q.cmd.k]+'（続行）':'';
+    try{SND.gong(.2);}catch(e){}drawBar();drawPh();}
+  function leavePhase(){const I=BT.ix;I.phase=false;BT.cards=false;BT.sel=null;BT.pick=null;document.body.classList.add('ixRun');
+    const p=document.getElementById('ixPh');if(p)p.remove();
+    for(const q of sideOf(0)){if(q._ixOrd&&live(q)){const o=q._ixOrd;q._ixOrd=null;applyCmd(q,o);}}
+    BT.paused=false;
+    try{SND.horn();}catch(e){}drawBar();}
+  function drawBar(){let b=document.getElementById('ixBar');if(!BT||!BT.ix){if(b)b.remove();return;}
+    if(!b){b=document.createElement('div');b.id='ixBar';app().appendChild(b);}
+    const I=BT.ix;if(I.phase){b.hidden=true;return;}b.hidden=false;const left=Math.max(0,Math.ceil(I.next-BT.time));
+    const h='次の指示まで <b>'+left+'</b>秒 <u><i style="width:'+(100-left/PH*100)+'%"></i></u><button class="btn sm red" type="button" id="ixE"'+(I.emg>0?'':' disabled')+'>緊急の一声 '+I.emg+'</button>';
+    if(b._h!==h){b._h=h;b.innerHTML=h;b.querySelector('#ixE').onclick=function(){if(BT.ix.emg<=0||BT.over)return;if(document.getElementById('duelIntro'))return;BT.ix.emg--;enterPhase(true);};}}
+  function drawPh(){const I=BT.ix;if(!I||!I.phase)return;let p=document.getElementById('ixPh');if(!p){p=document.createElement('div');p.id='ixPh';app().appendChild(p);}
+    p.style.display=BT.sel||BT.pick?'none':'';const my=sideOf(0).filter(live);const tl=Math.max(0,BT.limit-BT.time);
+    let h='<h3>'+(I.emgNow?'緊急の一声':'指示の時間 ・ 第'+I.n+'回')+'</h3><p>部隊をタップ→敵で攻撃・地面で移動。命令は次の指示まで続く。命じない部隊は自分で判断。残り '+Math.floor(tl/60)+':'+('0'+Math.floor(tl%60)).slice(-2)+'</p>';
+    h+='<div class="ol">'+my.map(function(q){return '<div><b>'+(q.gen?'★':'')+q.hs.n+'</b> '+TR[q.type].n+men(q).toLocaleString()+' ― '+(q._ixTxt?'<span style="color:#ffd77a">'+q._ixTxt+'</span>':'<span style="color:#9fc0a0">おまかせ</span>')+'</div>';}).join('')+'</div>';
+    h+='<div class="row"><button class="btn sm" type="button" id="ixGun">軍略：'+GUN[BT.stance[0]||'rinki'].n+'</button><button class="btn sm" type="button" id="ixAuto">全軍おまかせ</button>'+(BT.sel?'<button class="btn sm" type="button" id="ixOne">'+BT.sel.hs.n+'はおまかせ</button>':'')+'<button class="btn pri" type="button" id="ixGo" style="margin-left:auto;font-size:16px">進軍</button></div>';
+    if(p._h!==h){p._h=h;p.innerHTML=h;
+      p.querySelector('#ixGo').onclick=leavePhase;
+      p.querySelector('#ixGun').onclick=function(){BT.sel=null;BT.pick=BT.pick==='gun'?null:'gun';};
+      p.querySelector('#ixAuto').onclick=function(){for(const q of sideOf(0)){q.cmd=null;q._ixOrd=null;q._ixTxt='';}toast('全軍、各将の判断にまかせた');drawPh();};
+      const one=p.querySelector('#ixOne');if(one)one.onclick=function(){const q=BT.sel;if(q){q.cmd=null;q._ixOrd=null;q._ixTxt='';}BT.sel=null;drawPh();};}}
+  // 選択が変わったら指示パネルを描き直す
+  const _st=setStance;setStance=function(s,k,b){_st(s,k,b);if(BT&&BT.ix&&BT.ix.phase)setTimeout(drawPh,0);};
+  setInterval(function(){if(BT&&BT.ix&&BT.ix.phase){if(BT.paused===false)BT.paused=true;drawPh();}},250);
+
+  // ---- 兵法連鎖：近くの味方武将の戦法が続けて発動する ----
+  const SLOW=.5;// 指示の間隔に合わせて、戦はゆっくり進む
+  const _hs=hurtSq;hurtSq=function(q,dmg,src){if(BT&&BT.ix)dmg*=SLOW;if(src&&src._chM&&BT&&BT.time<src._chU)dmg*=src._chM;return _hs(q,dmg,src);};
+  const _us=useSkill;useSkill=function(q){const ok=_us(q);if(!ok||!BT||BT._chain)return ok;
+    const near=BT.sq.filter(function(o){return o!==q&&o.side===q.side&&o.hero&&!o.heroDown&&live(o)&&!o.hidden&&Math.hypot(o.x-q.x,o.y-q.y)<6;})
+      .sort(function(a,b){return Math.hypot(a.x-q.x,a.y-q.y)-Math.hypot(b.x-q.x,b.y-q.y);});
+    const L=[];for(const o of near){if(L.length>=3)break;const hi=o.hs.i||60;const bond=typeof bondsOf==='function'&&q.hero&&bondsOf([q.hero,o.hero]).length?.25:0;
+      const p=clamp(.22+(hi-60)/160+(o.senI||0)/400+bond,.08,.8);if(Math.random()<p)L.push(o);}
+    if(!L.length)return ok;let k=1;const fire=function(){if(!BT||BT.over||!L.length){BT&&(BT._chain=false);return;}const o=L.shift();if(!live(o)){fire();return;}
+      if(BT.paused&&!(BT.ix&&BT.ix.phase)){setTimeout(fire,400);L.unshift(o);return;}
+      BT._chain=true;const s0=o.senI;o.senI=100;const m=1+.2*k;o._chM=m;o._chU=BT.time+2.5;
+      if(useSkill(o)){k++;o.senI=Math.max(0,s0*.5);showChain(k,o);}else o.senI=s0;
+      BT._chain=false;if(L.length)setTimeout(fire,700/Math.max(1,BT.speed*.7));};
+    setTimeout(fire,650/Math.max(1,BT.speed*.7));return ok;};
+  function showChain(k,o){addTxt(o.x,o.y-2,'兵法連鎖 ×'+k,'#ffb03a',true);const d=document.createElement('div');d.className='chainTx';d.textContent=(o.side?'敵の':'')+'連鎖 ×'+k+'!';app().appendChild(d);setTimeout(function(){d.remove();},1300);
+    try{SND.gong(.16);}catch(e){}BT.shake=Math.max(BT.shake||0,6+k*2);if(o.side===1&&k===2)toast('敵の兵法が連鎖した！ 武将を固めすぎると狙われる');}
+
+  // ---- 戦が終わったら片付け ----
+  const _fw=finishWar;finishWar=function(win,why){document.body.classList.remove('ixRun');['ixBar','ixPh'].forEach(function(id){const e=document.getElementById(id);if(e)e.remove();});if(BT&&BT.ix)BT.ix.phase=false;return _fw(win,why);};
 })();
 </script>
 </body></html>
