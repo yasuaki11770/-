@@ -858,6 +858,28 @@ function title(){closeSheet();const T=$('#title');T.hidden=false;try{BGM.play('c
   requestAnimationFrame(()=>paintBg(T.querySelector('canvas'),'dawn'));
   const c=T.querySelector('#tCont');if(c)c.onclick=()=>{try{SND.init();}catch(_){}S=sv;T.hidden=true;enterMap();};
   T.querySelector('#tNew').onclick=()=>{try{SND.init();}catch(_){}lordSelect();};}
+/* 引いた天下を見て、勢力ごとの難しさを判定する */
+function rateWorld(W){const adj={};RIDS.forEach(r=>adj[r]=[]);W.map.adj.forEach(x=>{const[a,b]=x.split('-');adj[a].push(b);adj[b].push(a);});
+  const cap=r=>(W.map.reg&&W.map.reg[r]?W.map.reg[r].cap:DEF_REG[r].cap);
+  const tr=r=>{const o=W.own[r],t=START.reg[r][1];return Math.min(cap(r),o?Math.max(t,8000):Math.min(t,7000));};
+  const heroes=f=>Object.keys(W.place).filter(id=>W.place[id][0]===f);
+  const hp=id=>{const h=HB(id);return h.p*.6+(h.cmd||60)*.8+h.i*.4;};
+  const pow={};W.fids.forEach(f=>{const lands=RIDS.filter(r=>W.own[r]===f);const hs=heroes(f).map(hp).sort((a,b)=>b-a);
+    const troops=lands.reduce((a,r)=>a+tr(r),0);const top=Math.max(60,...heroes(f).map(id=>HB(id).cmd||60));
+    pow[f]=troops/1000*(.55+top/180)+hs.slice(0,5).reduce((a,v)=>a+v,0)/40+lands.reduce((a,r)=>a+cap(r),0)/8000;});
+  const out={};W.fids.forEach(f=>{const lands=RIDS.filter(r=>W.own[r]===f);const nb=new Set(),neu=new Set();let front=0;
+    lands.forEach(r=>adj[r].forEach(n=>{const o=W.own[n];if(o===f)return;front++;if(o)nb.add(o);else neu.add(n);}));
+    const ns=[...nb].map(o=>pow[o]);const mx=ns.length?Math.max(...ns):0,sum=ns.reduce((a,b)=>a+b,0);
+    const avg=W.fids.reduce((a,o)=>a+pow[o],0)/W.fids.length;const own=pow[f]/avg;const threat=(.5*mx+.15*sum)/avg+.04*front;
+    const score=own*(1+.06*Math.min(4,neu.size))/(threat+.55);
+    const big=[...nb].sort((a,b)=>pow[b]-pow[a])[0];
+    const why=[];if(big&&pow[big]>pow[f]*1.3)why.push('隣に強敵（'+FAC[big].n+'）');if(neu.size>=2)why.push('攻めやすい空き地が'+neu.size+'つ');if(!nb.size)why.push('敵と接していない');
+    if(heroes(f).length<=2)why.push('人材が少ない');else if(heroes(f).length>=7)why.push('人材が豊富');if(front>=8)why.push('四方を囲まれている');
+    out[f]={score,why};});
+  const sc=W.fids.map(f=>out[f].score).sort((a,b)=>a-b);const med=sc[Math.floor(sc.length/2)]||1;
+  W.fids.forEach(f=>{const k=out[f].score/med;const L=k>=1.4?['やさしい','#3a7a2a',1]:k>=.85?['ふつう','#2a5a8a',2]:k>=.6?['むずかしい','#8a3a12',3]:['至難','#5a0a0a',4];
+    out[f].lab=L[0];out[f].col=L[1];out[f].lv=L[2];});
+  return out;}
 let DRAFT=null;const DOPT={swap:0,mix:0,newland:0};
 function drawPreview(cv,W){applyMap(W.map);const w=300,h=270;cv.width=w;cv.height=h;const x=cv.getContext('2d');const img=x.createImageData(w,h),a=img.data;const gd=new Int8Array(w*h);
   const RI={};RIDS.forEach((r,i)=>RI[r]=i);
@@ -880,9 +902,10 @@ function lordSelect(reroll){const T=$('#title');if(!DRAFT||reroll)DRAFT=makeWorl
     '<div style="display:flex;flex-direction:column;align-items:center;gap:8px"><canvas id="pv" style="width:min(340px,88vw);height:auto;aspect-ratio:300/270;border:3px solid #6a4a22;box-shadow:0 0 0 1px #c9a23c,0 8px 24px rgba(0,0,0,.6)"></canvas>'+
     '<button class="btn pri big" type="button" id="gDraw">ガチャを引く</button></div>'+
     '<div class="eye" style="letter-spacing:.3em">君主を選ぶ</div><div class="lords">';
-  W.fids.forEach(f=>{const F=FAC[f];const regs=RIDS.filter(r=>W.own[r]===f);const cap=W.place[F.ruler][1];regs.sort((a,b)=>(b===cap)-(a===cap));const hs=Object.keys(W.place).filter(id=>W.place[id][0]===f);
+  const RT=rateWorld(W);
+  W.fids.forEach(f=>{const F=FAC[f];const rt=RT[f];const regs=RIDS.filter(r=>W.own[r]===f);const cap=W.place[F.ruler][1];regs.sort((a,b)=>(b===cap)-(a===cap));const hs=Object.keys(W.place).filter(id=>W.place[id][0]===f);
     const top=hs.filter(id=>id!==F.ruler).sort((a,b)=>HB(b).p+HB(b).i-HB(a).p-HB(a).i).slice(0,3).map(id=>HB(id).n);
-    h+='<button class="lordc" type="button" data-f="'+f+'" style="--c:'+F.col+';--d:'+F.diff[1]+'"><img alt="" src="'+portrait(HB(F.ruler))+'"><div style="min-width:0"><b>'+F.n+(W.opt.swap||W.opt.mix||W.opt.newland?'':'<em>'+F.diff[0]+'</em>')+'</b><small>'+regs.map(r=>REG[r].c).join('・')+' ・ 武将'+hs.length+'人</small><small>'+(W.opt.mix?'配下：'+top.join('・')+(hs.length>4?' ほか':''):F.d)+'</small></div></button>';});
+    h+='<button class="lordc" type="button" data-f="'+f+'" style="--c:'+F.col+';--d:'+rt.col+'"><img alt="" src="'+portrait(HB(F.ruler))+'"><div style="min-width:0"><b>'+F.n+'<em>'+rt.lab+'</em></b><small>'+regs.map(r=>REG[r].c).join('・')+' ・ 武将'+hs.length+'人</small><small>'+(W.opt.mix?'配下：'+top.join('・')+(hs.length>4?' ほか':''):W.opt.swap||W.opt.newland?'配下：'+(top.join('・')||'なし'):F.d)+'</small>'+(rt.why.length?'<small style="color:#e8c87a">'+rt.why.join('・')+'</small>':'')+'</div></button>';});
   h+='</div><button class="btn" type="button" id="lBack">戻る</button></div>';T.innerHTML=h;requestAnimationFrame(()=>paintBg(T.querySelector('canvas'),'battle'));
   drawPreview(T.querySelector('#pv'),W);
   T.querySelector('#lBack').onclick=()=>{applyMap(S&&S.map||DEF_MAP);title();};
@@ -901,6 +924,6 @@ function boot(){buildGrid();bindMap();
   $('#cEnd').onclick=()=>{if(S.ap>0&&!$('#cEnd').dataset.arm){$('#cEnd').dataset.arm=1;toast('令が'+S.ap+'つ残っている。もう一度押すと季節を進める');setTimeout(()=>delete $('#cEnd').dataset.arm,2500);return;}delete $('#cEnd').dataset.arm;endTurn();};
   document.addEventListener('pointerdown',()=>{try{SND.init();}catch(_){}},true);
   requestAnimationFrame(loop);title();
-  window.__HAOU={get S(){return S;},makeWorld,FIDS,battle,autoBattle,endTurn,REG,ADJ,tap:r=>tapRegion(r),talent:()=>talentSheet()};}
+  window.__HAOU={get S(){return S;},makeWorld,rateWorld,FIDS,battle,autoBattle,endTurn,REG,ADJ,tap:r=>tapRegion(r),talent:()=>talentSheet()};}
 boot();
 })();
