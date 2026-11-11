@@ -41,7 +41,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .cmd{display:flex;gap:5px;padding:6px max(8px,env(safe-area-inset-right,0px)) 8px max(8px,env(safe-area-inset-left,0px));background:var(--tex-wood),linear-gradient(#2a180c,#140c06);border-top:2px solid var(--gold)}
 .cmd button{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;padding:5px 2px;border-radius:2px;border:1px solid var(--line2);background:var(--tex-wood),linear-gradient(#4a2e18,#24150b);box-shadow:inset 0 0 0 1px #000,inset 0 0 0 2px rgba(216,172,76,.22)}
 .cmd button b{font-family:var(--f-disp);font-weight:400;font-size:21px;line-height:1.15;color:var(--gold)}
-.cmd button span{font-size:10.5px;color:var(--mute);white-space:nowrap}
+.cmd button span{font-size:10.5px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .cmd button.hot{background:var(--tex-wood),linear-gradient(#a8281c,#5e100a);border-color:#e0b860}
 .cmd button.hot b{color:#fbe2a8}
 .cmd button:disabled{opacity:.35;cursor:not-allowed}
@@ -699,6 +699,12 @@ function paintBg(cv,kind){const W=cv.width=Math.round(cv.clientWidth*1.5)||600,H
     case 'altar':sky('#03050f','#101836','#2a1e10');stars(200);for(let i=0;i<3;i++){g.fillStyle=['#6a4a2a','#7a5a34','#8a6a3e'][i];g.fillRect(W*(.2+i*.08),Hh*(.6-i*.05),W*(.6-i*.16),Hh*.05);}for(let i=0;i<12;i++){const x=W*(.1+i*.075);g.strokeStyle='#ccc';g.lineWidth=2;g.beginPath();g.moveTo(x,Hh*.7);g.lineTo(x,Hh*.55);g.stroke();g.fillStyle=['#c03030','#3050c0','#e0c030','#30a050'][i%4];g.fillRect(x,Hh*.55,16,22);}ground(Hh*.7,'#2a1e10','#100a04');break;
     case 'dawn':sky('#2a2a5a','#e0906a','#3a3424');g.fillStyle='rgba(255,220,150,.8)';g.beginPath();g.arc(W*.5,Hh*.5,Hh*.08,0,7);g.fill();ridge(Hh*.5,Hh*.1,'#5a4050');ridge(Hh*.56,Hh*.06,'#3a2a30');ground(Hh*.6,'#3a3424','#1a160e');break;
     case 'dark':sky('#05040a','#0a0814','#020204');vign(.6);break;
+    case 'sea':sky('#8ab4d0','#d8e8ee','#3a6a88');{const y0=Hh*.5;const sg=g.createLinearGradient(0,y0,0,Hh);sg.addColorStop(0,'#5a8aa6');sg.addColorStop(1,'#1e3a52');g.fillStyle=sg;g.fillRect(0,y0,W,Hh-y0);g.fillStyle='#4a5a4a';g.beginPath();g.moveTo(0,y0);g.quadraticCurveTo(W*.15,y0-Hh*.12,W*.32,y0);g.fill();g.beginPath();g.moveTo(W*.62,y0);g.quadraticCurveTo(W*.82,y0-Hh*.16,W,y0-Hh*.04);g.lineTo(W,y0);g.fill();
+      g.strokeStyle='rgba(230,240,245,.5)';g.lineWidth=2;for(let i=0;i<70;i++){const x=Rn()*W,y=y0+Rn()*(Hh-y0);g.beginPath();g.moveTo(x,y);g.quadraticCurveTo(x+10,y-5,x+20,y);g.stroke();}
+      for(let i=0;i<7;i++){const x=W*(.1+Rn()*.8),y=y0+Hh*(.06+Rn()*.25),s=Hh*(.03+Rn()*.03);g.fillStyle='#3a2414';g.beginPath();g.moveTo(x-s*2,y);g.lineTo(x+s*2,y);g.lineTo(x+s*1.5,y+s*.7);g.lineTo(x-s*1.5,y+s*.7);g.fill();g.fillStyle='#e8dcc0';g.fillRect(x-s*.1,y-s*2.2,s*.2,s*2.2);g.fillRect(x-s*.9,y-s*2,s*1.8,s*1.2);}}vign(.35);break;
+    case 'river':sky('#b0c8dc','#e4ecf0','#6a8a4a');ridge(Hh*.46,Hh*.1,'#8a98a0');ground(Hh*.52,'#8aa860','#4a6a32');{g.fillStyle='#5a86a0';g.beginPath();g.moveTo(0,Hh*.66);g.quadraticCurveTo(W*.5,Hh*.6,W,Hh*.7);g.lineTo(W,Hh*.78);g.quadraticCurveTo(W*.5,Hh*.68,0,Hh*.74);g.fill();g.fillStyle='#6a4a26';g.fillRect(W*.42,Hh*.6,W*.16,Hh*.03);for(let i=0;i<4;i++)g.fillRect(W*(.43+i*.045),Hh*.63,6,Hh*.06);}for(let i=0;i<6;i++)tree(Rn()*W,Hh*(.54+Rn()*.06),Hh*.1,'#3a5a32');vign(.35);break;
+    case 'city':sky('#9ab0c8','#e4e2d8','#8a8a70');ground(Hh*.6,'#9a9474','#5a5a44');{g.fillStyle='#8a8478';g.fillRect(0,Hh*.36,W,Hh*.26);for(let x=0;x<W;x+=W*.06)g.fillRect(x,Hh*.33,W*.035,Hh*.04);[.12,.42,.78].forEach(p=>{g.fillStyle='#7a746a';g.fillRect(W*p,Hh*.2,W*.1,Hh*.42);g.fillStyle='#3a3a4a';g.beginPath();g.moveTo(W*p-6,Hh*.2);g.lineTo(W*(p+.05),Hh*.1);g.lineTo(W*(p+.1)+6,Hh*.2);g.fill();});g.fillStyle='#2a2018';g.beginPath();g.arc(W*.5,Hh*.56,W*.06,Math.PI,0);g.fill();g.fillRect(W*.44,Hh*.56,W*.12,Hh*.06);}vign(.35);break;
+    case 'fort':sky('#0a0a1a','#2a1a2a','#1a1208');stars(80);ground(Hh*.6,'#2a2014','#0a0804');{const lg=g.createRadialGradient(W*.3,Hh*.5,10,W*.3,Hh*.5,Hh*.4);lg.addColorStop(0,'rgba(255,140,40,.7)');lg.addColorStop(1,'rgba(255,100,20,0)');g.fillStyle=lg;g.fillRect(0,0,W,Hh);g.fillStyle='#3a2a1a';g.fillRect(W*.15,Hh*.42,W*.3,Hh*.18);g.fillStyle='#1a1208';g.beginPath();g.moveTo(W*.12,Hh*.42);g.lineTo(W*.3,Hh*.32);g.lineTo(W*.48,Hh*.42);g.fill();g.fillStyle='#8a7a5a';for(let i=0;i<14;i++)g.fillRect(i*W/14,Hh*.62,W/14-4,Hh*.05);g.fillStyle='#6a5a3a';for(let i=0;i<14;i++)g.fillRect(i*W/14+W/28,Hh*.58,W/14-4,Hh*.045);}vign(.5);break;
     case 'rain':sky('#1a1e24','#3a4048','#22281e');ridge(Hh*.5,Hh*.1,'#2a3034');ridge(Hh*.56,Hh*.06,'#20262a');ground(Hh*.6,'#2a3222','#10140c');for(let i=0;i<6;i++)tree(Rn()*W,Hh*(.62+Rn()*.18),Hh*.16,'#141e14');g.strokeStyle='rgba(200,215,230,.45)';g.lineWidth=1.6;for(let i=0;i<520;i++){const x=Rn()*W*1.2,y=Rn()*Hh;g.beginPath();g.moveTo(x,y);g.lineTo(x-Hh*.02,y+Hh*.06);g.stroke();}vign(.55);break;
     case 'shrine':sky('#f0d8b0','#f6ead0','#7a8a52');ridge(Hh*.5,Hh*.08,'#9aa08a');ground(Hh*.6,'#a8a070','#6a6a3a');for(let i=0;i<8;i++)tree(W*(i<4?.04+i*.07:.7+(i-4)*.08),Hh*(.62+Rn()*.06),Hh*.22,'#2e4a2a');{const cx=W*.5,y=Hh*.3,w=W*.5;g.fillStyle='#b8321f';g.fillRect(cx-w*.36,y+Hh*.04,w*.07,Hh*.3);g.fillRect(cx+w*.29,y+Hh*.04,w*.07,Hh*.3);g.fillRect(cx-w*.42,y+Hh*.06,w*.84,Hh*.025);g.fillStyle='#1a1410';g.beginPath();g.moveTo(cx-w*.56,y);g.quadraticCurveTo(cx,y+Hh*.035,cx+w*.56,y);g.lineTo(cx+w*.52,y+Hh*.03);g.quadraticCurveTo(cx,y+Hh*.055,cx-w*.52,y+Hh*.03);g.fill();}vign(.35);break;
     default:sky('#8ec5e8','#d9ecf5','#5f8a3a');ridge(Hh*.48,Hh*.1,'#8aa0b0');ridge(Hh*.53,Hh*.06,'#6a8a6a');ground(Hh*.55,'#9fbf6a','#5f8a3a');for(let i=0;i<10;i++)tree(Rn()*W,Hh*(.58+Rn()*.2),Hh*.12,'#3a6a32');}
@@ -743,210 +749,31 @@ const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;',
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const speak=()=>null;
 const store={get(k){try{return JSON.parse(localStorage.getItem('saihai:'+k));}catch(e){return null;}},set(k,v){try{localStorage.setItem('saihai:'+k,JSON.stringify(v));}catch(e){}}};
-
-/* ---- 武将（顔は三国英雄伝の顔絵を流用） ---- */
-const HEROES=[
- {id:'nobu',n:'信長',f:'織',bgf:'群'},
- {id:'yoshi',n:'義元',f:'今',bgf:'漢'},
- {id:'hayashi',n:'林秀貞',f:'織',bgf:'群'},
- {id:'shibata',n:'柴田勝家',f:'織',bgf:'群'},
- {id:'yanada',n:'簗田政綱',f:'織',bgf:'群'},
- {id:'sassa',n:'佐々政次',f:'織',bgf:'群'},
- {id:'senshu',n:'千秋季忠',f:'織',bgf:'群'},
- {id:'mori',n:'毛利新介',f:'織',bgf:'群'},
- {id:'hattori',n:'服部小平太',f:'織',bgf:'群'},
- {id:'matsu',n:'松平元康',f:'今',bgf:'漢'}
-];
-Object.assign(PSPEC,{
- nobu:{fs:'sharp',fw:22,sk:'#f0d0ae',age:0,hair:'tail',brow:'angry',eye:'sharp',nose:'thin',mo:'tight',bd:'mus',cl:'armor',c1:'#2a2a2e',c2:'#c9a22c',c3:'#8a1a14'},
- yoshi:{fs:'round',fw:26,sk:'#f6e8da',age:2,hair:'knot',brow:'soft',eye:'narrow',nose:'n',mo:'smile',bd:'mus',cl:'royal',c1:'#6a2e7a',c2:'#e0c060',x:['fat']},
- hayashi:{fs:'long',fw:23,age:3,hair:'knot',hc:'#d8d6d0',brow:'white',eye:'narrow',nose:'n',mo:'frown',bd:'goatee',bc:'#e2e0da',cl:'robe',c1:'#5a4a32',c2:'#b8a070'},
- shibata:{fs:'square',fw:27,sk:'#c08a5e',age:1,hair:'knot',brow:'bushy',eye:'round',nose:'wide',mo:'frown',bd:'full',cl:'armor',c1:'#3a2a22',c2:'#a8842a',c3:'#6a1a12'},
- yanada:{fs:'long',fw:22,age:1,hair:'knot',brow:'thin',eye:'narrow',nose:'thin',mo:'n',bd:'goatee',cl:'light',c1:'#4a5a44',c2:'#a8a070'},
- sassa:{fs:'oval',fw:24,age:1,hair:'knot',brow:'angry',eye:'sharp',nose:'n',mo:'tight',bd:'short',cl:'armor',c1:'#2a3a5a',c2:'#c0a050'},
- senshu:{fs:'oval',fw:23,age:0,hair:'knot',brow:'n',eye:'round',nose:'thin',mo:'tight',bd:'none',cl:'armor',c1:'#e4e2d8',c2:'#b8321f'},
- mori:{fs:'square',fw:25,age:0,hair:'wild',brow:'thick',eye:'sharp',nose:'wide',mo:'grin',bd:'stub',cl:'armor',c1:'#2a2a30',c2:'#a07a3a'},
- hattori:{fs:'oval',fw:23,age:0,hair:'tail',brow:'angry',eye:'sharp',nose:'n',mo:'tight',bd:'none',cl:'armor',c1:'#3a3028',c2:'#b89a5a'},
- matsu:{fs:'round',fw:24,age:0,hair:'knot',brow:'soft',eye:'narrow',nose:'n',mo:'n',bd:'none',cl:'armor',c1:'#5a3a6a',c2:'#d8c070'}
-});
-const HN={},HBI={};HEROES.forEach(h=>{HN[h.n]=h;HBI[h.id]=h;});
+/* 武将の顔は三国英雄伝の顔絵（portrait2）を流用。戦ごとに regStage で足す */
+const HEROES=[],HN={},HBI={};
 const HB=id=>HBI[id];
 const FACE={};const face=id=>FACE[id]||(FACE[id]=portrait2(HB(id)));
-</script>
-<script>/* stage.js */
-/* ===== 戦の一覧 ===== */
-const STAGES=[
- {id:'okehazama',k:'桶',n:'桶狭間の戦い',y:'1560',vs:'織田 約3千 vs 今川 約2万5千',d:'奇襲・大将狙い。豪雨の中、敵の本陣を一点突破せよ。',open:true},
- {id:'stirling',k:'橋',n:'スターリング・ブリッジ',y:'1297',vs:'スコットランド vs イングランド',d:'敵が狭い橋を半分渡った瞬間を狙え。'},
- {id:'seisui',k:'背',n:'背水の陣',y:'前204',vs:'韓信 約3万 vs 趙 約20万',d:'逃げ場をなくし、別働隊で敵の城を奪え。'},
- {id:'kizakibaru',k:'釣',n:'木崎原の戦い',y:'1572',vs:'島津 約300 vs 伊東 約3千',d:'釣り野伏せ。十倍の敵を伏兵で包め。'},
- {id:'orleans',k:'聖',n:'オルレアンの乙女',y:'1429',vs:'フランス vs イングランド',d:'士気で戦え。ジャンヌと共に包囲を破れ。'},
- {id:'myeongnyang',k:'潮',n:'鳴梁海戦',y:'1597',vs:'13隻 vs 100隻超',d:'渦潮の海峡で、潮の変わり目を待て。'},
- {id:'rorke',k:'砦',n:'ロルクズ・ドリフト',y:'1879',vs:'約150 vs 約4千',d:'小さな拠点を一晩守り抜け。'},
- {id:'cannae',k:'包',n:'カンナエの戦い',y:'前216',vs:'ハンニバル 約5万 vs ローマ 約8万',d:'わざと中央を下げ、敵を包みこめ。'}
-];
-
-/* ===== 桶狭間：地図（横560×縦720の地図座標） ===== */
-const NODES={
- kiyosu:{n:'清洲城',x:120,y:56,t:'castle',side:'me'},
- atsuta:{n:'熱田神宮',x:96,y:300,t:'shrine',side:'me'},
- tange:{n:'丹下砦',x:205,y:338,t:'fort',side:'me'},
- zensho:{n:'善照寺砦',x:292,y:304,t:'fort',side:'me'},
- nakajima:{n:'中島砦',x:312,y:418,t:'fort',side:'me'},
- washizu:{n:'鷲津砦',x:178,y:492,t:'fort',side:'me'},
- marune:{n:'丸根砦',x:250,y:540,t:'fort',side:'me'},
- odaka:{n:'大高城',x:96,y:570,t:'castle',side:'foe'},
- takane:{n:'高根山',x:392,y:486,t:'hill'},
- taishi:{n:'太子ヶ根',x:430,y:372,t:'hill'},
- oke:{n:'桶狭間山',x:458,y:574,t:'hill'},
- kutsukake:{n:'沓掛城',x:500,y:226,t:'castle',side:'foe'}
-};
-// [から, まで, 時間, 種類]  open=敵から丸見え flank=敵前を横切る pass=山の抜け道 foe=今川の道
-const EDGES=[
- ['kiyosu','atsuta',2,'road'],['atsuta','tange',1,'road'],['tange','zensho',1,'road'],['tange','washizu',1,'road'],
- ['washizu','marune',1,'road'],['washizu','odaka',1,'foe'],['marune','odaka',1,'foe'],
- ['zensho','nakajima',1,'open'],['nakajima','takane',1,'road'],['takane','oke',1,'road'],['nakajima','oke',1,'flank'],
- ['zensho','taishi',2,'pass'],['taishi','oke',1,'pass'],['kutsukake','taishi',1,'foe'],['kutsukake','oke',2,'foe']
-];
-const ADJ={};Object.keys(NODES).forEach(k=>ADJ[k]=[]);
-EDGES.forEach(e=>{ADJ[e[0]].push({to:e[1],h:e[2],k:e[3]});ADJ[e[1]].push({to:e[0],h:e[2],k:e[3]});});
-const edgeOf=(a,b)=>ADJ[a].find(e=>e.to===b);
-
 const JI=['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
-const KAN=['〇','一','二','三','四','五','六','七','八','九','十','十一','十二'];
 const jiOf=h=>JI[Math.floor(((h+1)%24)/2)];
-const clock=h=>(h<12?'午前':'午後')+(h<=12?h:h-12)+'時';
-// 天気：12時に曇り、13時の一時間だけ豪雨（史実では未の刻ごろ）
-const weatherAt=h=>h===13?'rain':h===12?'cloud':h===14?'after':'clear';
-const WNAME={clear:'晴れ',cloud:'曇り',rain:'豪雨',after:'雨上がり'};
-const WICON={clear:'☀',cloud:'☁',rain:'☔',after:'⛅'};
-// 今川本隊の居場所
-const yoshiAt=h=>h<8?'kutsukake':h<11?'march':h<15?'oke':'gone';
-
-const DEADLINE=15, NEED=2.0, CAP=1200;
-
-/* ===== 状態 ===== */
-let G=null;
-function newGame(){
-  G={t:4,at:'kiyosu',T:800,M:55,A:30,lost:0,scouted:false,scoutT:null,prayed:false,garrison:false,sassa:null,nakaSpeech:null,
-     fell:false,council:null,dawn:null,route:[],log:[],flags:{},over:false,moving:null,assault:null,arrivalT:null,searched:false};
-}
-function addLog(t,cls){G.log.unshift({h:G.t,t,cls:cls||''});}
-const fmtN=n=>Math.round(n).toLocaleString('ja-JP');
-const yudan=()=>G.A<20?'大':G.A<40?'中':G.A<60?'小':'なし';
+const clock=h=>{h=((h%24)+24)%24;return (h<12?'午前':'午後')+(h<=12?h:h-12)+'時';};
+const clockM=m=>{const h=Math.floor(m/60)%24,mm=m%60;return (h<12?'午前':'午後')+(h<=12?h:h-12)+'時'+(mm?mm+'分':'');};
+const FS=['oval','square','long','round','sharp'];
+/* 武将を短く書くための関数： H('nobu','信長','織','群',{...顔の設定}) */
+function H(id,n,f,bgf,spec){PSPEC[id]=spec;return {id,n,f,bgf};}
 </script>
-<script>/* map.js */
+<script>/* core.js */
+/* ===== 共通エンジン：地図・時の流れ・画面 ===== */
 let _fd,_fb;const FD=()=>_fd||(_fd=getComputedStyle(document.body).getPropertyValue('--f-disp'));const FB=()=>_fb||(_fb=getComputedStyle(document.body).getPropertyValue('--f-body'));
-/* ===== 地図の描画 ===== */
-const MAPW=560,MAPH=720;
-const MV={s:1,ox:0,oy:0,dpr:1,W:0,H:0,base:null,anim:null,pick:false,drops:[]};
-const SEA=[[0,140],[44,196],[62,262],[56,330],[76,398],[58,470],[68,524],[46,604],[26,680],[0,720]];
-const RIVERS=[
- [[560,468],[480,470],[404,452],[350,432],[312,418],[262,448],[200,458],[130,452],[60,470]],
- [[544,650],[480,616],[430,540],[370,462],[312,418]],
- [[214,0],[190,90],[150,170],[100,226],[52,262]]
-];
-const HILLS=[[392,486,36,1],[458,574,44,1],[430,372,34,1],[500,470,30],[520,560,34],[410,640,30],[520,660,30],[360,560,22],[540,380,28],[470,300,26],[330,620,20],[420,250,22],[540,720,26]];
-function mrand(seed){let s=seed;return()=>(s=(s*16807)%2147483647)/2147483647;}
-function layoutMap(){const cv=$('#map');const r=cv.getBoundingClientRect();if(!r.width)return;const dpr=Math.min(2,window.devicePixelRatio||1);
-  cv.width=Math.round(r.width*dpr);cv.height=Math.round(r.height*dpr);MV.dpr=dpr;MV.W=r.width;MV.H=r.height;
-  const s=Math.min(r.width/MAPW,r.height/MAPH);MV.s=s;MV.ox=(r.width-MAPW*s)/2;MV.oy=(r.height-MAPH*s)/2;drawBase();}
-function smoothPath(g,pts){g.moveTo(pts[0][0],pts[0][1]);for(let i=1;i<pts.length-1;i++){const mx=(pts[i][0]+pts[i+1][0])/2,my=(pts[i][1]+pts[i+1][1])/2;g.quadraticCurveTo(pts[i][0],pts[i][1],mx,my);}const l=pts[pts.length-1];g.lineTo(l[0],l[1]);}
-function drawBase(){const c=document.createElement('canvas');c.width=$('#map').width;c.height=$('#map').height;const g=c.getContext('2d');MV.base=c;
-  // 紙
-  const gr=g.createRadialGradient(c.width/2,c.height*.45,10,c.width/2,c.height/2,Math.max(c.width,c.height)*.75);gr.addColorStop(0,'#e8d8b0');gr.addColorStop(1,'#b8a274');g.fillStyle=gr;g.fillRect(0,0,c.width,c.height);
-  const R=mrand(11);g.fillStyle='rgba(90,60,20,.08)';for(let i=0;i<1400;i++){g.fillRect(R()*c.width,R()*c.height,1.5*MV.dpr,1.5*MV.dpr);}
-  g.save();g.setTransform(MV.dpr*MV.s,0,0,MV.dpr*MV.s,MV.dpr*MV.ox,MV.dpr*MV.oy);
-  // 海（左にはみ出して描く）
-  g.fillStyle='#93aaa2';g.beginPath();g.moveTo(-400,-200);g.lineTo(0,-200);g.lineTo(SEA[0][0],SEA[0][1]);smoothPath(g,SEA);g.lineTo(0,900);g.lineTo(-400,900);g.closePath();g.fill();
-  g.strokeStyle='#5f7c76';g.lineWidth=2.2;g.beginPath();smoothPath(g,SEA);g.stroke();
-  g.strokeStyle='rgba(60,90,86,.45)';g.lineWidth=1.2;for(let i=0;i<26;i++){const x=-60+R()*90,y=40+R()*660;g.beginPath();g.moveTo(x,y);g.quadraticCurveTo(x+7,y-5,x+14,y);g.quadraticCurveTo(x+21,y+5,x+28,y);g.stroke();}
-  g.save();g.fillStyle='rgba(40,70,70,.7)';g.font='16px '+FD();g.textAlign='center';['伊','勢','湾'].forEach((ch,i)=>g.fillText(ch,20,380+i*20));g.restore();
-  // 山（墨の丘）
-  HILLS.forEach(([x,y,r,big])=>{const hg=g.createRadialGradient(x,y-r*.3,2,x,y,r);hg.addColorStop(0,'rgba(120,130,80,.55)');hg.addColorStop(1,'rgba(120,130,80,0)');g.fillStyle=hg;g.beginPath();g.arc(x,y,r,0,7);g.fill();
-    g.strokeStyle=big?'rgba(60,50,30,.75)':'rgba(60,50,30,.45)';g.lineWidth=big?2:1.4;for(let k=0;k<(big?3:2);k++){const w=r*(1-k*.28);g.beginPath();g.moveTo(x-w,y+r*.25-k*4);g.quadraticCurveTo(x-w*.4,y-r*.55+k*6,x,y-r*.6+k*8);g.quadraticCurveTo(x+w*.4,y-r*.55+k*6,x+w,y+r*.25-k*4);g.stroke();}});
-  // 森
-  for(let i=0;i<90;i++){const x=300+R()*260,y=320+R()*400;if(Math.hypot(x-458,y-574)<30)continue;g.fillStyle='rgba(60,80,40,'+(.25+R()*.25)+')';g.beginPath();g.arc(x,y,3+R()*3,0,7);g.fill();}
-  // 川
-  RIVERS.forEach((p,i)=>{g.strokeStyle='rgba(70,110,140,.75)';g.lineWidth=i===2?7:5;g.lineCap='round';g.beginPath();smoothPath(g,p);g.stroke();g.strokeStyle='rgba(200,225,235,.5)';g.lineWidth=1.5;g.beginPath();smoothPath(g,p);g.stroke();});
-  g.save();g.fillStyle='rgba(40,70,100,.85)';g.font='12px '+FB();g.fillText('扇川',220,474);g.fillText('手越川',448,620);g.restore();
-  // 道
-  EDGES.forEach(([a,b,h,k])=>{const A=NODES[a],B=NODES[b];g.save();g.lineCap='round';
-    if(k==='pass'){g.strokeStyle='rgba(70,70,70,.75)';g.lineWidth=3;g.setLineDash([2,7]);}
-    else if(k==='foe'){g.strokeStyle='rgba(140,40,30,.55)';g.lineWidth=3;g.setLineDash([10,7]);}
-    else if(k==='flank'){g.strokeStyle='rgba(150,60,30,.75)';g.lineWidth=3;g.setLineDash([4,6]);}
-    else{g.strokeStyle='rgba(90,58,26,.8)';g.lineWidth=3.4;g.setLineDash([12,6]);}
-    g.beginPath();const mx=(A.x+B.x)/2+(B.y-A.y)*.08,my=(A.y+B.y)/2-(B.x-A.x)*.08;g.moveTo(A.x,A.y);g.quadraticCurveTo(mx,my,B.x,B.y);g.stroke();g.restore();});
-  g.restore();
-  // 方位
-  g.save();g.setTransform(MV.dpr,0,0,MV.dpr,0,0);g.fillStyle='rgba(60,40,20,.7)';g.font='13px '+FD();g.textAlign='center';g.fillText('北',MV.W-20,MV.H-44);g.beginPath();g.moveTo(MV.W-20,MV.H-74);g.lineTo(MV.W-26,MV.H-58);g.lineTo(MV.W-14,MV.H-58);g.fill();g.restore();
-}
-const toScr=(x,y)=>[MV.ox+x*MV.s,MV.oy+y*MV.s];
-function mon(g,x,y,r,kind){g.save();g.translate(x,y);
-  if(kind==='oda'){g.fillStyle='#d8ac4c';for(let i=0;i<4;i++){const a=i*Math.PI/2+Math.PI/4;g.beginPath();g.arc(Math.cos(a)*r*.42,Math.sin(a)*r*.42,r*.46,0,7);g.fill();}g.fillStyle='#1a1410';g.beginPath();g.arc(0,0,r*.36,0,7);g.fill();g.fillStyle='#d8ac4c';g.beginPath();g.arc(0,0,r*.16,0,7);g.fill();}
-  else{g.strokeStyle='#1a1410';g.lineWidth=r*.16;g.beginPath();g.arc(0,0,r*.8,0,7);g.stroke();g.fillStyle='#1a1410';g.fillRect(-r*.72,-r*.38,r*1.44,r*.24);g.fillRect(-r*.72,r*.14,r*1.44,r*.24);}
-  g.restore();}
-function flag(g,x,y,side,label,sub,alpha){g.save();g.globalAlpha=alpha==null?1:alpha;const s=1;
-  g.strokeStyle='#2a1a0c';g.lineWidth=2.4;g.beginPath();g.moveTo(x,y+4);g.lineTo(x,y-44);g.stroke();
-  g.fillStyle=side==='me'?'#1c1814':'#f2ead6';g.strokeStyle=side==='me'?'#d8ac4c':'#8a1e12';g.lineWidth=2;
-  g.beginPath();g.rect(x+1,y-44,22,30);g.fill();g.stroke();mon(g,x+12,y-29,9,side==='me'?'oda':'ima');
-  if(label){g.font='bold 12px '+FB();const w=Math.max(g.measureText(label).width,sub?g.measureText(sub).width:0)+10;
-    g.fillStyle=side==='me'?'rgba(20,16,12,.88)':'rgba(120,24,16,.9)';g.fillRect(x-w/2+10,y+6,w,sub?30:17);g.fillStyle='#fbe9c0';g.textAlign='center';g.fillText(label,x+10,y+19);if(sub){g.font='11px '+FB();g.fillText(sub,x+10,y+32);}}
-  g.restore();}
-function nodeLabel(g,k,N){const [x,y]=toScr(N.x,N.y);const z=Math.max(.8,Math.min(1.25,MV.s*1.25));
-  g.save();g.font='bold 13px '+FB();const w=g.measureText(N.n).width+10;const ly=y+14*z+4;
-  g.fillStyle=N.side==='foe'?'rgba(122,36,24,.9)':'rgba(244,234,210,.92)';g.fillRect(x-w/2,ly,w,17);g.strokeStyle='rgba(90,60,30,.7)';g.lineWidth=1;g.strokeRect(x-w/2,ly,w,17);
-  g.fillStyle=N.side==='foe'?'#fbe9c0':'#2a1808';g.textAlign='center';g.fillText(N.n,x,ly+13);g.restore();
-}
-function nodeIcon(g,k,N,hl){const [x,y]=toScr(N.x,N.y);const z=Math.max(.8,Math.min(1.25,MV.s*1.25));g.save();g.translate(x,y);g.scale(z,z);
-  if(hl){const p=(Math.sin(performance.now()/260)+1)/2;g.strokeStyle='rgba(255,220,110,'+(.55+p*.45)+')';g.lineWidth=3;g.beginPath();g.arc(0,0,20+p*5,0,7);g.stroke();}
-  const burnt=G&&G.fell&&(k==='washizu'||k==='marune');
-  if(N.t==='castle'){g.fillStyle=N.side==='foe'?'#7a2418':'#3a2a1a';g.fillRect(-12,-6,24,14);g.fillStyle='#efe6d2';g.fillRect(-8,-16,16,10);g.fillStyle=N.side==='foe'?'#5a1610':'#2a1a10';g.beginPath();g.moveTo(-14,-14);g.lineTo(0,-24);g.lineTo(14,-14);g.fill();g.beginPath();g.moveTo(-11,-5);g.lineTo(0,-12);g.lineTo(11,-5);g.fill();}
-  else if(N.t==='fort'){g.fillStyle=burnt?'#3a3a3a':'#6a4a26';for(let i=-3;i<=3;i++){g.fillRect(i*4-1.5,-12+Math.abs(i)%2*2,3,16);}g.fillStyle=burnt?'#222':'#4a3218';g.fillRect(-14,0,28,4);}
-  else if(N.t==='shrine'){g.fillStyle='#b8321f';g.fillRect(-10,-14,3,18);g.fillRect(7,-14,3,18);g.fillRect(-12,-10,24,3);g.fillStyle='#1a1410';g.fillRect(-15,-16,30,4);}
-  else{g.fillStyle='rgba(50,40,20,.85)';g.font='18px '+FD();g.textAlign='center';g.fillText('山',0,6);}
-  g.restore();
-  if(burnt){g.save();const t=performance.now()/600;for(let i=0;i<4;i++){const a=(t+i*.8)%3;g.fillStyle='rgba(60,60,60,'+(.35*(1-a/3))+')';g.beginPath();g.arc(x+Math.sin(t+i)*4,y-14-a*14,6+a*4,0,7);g.fill();}g.restore();}
-}
-function reachList(){if(!G||G.over)return[];return ADJ[G.at].filter(e=>e.k!=='foe'&&NODES[e.to].side!=='foe');}
-function lerpPt(a,b,p){const A=NODES[a],B=NODES[b];const mx=(A.x+B.x)/2+(B.y-A.y)*.08,my=(A.y+B.y)/2-(B.x-A.x)*.08;const q=1-p;return [q*q*A.x+2*q*p*mx+p*p*B.x,q*q*A.y+2*q*p*my+p*p*B.y];}
-function enemyMarks(){const t=G.t,L=[];const N=NODES;
-  if(!G.fell){L.push({x:N.marune.x+34,y:N.marune.y-20,l:'松平元康',s:'約2千 攻撃中'});L.push({x:N.washizu.x-56,y:N.washizu.y-22,l:'朝比奈泰朝',s:'約2千 攻撃中'});}
-  else{L.push({x:N.marune.x+34,y:N.marune.y-20,l:'松平元康',s:'丸根を占領'});L.push({x:N.washizu.x-56,y:N.washizu.y-22,l:'朝比奈泰朝',s:'鷲津を占領'});}
-  if(t>=10||G.flags.vanSeen)L.push({x:N.takane.x+34,y:N.takane.y-24,l:'今川前衛',s:'約5千'});
-  const y=yoshiAt(t);
-  if(G.scouted){
-    if(y==='kutsukake')L.push({x:N.kutsukake.x-30,y:N.kutsukake.y-28,l:'義元本隊',s:'約5千',main:1});
-    else if(y==='march'){const p=(t-8)/3;const pt=lerpPt('kutsukake','oke',clamp(p,0,1));L.push({x:pt[0]+20,y:pt[1]-10,l:'義元本隊',s:'進軍中',main:1});}
-    else if(y==='oke')L.push({x:N.oke.x+34,y:N.oke.y-26,l:'義元本隊',s:'昼の休み',main:1});
-  }else{
-    if(t<8)L.push({x:N.kutsukake.x-30,y:N.kutsukake.y-28,l:'今川本隊?',s:'沓掛城にいるらしい',a:.75});
-    else [['oke',30,-30],['taishi',34,-26],['odaka',40,-34]].forEach(([k,dx,dy])=>L.push({x:N[k].x+dx,y:N[k].y+dy,a:.55,q:1}));
-  }
-  return L;}
-function drawMap(){const cv=$('#map');if(!cv.width||!MV.base)return;const g=cv.getContext('2d');g.setTransform(1,0,0,1,0,0);g.drawImage(MV.base,0,0);g.setTransform(MV.dpr,0,0,MV.dpr,0,0);
-  if(!G)return;const w=weatherAt(G.t);
-  if(w==='cloud'){g.fillStyle='rgba(40,44,56,.2)';g.fillRect(0,0,MV.W,MV.H);}
-  if(w==='rain'){g.fillStyle='rgba(20,26,38,.38)';g.fillRect(0,0,MV.W,MV.H);}
-  if(w==='after'){g.fillStyle='rgba(255,240,200,.08)';g.fillRect(0,0,MV.W,MV.H);}
-  const reach=MV.pick?reachList().map(e=>e.to):[];
-  Object.keys(NODES).forEach(k=>nodeIcon(g,k,NODES[k],reach.indexOf(k)>=0));
-  const drawLabels=()=>Object.keys(NODES).forEach(k=>nodeLabel(g,k,NODES[k]));
-  enemyMarks().forEach(m=>{const [x,y]=toScr(m.x,m.y);if(m.q){g.save();g.globalAlpha=m.a;g.fillStyle='#8a1e12';g.font='bold 22px '+FD();g.textAlign='center';g.fillText('？',x,y);g.font='bold 11px '+FB();g.fillText('本隊?',x,y+13);g.restore();return;}
-    flag(g,x-10,y,'foe',m.l,m.s,m.a);if(m.main){g.save();const p=(Math.sin(performance.now()/300)+1)/2;g.strokeStyle='rgba(224,60,40,'+(.4+p*.5)+')';g.lineWidth=2.5;g.beginPath();g.arc(x+2,y-20,30+p*4,0,7);g.stroke();g.restore();}});
-  drawLabels();
-  if(MV.pick)reachList().forEach(e=>{const [x,y]=toScr(NODES[e.to].x,NODES[e.to].y);g.save();g.font='bold 12px '+FB();const s=e.h+'時間';const tw=g.measureText(s).width+10;g.fillStyle='#a8281c';g.fillRect(x-tw/2,y-46,tw,18);g.fillStyle='#fff';g.textAlign='center';g.fillText(s,x,y-33);g.restore();});
-  // 織田勢
-  let px,py;if(MV.anim){const a=MV.anim;const p=clamp((performance.now()-a.t0)/a.dur,0,1);[px,py]=lerpPt(a.from,a.to,p);}else{px=NODES[G.at].x;py=NODES[G.at].y;}
-  const [x,y]=toScr(px,py);flag(g,x-14,y-6,'me','織田 '+fmtN(G.T),null);
-  // 雨
-  if(w==='rain'){if(MV.drops.length<220)for(let i=0;i<220;i++)MV.drops.push({x:Math.random()*MV.W,y:Math.random()*MV.H,v:9+Math.random()*7});g.strokeStyle='rgba(210,225,240,.55)';g.lineWidth=1.2;g.beginPath();MV.drops.forEach(d=>{d.y+=d.v;d.x-=d.v*.25;if(d.y>MV.H){d.y=-10;d.x=Math.random()*MV.W*1.2;}g.moveTo(d.x,d.y);g.lineTo(d.x+3,d.y-12);});g.stroke();}
-}
-function loop(){drawMap();requestAnimationFrame(loop);}
-function hitNode(cx,cy){const r=$('#map').getBoundingClientRect();const x=(cx-r.left-MV.ox)/MV.s,y=(cy-r.top-MV.oy)/MV.s;let best=null,bd=40/Math.max(.6,MV.s);Object.keys(NODES).forEach(k=>{const d=Math.hypot(NODES[k].x-x,NODES[k].y-y);if(d<bd){bd=d;best=k;}});return best;}
-</script>
-<script>/* game.js */
-/* ===== 画面の部品 ===== */
+let S=null,G=null;const STAGE={},ORDER=[];
+function regStage(d){STAGE[d.id]=d;ORDER.push(d.id);(d.heroes||[]).forEach(h=>{HEROES.push(h);HN[h.n]=h;HBI[h.id]=h;});Object.assign(PSPEC,d.pspec||{});Object.assign(FEMALE,d.female||{});if(d.fv)Object.assign(FV,d.fv);
+  const A={};Object.keys(d.map.nodes).forEach(k=>A[k]=[]);d.map.edges.forEach(e=>{A[e[0]].push({from:e[0],to:e[1],h:e[2],k:e[3]});A[e[1]].push({from:e[1],to:e[0],h:e[2],k:e[3]});});d.adj=A;}
+const fmtN=n=>Math.round(n).toLocaleString('ja-JP');
+function addLog(t,cls){G.log.unshift({h:S.logTime?S.logTime(G):'',t,cls:cls||''});}
+const edgeOf=(a,b)=>S.adj[a].find(e=>e.to===b);
+const meUnits=()=>G.units.filter(u=>u.side!=='foe'&&!u.gone);
+const selUnit=()=>G.units.find(u=>u.id===G.sel)||meUnits()[0];
+
+/* ---- 画面の部品 ---- */
 function toast(t){const b=$('#toast');const d=el('div',null,esc(t));b.appendChild(d);setTimeout(()=>d.remove(),3200);}
 function banner(t,sub){const b=el('div','banner',esc(t)+(sub?'<small>'+esc(sub)+'</small>':''));document.body.appendChild(b);setTimeout(()=>b.remove(),2500);}
 function closeSheet(){$('#ui').innerHTML='';}
@@ -954,19 +781,281 @@ function sheet(title,sub,body,foot){closeSheet();const s=el('div','sheet');s.inn
   s.querySelector('.x').onclick=()=>{SND.click();closeSheet();};s.querySelector('.sh-b').append(...[].concat(body));if(foot)s.querySelector('.sh-f').append(...foot);$('#ui').appendChild(s);return s;}
 function btn(label,cls,fn){const b=el('button','btn '+(cls||''),label);b.type='button';b.onclick=e=>{SND.click();fn(e);};return b;}
 function advEl(id,text){return el('div','adv','<img alt="" src="'+face(id)+'"><div><b>'+esc(HB(id).n)+'</b><p>'+esc(text)+'</p></div>');}
-
-function renderTop(){const t=G.t,w=weatherAt(t);
-  $('#top').innerHTML='<div class="when"><b>五月十九日 '+jiOf(t)+'の刻</b><small>'+clock(t)+'</small></div>'+
-    '<span class="pill">'+WICON[w]+' '+WNAME[w]+'</span>'+
-    '<span class="pill"><i>兵</i>'+fmtN(G.T)+'</span>'+
-    '<span class="pill"><i>士気</i><u><s style="width:'+clamp(G.M,0,100)+'%"></s></u></span>'+
-    '<span class="pill'+(G.A>=40?' warn':'')+'"><i>敵の油断</i>'+yudan()+'</span>';
-  $('#cScout').disabled=G.scouted||G.over;$('#cPray').disabled=!(G.at==='atsuta'&&!G.prayed)||G.over;
-  $('#cMove').disabled=$('#cWait').disabled=G.over;}
+function noteEl(cls,t){return el('div','note '+(cls||''),esc(t));}
 function setHint(t){const h=$('#hint');if(!t){h.hidden=true;return;}h.textContent=t;h.hidden=false;}
+function renderTop(){const w=S.when(G);
+  $('#top').innerHTML='<div class="when"><b>'+esc(w[0])+'</b><small>'+esc(w[1]||'')+'</small></div>'+S.pills(G).map(p=>'<span class="pill'+(p.warn?' warn':'')+'">'+(p.i?'<i>'+esc(p.i)+'</i>':'')+(p.bar!=null?'<u><s style="width:'+clamp(p.bar,0,100)+'%;'+(p.col?'background:'+p.col:'')+'"></s></u>':'')+(p.v!=null?esc(p.v):'')+'</span>').join('');
+  $('#cmd').querySelectorAll('button[data-k]').forEach(b=>{const k=b.dataset.k;if(k==='move')b.disabled=G.over||!S.canMoveAny||!S.canMoveAny(G);else if(k==='adv'||k==='log')b.disabled=false;else{const a=S.acts.find(x=>x.k===k);b.disabled=G.over||!a.on(G);}});}
+function buildCmd(){const c=$('#cmd');c.innerHTML='';const add=(k,kan,lab,hot)=>{const b=el('button',hot?'hot':'','<b>'+kan+'</b><span>'+lab+'</span>');b.type='button';b.dataset.k=k;c.appendChild(b);return b;};
+  if(S.canMoveAny)add('move','進',S.moveLabel||'進軍',true).onclick=()=>{SND.click();closeSheet();MV.pick=!MV.pick;setHint(MV.pick?(meUnits().length>1?'動かす隊：'+selUnit().name+'。光っている場所をタップ':'光っている場所をタップ'):null);};
+  S.acts.forEach(a=>{add(a.k,a.kan,a.lab,a.hot).onclick=()=>{SND.click();a.open(G);};});
+  add('adv','言','家臣の声').onclick=()=>{SND.click();sheet('家臣の声','誰の言うことを聞くかは、あなた次第',S.advice(G).map(a=>advEl(a[0],a[1])));};
+  add('log','巻','記録').onclick=()=>{SND.click();const n=el('div','news');G.log.forEach(l=>n.appendChild(el('div',l.cls,(l.h?'<em>'+esc(l.h)+'</em>':'')+esc(l.t))));
+    const s=sheet('記録','これまでの報せ',[n,el('div','sec','設定')]);const r=el('div');r.style.cssText='display:flex;gap:8px;flex-wrap:wrap';
+    r.append(btn(SND.bgmOn?'BGM：オン':'BGM：オフ','sm',e=>{BGM.setOn(!SND.bgmOn);e.target.textContent=SND.bgmOn?'BGM：オン':'BGM：オフ';}),btn('最初からやり直す','sm',()=>startStage(S.id)),btn('戦の一覧へ','sm',()=>showStages()));s.querySelector('.sh-b').appendChild(r);};}
+/* よくある「確認して実行」のシート */
+function confirmAct(title,sub,body,label,fn){sheet(title,sub,[].concat(body),[btn('やめる','',closeSheet),btn(label,'pri',fn)]);}
 
-/* ===== 家臣の声（状況ごとの進言） ===== */
-function advice(){const t=G.t,w=weatherAt(t),a=[];const at=G.at;
+/* ---- 時を進める ---- */
+let busy=false;
+const E={
+  async pass(h,ctx,delay){for(let i=0;i<h&&!G.over;i++){const d=delay==null?650:delay;const mv=G.units.filter(u=>u.order);mv.forEach(u=>{u.order.anim={t0:performance.now(),dur:d};});
+      await sleep(d);S.hour(G,ctx||{});G.t++;const arr=[];
+      mv.forEach(u=>{const o=u.order;o.anim=null;o.left--;if(o.left<=0){u.at=o.to;u.order=null;(G.route[u.id]=G.route[u.id]||[]).push(o.to);addLog(u.name+'が'+S.map.nodes[o.to].n+'に着いた。');arr.push([u,o.to]);}});
+      if(S.at)S.at(G);renderTop();await E.flush();
+      for(const [u,to] of arr){if(G.over)break;if(S.arrive)await S.arrive(G,u,to);}}
+    await E.flush();},
+  async flush(){while(G.q.length&&!G.over){const k=G.q.shift();await S.ev[k](G);renderTop();}},
+  story:(t,o)=>playStory(t,o),
+  gauge(R,need,label){let g=$('.gauge');if(!g){g=el('div','gauge','<div class="t"><span></span><b></b></div><u><s></s><i></i></u><small>白い線（100%）を越えていれば勝てる</small>');document.body.appendChild(g);document.body.classList.add('gz');}
+    const pct=Math.round(R/need*100);g.querySelector('.t span').textContent=label||'勝機';g.querySelector('b').textContent=pct+'%';g.querySelector('s').style.width=clamp(pct/150*100,0,100)+'%';},
+  gaugeOff(){const g=$('.gauge');if(g)g.remove();document.body.classList.remove('gz');}
+};
+async function act(fn){if(busy||G.over)return;busy=true;closeSheet();MV.pick=false;setHint(null);
+  try{await fn();if(!G.over&&S.after)await S.after(G);if(!G.over){renderTop();if(S.bgm)BGM.play(S.bgm(G));}}finally{busy=false;}}
+async function doMove(uid,to){const u=G.units.find(x=>x.id===uid);const e=edgeOf(u.at,to);
+  if(S.beforeMove)S.beforeMove(G,u,e);SND.horse();MV.anim={uid,from:u.at,to,t0:performance.now(),dur:650*e.h};
+  await E.pass(e.h,{move:e,unit:u});MV.anim=null;if(G.over)return;u.at=to;(G.route[u.id]=G.route[u.id]||[]).push(to);addLog(u.name+'が'+S.map.nodes[to].n+'に着いた。');renderTop();
+  if(S.arrive)await S.arrive(G,u,to);}
+function reachList(){if(!G||G.over)return[];const u=selUnit();if(!u)return[];return S.adj[u.at].filter(e=>e.k!=='foe'&&S.canMove(G,u,e)===true);}
+function moveSheet(to){const u=selUnit();if(u.order&&u.order.left<u.order.h){toast(u.name+'は移動中');return;}const e=edgeOf(u.at,to);const N=S.map.nodes[to];
+  if(!e){toast(N.n+'へは、ここから直接行けない');return;}const ok=e.k==='foe'?'敵の道は通れない':S.canMove(G,u,e);if(ok!==true){toast(ok);return;}
+  const body=[el('dl','kv','<dt>動かす隊</dt><dd>'+esc(u.name)+'</dd><dt>かかる時間</dt><dd>'+esc(S.costLabel?S.costLabel(e.h):e.h+'時間')+'</dd><dt>着く時刻</dt><dd>'+esc(S.arriveLabel?S.arriveLabel(G,e.h):'')+'</dd>')].concat((S.moveNotes?S.moveNotes(G,u,e):[]).map(n=>noteEl(n[0],n[1])));
+  const adv=S.advice(G);if(adv.length){body.push(el('div','sec','家臣の声'));adv.slice(0,2).forEach(a=>body.push(advEl(a[0],a[1])));}
+  if(S.multi)body.unshift(noteEl('','命令を出しても、まだ時は進まない。ほかの隊にも命令を出してから「時を進める」。'));
+  sheet(N.n+'へ',S.map.nodes[u.at].n+'から',body,[btn('やめる','',closeSheet),btn(S.multi?'命令する':(S.moveLabel||'進軍する'),'pri',()=>{if(S.multi){giveOrder(u,e);}else act(()=>doMove(u.id,to));})]);}
+function giveOrder(u,e){closeSheet();MV.pick=false;setHint(null);if(S.beforeMove)S.beforeMove(G,u,e);u.order={from:u.at,to:e.to,h:e.h,left:e.h,anim:null};SND.horse();toast(u.name+'：'+S.map.nodes[e.to].n+'へ（'+(S.costLabel?S.costLabel(e.h):e.h+'時間')+'）');renderTop();}
+
+/* ---- 地図 ---- */
+const MAPW=560,MAPH=720;
+const MV={s:1,ox:0,oy:0,dpr:1,W:0,H:0,base:null,anim:null,pick:false,drops:[]};
+function mrand(seed){let s=seed;return()=>(s=(s*16807)%2147483647)/2147483647;}
+const toScr=(x,y)=>[MV.ox+x*MV.s,MV.oy+y*MV.s];
+function layoutMap(){const cv=$('#map');const r=cv.getBoundingClientRect();if(!r.width)return;const dpr=Math.min(2,window.devicePixelRatio||1);
+  cv.width=Math.round(r.width*dpr);cv.height=Math.round(r.height*dpr);MV.dpr=dpr;MV.W=r.width;MV.H=r.height;
+  const s=Math.min(r.width/MAPW,r.height/MAPH);MV.s=s;MV.ox=(r.width-MAPW*s)/2;MV.oy=(r.height-MAPH*s)/2;drawBase();}
+function smoothPath(g,pts){g.moveTo(pts[0][0],pts[0][1]);for(let i=1;i<pts.length-1;i++){const mx=(pts[i][0]+pts[i+1][0])/2,my=(pts[i][1]+pts[i+1][1])/2;g.quadraticCurveTo(pts[i][0],pts[i][1],mx,my);}const l=pts[pts.length-1];g.lineTo(l[0],l[1]);}
+function edgeCurve(A,B){return [(A.x+B.x)/2+(B.y-A.y)*.08,(A.y+B.y)/2-(B.x-A.x)*.08];}
+function drawBase(){const c=document.createElement('canvas');c.width=$('#map').width;c.height=$('#map').height;const g=c.getContext('2d');MV.base=c;const D=S.map.deco||{};
+  const sea=D.base==='sea';
+  const gr=g.createRadialGradient(c.width/2,c.height*.45,10,c.width/2,c.height/2,Math.max(c.width,c.height)*.75);
+  if(sea){gr.addColorStop(0,'#a6bcb6');gr.addColorStop(1,'#6f8c88');}else{gr.addColorStop(0,'#e8d8b0');gr.addColorStop(1,'#b8a274');}g.fillStyle=gr;g.fillRect(0,0,c.width,c.height);
+  const R=mrand(11);g.fillStyle='rgba(60,40,20,.07)';for(let i=0;i<1400;i++){g.fillRect(R()*c.width,R()*c.height,1.5*MV.dpr,1.5*MV.dpr);}
+  g.save();g.setTransform(MV.dpr*MV.s,0,0,MV.dpr*MV.s,MV.dpr*MV.ox,MV.dpr*MV.oy);
+  (D.polys||[]).forEach(p=>{g.beginPath();smoothPath(g,p.pts);g.closePath();
+    if(p.kind==='sea'){g.fillStyle='#93aaa2';g.fill();g.strokeStyle='#5f7c76';g.lineWidth=2.2;g.stroke();}
+    else if(p.kind==='marsh'){g.fillStyle='rgba(110,130,90,.35)';g.fill();}
+    else if(p.kind==='field'){g.fillStyle=p.col||'rgba(200,170,90,.35)';g.fill();}
+    else{const lg=g.createLinearGradient(0,0,0,720);lg.addColorStop(0,'#e4d4aa');lg.addColorStop(1,'#c8b282');g.fillStyle=lg;g.fill();g.strokeStyle='#6a5a3a';g.lineWidth=2.2;g.stroke();}});
+  if(sea||(D.polys||[]).some(p=>p.kind==='sea')){g.strokeStyle='rgba(50,80,80,.35)';g.lineWidth=1.2;for(let i=0;i<60;i++){const x=R()*560,y=R()*720;if(!seaAt(x,y,D,sea))continue;g.beginPath();g.moveTo(x,y);g.quadraticCurveTo(x+7,y-5,x+14,y);g.quadraticCurveTo(x+21,y+5,x+28,y);g.stroke();}}
+  (D.hills||[]).forEach(([x,y,r,big])=>{const hg=g.createRadialGradient(x,y-r*.3,2,x,y,r);hg.addColorStop(0,'rgba(120,130,80,.55)');hg.addColorStop(1,'rgba(120,130,80,0)');g.fillStyle=hg;g.beginPath();g.arc(x,y,r,0,7);g.fill();
+    g.strokeStyle=big?'rgba(60,50,30,.75)':'rgba(60,50,30,.45)';g.lineWidth=big?2:1.4;for(let k=0;k<(big?3:2);k++){const w=r*(1-k*.28);g.beginPath();g.moveTo(x-w,y+r*.25-k*4);g.quadraticCurveTo(x-w*.4,y-r*.55+k*6,x,y-r*.6+k*8);g.quadraticCurveTo(x+w*.4,y-r*.55+k*6,x+w,y+r*.25-k*4);g.stroke();}});
+  (D.forests||[]).forEach(([fx,fy,fw,fh,n])=>{for(let i=0;i<n;i++){const x=fx+R()*fw,y=fy+R()*fh;g.fillStyle='rgba(60,80,40,'+(.25+R()*.25)+')';g.beginPath();g.arc(x,y,3+R()*3,0,7);g.fill();}});
+  (D.rivers||[]).forEach(p=>{const w=p.w||5;g.strokeStyle='rgba(70,110,140,.78)';g.lineWidth=w;g.lineCap='round';g.lineJoin='round';g.beginPath();smoothPath(g,p.pts);g.stroke();g.strokeStyle='rgba(200,225,235,.5)';g.lineWidth=Math.max(1.2,w*.25);g.beginPath();smoothPath(g,p.pts);g.stroke();});
+  (D.bridges||[]).forEach(b=>{g.strokeStyle='#4a3218';g.lineWidth=7;g.lineCap='butt';g.beginPath();g.moveTo(b[0],b[1]);g.lineTo(b[2],b[3]);g.stroke();g.strokeStyle='#8a6a3a';g.lineWidth=4;g.stroke();});
+  (D.walls||[]).forEach(w=>{g.strokeStyle=w.col||'#6a5030';g.lineWidth=w.w||5;g.setLineDash(w.dash||[]);g.beginPath();smoothPath(g,w.pts);if(w.close)g.closePath();g.stroke();g.setLineDash([]);});
+  (D.rects||[]).forEach(r=>{g.fillStyle=r.col;g.fillRect(r.x,r.y,r.w,r.h);if(r.bd){g.strokeStyle=r.bd;g.lineWidth=2;g.strokeRect(r.x,r.y,r.w,r.h);}});
+  S.map.edges.forEach(([a,b,h,k])=>{if(k==='none')return;const A=S.map.nodes[a],B=S.map.nodes[b];g.save();g.lineCap='round';
+    if(k==='pass'){g.strokeStyle='rgba(70,70,70,.75)';g.lineWidth=3;g.setLineDash([2,7]);}
+    else if(k==='foe'){g.strokeStyle='rgba(140,40,30,.55)';g.lineWidth=3;g.setLineDash([10,7]);}
+    else if(k==='flank'||k==='open'&&D.openRed){g.strokeStyle='rgba(150,60,30,.75)';g.lineWidth=3;g.setLineDash([4,6]);}
+    else if(k==='sea'){g.strokeStyle='rgba(30,60,90,.6)';g.lineWidth=3;g.setLineDash([6,8]);}
+    else{g.strokeStyle='rgba(90,58,26,.8)';g.lineWidth=3.4;g.setLineDash([12,6]);}
+    const m=edgeCurve(A,B);g.beginPath();g.moveTo(A.x,A.y);g.quadraticCurveTo(m[0],m[1],B.x,B.y);g.stroke();g.restore();});
+  (D.texts||[]).forEach(t=>{g.save();g.fillStyle=t.col||'rgba(40,70,100,.85)';g.font=(t.size||12)+'px '+(t.disp?FD():FB());g.textAlign='center';if(t.v)Array.from(t.t).forEach((ch,i)=>g.fillText(ch,t.x,t.y+i*(t.size||12)*1.25));else g.fillText(t.t,t.x,t.y);g.restore();});
+  if(S.drawBase)S.drawBase(g);
+  g.restore();
+  if(D.north!==false){g.save();g.setTransform(MV.dpr,0,0,MV.dpr,0,0);g.fillStyle='rgba(60,40,20,.7)';g.font='13px '+FD();g.textAlign='center';g.fillText('北',MV.W-20,MV.H-44);g.beginPath();g.moveTo(MV.W-20,MV.H-74);g.lineTo(MV.W-26,MV.H-58);g.lineTo(MV.W-14,MV.H-58);g.fill();g.restore();}
+}
+function seaAt(x,y,D,sea){let inSea=sea;(D.polys||[]).forEach(p=>{if(inPoly(x,y,p.pts)){if(p.kind==='sea')inSea=true;else if(p.kind==='land')inSea=false;}});return inSea;}
+function inPoly(x,y,pts){let c=false;for(let i=0,j=pts.length-1;i<pts.length;j=i++){const a=pts[i],b=pts[j];if((a[1]>y)!==(b[1]>y)&&x<(b[0]-a[0])*(y-a[1])/(b[1]-a[1])+a[0])c=!c;}return c;}
+/* 旗の紋 */
+const MONS={
+ oda:{bg:'#1c1814',bd:'#d8ac4c',draw(g,r){g.fillStyle='#d8ac4c';for(let i=0;i<4;i++){const a=i*Math.PI/2+Math.PI/4;g.beginPath();g.arc(Math.cos(a)*r*.42,Math.sin(a)*r*.42,r*.46,0,7);g.fill();}g.fillStyle='#1c1814';g.beginPath();g.arc(0,0,r*.36,0,7);g.fill();g.fillStyle='#d8ac4c';g.beginPath();g.arc(0,0,r*.16,0,7);g.fill();}},
+ ima:{bg:'#f2ead6',bd:'#8a1e12',draw(g,r){g.strokeStyle='#1a1410';g.lineWidth=r*.16;g.beginPath();g.arc(0,0,r*.8,0,7);g.stroke();g.fillStyle='#1a1410';g.fillRect(-r*.72,-r*.38,r*1.44,r*.24);g.fillRect(-r*.72,r*.14,r*1.44,r*.24);}},
+ saltire:{bg:'#1f4e9a',bd:'#e8e8f0',draw(g,r){g.strokeStyle='#fff';g.lineWidth=r*.38;g.beginPath();g.moveTo(-r,-r*1.3);g.lineTo(r,r*1.3);g.moveTo(r,-r*1.3);g.lineTo(-r,r*1.3);g.stroke();}},
+ george:{bg:'#f4f0e6',bd:'#9a1a14',draw(g,r){g.fillStyle='#c0201a';g.fillRect(-r*.22,-r*1.4,r*.44,r*2.8);g.fillRect(-r*1.1,-r*.22,r*2.2,r*.44);}},
+ lions:{bg:'#b0201a',bd:'#e8c060',draw(g,r){g.fillStyle='#e8c060';g.font='bold '+(r*1.3)+'px serif';g.textAlign='center';g.textBaseline='middle';g.fillText('獅',0,1);}},
+ fleur:{bg:'#1f3a8a',bd:'#e8c060',draw(g,r){g.fillStyle='#f0d070';g.font='bold '+(r*1.6)+'px serif';g.textAlign='center';g.textBaseline='middle';g.fillText('⚜',0,1);}},
+ shimazu:{bg:'#f4f0e6',bd:'#1a1410',draw(g,r){g.strokeStyle='#1a1410';g.lineWidth=r*.2;g.beginPath();g.arc(0,0,r*.8,0,7);g.stroke();g.beginPath();g.moveTo(-r*.8,0);g.lineTo(r*.8,0);g.moveTo(0,-r*.8);g.lineTo(0,r*.8);g.stroke();}},
+ ito:{bg:'#2a3a5a',bd:'#d8d0b0',draw(g,r){g.strokeStyle='#e8e0c8';g.lineWidth=r*.16;g.beginPath();g.moveTo(-r,-r*.1);g.lineTo(0,-r*.9);g.lineTo(r,-r*.1);g.stroke();g.fillStyle='#e8e0c8';g.beginPath();g.arc(0,r*.25,r*.45,0,7);g.fill();}},
+ han:{bg:'#b8281c',bd:'#f0d070',glyph:'漢',fg:'#fbe9c0'},
+ zhao:{bg:'#1a1a22',bd:'#c0c0c8',glyph:'趙',fg:'#e8e8f0'},
+ joseon:{bg:'#f4f0e6',bd:'#1f3a8a',glyph:'帥',fg:'#1f3a8a'},
+ wa:{bg:'#f4f0e6',bd:'#1a1410',draw(g,r){g.fillStyle='#b8281c';g.beginPath();g.arc(0,0,r*.6,0,7);g.fill();}},
+ redcoat:{bg:'#b8281c',bd:'#f0e0b0',draw(g,r){g.fillStyle='#f0e0b0';g.font='bold '+(r*1.1)+'px serif';g.textAlign='center';g.textBaseline='middle';g.fillText('24',0,1);}},
+ zulu:{bg:'#6a4a2a',bd:'#f0e6d0',draw(g,r){g.fillStyle='#f0e6d0';g.beginPath();g.ellipse(0,0,r*.45,r*1.05,0,0,7);g.fill();g.fillStyle='#2a1a10';g.fillRect(-r*.08,-r*1,r*.16,r*2);}},
+ carthage:{bg:'#5a2a6a',bd:'#e8c060',glyph:'☾',fg:'#f0d070'},
+ rome:{bg:'#9a1a14',bd:'#e8c060',glyph:'SPQR',fg:'#f0d070',small:1}
+};
+function flag(g,x,y,mon,label,sub,alpha,dark){const M=MONS[mon]||MONS.oda;g.save();g.globalAlpha=alpha==null?1:alpha;
+  g.strokeStyle='#2a1a0c';g.lineWidth=2.4;g.beginPath();g.moveTo(x,y+4);g.lineTo(x,y-44);g.stroke();
+  g.fillStyle=M.bg;g.strokeStyle=M.bd;g.lineWidth=2;g.beginPath();g.rect(x+1,y-44,22,30);g.fill();g.stroke();
+  g.save();g.beginPath();g.rect(x+2,y-43,20,28);g.clip();g.translate(x+12,y-29);if(M.draw)M.draw(g,9);else{g.fillStyle=M.fg;g.font='bold '+(M.small?8:15)+'px '+FD();g.textAlign='center';g.textBaseline='middle';g.fillText(M.glyph,0,1);}g.restore();
+  if(label){g.font='bold 12px '+FB();const w=Math.max(g.measureText(label).width,sub?g.measureText(sub).width:0)+10;
+    g.fillStyle=dark?'rgba(20,16,12,.88)':'rgba(120,24,16,.9)';g.fillRect(x-w/2+10,y+6,w,sub?30:17);g.fillStyle='#fbe9c0';g.textAlign='center';g.fillText(label,x+10,y+19);if(sub){g.font='11px '+FB();g.fillText(sub,x+10,y+32);}}
+  g.restore();}
+function nodeLabel(g,k,N){if(N.nolabel)return;const side=S.sideOf?S.sideOf(G,k):N.side;const [x,y]=toScr(N.x,N.y);const z=Math.max(.8,Math.min(1.25,MV.s*1.25));
+  g.save();g.font='bold 13px '+FB();const w=g.measureText(N.n).width+10;const ly=y+14*z+4;
+  g.fillStyle=side==='foe'?'rgba(122,36,24,.9)':'rgba(244,234,210,.92)';g.fillRect(x-w/2,ly,w,17);g.strokeStyle='rgba(90,60,30,.7)';g.lineWidth=1;g.strokeRect(x-w/2,ly,w,17);
+  g.fillStyle=side==='foe'?'#fbe9c0':'#2a1808';g.textAlign='center';g.fillText(N.n,x,ly+13);g.restore();}
+function nodeIcon(g,k,N,hl){const side=S.sideOf?S.sideOf(G,k):N.side;const [x,y]=toScr(N.x,N.y);const z=Math.max(.8,Math.min(1.25,MV.s*1.25));g.save();g.translate(x,y);g.scale(z,z);
+  if(hl){const p=(Math.sin(performance.now()/260)+1)/2;g.strokeStyle='rgba(255,220,110,'+(.55+p*.45)+')';g.lineWidth=3;g.beginPath();g.arc(0,0,20+p*5,0,7);g.stroke();}
+  const burnt=S.burnt&&S.burnt(G,k);const t=N.t;
+  if(t==='castle'){g.fillStyle=side==='foe'?'#7a2418':'#3a2a1a';g.fillRect(-12,-6,24,14);g.fillStyle='#efe6d2';g.fillRect(-8,-16,16,10);g.fillStyle=side==='foe'?'#5a1610':'#2a1a10';g.beginPath();g.moveTo(-14,-14);g.lineTo(0,-24);g.lineTo(14,-14);g.fill();g.beginPath();g.moveTo(-11,-5);g.lineTo(0,-12);g.lineTo(11,-5);g.fill();}
+  else if(t==='fort'){g.fillStyle=burnt?'#3a3a3a':(side==='foe'?'#7a2418':'#6a4a26');for(let i=-3;i<=3;i++){g.fillRect(i*4-1.5,-12+Math.abs(i)%2*2,3,16);}g.fillStyle=burnt?'#222':'#4a3218';g.fillRect(-14,0,28,4);}
+  else if(t==='tower'){g.fillStyle=burnt?'#3a3a3a':(side==='foe'?'#7a2418':'#6a6058');g.fillRect(-9,-18,18,24);for(let i=-9;i<9;i+=6)g.fillRect(i,-22,4,4);g.fillStyle='#2a1a10';g.fillRect(-3,-4,6,10);}
+  else if(t==='city'){g.fillStyle='#8a8070';g.fillRect(-16,-10,32,16);g.fillStyle='#6a6058';[-16,-3,10].forEach(i=>g.fillRect(i,-18,7,10));g.fillStyle='#3a2a1a';g.beginPath();g.moveTo(-3,-18);g.lineTo(0.5,-28);g.lineTo(4,-18);g.fill();}
+  else if(t==='shrine'){g.fillStyle='#b8321f';g.fillRect(-10,-14,3,18);g.fillRect(7,-14,3,18);g.fillRect(-12,-10,24,3);g.fillStyle='#1a1410';g.fillRect(-15,-16,30,4);}
+  else if(t==='camp'){g.fillStyle=side==='foe'?'#a84a3a':'#e8dcc4';g.beginPath();g.moveTo(0,-16);g.lineTo(13,4);g.lineTo(-13,4);g.closePath();g.fill();g.strokeStyle='#5a3a1a';g.lineWidth=1.5;g.stroke();}
+  else if(t==='bridge'){g.fillStyle='#6a4a26';g.fillRect(-16,-4,32,8);g.fillStyle='#4a3218';for(let i=-14;i<16;i+=7)g.fillRect(i,4,3,6);}
+  else if(t==='house'){g.fillStyle=burnt?'#444':'#c8b890';g.fillRect(-12,-8,24,14);g.fillStyle=burnt?'#222':'#7a5a30';g.beginPath();g.moveTo(-15,-8);g.lineTo(0,-18);g.lineTo(15,-8);g.fill();}
+  else if(t==='wall'){g.fillStyle='#8a7050';g.fillRect(-15,-6,30,10);g.fillStyle='#c8a870';for(let i=-14;i<14;i+=7)g.fillRect(i,-6,5,4);}
+  else if(t==='sea'){g.strokeStyle='rgba(30,60,90,.8)';g.lineWidth=2;g.beginPath();g.arc(0,-4,9,0,7);g.stroke();}
+  else if(t==='field'){g.strokeStyle='rgba(70,90,40,.85)';g.lineWidth=1.6;[[-8,0],[0,-4],[8,0]].forEach(([dx,dy])=>{g.beginPath();g.moveTo(dx-3,dy);g.lineTo(dx,dy-7);g.lineTo(dx+3,dy);g.stroke();});}
+  else if(t==='dot'){g.fillStyle='rgba(60,40,20,.75)';g.beginPath();g.arc(0,-4,5,0,7);g.fill();}
+  else{g.fillStyle='rgba(50,40,20,.85)';g.font='18px '+FD();g.textAlign='center';g.fillText(t==='hill'?'山':t==='wood'?'森':t==='field'?'原':'・',0,6);}
+  g.restore();
+  if(burnt){g.save();const tt=performance.now()/600;for(let i=0;i<4;i++){const a=(tt+i*.8)%3;g.fillStyle='rgba(60,60,60,'+(.35*(1-a/3))+')';g.beginPath();g.arc(x+Math.sin(tt+i)*4,y-14-a*14,6+a*4,0,7);g.fill();}g.restore();}}
+function lerpPt(a,b,p){const A=S.map.nodes[a],B=S.map.nodes[b];const m=edgeCurve(A,B);const q=1-p;return [q*q*A.x+2*q*p*m[0]+p*p*B.x,q*q*A.y+2*q*p*m[1]+p*p*B.y];}
+function drawMap(){const cv=$('#map');if(!cv.width||!MV.base||!G||!S)return;const g=cv.getContext('2d');g.setTransform(1,0,0,1,0,0);g.drawImage(MV.base,0,0);g.setTransform(MV.dpr,0,0,MV.dpr,0,0);
+  const w=S.overlay?S.overlay(G):null;
+  if(w==='cloud'){g.fillStyle='rgba(40,44,56,.2)';g.fillRect(0,0,MV.W,MV.H);}
+  if(w==='rain'){g.fillStyle='rgba(20,26,38,.38)';g.fillRect(0,0,MV.W,MV.H);}
+  if(w==='night'){g.fillStyle='rgba(10,16,40,.42)';g.fillRect(0,0,MV.W,MV.H);}
+  if(w==='dusk'){g.fillStyle='rgba(120,50,20,.18)';g.fillRect(0,0,MV.W,MV.H);}
+  if(w==='dawn'||w==='after'){g.fillStyle='rgba(255,240,200,.08)';g.fillRect(0,0,MV.W,MV.H);}
+  if(S.drawUnder)S.drawUnder(g);
+  const reach=MV.pick?reachList().map(e=>e.to):[];const N=S.map.nodes;
+  Object.keys(N).forEach(k=>nodeIcon(g,k,N[k],reach.indexOf(k)>=0));
+  (S.marks?S.marks(G):[]).forEach(m=>{const [x,y]=toScr(m.x,m.y);if(m.q){g.save();g.globalAlpha=m.a||.55;g.fillStyle='#8a1e12';g.font='bold 22px '+FD();g.textAlign='center';g.fillText('？',x,y);g.font='bold 11px '+FB();g.fillText(m.l||'敵?',x,y+13);g.restore();return;}
+    flag(g,x-10,y,m.mon||S.foeMon,m.l,m.s,m.a,m.dark);if(m.main){g.save();const p=(Math.sin(performance.now()/300)+1)/2;g.strokeStyle='rgba(224,60,40,'+(.4+p*.5)+')';g.lineWidth=2.5;g.beginPath();g.arc(x+2,y-20,30+p*4,0,7);g.stroke();g.restore();}});
+  Object.keys(N).forEach(k=>nodeLabel(g,k,N[k]));
+  if(MV.pick)reachList().forEach(e=>{const [x,y]=toScr(N[e.to].x,N[e.to].y);g.save();g.font='bold 12px '+FB();const s=S.costLabel?S.costLabel(e.h):e.h+'時間';const tw=g.measureText(s).width+10;g.fillStyle='#a8281c';g.fillRect(x-tw/2,y-46,tw,18);g.fillStyle='#fff';g.textAlign='center';g.fillText(s,x,y-33);g.restore();});
+  // 命令の矢印
+  meUnits().forEach(u=>{const o=u.order;if(!o)return;const A=N[o.from],B=N[o.to];const m=edgeCurve(A,B);g.save();g.strokeStyle='rgba(255,220,110,.9)';g.lineWidth=3;g.setLineDash([6,5]);g.beginPath();const a=toScr(A.x,A.y),b2=toScr(B.x,B.y),mm=toScr(m[0],m[1]);g.moveTo(a[0],a[1]);g.quadraticCurveTo(mm[0],mm[1],b2[0],b2[1]);g.stroke();g.setLineDash([]);g.fillStyle='rgba(255,220,110,.95)';g.beginPath();g.arc(b2[0],b2[1],6,0,7);g.fill();g.restore();});
+  // 味方の隊（同じ場所の隊は少しずらす）
+  const cnt={},at={};meUnits().forEach(u=>{cnt[u.at]=(cnt[u.at]||0)+1;});
+  meUnits().forEach(u=>{let px,py;const o=u.order;const moving=(MV.anim&&MV.anim.uid===u.id)||(o&&(o.left<o.h||o.anim));if(MV.anim&&MV.anim.uid===u.id){const a=MV.anim;const p=clamp((performance.now()-a.t0)/a.dur,0,1);[px,py]=lerpPt(a.from,a.to,p);}
+    else if(o&&moving){const f=o.anim?clamp((performance.now()-o.anim.t0)/o.anim.dur,0,1):0;[px,py]=lerpPt(o.from,o.to,clamp((o.h-o.left+f)/o.h,0,1));}else{px=N[u.at].x;py=N[u.at].y;}
+    const i=at[u.at]=(at[u.at]||0)+1;const c=moving?1:cnt[u.at];const [x,y]=toScr(px,py);const ox=c>1?(i-1-(c-1)/2)*50-10:-10,oy=-30;
+    if(meUnits().length>1&&u.id===selUnit().id){g.save();g.strokeStyle='rgba(255,230,120,.9)';g.lineWidth=2.5;g.beginPath();g.arc(x+ox+12,y+oy-28,20,0,7);g.stroke();g.restore();}
+    flag(g,x+ox,y+oy,u.mon||S.meMon,u.short||u.name,S.unitSub?S.unitSub(u):(u.n!=null?fmtN(u.n):null),1,true);});
+  if(S.drawOver)S.drawOver(g);
+  if(w==='rain'){if(MV.drops.length<220)for(let i=0;i<220;i++)MV.drops.push({x:Math.random()*MV.W,y:Math.random()*MV.H,v:9+Math.random()*7});g.strokeStyle='rgba(210,225,240,.55)';g.lineWidth=1.2;g.beginPath();MV.drops.forEach(d=>{d.y+=d.v;d.x-=d.v*.25;if(d.y>MV.H){d.y=-10;d.x=Math.random()*MV.W*1.2;}g.moveTo(d.x,d.y);g.lineTo(d.x+3,d.y-12);});g.stroke();}}
+function loop(){drawMap();requestAnimationFrame(loop);}
+function hitNode(cx,cy){const r=$('#map').getBoundingClientRect();const x=(cx-r.left-MV.ox)/MV.s,y=(cy-r.top-MV.oy)/MV.s;let best=null,bd=40/Math.max(.6,MV.s);const N=S.map.nodes;Object.keys(N).forEach(k=>{const d=Math.hypot(N[k].x-x,N[k].y-y);if(d<bd){bd=d;best=k;}});return best;}
+function mapTap(e){if(!G||busy||G.over)return;const k=hitNode(e.clientX,e.clientY);if(!k)return;const N=S.map.nodes;
+  const here=meUnits().filter(u=>u.at===k);
+  if(here.length&&!MV.pick){SND.click();const cur=selUnit();const idx=here.indexOf(cur);const nx=here[(idx+1)%here.length];G.sel=nx.id;toast((meUnits().length>1?'選んだ隊：':'今いる場所：')+(meUnits().length>1?nx.name+'（'+N[k].n+'）':N[k].n));if(S.onSelect)S.onSelect(G,nx);return;}
+  if(!S.canMoveAny||!S.canMoveAny(G)){if(S.onTap)S.onTap(G,k);return;}
+  const ok=reachList().some(r=>r.to===k);if(!ok){if(here.length){G.sel=here[0].id;toast('選んだ隊：'+here[0].name);return;}const e2=edgeOf(selUnit().at,k);toast(e2?(S.canMove(G,selUnit(),e2)===true?'':S.canMove(G,selUnit(),e2)):(N[k].side==='foe'?N[k].n+'は敵の陣':N[k].n+'へは、ここから直接行けない'));return;}
+  SND.click();moveSheet(k);}
+
+/* ---- 結果 ---- */
+async function endGame(kind){if(G.over&&G.ended)return;G.over=true;G.ended=true;G.endKind=kind;busy=false;closeSheet();E.gaugeOff();
+  const win=kind==='win';BGM.play(win?'victory':'defeat');
+  let rank='';if(win){rank=S.rank(G);const c=store.get('clear')||{};if(!c[S.id]||'SAB'.indexOf(rank)<'SAB'.indexOf(c[S.id]))c[S.id]=rank;store.set('clear',c);}
+  const s=$('#scr');s.hidden=false;$('#app').hidden=true;s.scrollTop=0;
+  const lv=S.lose[kind]||['',''];
+  const rv=S.review(G).map(r=>'<dl class="rv"><dt>'+esc(r.k)+'</dt><dd class="you '+(r.ok===true?'ok':r.ok===false?'ng':'')+'">あなた：'+esc(r.you)+(r.ok===true?' ◎':r.ok===false?' ✕':' △')+'</dd><dd class="his">史実：'+esc(r.his)+'</dd></dl>').join('');
+  s.innerHTML='<div class="in"><div class="eye">'+esc(S.n)+'</div><div class="verdict '+(win?'win':'lose')+'">'+(win?'勝利':'敗北')+'</div>'+
+    (win?'<div class="rank">評価<b>'+rank+'</b></div>':'<div class="rank">敗因：'+esc(lv[0])+'</div><p class="lead">'+esc(lv[1])+'</p>')+
+    '<div class="box"><dl class="kv">'+S.stats(G).map(r=>'<dt>'+esc(r[0])+'</dt><dd>'+esc(r[1])+'</dd>').join('')+'</dl></div>'+
+    '<div class="box"><div class="sec">采配のふり返り</div>'+rv+'</div>'+(S.epilogue?'<p class="lead">'+esc(S.epilogue)+'</p>':'')+
+    '<div class="endrow" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center"></div></div>';
+  const id=S.id;const nx=ORDER[ORDER.indexOf(id)+1];
+  s.querySelector('.endrow').append(btn('もう一度','pri big',()=>startStage(id)));
+  if(win&&nx)s.querySelector('.endrow').append(btn('次の戦へ','big',()=>startStage(nx)));
+  s.querySelector('.endrow').append(btn('戦の一覧へ','big',()=>showStages()));}
+
+/* ---- 題名・一覧・開始 ---- */
+function showTitle(){G=null;$('#app').hidden=true;const s=$('#scr');s.hidden=false;BGM.play('camp');
+  s.innerHTML='<div class="in" style="justify-content:center"><div class="eye">劣勢をひっくり返せ</div><h1>逆転の采配</h1><p class="lead">歴史には、不利な側が指揮官の判断ひとつで勝った戦がある。<br>あなたは指揮官。正しい選択を重ねれば、勝てる。</p></div>';
+  s.querySelector('.in').append(btn('はじめる','pri big',()=>{SND.init();showStages();}));}
+function showStages(){G=null;$('#app').hidden=true;const s=$('#scr');s.hidden=false;s.scrollTop=0;BGM.play('camp');const c=store.get('clear')||{};
+  s.innerHTML='<div class="in"><div class="eye">逆転の采配</div><div class="sec" style="font-size:22px">戦を選ぶ</div><div class="stages"></div></div>';
+  const box=s.querySelector('.stages');ORDER.forEach((id,i)=>{const st=STAGE[id];const b=el('button','stg','<span class="k">'+st.k+'</span><span><b>'+esc(st.n)+'<small>'+esc(st.y)+'</small></b><span>'+esc(st.vs)+'</span><span>'+esc(st.d)+'</span>'+(c[id]?'<span class="clr">勝利 評価'+c[id]+'</span>':'')+'</span>');b.type='button';b.onclick=()=>{SND.click();startStage(id);};box.appendChild(b);});
+  s.querySelector('.in').append(btn('題名へ','sm',()=>showTitle()));}
+async function startStage(id){S=STAGE[id];G=Object.assign({t:0,log:[],q:[],flags:{},over:false,route:{},units:[],sel:null},S.init());MV.drops=[];MV.anim=null;MV.pick=false;busy=false;E.gaugeOff();closeSheet();
+  $('#scr').hidden=true;$('#scr').innerHTML='';buildCmd();
+  const ok=await S.prologue(G);if(!ok||G.over)return;
+  $('#app').hidden=false;requestAnimationFrame(()=>{layoutMap();});renderTop();if(S.bgm)BGM.play(S.bgm(G));
+  if(S.start)S.start(G);}
+function bindUI(){$('#map').addEventListener('click',mapTap);window.addEventListener('resize',()=>{if(!$('#app').hidden)layoutMap();});document.addEventListener('pointerdown',()=>{try{SND.init();}catch(e){}},{passive:true});}
+</script>
+<script>/* s1.js */
+/* ===== 桶狭間の戦い（1560） ===== */
+(function(){
+const weatherAt=h=>h===13?'rain':h===12?'cloud':h===14?'after':'clear';
+const WN={clear:'晴れ',cloud:'曇り',rain:'豪雨',after:'雨上がり'},WI={clear:'☀',cloud:'☁',rain:'☔',after:'⛅'};
+const yoshiAt=h=>h<8?'kutsukake':h<11?'march':h<15?'oke':'gone';
+const DEAD=15,NEED=2.0,CAP=1200;
+const U=()=>G.units[0];
+const yudan=()=>G.A<20?'大':G.A<40?'中':G.A<60?'小':'なし';
+const N={
+ kiyosu:{n:'清洲城',x:120,y:56,t:'castle'},atsuta:{n:'熱田神宮',x:96,y:300,t:'shrine'},tange:{n:'丹下砦',x:205,y:338,t:'fort'},
+ zensho:{n:'善照寺砦',x:292,y:304,t:'fort'},nakajima:{n:'中島砦',x:312,y:418,t:'fort'},washizu:{n:'鷲津砦',x:178,y:492,t:'fort'},
+ marune:{n:'丸根砦',x:250,y:540,t:'fort'},odaka:{n:'大高城',x:96,y:570,t:'castle',side:'foe'},takane:{n:'高根山',x:392,y:486,t:'hill'},
+ taishi:{n:'太子ヶ根',x:430,y:372,t:'hill'},oke:{n:'桶狭間山',x:458,y:574,t:'hill'},kutsukake:{n:'沓掛城',x:500,y:226,t:'castle',side:'foe'}};
+const ST={id:'okehazama',k:'桶',n:'桶狭間の戦い',y:'1560',vs:'織田 約3千 vs 今川 約2万5千',d:'奇襲・大将狙い。豪雨の中、敵の本陣を一点突破せよ。',
+ meMon:'oda',foeMon:'ima',
+ heroes:[H('nobu','信長','織','群',{fs:'sharp',fw:22,sk:'#f0d0ae',age:0,hair:'tail',brow:'angry',eye:'sharp',nose:'thin',mo:'tight',bd:'mus',cl:'armor',c1:'#2a2a2e',c2:'#c9a22c',c3:'#8a1a14'}),
+  H('yoshi','義元','今','漢',{fs:'round',fw:26,sk:'#f6e8da',age:2,hair:'knot',brow:'soft',eye:'narrow',nose:'n',mo:'smile',bd:'mus',cl:'royal',c1:'#6a2e7a',c2:'#e0c060',x:['fat']}),
+  H('hayashi','林秀貞','織','群',{fs:'long',fw:23,age:3,hair:'knot',hc:'#d8d6d0',brow:'white',eye:'narrow',nose:'n',mo:'frown',bd:'goatee',bc:'#e2e0da',cl:'robe',c1:'#5a4a32',c2:'#b8a070'}),
+  H('shibata','柴田勝家','織','群',{fs:'square',fw:27,sk:'#c08a5e',age:1,hair:'knot',brow:'bushy',eye:'round',nose:'wide',mo:'frown',bd:'full',cl:'armor',c1:'#3a2a22',c2:'#a8842a',c3:'#6a1a12'}),
+  H('yanada','簗田政綱','織','群',{fs:'long',fw:22,age:1,hair:'knot',brow:'thin',eye:'narrow',nose:'thin',mo:'n',bd:'goatee',cl:'light',c1:'#4a5a44',c2:'#a8a070'}),
+  H('sassa','佐々政次','織','群',{fs:'oval',fw:24,age:1,hair:'knot',brow:'angry',eye:'sharp',nose:'n',mo:'tight',bd:'short',cl:'armor',c1:'#2a3a5a',c2:'#c0a050'}),
+  H('senshu','千秋季忠','織','群',{fs:'oval',fw:23,age:0,hair:'knot',brow:'n',eye:'round',nose:'thin',mo:'tight',bd:'none',cl:'armor',c1:'#e4e2d8',c2:'#b8321f'}),
+  H('mori','毛利新介','織','群',{fs:'square',fw:25,age:0,hair:'wild',brow:'thick',eye:'sharp',nose:'wide',mo:'grin',bd:'stub',cl:'armor',c1:'#2a2a30',c2:'#a07a3a'}),
+  H('hattori','服部小平太','織','群',{fs:'oval',fw:23,age:0,hair:'tail',brow:'angry',eye:'sharp',nose:'n',mo:'tight',bd:'none',cl:'armor',c1:'#3a3028',c2:'#b89a5a'})],
+ map:{nodes:N,edges:[['kiyosu','atsuta',2,'road'],['atsuta','tange',1,'road'],['tange','zensho',1,'road'],['tange','washizu',1,'road'],['washizu','marune',1,'road'],['washizu','odaka',1,'foe'],['marune','odaka',1,'foe'],
+  ['zensho','nakajima',1,'open'],['nakajima','takane',1,'road'],['takane','oke',1,'road'],['nakajima','oke',1,'flank'],['zensho','taishi',2,'pass'],['taishi','oke',1,'pass'],['kutsukake','taishi',1,'foe'],['kutsukake','oke',2,'foe']],
+  deco:{polys:[{kind:'sea',pts:[[-300,-200],[0,-200],[0,140],[44,196],[62,262],[56,330],[76,398],[58,470],[68,524],[46,604],[26,680],[0,720],[0,900],[-300,900]]}],
+   rivers:[{pts:[[560,468],[480,470],[404,452],[350,432],[312,418],[262,448],[200,458],[130,452],[60,470]]},{pts:[[544,650],[480,616],[430,540],[370,462],[312,418]]},{w:7,pts:[[214,0],[190,90],[150,170],[100,226],[52,262]]}],
+   hills:[[392,486,36,1],[458,574,44,1],[430,372,34,1],[500,470,30],[520,560,34],[410,640,30],[520,660,30],[360,560,22],[540,380,28],[470,300,26],[330,620,20],[420,250,22],[540,720,26]],
+   forests:[[300,320,260,400,90]],texts:[{t:'伊勢湾',x:20,y:380,v:1,size:16,disp:1,col:'rgba(40,70,70,.7)'},{t:'扇川',x:230,y:474},{t:'手越川',x:470,y:625}]}},
+ init(){return {t:4,A:30,M:55,came:0,units:[{id:'oda',name:'織田勢',short:'織田',at:'kiyosu',n:800}],scouted:false,prayed:false,garrison:false,sassa:null,naka:null,fell:false,council:null,dawn:null,assault:null,arrT:null};},
+ when:G=>['五月十九日 '+jiOf(G.t)+'の刻',clock(G.t)],
+ logTime:G=>clock(G.t),
+ pills:G=>{const w=weatherAt(G.t);return [{v:WI[w]+' '+WN[w]},{i:'兵',v:fmtN(U().n)},{i:'士気',bar:G.M},{i:'敵の油断',v:yudan(),warn:G.A>=40}];},
+ overlay:G=>weatherAt(G.t),
+ bgm:G=>{const w=weatherAt(G.t);return w==='rain'||w==='after'?'crisis':G.fell?'battle':'camp';},
+ burnt:(G,k)=>G.fell&&(k==='washizu'||k==='marune'),
+ canMoveAny:G=>true,
+ canMove(G,u,e){const T=N[e.to];if(T.side==='foe')return T.n+'は今川の城。近づけない';return true;},
+ arriveLabel:(G,h)=>clock(G.t+h)+'（'+jiOf(G.t+h)+'の刻）',
+ moveNotes(G,u,e){const w=weatherAt(G.t),o=[];const to=e.to;
+  if(e.k==='open')o.push([w==='rain'?'good':'bad',w==='rain'?'低い田の道。今は豪雨で、敵からは見えない。':'低い田の道。高根山の敵前衛から丸見えになる。']);
+  if(e.k==='flank')o.push([w==='rain'?'good':'bad',w==='rain'?'敵前衛の目の前を横切る近道。豪雨のあいだなら気づかれない。':'敵前衛の目の前を横切る近道。晴れていれば見つかって矢を浴びる。']);
+  if(e.k==='pass')o.push(['good','山の中の抜け道。敵に見つかりにくい。']);
+  if(to==='washizu'||to==='marune')o.push(['bad',G.fell?'今川勢が砦を占領している。':'今川の大軍が砦を囲んでいる。']);
+  if(to==='takane')o.push(['bad','今川の前衛（約5千）が陣取っている。着けば戦いになる。']);
+  if(to==='oke')o.push(['',G.scouted?'義元の本陣がある（向かっている）山。着けばそのまま突撃する。':'敵の本陣があるかもしれない山。着けばそのまま突撃する。']);
+  o.push(['','着いた時の天気は、着いてみないと分からない。']);return o;},
+ beforeMove(G,u,e){const w=weatherAt(G.t);
+  if(e.k==='open'&&w!=='rain'){G.A+=15;addLog('中島砦へ移る織田勢の姿を、高根山の今川前衛が見つけた。','bad');}
+  if(e.k==='flank'){if(w!=='rain'){G.A+=35;const l=Math.round(u.n*.12);u.n-=l;addLog('敵前衛の目の前を横切り、矢を浴びた（兵 −'+fmtN(l)+'）。','bad');}else addLog('豪雨にまぎれ、敵前衛の目の前を気づかれずに抜けた。','good');}},
+ hour(G,c){const w=weatherAt(G.t);const u=U();const add=Math.min(c.kiyosu?500:250,CAP-G.came);if(add>0){G.came+=add;u.n+=add;}
+  if(w==='rain')G.A-=10;if(c.visible&&w!=='rain')G.A+=5;G.A=clamp(G.A,0,100);G.M=clamp(G.M,0,100);},
+ at(G){const t=G.t;
+  if(t===8)addLog(G.scouted?'今川本隊が沓掛城を出て、西へ進みはじめた。':'沓掛の今川勢が動き出したらしい、と噂が届いた。');
+  if(t===10&&!G.fell)G.q.push('fall');
+  if(t===11&&G.scouted)addLog('義元の本隊が桶狭間山に陣を張った。','bad');
+  if(t===12){toast('西の空に、黒い雲がわき立っている……');addLog('西の空に黒い雲が出てきた。');}
+  if(t===13)G.q.push('rain');
+  if(t===14){toast('雨が上がった！');addLog('雨が上がった。','good');}},
+ async after(G){if(U().n<600){await endGame('broken');return;}
+  if(G.t>=DEAD){await E.story('@bg camp\n#申の刻。義元は昼の休みを終え、輿に乗って大高城へ入った。\n義元：尾張の小せがれは、とうとう出てこなんだか。\n#大高城は今川の大軍に守られ、もう手出しはできない。\n#尾張は、今川のものとなった。');await endGame('timeout');return;}
+  if(!G.sassa&&G.t>=11&&['tange','zensho','nakajima'].indexOf(U().at)>=0)await sassaEv(G);},
+ acts:[
+  {k:'wait',kan:'待',lab:'待機',on:G=>true,open(G){const at=U().at,w=weatherAt(G.t);const b=[el('p','muted','一時間、この場で待つ。'+(at==='kiyosu'?'清洲城なら、兵がふだんより早く集まる。':'その間にも、遅れていた兵が追いついてくる。'))];
+    if(at==='nakajima'&&w!=='rain')b.push(noteEl('bad','中島砦は敵の前衛から見える。待つほど敵が警戒する。'));S.advice(G).slice(0,2).forEach(a=>b.push(advEl(a[0],a[1])));
+    confirmAct('待機',N[at].n,b,'一時間待つ',()=>act(async()=>{await E.pass(1,{kiyosu:at==='kiyosu',visible:at==='nakajima'||at==='takane'},400);addLog(N[at].n+'で一時間待った。');}));}},
+  {k:'scout',kan:'物',lab:'物見',on:G=>!G.scouted,open(G){confirmAct('物見を出す','簗田政綱',[advEl('yanada','一時間いただければ、義元の本隊がどこにおるか、必ず突き止めてまいります。'),el('p','muted','一時間かかる。分かった後は、義元本隊の動きがずっと地図に出る。')],'物見を出す',()=>act(async()=>{await E.pass(1,{},400);G.scouted=true;G.scoutT=G.t;await scoutEv(G);}));}},
+  {k:'pray',kan:'祈',lab:'祈願',on:G=>U().at==='atsuta'&&!G.prayed,open(G){confirmAct('戦勝祈願','熱田神宮',[el('p','muted','一時間かけて、熱田の神に戦勝を祈る。兵の士気が上がる。')],'祈る',()=>act(async()=>{await E.pass(1,{},400);G.prayed=true;G.M+=20;await E.story('@bg shrine\n#熱田神宮。\n信長：熱田の神よ、この一戦、我らに勝たせたまえ。\n#そのとき、社の奥で鎧の触れ合うような音がした。白鷺が二羽、東の空へ飛んでいく。\n柴田勝家：吉兆じゃ！ 神が我らを導いておられる！\n#兵たちの顔つきが変わった。',{place:'熱田神宮'});addLog('熱田神宮で戦勝を祈った（士気 +20）。','good');}));}}
+ ],
+ advice(G){const t=G.t,w=weatherAt(t),a=[],at=U().at;
   if(!G.scouted)a.push(['yanada',t>=11?'殿、義元の居場所が分からぬまま攻めては、山の中で迷いまする。今すぐ物見を！':'義元がどこにおるか分からねば、戦は始まりませぬ。物見をお許しくだされ。']);
   if(at==='kiyosu')a.push(['shibata','清洲にいては、砦が落ちるのを見ているだけでござる。南の熱田へ！']);
   if(at==='atsuta'&&!G.prayed)a.push(['shibata','熱田の宮で戦勝を祈れば、兵たちの心が一つになりまする。']);
@@ -979,193 +1068,839 @@ function advice(){const t=G.t,w=weatherAt(t),a=[];const at=G.at;
   if(w==='rain')a.push(['yanada','この雨なら、敵には我らが見えませぬ！ 今のうちに進めば、雨が上がる時に敵の目の前へ出られます！']);
   if(t>=12&&G.scouted)a.push(['yanada','義元の昼の休みが終われば、本隊は大高城へ入ってしまいます。それまでが勝負でございます。']);
   if(at==='taishi')a.push(['shibata','この山を下れば、すぐ桶狭間山。あとは突っこむ時を選ぶだけでござる。']);
-  if(!a.length)a.push(['shibata','殿のご命令を待っておりまする。']);
-  return a.slice(0,3);}
-
-/* ===== 一時間ずつ時を進める ===== */
-const queue=[];
-function stepHour(ctx){const hh=G.t,w=weatherAt(hh);ctx=ctx||{};
-  const add=Math.min(ctx.kiyosuWait?500:250,CAP-(G.came||0));if(add>0){G.came=(G.came||0)+add;G.T+=add;}
-  if(w==='rain'){G.A-=10;}
-  if(ctx.visibleWait&&w!=='rain')G.A+=5;
-  G.A=clamp(G.A,0,100);G.M=clamp(G.M,0,100);
-  G.t=hh+1;const t=G.t;
-  if(t===8)addLog(G.scouted?'今川本隊が沓掛城を出て、西へ進みはじめた。':'沓掛の今川勢が動き出したらしい、と噂が届いた。');
-  if(t===10&&!G.fell)queue.push('fall');
-  if(t===11&&G.scouted)addLog('義元の本隊が桶狭間山に陣を張った。','bad');
-  if(t===12){toast('西の空に、黒い雲がわき立っている……');addLog('西の空に黒い雲が出てきた。');}
-  if(t===13)queue.push('rain');
-  if(t===14){toast('雨が上がった！');addLog('雨が上がった。','good');}
-}
-function bgmNow(){if(!G||G.over)return;const w=weatherAt(G.t);BGM.play(w==='rain'||w==='after'?'crisis':G.fell?'battle':'camp');}
-
-/* ===== 行動 ===== */
-let busy=false;
-async function act(kind,arg){if(busy||G.over)return;busy=true;closeSheet();MV.pick=false;setHint(null);
-  try{
-    if(kind==='move'){const e=edgeOf(G.at,arg);const from=G.at;const w=weatherAt(G.t);
-      if(e.k==='open'&&w!=='rain'){G.A+=15;addLog('中島砦へ移る織田勢の姿を、高根山の今川前衛が見つけた。','bad');}
-      if(e.k==='flank'){if(w!=='rain'){G.A+=35;const l=Math.round(G.T*.12);G.T-=l;G.lost+=l;addLog('敵前衛の目の前を横切り、矢を浴びた（兵 −'+fmtN(l)+'）。','bad');}else addLog('豪雨にまぎれ、敵前衛の目の前を気づかれずに抜けた。','good');}
-      SND.horse();MV.anim={from,to:arg,t0:performance.now(),dur:900*e.h};
-      for(let i=0;i<e.h;i++){stepHour();renderTop();await sleep(900);}
-      MV.anim=null;G.at=arg;G.route.push(arg);addLog(NODES[arg].n+'に着いた。');renderTop();
-      if(await runQueue())return;
-      if(await arrive(arg))return;
-    }else if(kind==='wait'){const w=weatherAt(G.t);stepHour({kiyosuWait:G.at==='kiyosu',visibleWait:G.at==='nakajima'||G.at==='takane'});addLog(NODES[G.at].n+'で一時間待った。');renderTop();await sleep(500);if(await runQueue())return;}
-    else if(kind==='scout'){stepHour();G.scouted=true;G.scoutT=G.t;renderTop();await scoutReport();if(await runQueue())return;}
-    else if(kind==='pray'){stepHour();G.prayed=true;G.M+=20;renderTop();await prayStory();if(await runQueue())return;}
-    if(G.T<600){await endGame('broken');return;}
-    if(G.t>=DEADLINE){await timeoutStory();await endGame('timeout');return;}
-    if(!G.sassa&&G.t>=11&&['tange','zensho','nakajima'].indexOf(G.at)>=0){await sassaEvent();}
-    bgmNow();renderTop();
-  }finally{busy=false;}
-}
-async function runQueue(){while(queue.length){const k=queue.shift();if(k==='fall')await fallStory();if(k==='rain')await rainStory();renderTop();}if(G.T<600){await endGame('broken');return true;}return false;}
-
-async function arrive(k){
-  if(k==='zensho'&&!G.garrison){G.garrison=true;G.T+=500;addLog('善照寺砦の兵五百が加わった。','good');toast('善照寺砦の兵 500 が加わった');}
-  if(k==='nakajima'&&G.nakaSpeech==null)await nakaStory();
-  if(k==='washizu'||k==='marune'){await reliefStory(k);}
-  if(k==='takane'){await vanguardStory();}
-  if(k==='oke'){await assault();return true;}
-  renderTop();return false;}
-
-/* ===== 物語の場面 ===== */
-async function prologue(){BGM.play('council');
-  const c=await playStory('@title 桶狭間の戦い\n@bg camp\n#永禄三年（一五六〇年）五月。駿河・遠江・三河を治める「海道一の弓取り」今川義元が、二万五千の大軍で尾張へ攻めこんだ。\n義元：尾張の小せがれなど、ひと揉みよ。まずは丸根・鷲津の砦を落とし、大高城に入るぞ。\n#迎え撃つ織田信長は二十七歳。かき集めても、兵は三千に足りない。\n@bg room\n#五月十八日の夜。清洲城の大広間。\n林秀貞：殿、敵は二万五千。城にこもって守るほかありませぬ。\n柴田勝家：籠城など、ゆっくり負けるだけじゃ。打って出るべきでござる！\n#家臣たちの目が、信長に集まった。信長の決断は──\n?城にこもって守る（籠城）｜「明日、打って出る」と皆に告げる｜何も決めず、世間話をして解散する',{place:'清洲城'});
+  if(!a.length)a.push(['shibata','殿のご命令を待っておりまする。']);return a.slice(0,3);},
+ marks(G){const t=G.t,L=[];
+  L.push({x:N.marune.x+34,y:N.marune.y-20,l:'松平元康',s:G.fell?'丸根を占領':'約2千 攻撃中'});L.push({x:N.washizu.x-56,y:N.washizu.y-22,l:'朝比奈泰朝',s:G.fell?'鷲津を占領':'約2千 攻撃中'});
+  if(t>=10||G.flags.van)L.push({x:N.takane.x+34,y:N.takane.y-24,l:'今川前衛',s:'約5千'});
+  const y=yoshiAt(t);
+  if(G.scouted){if(y==='kutsukake')L.push({x:N.kutsukake.x-30,y:N.kutsukake.y-28,l:'義元本隊',s:'約5千',main:1});
+    else if(y==='march'){const pt=lerpPt('kutsukake','oke',clamp((t-8)/3,0,1));L.push({x:pt[0]+20,y:pt[1]-10,l:'義元本隊',s:'進軍中',main:1});}
+    else if(y==='oke')L.push({x:N.oke.x+34,y:N.oke.y-26,l:'義元本隊',s:'昼の休み',main:1});}
+  else if(t<8)L.push({x:N.kutsukake.x-30,y:N.kutsukake.y-28,l:'今川本隊?',s:'沓掛城にいるらしい',a:.75});
+  else [['oke',30,-30],['taishi',34,-26],['odaka',40,-34]].forEach(([k,dx,dy])=>L.push({x:N[k].x+dx,y:N[k].y+dy,q:1,l:'本隊?'}));
+  return L;},
+ ev:{
+  async fall(G){G.fell=true;G.M-=15;G.A-=10;BGM.play('battle');
+   await E.story('@bg fire\n#巳の刻。南の空に黒い煙が上がった。\n#丸根砦の佐久間盛重、鷲津砦の織田秀敏、ともに討死。二つの砦が落ちた。\n柴田勝家：……砦が。殿、皆の顔色が悪うございます。'+(G.scouted?'\n@bg camp\n義元：丸根も鷲津も落ちたか。めでたい、めでたい。ここで昼の休みとしよう。謡でも聞こうぞ。\n#勝ち戦に、今川の陣はゆるみはじめた。':''),{place:'丸根・鷲津'});
+   addLog('丸根・鷲津の砦が落ちた（士気 −15）。今川方は勝ちに浮かれている。','bad');},
+  async rain(G){BGM.play('crisis');const at=U().at;await E.story('@bg rain\n#未の刻。にわかに空がかき曇り、石や氷を投げつけるような豪雨が降り出した。\n#楠の大木が東へ倒れるほどの、激しい雨と風。\n#今川勢は雨を顔に受け、前も見えない。\n簗田政綱：殿、この雨なら敵には我らが見えませぬ！'+(at==='kiyosu'||at==='atsuta'?'\n柴田勝家：……しかし、ここからでは桶狭間は遠すぎる！':''),{place:'豪雨'});addLog('豪雨が降り出した。敵の目がふさがる。','good');}
+ },
+ async arrive(G,u,k){
+  if(k==='zensho'&&!G.garrison){G.garrison=true;u.n+=500;addLog('善照寺砦の兵五百が加わった。','good');toast('善照寺砦の兵 500 が加わった');}
+  if(k==='nakajima'&&G.naka==null){const c=await E.story('@bg battle\n#中島砦。敵の前衛が陣取る高根山が、目の前に見える。\n柴田勝家：殿、兵たちに何かお言葉を。\n?兵を励ます「敵は夜通し戦って疲れている。恐れるな」｜何も言わず、静かに時を待つ',{place:'中島砦'});G.naka=c;
+    if(c===1){G.M+=15;await E.story('信長：皆、聞け！ 敵は夜通し大高へ兵糧を運び、砦を攻めて疲れきっておる。こちらは新手じゃ！\n信長：小勢だからと恐れるな。勝敗は運にあり。敵がかかってきたら引き、退いたら追え！\n信長：首は取るな、打ち捨てにせよ。この一戦に勝てば、ここにいた者は家の誉れとなる！\n#兵たちが、おおっと声を上げた。');addLog('中島砦で兵を励ました（士気 +15）。','good');}else addLog('中島砦で静かに時を待った。');}
+  if(k==='washizu'||k==='marune'){const l=Math.round(u.n*.4);u.n-=l;G.M-=10;await E.story('@bg fire\n#'+N[k].n+'の周りには、今川の大軍がひしめいていた。\n#織田勢は囲まれ、多くの兵を失った（兵 −'+fmtN(l)+'）。\n柴田勝家：殿、ここは敵が多すぎる！ 引きましょう！');addLog(N[k].n+'で今川の大軍とぶつかった（兵 −'+fmtN(l)+'）。','bad');await E.pass(1,{},300);}
+  if(k==='takane'){if(weatherAt(G.t-1)==='rain'){const l=Math.round(u.n*.08);u.n-=l;G.A-=15;await E.story('@bg rain\n#雨の中から突然あらわれた織田勢に、今川の前衛はうろたえた。\n#前衛は崩れて逃げ出し、逃げる兵が義元の本陣へなだれこんでいく！');addLog('雨の中で前衛を崩した。逃げる兵が本陣を混乱させた。','good');}
+    else{const l=Math.round(u.n*.35);u.n-=l;G.A+=40;G.M-=10;G.flags.van=1;await E.story('@bg battle\n#高根山には、今川の前衛五千が待ちかまえていた。\n#晴れた空の下、織田勢は丸見えだった。激しい戦いで、多くの兵が倒れた（兵 −'+fmtN(l)+'）。\n#「織田勢が来たぞ！」 今川の陣じゅうに知らせが走った。');addLog('高根山で前衛とぶつかった（兵 −'+fmtN(l)+'）。敵が警戒した。','bad');}}
+  if(k==='oke')await assault(G);},
+ async prologue(G){BGM.play('council');
+  const c=await E.story('@title 桶狭間の戦い\n@bg camp\n#永禄三年（一五六〇年）五月。駿河・遠江・三河を治める「海道一の弓取り」今川義元が、二万五千の大軍で尾張へ攻めこんだ。\n義元：尾張の小せがれなど、ひと揉みよ。まずは丸根・鷲津の砦を落とし、大高城に入るぞ。\n#迎え撃つ織田信長は二十七歳。かき集めても、兵は三千に足りない。\n@bg room\n#五月十八日の夜。清洲城の大広間。\n林秀貞：殿、敵は二万五千。城にこもって守るほかありませぬ。\n柴田勝家：籠城など、ゆっくり負けるだけじゃ。打って出るべきでござる！\n#家臣たちの目が、信長に集まった。信長の決断は──\n?城にこもって守る（籠城）｜「明日、打って出る」と皆に告げる｜何も決めず、世間話をして解散する',{place:'清洲城'});
   G.council=c;
-  if(c===1){await playStory('@bg room\n信長：……城にこもる。\n#織田勢は清洲城の門を固く閉ざした。\n@bg fire\n#だが援軍のあてはない。丸根・鷲津の砦は見殺しにされ、尾張の国衆は次々と今川に寝返った。\n#数か月の包囲の末、清洲城は落ちた。');await endGame('rojo');return false;}
-  if(c===2){G.A+=15;G.M+=5;await playStory('信長：明日、打って出る！ 狙うは義元ただ一人じゃ！\n柴田勝家：おおっ！ それでこそ殿！\n#家臣たちは奮い立った。\n@bg night\n#……だが、その夜のうちに、軍議の様子はひそかに今川方へ伝えられた。城の中にも、敵に通じる者がいたのだ。');addLog('軍議で出陣を告げた。作戦が今川方にもれた。','bad');}
-  else{await playStory('信長：夜も更けた。皆、もう帰って休め。\n#信長は籠城とも出撃とも言わず、世間話だけをして軍議を終えた。\n林秀貞：運の尽きる時には、知恵の鏡も曇るというが……。\n#家老たちはあきれて帰っていった。だが信長は、城の中に敵の間者がいるかもしれないことを知っていたのだ。');addLog('軍議では何も決めずに解散した。','good');}
-  const d=await playStory('@bg night\n#五月十九日、夜明け前。\n#「丸根・鷲津の砦が、今川勢に攻められております！」\n信長：人間五十年、下天のうちをくらぶれば、夢幻のごとくなり……。\n#信長は「敦盛」を舞い終えると、立ちあがった。\n?今すぐ出陣する（兵はまだ800ほど）｜兵がそろうまで待つ（2時間かかる）',{place:'清洲城'});
+  if(c===1){await E.story('@bg room\n信長：……城にこもる。\n#織田勢は清洲城の門を固く閉ざした。\n@bg fire\n#だが援軍のあてはない。丸根・鷲津の砦は見殺しにされ、尾張の国衆は次々と今川に寝返った。\n#数か月の包囲の末、清洲城は落ちた。');await endGame('rojo');return false;}
+  if(c===2){G.A+=15;G.M+=5;await E.story('信長：明日、打って出る！ 狙うは義元ただ一人じゃ！\n柴田勝家：おおっ！ それでこそ殿！\n@bg night\n#……だが、その夜のうちに、軍議の様子はひそかに今川方へ伝えられた。城の中にも、敵に通じる者がいたのだ。');addLog('軍議で出陣を告げた。作戦が今川方にもれた。','bad');}
+  else{await E.story('信長：夜も更けた。皆、もう帰って休め。\n#信長は籠城とも出撃とも言わず、世間話だけをして軍議を終えた。\n林秀貞：運の尽きる時には、知恵の鏡も曇るというが……。\n#家老たちはあきれて帰っていった。だが信長は、城の中に敵の間者がいるかもしれないことを知っていたのだ。');addLog('軍議では何も決めずに解散した。','good');}
+  const d=await E.story('@bg night\n#五月十九日、夜明け前。\n#「丸根・鷲津の砦が、今川勢に攻められております！」\n信長：人間五十年、下天のうちをくらぶれば、夢幻のごとくなり……。\n#信長は「敦盛」を舞い終えると、立ちあがった。\n?今すぐ出陣する（兵はまだ800ほど）｜兵がそろうまで待つ（2時間かかる）',{place:'清洲城'});
   G.dawn=d;
-  if(d===1){G.M+=10;await playStory('信長：貝を吹け！ 具足をよこせ！\n#信長は立ったまま湯漬けをかきこむと、わずかな供を連れて城を飛び出した。\n#あとを追って、兵たちが次々と駆けてくる。');addLog('夜明けとともに出陣した。');}
-  else{G.t=6;G.T=1800;G.came=1000;await playStory('#信長は兵が集まるのを待った。\n#空が白み、日が昇っていく。');addLog('兵が集まるのを待ってから出陣した。');}
-  return true;}
-async function prayStory(){await playStory('@bg shrine\n#熱田神宮。\n信長：熱田の神よ、この一戦、我らに勝たせたまえ。\n#そのとき、社の奥で鎧の触れ合うような音がした。白鷺が二羽、東の空へ飛んでいく。\n柴田勝家：吉兆じゃ！ 神が我らを導いておられる！\n#兵たちの顔つきが変わった。',{place:'熱田神宮'});addLog('熱田神宮で戦勝を祈った（士気 +20）。','good');}
-async function scoutReport(){const y=yoshiAt(G.t);
-  const txt=y==='kutsukake'?'義元の本隊は、まだ沓掛城におります。間もなく西へ動くかと。':y==='march'?'義元の本隊が沓掛城を出ました。輿に乗り、桶狭間山の方へ向かっております！':'義元の本隊は桶狭間山で昼の休みをとっております。兵は散らばり、酒を飲む者までおります！';
-  await playStory('@bg field\n簗田政綱：殿、物見が戻りました。\n簗田政綱：'+txt+'\n信長：よし。これからも目を離すな。義元の動きは逐一知らせよ。',{place:'物見の報せ'});
-  addLog('物見の報せ：'+txt,'good');toast('義元本隊の居場所が地図に出た');}
-async function fallStory(){G.fell=true;G.M-=15;G.A-=10;BGM.play('battle');
-  await playStory('@bg fire\n#巳の刻。南の空に黒い煙が上がった。\n#丸根砦の佐久間盛重、鷲津砦の織田秀敏、ともに討死。二つの砦が落ちた。\n柴田勝家：……砦が。殿、皆の顔色が悪うございます。'+(G.scouted?'\n@bg camp\n義元：丸根も鷲津も落ちたか。めでたい、めでたい。ここで昼の休みとしよう。謡でも聞こうぞ。\n#勝ち戦に、今川の陣はゆるみはじめた。':''),{place:'丸根・鷲津'});
-  addLog('丸根・鷲津の砦が落ちた（士気 −15）。今川方は勝ちに浮かれている。','bad');}
-async function sassaEvent(){const c=await playStory('@bg battle\n佐々政次：殿！ 我ら中島の兵三百で、敵の前衛に斬りこみとうございます！\n千秋季忠：熱田の神官の家の意地、見せてやりまする！\n?行かせる｜止めて、本隊に加える',{place:'中島砦の前'});
-  if(c===1){G.sassa='go';G.A-=20;G.M-=5;await playStory('#佐々と千秋は三百の兵で敵の前衛へ突っこんだ。\n#だが多勢に無勢。二人は五十騎ほどと共に討死した。\n@bg camp\n義元：織田の兵など、この程度よ。わしの矛先には天魔鬼神もかなうまい。\n#今川勢は勝ちに酔い、ますます油断した。');addLog('佐々・千秋が討死。今川方はますます油断した。','bad');}
-  else{G.sassa='stop';G.T+=300;await playStory('信長：待て。その命、大事な一戦のためにとっておけ。\n佐々政次：……はっ！\n#佐々と千秋の三百が本隊に加わった。');addLog('佐々・千秋の三百が本隊に加わった。','good');}
-  renderTop();}
-async function nakaStory(){const c=await playStory('@bg battle\n#中島砦。敵の前衛が陣取る高根山が、目の前に見える。\n柴田勝家：殿、兵たちに何かお言葉を。\n?兵を励ます「敵は夜通し戦って疲れている。恐れるな」｜何も言わず、静かに時を待つ',{place:'中島砦'});
-  G.nakaSpeech=c;
-  if(c===1){G.M+=15;await playStory('信長：皆、聞け！ 敵は夜通し大高へ兵糧を運び、砦を攻めて疲れきっておる。こちらは新手じゃ！\n信長：小勢だからと恐れるな。勝敗は運にあり。敵がかかってきたら引き、退いたら追え！\n信長：首は取るな、打ち捨てにせよ。この一戦に勝てば、ここにいた者は家の誉れとなる！\n#兵たちが、おおっと声を上げた。');addLog('中島砦で兵を励ました（士気 +15）。','good');}
-  else addLog('中島砦で静かに時を待った。');}
-async function rainStory(){BGM.play('crisis');await playStory('@bg rain\n#未の刻。にわかに空がかき曇り、石や氷を投げつけるような豪雨が降り出した。\n#楠の大木が東へ倒れるほどの、激しい雨と風。\n#今川勢は雨を顔に受け、前も見えない。\n簗田政綱：殿、この雨なら敵には我らが見えませぬ！'+(G.at==='kiyosu'||G.at==='atsuta'?'\n柴田勝家：……しかし、ここからでは桶狭間は遠すぎる！':''),{place:'豪雨'});
-  addLog('豪雨が降り出した。敵の目がふさがる。','good');}
-async function reliefStory(k){const l=Math.round(G.T*.4);G.T-=l;G.lost+=l;G.M-=10;
-  await playStory('@bg fire\n#'+NODES[k].n+'の周りには、今川の大軍がひしめいていた。\n#織田勢は囲まれ、多くの兵を失った（兵 −'+fmtN(l)+'）。\n柴田勝家：殿、ここは敵が多すぎる！ 引きましょう！');
-  addLog(NODES[k].n+'で今川の大軍とぶつかった（兵 −'+fmtN(l)+'）。','bad');stepHour();renderTop();await runQueue();}
-async function vanguardStory(){const rain=weatherAt(G.t-1)==='rain';
-  if(rain){const l=Math.round(G.T*.08);G.T-=l;G.lost+=l;G.A-=15;await playStory('@bg rain\n#雨の中から突然あらわれた織田勢に、今川の前衛はうろたえた。\n#前衛は崩れて逃げ出し、逃げる兵が義元の本陣へなだれこんでいく！');addLog('雨の中で前衛を崩した。逃げる兵が本陣を混乱させた。','good');}
-  else{const l=Math.round(G.T*.35);G.T-=l;G.lost+=l;G.A+=40;G.M-=10;await playStory('@bg battle\n#高根山には、今川の前衛五千が待ちかまえていた。\n#晴れた空の下、織田勢は丸見えだった。激しい戦いで、多くの兵が倒れた（兵 −'+fmtN(l)+'）。\n#「織田勢が来たぞ！」 今川の陣じゅうに知らせが走った。');addLog('高根山で前衛とぶつかった（兵 −'+fmtN(l)+'）。敵が警戒した。','bad');G.flags.vanSeen=1;}
-  renderTop();}
-async function timeoutStory(){await playStory('@bg camp\n#申の刻。義元は昼の休みを終え、輿に乗って大高城へ入った。\n義元：尾張の小せがれは、とうとう出てこなんだか。\n#大高城は今川の大軍に守られ、もう手出しはできない。\n#尾張は、今川のものとなった。');}
-
-/* ===== 本陣への突撃 ===== */
-function calcR(){const rainB=weatherAt(G.t-1)==='rain'?30:weatherAt(G.t)==='rain'?15:0;const restB=G.scouted&&G.t>=11&&G.t<=14?10:0;
-  const S=clamp(100-G.A,0,100)+rainB+restB;const P=G.T*(G.M/100)*(1+S/50);const E=5000*(.3+G.A/100);return {R:P/E,rainB,restB,S,P,E};}
-function gaugeEl(){let g=$('.gauge');if(!g){g=el('div','gauge','<div class="t"><span>勝機</span><b></b></div><u><s></s><i></i></u><small>白い線（100%）を越えていれば、義元を討ち取れる</small>');document.body.appendChild(g);}return g;}
-function showGauge(R){const g=gaugeEl();const pct=Math.round(R/NEED*100);g.querySelector('b').textContent=pct+'%';g.querySelector('s').style.width=clamp(pct/150*100,0,100)+'%';}
-async function assault(){G.arrivalT=G.t;BGM.play('crisis');
-  if(!G.scouted){G.searched=true;await playStory('@bg field\n#桶狭間山に着いた。だが、どこに義元の本陣があるのか分からない。\n柴田勝家：殿、陣がいくつもあって、どれが本陣か……！\n#織田勢は山の中を探しまわった。');G.A+=10;stepHour();renderTop();await runQueue();
-    if(G.t>=DEADLINE){await playStory('#ようやく本陣を見つけた時には、陣はもぬけの殻だった。義元はすでに大高城へ向かっていた。');await endGame('timeout');return;}}
-  if(G.t>=DEADLINE){await playStory('@bg camp\n#桶狭間山の本陣は、もぬけの殻だった。\n#義元は昼の休みを終え、すでに大高城へ入っていた。');await endGame('timeout');return;}
-  let early=false;if(G.t<11){early=true;G.A+=40;await playStory('@bg field\n#桶狭間山に着いた。だが、まだ義元の本隊は来ていない。\n#しばらくして、沓掛から五千の本隊が登ってきた。山の上の織田勢は丸見えだった。\n義元：なに、織田がもうここに？ 囲め、囲め！');}
-  const c=calcR();let R=c.R;G.assault={base:R,ans:[],early};
-  document.body.classList.add('gz');
-  const open=c.rainB===30?'@bg rain\n#雨が上がった。目の前に、今川の本陣の幕が見える。\n信長：今じゃ！ かかれ、かかれぇっ！':c.rainB?'@bg rain\n#豪雨の中、織田勢は今川の本陣へ斬りこんだ。':'@bg battle\n#晴れた空の下、織田勢は今川の本陣へ攻めかかった。';
-  showGauge(R);
-  const q1=await playStory(open+'\n#織田勢は山を駆けあがり、今川の本陣に襲いかかった。不意をつかれた今川の兵は、槍も持たずに逃げまどう。\n#兵たちは、手柄の首を取ろうと立ち止まりはじめた──\n?「首は打ち捨てにせよ！ 進め！」｜「手柄の首を取れ！」',{place:'桶狭間山',gauge:1});
-  if(q1===2){R*=.75;}G.assault.ans.push(q1===1);showGauge(R);
-  const q2=await playStory('@bg battle\n#本陣の奥で、塗りの輿が後ろへ退いていく。周りを三百ほどの旗本が守っている。\n?輿を追え。義元はそこにいる！｜まず周りの敵を崩せ',{gauge:1});
-  if(q2===2){R*=.8;}G.assault.ans.push(q2===1);showGauge(R);
-  const q3=await playStory('@bg battle\n#輿を捨てた義元が、旗本に守られて馬に乗ろうとしている。\n服部小平太：義元、覚悟っ！\n#服部小平太が槍をつけた。だが義元は刀を抜き、小平太の膝を斬り払った！\n?「続け！ 囲んで討ち取れ！」｜「いったん下がって、立て直せ！」',{gauge:1});
-  if(q3===2){R*=.6;}G.assault.ans.push(q3===1);showGauge(R);G.assault.R=R;
-  await sleep(500);$('.gauge')&&$('.gauge').remove();document.body.classList.remove('gz');
-  if(R>=NEED){SND.warcry();await playStory('@bg battle\n#毛利新介が義元に組みつき、二人はもつれあって倒れた。\n義元：ぐっ……無礼者めがっ！\n#義元は新介の指に食いついた。それでも新介は離さない。\n毛利新介：今川義元、討ち取ったりいぃっ！\n@bg dawn\n#総大将を失った今川の大軍は、散り散りに逃げ去った。\n#わずか二千あまりの兵が、二万五千を破ったのだ。\n@title 桶狭間の戦い　織田方の勝利');await endGame('win');}
-  else{await playStory('@bg battle\n#旗本たちが義元を馬に押し上げた。\n義元：退け、大高城へ退けい！\n#義元は乱戦をすり抜け、雨上がりの道を駆け去っていく。\n#まわりの今川勢が集まりはじめ、織田勢は逆に囲まれた。\n柴田勝家：殿、もはやこれまで……！');await endGame('assault');}
-}
-
-/* ===== 結果 ===== */
-const LOSE={rojo:['籠城','援軍のあてがない籠城は、ゆっくり負けるだけ。信長は城にこもらず、打って出ることを選んだ。'],
+  if(d===1){G.M+=10;await E.story('信長：貝を吹け！ 具足をよこせ！\n#信長は立ったまま湯漬けをかきこむと、わずかな供を連れて城を飛び出した。\n#あとを追って、兵たちが次々と駆けてくる。');addLog('夜明けとともに出陣した。');}
+  else{G.t=6;U().n=1800;G.came=1000;await E.story('#信長は兵が集まるのを待った。\n#空が白み、日が昇っていく。');addLog('兵が集まるのを待ってから出陣した。');}
+  return true;},
+ start(G){banner('出陣',clock(G.t)+' 清洲城');setTimeout(()=>toast('行き先の砦をタップして進軍。物見で義元の居場所を探れ'),900);},
+ lose:{rojo:['籠城','援軍のあてがない籠城は、ゆっくり負けるだけ。信長は城にこもらず、打って出ることを選んだ。'],
   timeout:['時間切れ','義元が昼の休みを終えて大高城に入ると、もう手出しはできない。本陣が桶狭間山にいる「昼の数時間」が唯一の勝機だった。'],
   assault:['討ち漏らし','本陣には迫ったが、義元を逃がした。敵の油断・士気・突撃の判断のどれかが足りなかった。'],
-  broken:['兵が尽きた','今川の大軍と正面からぶつかり、兵を失いすぎた。狙うのは義元ひとりだけ。']};
-function review(){const L=[];const R=(k,you,ok,his)=>L.push({k,you,ok,his});
+  broken:['兵が尽きた','今川の大軍と正面からぶつかり、兵を失いすぎた。狙うのは義元ひとりだけ。']},
+ rank:G=>{const R=G.assault.R;return R>=3?'S':R>=2.4?'A':'B';},
+ stats:G=>[['時刻',clock(G.t)+'（'+jiOf(G.t)+'の刻）'],['残った兵',fmtN(U().n)],['士気',Math.round(G.M)],['敵の油断',yudan()]].concat(G.assault?[['勝機',Math.round(G.assault.R/NEED*100)+'%']]:[]),
+ review(G){const L=[];const R=(k,you,ok,his)=>L.push({k,you,ok,his});
   R('軍議',['籠城する','「打って出る」と告げた','何も決めずに解散した'][G.council-1]||'-',G.council===3,'籠城とも出撃とも言わず、世間話で軍議を終えた。敵の間者に作戦をもらさないためと言われる。');
-  if(G.council!==1){
+  if(G.council===1)return L;
   R('出陣',G.dawn===1?'夜明けとともに出陣':'兵を待ってから出陣',G.dawn===1,'敦盛を舞い、わずかな供で清洲城を飛び出した。兵はあとから追いついた。');
   R('熱田神宮',G.prayed?'戦勝を祈った':'祈らなかった',G.prayed,'熱田神宮に立ち寄って戦勝を祈り、兵の心をまとめた。');
   R('物見',G.scouted?clock(G.scoutT)+'に義元の居場所をつかんだ':'物見を出さなかった',G.scouted,'簗田政綱が義元の居場所を知らせた。戦のあと、首を取った者より上の一番手柄とされたという。');
   if(G.sassa)R('佐々・千秋',G.sassa==='go'?'行かせた':'止めた',null,'二人は前衛へ突撃して討死した。今川方は勝ったと思い、ますます油断した。');
-  const rt=['清洲城'].concat(G.route.map(k=>NODES[k].n)).join('→');
-  R('進路',rt,G.route.indexOf('oke')>=0&&G.arrivalT===14,'中島砦から、豪雨にまぎれて桶狭間山へ近づき、雨が上がった瞬間に襲いかかった（山を回りこんだという説もある）。');
-  if(G.assault){const a=G.assault.ans;R('突撃',(a[0]?'首は打ち捨て':'首を取らせた')+'・'+(a[1]?'輿を追った':'周りから崩した')+'・'+(a[2]?'囲んで討った':'下がった'),a.every(Boolean),'「首は打ち捨てにせよ」と命じて本陣へまっしぐら。服部小平太が槍をつけ、毛利新介が義元を討ち取った。');}}
+  const rt=['清洲城'].concat((G.route.oda||[]).map(k=>N[k].n)).join('→');
+  R('進路',rt,G.arrT===14,'中島砦から、豪雨にまぎれて桶狭間山へ近づき、雨が上がった瞬間に襲いかかった（山を回りこんだという説もある）。');
+  if(G.assault&&G.assault.ans.length){const a=G.assault.ans;R('突撃',(a[0]?'首は打ち捨て':'首を取らせた')+'・'+(a[1]?'輿を追った':'周りから崩した')+'・'+(a[2]?'囲んで討った':'下がった'),a.every(Boolean),'「首は打ち捨てにせよ」と命じて本陣へまっしぐら。服部小平太が槍をつけ、毛利新介が義元を討ち取った。');}
   return L;}
-async function endGame(kind){G.over=true;busy=false;closeSheet();$('.gauge')&&$('.gauge').remove();document.body.classList.remove('gz');
-  const win=kind==='win';if(win)BGM.play('victory');else BGM.play('defeat');
-  let rank='';if(win){const R=G.assault.R;rank=R>=3?'S':R>=2.4?'A':'B';const c=store.get('clear')||{};if(!c.okehazama||'SAB'.indexOf(rank)<'SAB'.indexOf(c.okehazama))c.okehazama=rank;store.set('clear',c);}
-  const s=$('#scr');s.hidden=false;$('#app').hidden=true;
-  const lv=LOSE[kind]||['',''];
-  const rv=review().map(r=>'<dl class="rv"><dt>'+esc(r.k)+'</dt><dd class="you '+(r.ok===true?'ok':r.ok===false?'ng':'')+'">あなた：'+esc(r.you)+(r.ok===true?' ◎':r.ok===false?' ✕':' △')+'</dd><dd class="his">史実：'+esc(r.his)+'</dd></dl>').join('');
-  s.innerHTML='<div class="in"><div class="eye">桶狭間の戦い</div><div class="verdict '+(win?'win':'lose')+'">'+(win?'勝利':'敗北')+'</div>'+
-    (win?'<div class="rank">評価<b>'+rank+'</b></div>':'<div class="rank">敗因：'+esc(lv[0])+'</div><p class="lead">'+esc(lv[1])+'</p>')+
-    '<div class="box"><dl class="kv"><dt>時刻</dt><dd>'+clock(G.t)+'（'+jiOf(G.t)+'の刻）</dd><dt>残った兵</dt><dd>'+fmtN(G.T)+'</dd><dt>士気</dt><dd>'+Math.round(G.M)+'</dd><dt>敵の油断</dt><dd>'+yudan()+'</dd>'+(G.assault?'<dt>勝機</dt><dd>'+Math.round(G.assault.R/NEED*100)+'%</dd>':'')+'</dl></div>'+
-    '<div class="box"><div class="sec">采配のふり返り</div>'+rv+'</div>'+
-    '<div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center"></div></div>';
-  const row=s.querySelector('.in>div:last-child');row.append(btn('もう一度','pri big',()=>startStage('okehazama')),btn('戦の一覧へ','big',()=>showStages()));}
-
-/* ===== 題名・戦の一覧 ===== */
-function showTitle(){G=null;$('#app').hidden=true;const s=$('#scr');s.hidden=false;BGM.play('camp');
-  s.innerHTML='<div class="in" style="justify-content:center"><div class="eye">劣勢をひっくり返せ</div><h1>逆転の采配</h1><p class="lead">歴史には、不利な側が指揮官の判断ひとつで勝った戦がある。<br>あなたは指揮官。正しい選択を重ねれば、勝てる。</p></div>';
-  s.querySelector('.in').append(btn('はじめる','pri big',()=>{SND.init();showStages();}));}
-function showStages(){G=null;$('#app').hidden=true;const s=$('#scr');s.hidden=false;BGM.play('camp');const c=store.get('clear')||{};
-  s.innerHTML='<div class="in"><div class="eye">逆転の采配</div><div class="sec" style="font-size:22px">戦を選ぶ</div><div class="stages"></div></div>';
-  const box=s.querySelector('.stages');STAGES.forEach(st=>{const b=el('button','stg','<span class="k">'+st.k+'</span><span><b>'+esc(st.n)+'<small>'+esc(st.y)+'</small></b><span>'+esc(st.vs)+'</span><span>'+esc(st.d)+'</span>'+(st.open?(c[st.id]?'<span class="clr">勝利 評価'+c[st.id]+'</span>':''):'<span>準備中</span>')+'</span>');b.type='button';b.disabled=!st.open;b.onclick=()=>{SND.click();startStage(st.id);};box.appendChild(b);});
-  s.querySelector('.in').append(btn('題名へ','sm',()=>showTitle()));}
-async function startStage(id){newGame();queue.length=0;MV.drops=[];$('#scr').hidden=true;$('#scr').innerHTML='';
-  const ok=await prologue();if(!ok)return;
-  $('#app').hidden=false;requestAnimationFrame(()=>{layoutMap();});renderTop();bgmNow();
-  banner('出陣',clock(G.t)+' 清洲城');setTimeout(()=>toast('行き先の砦をタップして進軍。物見で義元の居場所を探れ'),900);
-  addLog(clock(G.t)+'、清洲城を出る。');}
-
-/* ===== 操作 ===== */
-function moveSheet(to){const e=edgeOf(G.at,to);const N=NODES[to];const w=weatherAt(G.t);const notes=[];
-  if(N.side==='foe'){toast(N.n+'は今川の城。近づけない');return;}
-  if(!e||e.k==='foe'){toast('ここからは直接行けない');return;}
-  if(e.k==='open')notes.push([w==='rain'?'good':'bad',w==='rain'?'低い田の道。今は豪雨で、敵からは見えない。':'低い田の道。高根山の敵前衛から丸見えになる。']);
-  if(e.k==='flank')notes.push([w==='rain'?'good':'bad',w==='rain'?'敵前衛の目の前を横切る近道。豪雨のあいだなら気づかれない。':'敵前衛の目の前を横切る近道。晴れていれば見つかって矢を浴びる。']);
-  if(e.k==='pass')notes.push(['good','山の中の抜け道。敵に見つかりにくい。']);
-  if(to==='washizu'||to==='marune')notes.push(['bad',G.fell?'今川勢が砦を占領している。':'今川の大軍が砦を囲んでいる。']);
-  if(to==='takane')notes.push(['bad','今川の前衛（約5千）が陣取っている。着けば戦いになる。']);
-  if(to==='oke')notes.push([G.scouted&&yoshiAt(G.t+e.h)==='oke'?'good':'',G.scouted?(yoshiAt(G.t)==='oke'?'義元の本陣！ 着けばそのまま突撃する。':'義元が向かっている山。着けばそのまま突撃する。'):'敵の本陣があるかもしれない山。着けばそのまま突撃する。']);
-  const arr=G.t+e.h;
-  const body=[el('dl','kv','<dt>かかる時間</dt><dd>'+e.h+'時間</dd><dt>着く時刻</dt><dd>'+clock(arr)+'（'+jiOf(arr)+'の刻）</dd><dt>その時の天気</dt><dd>'+WICON[weatherAt(arr)]+' '+WNAME[weatherAt(arr)]+'（予想できない）</dd>')].concat(notes.map(n=>el('div','note '+n[0],esc(n[1]))));
-  const adv=advice();if(adv.length){body.push(el('div','sec','家臣の声'));adv.forEach(a=>body.push(advEl(a[0],a[1])));}
-  // 着く時刻の天気は伏せる
-  body[0].querySelector('dd:last-child').textContent='着いてみないと分からない';
-  sheet(N.n+'へ進む',NODES[G.at].n+'から',body,[btn('やめる','',closeSheet),btn('進軍する','pri',()=>act('move',to))]);}
-function bindUI(){
-  $('#map').addEventListener('click',e=>{if(!G||busy||G.over)return;const k=hitNode(e.clientX,e.clientY);if(!k)return;if(k===G.at){SND.click();toast('今いる場所：'+NODES[k].n);return;}const ok=reachList().some(r=>r.to===k);if(!ok){toast(NODES[k].side==='foe'?NODES[k].n+'は今川の城':NODES[k].n+'へは、ここから直接行けない');return;}SND.click();moveSheet(k);});
-  $('#cMove').onclick=()=>{SND.click();closeSheet();MV.pick=!MV.pick;setHint(MV.pick?'光っている場所をタップ':'');if(!MV.pick)setHint(null);};
-  $('#cWait').onclick=()=>{SND.click();const w=weatherAt(G.t);const body=[el('p','muted','一時間、この場で待つ。'+(G.at==='kiyosu'?'清洲城なら、兵がふだんより早く集まる。':'その間にも、遅れていた兵が追いついてくる。'))];if(G.at==='nakajima'&&w!=='rain')body.push(el('div','note bad','中島砦は敵の前衛から見える。待つほど敵が警戒する。'));const adv=advice();body.push(el('div','sec','家臣の声'));adv.forEach(a=>body.push(advEl(a[0],a[1])));sheet('待機',NODES[G.at].n,body,[btn('やめる','',closeSheet),btn('一時間待つ','pri',()=>act('wait'))]);};
-  $('#cScout').onclick=()=>{SND.click();sheet('物見を出す','簗田政綱',[advEl('yanada','一時間いただければ、義元の本隊がどこにおるか、必ず突き止めてまいります。'),el('p','muted','一時間かかる。分かった後は、義元本隊の動きがずっと地図に出る。')],[btn('やめる','',closeSheet),btn('物見を出す','pri',()=>act('scout'))]);};
-  $('#cPray').onclick=()=>{SND.click();sheet('戦勝祈願','熱田神宮',[el('p','muted','一時間かけて、熱田の神に戦勝を祈る。兵の士気が上がる。')],[btn('やめる','',closeSheet),btn('祈る','pri',()=>act('pray'))]);};
-  $('#cAdv').onclick=()=>{SND.click();sheet('家臣の声','誰の言うことを聞くかは、あなた次第',advice().map(a=>advEl(a[0],a[1])));};
-  $('#cLog').onclick=()=>{SND.click();const n=el('div','news');G.log.forEach(l=>n.appendChild(el('div',l.cls,'<em>'+clock(l.h)+'</em>'+esc(l.t))));
-    const s=sheet('記録','これまでの報せ',[n,el('div','sec','設定')],null);const b=s.querySelector('.sh-b');const r=el('div','row');r.style.cssText='display:flex;gap:8px;flex-wrap:wrap';
-    r.append(btn(SND.bgmOn?'BGM：オン':'BGM：オフ','sm',e=>{BGM.setOn(!SND.bgmOn);e.target.textContent=SND.bgmOn?'BGM：オン':'BGM：オフ';}),btn('最初からやり直す','sm',()=>startStage('okehazama')),btn('戦の一覧へ','sm',()=>showStages()));b.appendChild(r);};
-  window.addEventListener('resize',()=>{if(!$('#app').hidden)layoutMap();});
-  document.addEventListener('pointerdown',()=>{try{SND.init();}catch(e){}},{passive:true});
-}
+};
+async function scoutEv(G){const y=yoshiAt(G.t);
+ const txt=y==='kutsukake'?'義元の本隊は、まだ沓掛城におります。間もなく西へ動くかと。':y==='march'?'義元の本隊が沓掛城を出ました。輿に乗り、桶狭間山の方へ向かっております！':'義元の本隊は桶狭間山で昼の休みをとっております。兵は散らばり、酒を飲む者までおります！';
+ await E.story('@bg field\n簗田政綱：殿、物見が戻りました。\n簗田政綱：'+txt+'\n信長：よし。これからも目を離すな。義元の動きは逐一知らせよ。',{place:'物見の報せ'});addLog('物見の報せ：'+txt,'good');toast('義元本隊の居場所が地図に出た');}
+async function sassaEv(G){const c=await E.story('@bg battle\n佐々政次：殿！ 我ら中島の兵三百で、敵の前衛に斬りこみとうございます！\n千秋季忠：熱田の神官の家の意地、見せてやりまする！\n?行かせる｜止めて、本隊に加える',{place:'中島砦の前'});
+ if(c===1){G.sassa='go';G.A-=20;G.M-=5;await E.story('#佐々と千秋は三百の兵で敵の前衛へ突っこんだ。\n#だが多勢に無勢。二人は五十騎ほどと共に討死した。\n@bg camp\n義元：織田の兵など、この程度よ。わしの矛先には天魔鬼神もかなうまい。\n#今川勢は勝ちに酔い、ますます油断した。');addLog('佐々・千秋が討死。今川方はますます油断した。','bad');}
+ else{G.sassa='stop';U().n+=300;await E.story('信長：待て。その命、大事な一戦のためにとっておけ。\n佐々政次：……はっ！\n#佐々と千秋の三百が本隊に加わった。');addLog('佐々・千秋の三百が本隊に加わった。','good');}}
+function calcR(G){const rainB=weatherAt(G.t-1)==='rain'?30:weatherAt(G.t)==='rain'?15:0;const restB=G.scouted&&G.t>=11&&G.t<=14?10:0;
+ const S_=clamp(100-G.A,0,100)+rainB+restB;return {R:U().n*(G.M/100)*(1+S_/50)/(5000*(.3+G.A/100)),rainB};}
+async function assault(G){G.arrT=G.t;BGM.play('crisis');
+ if(!G.scouted){await E.story('@bg field\n#桶狭間山に着いた。だが、どこに義元の本陣があるのか分からない。\n柴田勝家：殿、陣がいくつもあって、どれが本陣か……！\n#織田勢は山の中を探しまわった。');G.A+=10;await E.pass(1,{},300);if(G.over)return;}
+ if(G.t>=DEAD){await E.story('@bg camp\n#桶狭間山の本陣は、もぬけの殻だった。\n#義元は昼の休みを終え、すでに大高城へ入っていた。');await endGame('timeout');return;}
+ if(G.t<11){G.A+=40;await E.story('@bg field\n#桶狭間山に着いた。だが、まだ義元の本隊は来ていない。\n#しばらくして、沓掛から五千の本隊が登ってきた。山の上の織田勢は丸見えだった。\n義元：なに、織田がもうここに？ 囲め、囲め！');}
+ const c=calcR(G);let R=c.R;G.assault={ans:[],R};
+ const open=c.rainB===30?'@bg rain\n#雨が上がった。目の前に、今川の本陣の幕が見える。\n信長：今じゃ！ かかれ、かかれぇっ！':c.rainB?'@bg rain\n#豪雨の中、織田勢は今川の本陣へ斬りこんだ。':'@bg battle\n#晴れた空の下、織田勢は今川の本陣へ攻めかかった。';
+ E.gauge(R,NEED);
+ const q1=await E.story(open+'\n#織田勢は山を駆けあがり、今川の本陣に襲いかかった。不意をつかれた今川の兵は、槍も持たずに逃げまどう。\n#兵たちは、手柄の首を取ろうと立ち止まりはじめた──\n?「首は打ち捨てにせよ！ 進め！」｜「手柄の首を取れ！」',{place:'桶狭間山'});
+ if(q1===2)R*=.75;G.assault.ans.push(q1===1);E.gauge(R,NEED);
+ const q2=await E.story('@bg battle\n#本陣の奥で、塗りの輿が後ろへ退いていく。周りを三百ほどの旗本が守っている。\n?輿を追え。義元はそこにいる！｜まず周りの敵を崩せ');
+ if(q2===2)R*=.8;G.assault.ans.push(q2===1);E.gauge(R,NEED);
+ const q3=await E.story('@bg battle\n#輿を捨てた義元が、旗本に守られて馬に乗ろうとしている。\n服部小平太：義元、覚悟っ！\n#服部小平太が槍をつけた。だが義元は刀を抜き、小平太の膝を斬り払った！\n?「続け！ 囲んで討ち取れ！」｜「いったん下がって、立て直せ！」');
+ if(q3===2)R*=.6;G.assault.ans.push(q3===1);E.gauge(R,NEED);G.assault.R=R;await sleep(600);E.gaugeOff();
+ if(R>=NEED){SND.warcry();await E.story('@bg battle\n#毛利新介が義元に組みつき、二人はもつれあって倒れた。\n義元：ぐっ……無礼者めがっ！\n#義元は新介の指に食いついた。それでも新介は離さない。\n毛利新介：今川義元、討ち取ったりいぃっ！\n@bg dawn\n#総大将を失った今川の大軍は、散り散りに逃げ去った。\n#わずか二千あまりの兵が、二万五千を破ったのだ。\n@title 桶狭間の戦い　織田方の勝利');await endGame('win');}
+ else{await E.story('@bg battle\n#旗本たちが義元を馬に押し上げた。\n義元：退け、大高城へ退けい！\n#義元は乱戦をすり抜け、雨上がりの道を駆け去っていく。\n#まわりの今川勢が集まりはじめ、織田勢は逆に囲まれた。\n柴田勝家：殿、もはやこれまで……！');await endGame('assault');}}
+regStage(ST);
+})();
+</script>
+<script>/* s2.js */
+/* ===== スターリング・ブリッジの戦い（1297） ===== */
+(function(){
+const NEED=2.0,TOTAL=9000,STEP=450;
+const tm=t=>5*60+t*30;
+const N={
+ craig:{n:'アビー・クレイグの丘',x:430,y:170,t:'hill'},causeway:{n:'土手道',x:330,y:250,t:'dot'},bfoot:{n:'橋の北のたもと',x:286,y:340,t:'dot'},
+ bridge:{n:'スターリング橋',x:280,y:405,t:'bridge'},camp:{n:'イングランド軍の陣',x:250,y:540,t:'camp',side:'foe'},castle:{n:'スターリング城',x:96,y:600,t:'castle',side:'foe'},
+ ford:{n:'浅瀬',x:70,y:300,t:'field'}};
+const U=id=>G.units.find(u=>u.id===id);
+const keikai=G=>G.A<30?'低い':G.A<50?'中':'高い';
+function sc(n){return n<900?.35:n<1800?.65:n<2000?.8:n<=3600?1:n<=4300?.8:.55;}
+const ST={id:'stirling',k:'橋',n:'スターリング・ブリッジの戦い',y:'1297',vs:'スコットランド 約5千 vs イングランド 約9千',d:'敵が狭い橋を渡りきる前に、ちょうどよい数だけ渡った瞬間を狙え。',
+ meMon:'saltire',foeMon:'george',
+ heroes:[H('wallace','ウォレス','蘇','魏',{fs:'long',fw:24,sk:'#ecc8a8',age:1,hair:'loose',hc:'#6a3a1a',brow:'thick',eye:'sharp',nose:'n',mo:'tight',bd:'short',bc:'#6a3a1a',cl:'armor',c1:'#2a4a8a',c2:'#c8c8d0',c3:'#1a2a5a'}),
+  H('moray','モレー','蘇','魏',{fs:'oval',fw:23,sk:'#f0d4b8',age:0,hair:'loose',hc:'#3a2a1a',brow:'n',eye:'round',nose:'thin',mo:'n',bd:'none',cl:'armor',c1:'#3a5a7a',c2:'#d8d0b0'}),
+  H('surrey','サリー伯','英','呉',{fs:'long',fw:23,sk:'#f0d8c8',age:3,hair:'knot',hc:'#e0ded8',brow:'white',eye:'narrow',nose:'hook',mo:'frown',bd:'short',bc:'#e8e6e0',cl:'royal',c1:'#8a1a1a',c2:'#e0c060'}),
+  H('cress','クレッシンガム','英','呉',{fs:'round',fw:27,sk:'#f4d4c0',age:2,hair:'bald',brow:'angry',eye:'narrow',nose:'wide',mo:'frown',bd:'none',cl:'robe',c1:'#7a2a2a',c2:'#e0c060',x:['fat']}),
+  H('lundie','ランディ','英','呉',{fs:'square',fw:24,age:1,hair:'knot',brow:'thick',eye:'sharp',nose:'n',mo:'tight',bd:'full',cl:'armor',c1:'#5a5a62',c2:'#b0a080'})],
+ map:{nodes:N,edges:[['craig','causeway',1,'open'],['causeway','bfoot',1,'open'],['craig','ford',3,'pass'],['bfoot','bridge',1,'foe'],['bridge','camp',1,'foe'],['camp','castle',1,'foe'],['ford','camp',2,'foe']],
+  deco:{openRed:1,polys:[{kind:'marsh',pts:[[200,200],[400,200],[420,330],[340,380],[180,370],[150,280]]}],
+   rivers:[{w:16,pts:[[560,300],[500,330],[480,420],[400,450],[340,420],[290,405],[230,440],[200,500],[300,520],[360,560],[300,620],[180,640],[120,560],[150,470],[90,400],[60,330],[0,320]]}],
+   hills:[[430,170,48,1],[96,600,40,1],[480,90,30],[530,200,26]],forests:[[440,60,120,120,40]],bridges:[[282,382,280,428]],
+   texts:[{t:'フォース川',x:470,y:470,size:13},{t:'湿地',x:250,y:300,size:13,col:'rgba(60,80,40,.8)'}]}},
+ init(){return {t:0,A:25,M:60,n:0,units:[{id:'wal',name:'ウォレス隊',short:'ウォレス',at:'craig',n:3000},{id:'mor',name:'モレー隊',short:'モレー',at:'craig',n:2000},{id:'watch',name:'見張り隊',short:'見張り',at:'craig',n:300}],sel:'watch',hidden:null,parley:null,lundie:false,revealed:false,halt:0,ph:0,R:null,ans:[],attackN:null};},
+ when:G=>['九月十一日',clockM(tm(G.t))],logTime:G=>clockM(tm(G.t)),
+ pills:G=>[{i:'渡った英軍',v:fmtN(G.n)},{i:'士気',bar:G.M},{i:'敵の警戒',v:keikai(G),warn:G.A>=50}],
+ overlay:G=>G.t<2?'dawn':null,bgm:G=>G.n>0?'battle':'camp',
+ canMoveAny:G=>true,moveLabel:'移動',costLabel:h=>h*30+'分',arriveLabel:(G,h)=>clockM(tm(G.t+h)),
+ canMove(G,u,e){return true;},
+ moveNotes(G,u,e){const o=[];if(e.to==='causeway'||e.to==='bfoot')o.push(['bad','丘を下りると、南岸のイングランド軍から丸見えになる。敵は罠に気づき、橋を渡るのをやめるかもしれない。']);
+  if(e.to==='ford')o.push(['','西の浅瀬。敵の騎兵が回りこんでくるなら、ここを通る。']);if(e.to==='craig')o.push(['good','丘の上。木々にかくれて敵から見えない。']);return o;},
+ beforeMove(G,u,e){if((e.to==='causeway'||e.to==='bfoot')&&!G.revealed){G.revealed=true;G.A+=30;G.halt=2;addLog(u.name+'の姿を南岸の敵が見つけた。イングランド軍が渡るのをやめた。','bad');}},
+ hour(G){if(G.ph===1)G.n+=400;else if(G.ph===3){if(G.halt>0)G.halt--;else G.n+=STEP;}G.n=Math.min(G.n,TOTAL);G.A=clamp(G.A,0,100);G.M=clamp(G.M,0,100);},
+ at(G){const t=G.t;if(t===1){G.ph=1;addLog('夜明け。イングランドの先陣が橋を渡りはじめた。');}
+  if(t===2)G.q.push('recall');if(t===4)G.q.push('parley');if(t===6)G.q.push('council');
+  if(t===7){G.ph=3;toast('イングランド軍が、ふたたび橋を渡りはじめた');addLog('イングランド軍が、ふたたび橋を渡りはじめた。','bad');}},
+ async after(G){if(G.n>=5400){await E.story('@bg river\n#イングランド軍の大半が北岸に渡りきった。\n#重騎兵が隊列を組み、長弓兵が並ぶ。もう、渡り途中の敵を叩く機会はない。\nサリー伯：さあ、反逆者どもを踏みつぶせ！');await endGame('formed');}},
+ acts:[
+  {k:'wait',kan:'待',lab:'待つ',on:G=>true,open(G){const b=[el('p','muted','三十分、丘の上で息をひそめて待つ。'),noteEl('',G.ph===3?'橋は狭く、騎兵が二騎ならんで通るのがやっと。三十分で約'+STEP+'人ずつ渡ってくる。':'敵はまだ橋を渡っていない。')];S.advice(G).slice(0,2).forEach(a=>b.push(advEl(a[0],a[1])));
+    confirmAct('待つ','アビー・クレイグの丘',b,'三十分待つ',()=>act(async()=>{await E.pass(1,{},350);}));}},
+  {k:'go',kan:'突',lab:'突撃の合図',hot:1,on:G=>G.n>0&&G.ph===3,open(G){const b=[el('dl','kv','<dt>北岸に渡った敵</dt><dd>約'+fmtN(G.n)+'</dd><dt>南岸に残る敵</dt><dd>約'+fmtN(TOTAL-G.n)+'</dd>'),noteEl('','合図を出すと、全軍が丘を駆け下りる。やり直しはきかない。')];S.advice(G).slice(0,2).forEach(a=>b.push(advEl(a[0],a[1])));
+    confirmAct('突撃の合図','角笛を吹く',b,'角笛を吹け！',()=>act(async()=>{await finale(G);}));}}
+ ],
+ advice(G){const a=[],n=G.n;
+  if(G.ph!==3)a.push(['moray','敵はまだ渡ってこない。今は丘の上で、木にかくれて待つのだ。']);
+  else if(n<1500)a.push(['moray','まだ早い。今たたいても、残りの大軍は南岸で無傷だ。']);
+  else if(n<=3600)a.push(['wallace','渡った敵は、ちょうど我らで討てる数。後ろは狭い橋で、助けは来られぬ。']);
+  else a.push(['moray','これ以上渡らせたら、敵が北岸で隊列を組んでしまう！']);
+  if(G.A>=40&&U('watch').at!=='ford')a.push(['moray','敵がこちらに気づいた。西の浅瀬から騎兵が回りこむかもしれぬ。見張りを出そう。']);
+  if(!G.revealed)a.push(['wallace','丘を下りるのは合図の時だけだ。それまで姿を見せるな。']);
+  return a.slice(0,3);},
+ marks(G){const L=[{x:N.camp.x+40,y:N.camp.y-24,l:'イングランド軍',s:'南岸 約'+fmtN(TOTAL-G.n)}];
+  if(G.n>0)L.push({x:N.bfoot.x-70,y:N.bfoot.y-10,l:'渡った英軍',s:'約'+fmtN(G.n),main:G.n>=2000&&G.n<=3600});
+  if(G.lundie&&G.t>=10)L.push({x:N.ford.x+40,y:N.ford.y+40,l:'英騎兵?',q:1});return L;},
+ drawOver(g){const R=mrand(5);const k=Math.floor(G.n/120);g.fillStyle='rgba(160,30,20,.85)';for(let i=0;i<k;i++){const [x,y]=toScr(230+R()*120,300+R()*70);g.fillRect(x,y,3,3);}
+  if((G.ph===1||G.ph===3)&&G.halt===0&&G.n<TOTAL){const ph=(performance.now()/400)%1;for(let i=0;i<6;i++){const p=(i/6+ph)%1;const [x,y]=toScr(281,428-p*46);g.fillRect(x-1,y,3,3);}}},
+ ev:{
+  async recall(G){G.ph=2;G.n=0;await E.story('@bg river\n#先陣がいくらか渡ったところで、なぜか呼びもどされた。\n#総大将のサリー伯が、まだ寝ていたのだ。\nサリー伯：（あくびをしながら）……騎士の叙任式をすませてからでよい。\n#渡った兵は、また南岸へ戻っていった。',{place:'イングランド軍の陣'});addLog('総大将が寝坊し、渡った先陣が呼び戻された。');},
+  async parley(G){const c=await E.story('@bg river\n#イングランド軍から、二人の修道士が使いとしてやってきた。\n#「降伏すれば、命は助けよう」\n?「我らは和平のためではなく、戦って国を自由にするために来た」｜降伏を考えるふりをして、時をかせぐ｜降伏する',{place:'丘のふもと'});G.parley=c;
+   if(c===1){G.M+=15;G.A+=10;await E.story('ウォレス：帰って伝えよ。我らは和平のために来たのではない。戦って、この国を自由にするために来たのだ。\n#スコットランドの兵たちが、どっと声を上げた。');addLog('使者を追い返した（士気 +15）。','good');}
+   else if(c===2){G.A-=10;G.M-=5;await E.story('ウォレス：……考える時間をいただきたい。\n#使者は帰っていった。兵たちの間に、迷いが広がった。');addLog('降伏を考えるふりをした。兵が迷いはじめた（士気 −5）。');}
+   else{await E.story('#ウォレスは剣を置いた。\n#スコットランドの兵は散り散りになり、国はふたたびイングランドに従った。');await endGame('surrender');}},
+  async council(G){G.lundie=G.A>=40;await E.story('@bg river\nランディ：閣下、この橋は狭すぎます。西の浅瀬から騎兵五百を回りこませ、敵の背後をつきましょう。\nクレッシンガム：時間と金のむだだ！ 正面から渡って、さっさと片づけるのだ。\n'+(G.lundie?'サリー伯：……敵はこちらを待ちかまえておるようだ。ランディの案も使おう。\n#イングランドの騎兵の一部が、西の浅瀬へ向かった。':'サリー伯：敵は丘の上でふるえておる。正面から渡れ。\n#ランディの案は退けられた。'),{place:'イングランド軍の軍議'});
+   addLog(G.lundie?'敵の騎兵が西の浅瀬へ向かったらしい。':'敵はランディの「浅瀬を回る案」を退けた。',G.lundie?'bad':'good');}
+ },
+ async prologue(G){BGM.play('council');
+  const c=await E.story('@title スターリング・ブリッジの戦い\n@bg river\n#一二九七年。スコットランドはイングランド王エドワード一世に支配されていた。\n#立ち上がったのは、ウィリアム・ウォレスとアンドリュー・モレー。\n#九月、イングランドのサリー伯が約九千の兵でスターリングに迫った。\n#両軍の間には、フォース川。かかる橋はただ一つ、騎兵が二騎ならぶのがやっとの、狭い木の橋だった。\nモレー：ウィリアム、我らは五千。まともにぶつかれば勝ち目はない。\nウォレス：だが、あの橋を渡ってくる間は、敵は少しずつしか来られぬ。\n?北の丘（アビー・クレイグ）の木立にかくれて待つ｜橋の前の平地に、堂々と隊列を並べる',{place:'スターリング'});
+  G.hidden=c===1;if(!G.hidden){G.A+=30;await E.story('#スコットランド軍は平地に並んだ。\n#南岸のイングランド軍からは、その数がまる見えだった。\nサリー伯：ほう、たったあれだけか。だが油断はするな。');addLog('平地に隊列を並べた。敵に数を知られた。','bad');}
+  else{await E.story('#スコットランド軍は丘の木立に身をひそめた。\n#南岸からは、丘の上にどれだけの兵がいるのか分からない。\nウォレス：合図があるまで、誰も動くな。');addLog('丘の木立にかくれた。','good');}
+  return true;},
+ start(G){banner('夜明け',clockM(tm(G.t))+' アビー・クレイグ');setTimeout(()=>toast('敵がちょうどよい数だけ渡った時に「突撃の合図」'),900);},
+ dbg:G=>({t:G.t,n:G.n,A:G.A,M:G.M}),
+ lose:{formed:['渡りきられた','敵の大半が北岸で隊列を組むと、もう小勢では勝てない。狭い橋の上で敵が「少しずつしか来られない」間が勝機だった。'],
+  surrender:['降伏','戦わずに降伏し、スコットランドの独立の望みは消えた。'],
+  early:['早すぎた','渡った敵が少なすぎた。南岸の大軍は無傷のまま、別の道から押し寄せてきた。'],
+  assault:['押しかえされた','渡った敵を討ちきれなかった。敵の数、士気、突撃の判断のどれかが足りなかった。']},
+ rank:G=>G.R>=2.5?'S':G.R>=2.2?'A':'B',
+ stats:G=>[['合図の時刻',G.attackT!=null?clockM(tm(G.attackT)):'-'],['その時渡っていた敵',G.attackN!=null?'約'+fmtN(G.attackN):'-'],['士気',Math.round(G.M)],['敵の警戒',keikai(G)]].concat(G.R?[['勝機',Math.round(G.R/NEED*100)+'%']]:[]),
+ review(G){const L=[];const R=(k,you,ok,his)=>L.push({k,you,ok,his});
+  R('布陣',G.hidden?'丘の木立にかくれた':'平地に並んだ',G.hidden,'アビー・クレイグの丘に陣取り、敵からは兵の数が分からなかった。');
+  if(G.parley)R('使者',['追い返した','時をかせいだ','降伏した'][G.parley-1],G.parley===1,'ウォレスは「我らは和平ではなく、戦って国を自由にするために来た」と答えたと伝わる。');
+  R('動かずに待つ',G.revealed?'合図の前に丘を下りた':'合図まで姿を見せなかった',!G.revealed,'敵が橋を渡りはじめても、合図があるまで丘の上で待ち続けた。');
+  if(G.attackN!=null)R('合図',clockM(tm(G.attackT))+'、渡った敵 約'+fmtN(G.attackN),G.attackN>=2000&&G.attackN<=3600,'敵の先陣とクレッシンガムが渡ったところで角笛を吹いた。渡った数は数千と言われる。');
+  if(G.ans.length)R('突撃',(G.ans[0]?'橋のたもとを奪った':'正面から斬りこんだ')+'・'+(G.ans[1]?'槍を密集させた':'散って戦った')+'・'+(G.ans[2]?'北岸で討ち尽くした':'南岸へ追った'),G.ans.every(Boolean),'モレーの槍兵が土手道を駆け下りて橋のたもとを押さえ、渡った敵は逃げ場を失った。クレッシンガムは討死した。');
+  return L;}
+};
+async function finale(G){G.attackN=G.n;G.attackT=G.t;BGM.play('crisis');SND.horn();
+ const pres=['wal','mor'].reduce((s,id)=>{const u=U(id);return s+(['craig','causeway','bfoot'].indexOf(u.at)>=0?u.n:0);},0);
+ let R=3.4*sc(G.n)*(1-G.A/150)*(G.M/80)*(pres/5000);G.R=R;
+ if(G.n<900){await E.story('@bg river\n#角笛が鳴った。だが北岸に渡った敵は、まだわずか。\n#討たれた先陣を見て、南岸の大軍は橋を渡るのをやめ、守りを固めた。\nサリー伯：あわてるな。別の道から攻めればよい。');G.R=R;await endGame('early');return;}
+ await E.story('@bg river\n#角笛が鳴りひびいた。\n#丘の木立から、スコットランドの槍兵が叫び声を上げて駆け下りる。\nクレッシンガム：な、なんだ!? 敵はどこから……！',{place:'スターリング橋'});
+ if(G.lundie&&U('watch').at!=='ford'){R*=.6;await E.story('#そのとき、西の浅瀬を渡ったイングランドの騎兵が、背後からあらわれた！\nモレー：しまった、回りこまれた！');}
+ else if(G.lundie){await E.story('#西の浅瀬から回りこもうとした敵の騎兵を、見張り隊が食いとめた。\nモレー：浅瀬に見張りを置いておいて、よかった！');}
+ E.gauge(R,NEED);
+ const q1=await E.story('@bg river\n#渡った敵は湿地の中の土手道に、細長く並んでいる。\n?モレー隊を土手道に走らせ、橋のたもとを奪え｜全軍で正面から斬りこめ');
+ if(q1===2)R*=.75;G.ans.push(q1===1);E.gauge(R,NEED);
+ const q2=await E.story('@bg river\n#イングランドの重騎兵が、槍をそろえて突っこんでくる！\n?槍を外に向けて密集し、壁をつくれ｜散らばって、馬の足を狙え');
+ if(q2===2)R*=.7;G.ans.push(q2===1);E.gauge(R,NEED);
+ const q3=await E.story('@bg river\n#橋のたもとを奪われ、渡った敵は逃げ場を失った。\n#南岸のサリー伯は、橋の上に兵を送りこもうとしている。\n?橋のたもとを守り、北岸の敵を討ち尽くせ｜勢いのまま橋を渡り、南岸へ攻めこめ');
+ if(q3===2)R*=.6;G.ans.push(q3===1);E.gauge(R,NEED);G.R=R;await sleep(600);E.gaugeOff();
+ if(R>=NEED){SND.warcry();await E.story('@bg river\n#北岸に渡ったイングランド兵は、湿地と川に追いつめられた。\n#重い鎧の騎士たちが、次々と川に沈んでいく。\n#クレッシンガムは討たれ、南岸のサリー伯は橋を焼かせて逃げ去った。\nウォレス：スコットランドは、自由だ！\n@title スターリング・ブリッジ　スコットランドの勝利');await endGame('win');}
+ else{await E.story('@bg river\n#スコットランド軍は渡った敵を崩しきれなかった。\n#そのあいだにイングランド軍は次々と橋を渡り、北岸で隊列を組みなおした。\nモレー：……引け、丘まで引け！');await endGame('assault');}}
+regStage(ST);
+})();
+</script>
+<script>/* s3.js */
+/* ===== 背水の陣（井陘の戦い 前204） ===== */
+(function(){
+const NEED=2.0,DEAD=14;
+const N={
+ pass:{n:'井陘の狭い道',x:70,y:390,t:'dot'},exit:{n:'井陘口',x:180,y:390,t:'dot'},path:{n:'山の間道',x:190,y:190,t:'dot'},
+ ura:{n:'抱犢山',x:400,y:160,t:'hill'},plain:{n:'平原',x:340,y:420,t:'field'},bank:{n:'綿蔓水の岸',x:250,y:540,t:'field'},
+ zhao:{n:'趙の砦',x:470,y:330,t:'fort',side:'foe'}};
+const U=id=>G.units.find(u=>u.id===id);
+const ydn=G=>G.Y>=60?'大':G.Y>=40?'中':'小';
+const ZS={camp:'砦にこもる',sally:'砦から出てきた',chase:'全軍で追撃中',back:'砦に戻った'};
+const ST={id:'seisui',k:'背',n:'背水の陣',y:'前204',vs:'韓信 約3万 vs 趙 約20万（公称）',d:'わざと川を背に陣を敷き、空になった敵の砦を別働隊で奪え。',
+ meMon:'han',foeMon:'zhao',
+ heroes:[H('hanxin','韓信','漢','蜀',{fs:'long',fw:23,sk:'#f0d0ae',age:1,hair:'knot',brow:'thin',eye:'phoenix',nose:'thin',mo:'tight',bd:'mus',cl:'armor',c1:'#8a2a1a',c2:'#e0c060',c3:'#5a1a10'}),
+  H('zhanger','張耳','漢','蜀',{fs:'long',fw:23,age:3,hair:'knot',hc:'#d8d6d0',brow:'white',eye:'narrow',nose:'n',mo:'n',bd:'long',bc:'#e2e0da',cl:'robe',c1:'#6a3a2a',c2:'#c0a060'}),
+  H('chenyu','陳余','趙','魏',{fs:'sharp',fw:23,age:2,hair:'knot',brow:'angry',eye:'narrow',nose:'hook',mo:'frown',bd:'fork',cl:'royal',c1:'#1a1a2a',c2:'#a0a0b8'}),
+  H('lizuoche','李左車','趙','魏',{fs:'long',fw:22,age:1,hair:'knot',brow:'thin',eye:'narrow',nose:'thin',mo:'n',bd:'goatee',cl:'robe',c1:'#2a3a4a',c2:'#b0b8c0'})],
+ map:{nodes:N,edges:[['pass','exit',1,'road'],['exit','bank',1,'road'],['exit','plain',1,'road'],['bank','plain',1,'road'],['plain','zhao',1,'road'],['pass','path',2,'pass'],['path','ura',2,'pass'],['ura','zhao',1,'pass']],
+  deco:{rivers:[{w:14,pts:[[560,640],[460,600],[350,580],[250,575],[150,600],[60,620],[0,610]]}],
+   hills:[[60,300,50,1],[80,480,50,1],[150,250,40,1],[150,520,36],[40,200,40],[260,200,34],[400,160,46,1],[500,170,34],[320,110,30],[520,260,28]],forests:[[200,120,240,120,50],[0,250,160,300,60]],
+   texts:[{t:'綿蔓水',x:420,y:612,size:13},{t:'太行山脈',x:60,y:120,size:15,disp:1,col:'rgba(60,50,30,.7)'}]}},
+ init(){return {t:0,M:60,Y:40,units:[{id:'kan',name:'韓信の本隊',short:'韓信',at:'pass',n:10000},{id:'sen',name:'先発隊',short:'先発',at:'pass',n:10000},{id:'ki',name:'軽騎兵（赤旗）',short:'軽騎兵',at:'pass',n:2000}],sel:'ki',spy:null,zs:'camp',empty:0,kiHidden:true,beisui:false,laughed:false,fought:0,dropped:null,R:null,ans:[],li:null};},
+ when:G=>[(G.t<6?'夜 ':'')+jiOf(G.t)+'の刻',clock(G.t)],logTime:G=>clock(G.t),
+ pills:G=>[{i:'士気',bar:G.M},{i:'趙の油断',v:ydn(G)},{i:'趙軍',v:ZS[G.zs],warn:G.zs==='sally'}],
+ overlay:G=>G.t<6?'night':G.t===6?'dawn':null,bgm:G=>G.zs==='chase'?'crisis':G.t>=6?'battle':'camp',
+ canMoveAny:G=>true,multi:true,moveLabel:'命令',
+ canMove(G,u,e){if(e.to==='zhao'){if(u.id!=='ki')return '本隊で砦を攻めても、二十万の兵には勝てない';if(G.zs!=='chase')return '砦にはまだ趙の兵がこもっている';}
+  if((e.to==='path'||e.to==='ura')&&u.id!=='ki')return '山の間道は、騎兵だけが通る道';return true;},
+ arriveLabel:(G,h)=>clock(G.t+h),
+ moveNotes(G,u,e){const o=[],day=G.t+e.h>6;
+  if(u.id==='ki'&&(e.to==='path'||e.to==='ura'))o.push([day?'bad':'good',day?'夜明けまでに山に入れない。明るくなってから動くと、趙の物見に見つかる。':'夜の闇にまぎれて、山の間道を進む。']);
+  if(e.to==='bank')o.push(['','川を背にした場所。逃げ場はない。']);
+  if(e.to==='plain')o.push([u.id==='kan'?'':'bad',u.id==='kan'?'大将旗をかかげて平原に出れば、趙軍は韓信を討とうと砦から出てくるはず。':'大将旗がないと、趙軍は出てこない。']);
+  if(e.to==='zhao')o.push(['good','空になった趙の砦へ駆けこみ、赤い旗を立てる。']);return o;},
+ hour(G){if(G.zs==='chase'){['kan','sen'].forEach(id=>{const u=U(id);if(u.at==='bank')u.n=Math.round(u.n*.95);});G.empty--;}
+  G.M=clamp(G.M,0,100);G.Y=clamp(G.Y,0,100);},
+ at(G){const t=G.t;
+  if(t===6){addLog('夜が明けた。','');if(U('sen').at==='bank'&&!G.laughed)G.q.push('laugh');if(U('ki').at!=='ura')G.kiHidden=false;}
+  if(t>=6&&U('kan').at==='plain'&&(G.zs==='camp'||G.zs==='back'))G.q.push('sally');
+  if(G.zs==='chase'&&G.empty<=0)G.q.push('missed');},
+ async arrive(G,u,k){
+  if(u.id==='ki'&&k==='ura'){if(G.t>6){G.kiHidden=false;addLog('軽騎兵が山を登るのを、趙の物見に見られた。','bad');toast('軽騎兵が趙の物見に見つかった');}else{addLog('軽騎兵が抱犢山にひそんだ。','good');toast('軽騎兵が抱犢山にひそんだ');}}
+  if(u.id==='sen'&&k==='bank'&&G.t>=6&&!G.laughed)G.q.push('laugh');
+  if(u.id==='kan'&&k==='plain'){if(G.t<6)toast('夜の平原では、趙軍は出てこない');else if(G.zs!=='chase')G.q.push('sally');}
+  if(u.id==='ki'&&k==='zhao'){await finale(G);return;}
+  await E.flush();},
+ async after(G){if(G.t>=DEAD){await E.story('@bg camp\n#日が傾いた。趙軍は砦にこもったまま動かない。\n#狭い山道を抜けてきた漢軍に、もう兵糧はなかった。\n張耳：韓信どの……引くしかあるまい。');await endGame('timeout');}},
+ acts:[{k:'wait',kan:'時',lab:'進める',hot:1,on:G=>true,open(G){const b=[el('p','muted',(G.units.some(u=>u.order)?'命令を出した隊が動きだす。':'')+'一時間、全軍その場で待つ。')];S.advice(G).slice(0,2).forEach(a=>b.push(advEl(a[0],a[1])));confirmAct('待機','全軍',b,'一時間進める',()=>act(async()=>{await E.pass(1,{},500);}));}}],
+ advice(G){const a=[],t=G.t,ki=U('ki'),sen=U('sen'),kan=U('kan');
+  if(t<6&&ki.at!=='ura')a.push(['hanxin','軽騎兵二千は、夜のうちに山の間道から抱犢山へ。一人一本ずつ、漢の赤い旗を持たせよ。']);
+  if(sen.at!=='bank')a.push(['hanxin','先発隊一万は、綿蔓水を背にして陣を敷け。趙は「兵法を知らぬ」と笑うだろう。それでよい。']);
+  if(t>=6&&kan.at!=='plain'&&G.zs==='camp')a.push(['hanxin','夜が明けたら、わしが大将旗と太鼓をかかげて平原へ出る。趙はわしを討とうと、砦から出てくる。']);
+  if(G.zs==='chase')a.push(['zhanger','趙軍がみな砦を出たぞ！ 今こそ軽騎兵を砦へ！']);
+  if(G.zs==='camp'&&t>=6)a.push(['zhanger','趙軍はまだ砦の中だ。こちらから砦を攻めては、数に押しつぶされる。']);
+  if(!a.length)a.push(['zhanger','韓信どの、次の手は？']);return a.slice(0,3);},
+ marks(G){const L=[];const zs=G.zs;
+  L.push({x:N.zhao.x+40,y:N.zhao.y-26,l:'趙軍',s:zs==='chase'?'砦は空':'約20万',a:zs==='chase'?.5:1});
+  if(zs==='sally')L.push({x:N.plain.x+50,y:N.plain.y-20,l:'趙軍',s:'出撃',main:1});
+  if(zs==='chase')L.push({x:N.bank.x+70,y:N.bank.y-20,l:'趙軍',s:'川岸に殺到',main:1});return L;},
+ ev:{
+  async laugh(G){G.laughed=true;G.Y+=20;await E.story('@bg river\n#夜が明けると、川を背にして並ぶ漢の先発隊が見えた。\n陳余：はっはっは！ 川を背にして陣を敷くとは。逃げ場のない所に兵を置くなど、兵法の初歩も知らぬわ！\n#趙の兵たちは、漢軍を指さして笑った。',{place:'趙の砦'});addLog('趙軍が背水の陣を見て笑った（趙の油断 大きく）。','good');},
+  async sally(G){if(G.zs==='chase')return;G.zs='sally';G.fought++;const c=await E.story('@bg battle\n#大将旗と太鼓をかかげた韓信の本隊が、平原に進み出た。\n陳余：あれが韓信か！ 討ち取って手柄にせよ！\n#趙軍が砦の門を開き、どっと押し寄せてきた。\n?旗と太鼓を捨てて、川岸の陣へ逃げる｜その場に踏みとどまって戦う',{place:'平原'});
+   const kan=U('kan');
+   if(c===1){G.dropped=true;kan.at='bank';(G.route.kan=G.route.kan||[]).push('bank');G.zs='chase';G.empty=2;G.beisui=U('sen').at==='bank';
+    if(G.beisui){G.M+=20;await E.story('#韓信は旗も太鼓も投げ捨てて、川岸へ逃げこんだ。\n陳余：見よ、韓信が逃げたぞ！ 旗を拾え、手柄を取れ！ 全軍、かかれ！\n#趙の兵は砦をからにして、川岸へ殺到した。\n#だが、漢の兵の後ろは川。逃げ場はない。\n韓信：退けば川に沈むだけだ！ 生きたければ戦え！\n#漢の兵は、死にものぐるいで戦いはじめた。');addLog('旗を捨てて川岸へ退いた。趙軍が砦を空にして追ってきた。','good');}
+    else{G.M-=15;await E.story('#韓信は旗を捨てて川岸へ逃げた。\n#だが川岸には味方の陣がない。趙軍が砦を空にして押し寄せる。\n#兵たちは浮き足立ち、川へ逃げこもうとする者まで出はじめた。');addLog('川岸に味方の陣がなく、兵が浮き足立った。','bad');}}
+   else{kan.n=Math.round(kan.n*.6);G.M-=15;G.zs='back';await E.story('#韓信の本隊は平原で踏みとどまった。\n#だが趙軍は数が多すぎる。本隊は多くの兵を失った。\n#趙軍は勝ちを確かめると、また砦に引き上げていった。');addLog('平原で踏みとどまり、多くの兵を失った。','bad');}},
+  async missed(G){if(G.zs!=='chase')return;G.zs='back';await E.story('@bg battle\n#川岸の漢軍を攻めあぐねた趙軍は、拾った旗を手に砦へ引き上げた。\n#砦を奪う機会は、過ぎ去った。\n張耳：軽騎兵は、間に合わなかったか……。\n#疲れきった漢軍に、もう次の手はなかった。');await endGame('missed');}
+ },
+ async prologue(G){BGM.play('council');
+  const c=await E.story('@title 背水の陣\n@bg camp\n#紀元前二〇四年。漢の大将・韓信は、趙の国を攻めようとしていた。\n#趙へ入るには、井陘という狭い山道を通るしかない。その出口で、趙の二十万（と称する大軍）が待ちかまえている。\n張耳：韓信どの、もし山道で横から襲われたら、我らはひとたまりもない。\n?間者を放って、趙の様子をさぐる｜ためらわず、一気に山道を抜ける',{place:'井陘の手前'});
+  G.spy=c;
+  if(c===1){G.M+=10;await E.story('@bg palace\n#間者の報せ──趙の軍議にて。\n李左車：わたしに三万の兵をください。山道で漢の補給を断ち、出口はふさぐ。十日で韓信の首をお届けします。\n陳余：正義の軍は、だまし討ちなどせぬ。それに相手は小勢だ。正面から叩けばよい。\n#李左車の策は退けられた。\n@bg camp\n韓信：……よし。これで安心して山道を進める。');addLog('間者の報せ：李左車の策は退けられた。','good');}
+  else{G.M-=20;G.units.forEach(u=>u.n=Math.round(u.n*.8));await E.story('@bg battle\n#漢軍は山道を急いだ。\n#だが趙では、李左車の策が用いられた。山道の途中で補給の列が襲われ、多くの兵と食糧が失われた。\n張耳：やはり、様子をさぐるべきだった……。');addLog('山道で補給を断たれた（兵 −20%）。','bad');}
+  await E.story('@bg night\n#井陘の出口の手前。夜。\n韓信：今日は趙を破ってから、皆で朝飯を食おう。\n#将たちは、まさかと思いながらも「はい」と答えた。\n#夜明けまで、あと六時間。');return true;},
+ start(G){banner('子の刻',clock(G.t)+' 井陘の手前');setTimeout(()=>toast('隊をタップして選び、行き先をタップ。まずは軽騎兵を山へ'),900);},
+ dbg:G=>({t:G.t,zs:G.zs,M:G.M,Y:G.Y,at:G.units.map(u=>u.id+':'+u.at).join(' ')}),
+ lose:{timeout:['兵糧切れ','趙軍を砦から引き出せなかった。大将旗という「えさ」で敵を誘い出し、空になった砦を奪うのが韓信の策だった。'],
+  missed:['間に合わなかった','趙軍が砦を空にしたのは、ほんの短い間だった。別働隊は前もって、砦を見下ろす山にひそんでいなければならない。'],
+  assault:['崩れた','砦は奪ったが、挟み撃ちが決まらなかった。背水の陣・軽騎兵の隠密・最後の判断のどれかが足りなかった。']},
+ rank:G=>G.R>=2.8&&G.li===1?'S':G.R>=2.3?'A':'B',
+ stats:G=>[['時刻',clock(G.t)],['士気',Math.round(G.M)],['趙の油断',ydn(G)],['本隊の兵',fmtN(U('kan').n)]].concat(G.R?[['勝機',Math.round(G.R/NEED*100)+'%']]:[]),
+ review(G){const L=[];const R=(k,you,ok,his)=>L.push({k,you,ok,his});
+  R('間者',G.spy===1?'様子をさぐった':'一気に山道を抜けた',G.spy===1,'韓信は間者を放ち、李左車の策が退けられたと知ってから山道を進んだ。');
+  R('軽騎兵',G.kiHidden?'夜のうちに抱犢山にひそんだ':'明るくなってから動いた',G.kiHidden,'夜中に二千の騎兵を山の間道へ送り、一人一本ずつ赤い旗を持たせた。');
+  R('背水の陣',U('sen').at==='bank'||G.beisui?'川を背に陣を敷いた':'川岸に陣を敷かなかった',G.beisui,'一万の兵に川を背にして陣を敷かせた。趙軍はそれを見て笑った。');
+  R('おとり',G.dropped?'大将旗と太鼓を捨てて逃げた':G.fought?'踏みとどまって戦った':'平原に出なかった',!!G.dropped&&G.fought===1,'韓信は大将旗をかかげて出撃し、わざと負けたふりで旗と太鼓を捨てて川岸へ逃げた。');
+  if(G.ans.length)R('決戦',(G.ans[0]?'踏みとどまった':'川を渡って逃げた')+'・'+(G.ans[1]?'挟み撃ちにした':'様子を見た')+'・'+(G.ans[2]?'陳余を追った':'見逃した'),G.ans.every(Boolean),'砦に二千の赤い旗が立ち、趙軍は大混乱。陳余は泜水のほとりで討たれ、趙王は捕らえられた。');
+  if(G.li)R('李左車',G.li===1?'師として迎えた':'斬った',G.li===1,'韓信は捕らえた李左車の縄を自ら解き、師として教えを請うた。');
+  return L;}
+};
+async function finale(G){BGM.play('crisis');const kan=U('kan');
+ let R=2.8*(G.M/80)*(G.kiHidden?1:.65)*(G.beisui?1:.6)*clamp(G.Y/60,.7,1.2)*clamp(kan.n/10000,.6,1);G.R=R;
+ await E.story('@bg battle\n#からっぽになった趙の砦に、二千の騎兵が駆けこんだ。\n#趙の旗を引き抜き、二千本の漢の赤い旗を立てていく。',{place:'趙の砦'});
+ E.gauge(R,NEED);
+ const q1=await E.story('@bg river\n#川岸では、趙の大軍が漢軍を押しつぶそうとしている。\n#兵たちは、後ろの川を何度もふり返る。\n?「一歩も引くな！ 後ろは川だ、戦うしかない！」｜「川を渡って逃げよ！」');
+ if(q1===2)R*=.5;G.ans.push(q1===1);E.gauge(R,NEED);
+ const q2=await E.story('@bg battle\n#攻めあぐねた趙兵が、砦へ戻ろうとふり返った。\n#砦には、一面の赤い旗。\n趙の兵：な、なんだ!? 砦が漢に取られている！ 趙王さまも捕まったのか!?\n#趙軍は大混乱におちいった。\n?「今だ！ 前と後ろから挟み撃ちにせよ！」｜「様子を見よ。敵はまだ多い」');
+ if(q2===2)R*=.75;G.ans.push(q2===1);E.gauge(R,NEED);
+ const q3=await E.story('@bg river\n#崩れた趙軍の中から、陳余がわずかな供と逃げていく。\n?追って討ち取れ｜逃げる者は見逃せ');
+ if(q3===2)R*=.8;G.ans.push(q3===1);E.gauge(R,NEED);G.R=R;await sleep(600);E.gaugeOff();
+ if(R>=NEED){SND.warcry();await E.story('@bg river\n#陳余は泜水のほとりで討たれ、趙王・歇は捕らえられた。\n#わずか一日で、趙の国は滅んだ。\n@bg camp\n#戦のあと、将たちがたずねた。\n張耳：兵法では、山を背に、水を前にせよという。なぜ水を背にして勝てたのですか。\n韓信：兵法にあるではないか。「これを死地に陥れて、しかる後に生く」と。逃げ場のない兵は、必ず戦うのだ。');
+  const c=await E.story('#捕らえられた李左車が、縄をかけられて引き出されてきた。\n?縄を解き、師として教えを請う｜敵の軍師として斬る');G.li=c;
+  if(c===1)await E.story('韓信：先生、どうか教えてください。わたしは北の燕と東の斉を攻めたい。どうすればよいでしょうか。\n李左車：……敗れた将は、勇を語らずと申します。ですが、ひとつだけ。\n#李左車の策で、燕は戦わずに漢に従った。\n@title 背水の陣　漢の勝利');
+  else await E.story('#李左車は斬られた。\n#燕と斉を攻める策を授けてくれる者は、もういなかった。\n@title 背水の陣　漢の勝利');
+  await endGame('win');}
+ else{await E.story('@bg river\n#赤い旗に気づいた趙軍だったが、陳余は兵をまとめなおした。\n#川岸の漢軍は崩れ、多くの兵が綿蔓水に沈んだ。\n張耳：韓信どの、もはやこれまで……！');await endGame('assault');}}
+regStage(ST);
+})();
+</script>
+<script>/* s4.js */
+/* ===== 木崎原の戦い（1572） ===== */
+(function(){
+const NEED=2.0;
+const N={
+ iino:{n:'飯野城',x:90,y:150,t:'castle'},kakuto:{n:'加久藤城',x:300,y:110,t:'castle'},shiratori:{n:'白鳥山',x:480,y:90,t:'shrine',nolabel:0},
+ kizaki:{n:'木崎原',x:300,y:390,t:'field'},hongo:{n:'本地原',x:110,y:450,t:'wood'},torigoe:{n:'鳥越',x:470,y:450,t:'hill'},
+ sankaku:{n:'三角田',x:300,y:560,t:'field'},kobayashi:{n:'小林城',x:470,y:660,t:'castle',side:'foe'}};
+const HIDE={hongo:1,torigoe:1,iino:1,kakuto:1};
+const U=id=>G.units.find(u=>u.id===id);
+const itoAt=t=>t<4?'kakuto':t<8?'kizaki':'gone';
+const ST={id:'kizakibaru',k:'釣',n:'木崎原の戦い',y:'1572',vs:'島津 約300 vs 伊東 約3千',d:'釣り野伏せ。囮で敵を誘い、両側の伏兵と本隊の三方から包め。',
+ meMon:'shimazu',foeMon:'ito',
+ heroes:[H('yoshihiro','島津義弘','島','蜀',{fs:'square',fw:25,sk:'#d8a880',age:1,hair:'knot',brow:'thick',eye:'sharp',nose:'n',mo:'tight',bd:'mus',cl:'armor',c1:'#1a1a1e',c2:'#c8c8c0',c3:'#3a1a10'}),
+  H('toya','遠矢良賢','島','蜀',{fs:'long',fw:23,age:2,hair:'knot',brow:'thin',eye:'narrow',nose:'n',mo:'n',bd:'goatee',cl:'armor',c1:'#3a3a2a',c2:'#a89060'}),
+  H('godai','五代友喜','島','蜀',{fs:'round',fw:25,age:1,hair:'knot',brow:'bushy',eye:'round',nose:'wide',mo:'grin',bd:'stub',cl:'armor',c1:'#4a2a1a',c2:'#b08a50'}),
+  H('arikawa','有川貞真','島','蜀',{fs:'oval',fw:23,age:0,hair:'tail',brow:'angry',eye:'sharp',nose:'thin',mo:'tight',bd:'none',cl:'light',c1:'#3a4a3a',c2:'#a8a070'}),
+  H('suketaka','伊東祐安','伊','魏',{fs:'long',fw:24,age:2,hair:'knot',brow:'angry',eye:'narrow',nose:'hook',mo:'frown',bd:'fork',cl:'armor',c1:'#2a3a5a',c2:'#d8d0b0'})],
+ map:{nodes:N,edges:[['iino','kakuto',1,'road'],['iino','hongo',2,'pass'],['kakuto','kizaki',1,'road'],['iino','kizaki',2,'road'],['hongo','kizaki',1,'road'],['torigoe','kizaki',1,'road'],['kakuto','torigoe',2,'pass'],
+  ['kizaki','sankaku',1,'road'],['hongo','sankaku',1,'pass'],['torigoe','sankaku',1,'pass'],['sankaku','kobayashi',1,'foe']],
+  deco:{rivers:[{w:7,pts:[[560,330],[460,350],[380,410],[330,430],[250,420],[160,380],[0,360]]}],
+   hills:[[480,90,40,1],[470,450,40,1],[90,150,30],[300,110,30],[540,520,30],[20,520,30],[200,250,26],[400,240,26]],forests:[[50,400,140,110,70],[420,410,110,90,40]],
+   texts:[{t:'池島川',x:420,y:376,size:13},{t:'えびの盆地',x:300,y:300,size:14,disp:1,col:'rgba(60,50,30,.6)'}]}},
+ init(){return {t:0,M:60,units:[{id:'yoshi',name:'義弘の本隊',short:'義弘',at:'iino',n:130},{id:'toya',name:'遠矢の伏兵',short:'遠矢',at:'iino',n:50},{id:'godai',name:'五代の伏兵',short:'五代',at:'iino',n:40},{id:'ari',name:'有川の囮',short:'有川',at:'iino',n:30}],sel:'ari',held:null,banners:false,spotted:false,rest:null,retreat:null,bait:null,R:null,ans:[],engaged:false};},
+ when:G=>['五月四日 '+(G.t<5?'夜 ':'')+jiOf(G.t)+'の刻',clock(G.t)],logTime:G=>clock(G.t),
+ pills:G=>{const a=itoAt(G.t);return [{i:'兵',v:fmtN(G.units.reduce((s,u)=>s+u.n,0))},{i:'士気',bar:G.M},{i:'伊東勢',v:a==='kakuto'?'加久藤城を攻撃中':a==='kizaki'?(G.t>=5?'木崎原で休息中':'木崎原へ退く'):'引き上げた',warn:a==='kakuto'}];},
+ overlay:G=>G.t<5?'night':G.t===5?'dawn':null,bgm:G=>G.t<4?'battle':'camp',
+ canMoveAny:G=>true,multi:true,moveLabel:'命令',
+ canMove(G,u,e){return true;},arriveLabel:(G,h)=>clock(G.t+h),
+ moveNotes(G,u,e){const o=[],to=e.to;
+  if(HIDE[to]&&(to==='hongo'||to==='torigoe'))o.push(['good',N[to].n+'は'+(to==='hongo'?'深い森':'小高い丘')+'。伏兵がかくれられる。']);
+  if(to==='kizaki')o.push([itoAt(G.t+e.h)==='kizaki'?'':'bad',itoAt(G.t+e.h)==='kizaki'?'伊東勢のいる原。この隊が囮になって斬りこみ、逃げて敵を誘う。':'今は誰もいない原。だが伊東勢がここへ退いてくると、見つかってしまう。']);
+  if(to==='sankaku')o.push(['bad','見晴らしのよい田んぼ。木崎原から丸見えで、かくれる場所がない。']);
+  if(to==='kakuto')o.push([G.t<3?'good':'',G.t<3?'伊東勢に攻められている城。夜明け前に助けが要る。':'加久藤城。']);return o;},
+ hour(G){G.M=clamp(G.M,0,100);},
+ at(G){const t=G.t;if(t===1)G.q.push('kakutoAtk');if(t===3)G.q.push('kakutoRes');if(t===4)G.q.push('withdraw');if(t===5)G.q.push('rest');
+  if(t>=4&&t<8&&!G.spotted&&G.units.some(u=>u.at==='sankaku')){G.spotted=true;addLog('三角田にいる隊が、伊東勢の物見に見つかった。','bad');toast('三角田の隊が敵に見つかった');}},
+ async arrive(G,u,k){
+  if(k==='kizaki'&&itoAt(G.t)==='kizaki'){await bait(G,u);return;}
+  if(k==='sankaku'&&itoAt(G.t)==='kizaki'&&!G.spotted){G.spotted=true;addLog(u.name+'が三角田で伊東勢の物見に見つかった。','bad');toast('三角田は丸見え。敵に見つかった');}
+  await E.flush();},
+ async after(G){if(G.t>=8&&!G.engaged){await E.story('@bg field\n#伊東勢は休みを終え、隊列を組んで小林城へ引き上げていった。\n#わずか三百の島津勢には、それを見送ることしかできなかった。\n島津義弘：……好機を逃したか。');await endGame('timeout');}},
+ acts:[
+  {k:'wait',kan:'時',lab:'進める',hot:1,on:G=>true,open(G){const b=[el('p','muted',(G.units.some(u=>u.order)?'命令を出した隊が動きだす。':'')+'一時間、全隊その場で息をひそめる。')];S.advice(G).slice(0,2).forEach(a=>b.push(advEl(a[0],a[1])));confirmAct('待機','全隊',b,'一時間進める',()=>act(async()=>{await E.pass(1,{},500);}));}},
+  {k:'flag',kan:'旗',lab:'旗',on:G=>!G.banners&&!G.engaged,open(G){confirmAct('白鳥山に旗を立てる','白鳥神社の僧たち',[el('p','muted','一時間かけて、白鳥山の僧や村人に島津の旗を何十本も立てさせる。遠くから見れば、島津の援軍が来たように見える。'),advEl('yoshihiro','兵は出せぬ。だが旗なら、いくらでも立てられる。')],'旗を立てさせる',()=>act(async()=>{await E.pass(1,{},400);G.banners=true;addLog('白鳥山に島津の旗が何十本も立った。','good');toast('白鳥山に旗が立った。援軍に見える');}));}}
+ ],
+ advice(G){const a=[],t=G.t;
+  if(t<3&&!G.units.some(u=>u.at==='kakuto'))a.push(['toya','加久藤城が攻められております！ 夜明けまでに、どれか一隊を助けに送らねば城が落ちまする。']);
+  if(t<4&&G.units.some(u=>u.at==='kizaki'))a.push(['godai','木崎原に隊を残したままでは、退いてくる伊東勢に見つかりますぞ。']);
+  if(!(U('toya').at==='hongo'||U('toya').at==='torigoe')||!(U('godai').at==='hongo'||U('godai').at==='torigoe'))a.push(['yoshihiro','釣り野伏せじゃ。伏兵は森（本地原）と丘（鳥越）の両側にかくせ。敵を誘いこむのは、その間の三角田よ。']);
+  if(t>=4&&t<8)a.push(['arikawa','伊東勢が休んでおるうちに、それがしが斬りこみ、逃げて敵を誘いまする。木崎原へ行けとご命令を。']);
+  if(!G.banners)a.push(['yoshihiro','白鳥山の僧たちに旗を立てさせよう。援軍が来たと思わせるのだ。']);
+  if(!a.length)a.push(['toya','殿のご命令を。']);return a.slice(0,3);},
+ marks(G){const a=itoAt(G.t),L=[];
+  if(a==='kakuto')L.push({x:N.kakuto.x+44,y:N.kakuto.y+44,l:'伊東勢',s:'約3千 攻撃中',main:1});
+  if(a==='kizaki')L.push({x:N.kizaki.x+44,y:N.kizaki.y-20,l:'伊東勢',s:G.t>=5?'休息中':'退却中',main:1});
+  if(G.banners)L.push({x:N.shiratori.x-50,y:N.shiratori.y+10,l:'島津の旗',s:'援軍に見える',mon:'shimazu',dark:1});return L;},
+ ev:{
+  async kakutoAtk(G){await E.story('@bg night\n#子の刻すぎ。\n#伊東勢三千が、闇にまぎれて加久藤城に攻めかかった。\n#城を守るのは、わずか五十人ほど。城には義弘の妻子もいる。\n遠矢良賢：殿！ 加久藤が危のうございます！',{place:'加久藤城'});addLog('伊東勢が加久藤城を攻めはじめた。','bad');},
+  async kakutoRes(G){const h=G.units.some(u=>u.at==='kakuto');G.held=h;
+   if(h){G.M+=10;await E.story('@bg fort\n#加久藤城に駆けつけた島津の兵が、城の守りに加わった。\n#石や丸太を投げ落とし、伊東勢を寄せつけない。\n伊東祐安：ちっ、小さな城と思ったが、しぶとい。……いったん引くぞ。');addLog('加久藤城が伊東勢を追い返した（士気 +10）。','good');}
+   else{await E.story('@bg fire\n#加久藤城に助けは来なかった。\n#夜明け前、城は伊東勢の手に落ちた。\n#義弘の妻子は捕らえられ、島津の兵たちは戦う力を失った。');await endGame('kakuto');}},
+  async withdraw(G){const here=G.units.filter(u=>u.at==='kizaki');
+   await E.story('@bg dawn\n#伊東勢は加久藤城を落とせず、木崎原まで退いてきた。\n伊東祐安：島津はたった三百。わしらは三千だ。慌てることはない。ここで休もう。',{place:'木崎原'});
+   if(here.length){await E.story('#木崎原にいた島津の'+here.map(u=>u.name).join('・')+'が、伊東勢に見つかった。\n伊東祐安：なんだ、こんな所に島津の兵が。囲め、囲め！\n#わずかな兵は、三千に飲みこまれた。');await endGame('found');}},
+  async rest(G){G.rest=true;await E.story('@bg river\n#朝。伊東勢は木崎原に陣をとき、池島川で体を洗いはじめた。\n#夜通し戦った兵たちは、鎧を脱いで横になっている。\n島津義弘：……今じゃ。敵は油断しておる。',{place:'木崎原'});addLog('伊東勢が木崎原で休んでいる。鎧を脱ぐ者もいる。','good');}
+ },
+ async prologue(G){BGM.play('council');
+  await E.story('@title 木崎原の戦い\n@bg castle\n#元亀三年（一五七二年）五月。日向の伊東義祐が、三千の兵を薩摩の島津領へ送りこんだ。\n#迎え撃つ島津義弘の兵は、飯野城と加久藤城をあわせて、わずか三百。十倍の敵だ。\n島津義弘：まともにぶつかれば、ひとたまりもない。……だが、島津には「釣り野伏せ」がある。\n遠矢良賢：囮が斬りこんで、負けたふりで逃げる。追ってきた敵を、両側にかくれた伏兵と、本隊の三方から包む……。\n五代友喜：三百で三千を釣るとは、腕が鳴りまするな！',{place:'飯野城'});
+  return true;},
+ start(G){banner('子の刻',clock(G.t)+' 飯野城');setTimeout(()=>toast('隊をタップして選び、行き先をタップ'),900);},
+ dbg:G=>({t:G.t,M:G.M,at:G.units.map(u=>u.id+':'+u.at).join(' ')}),
+ lose:{kakuto:['加久藤城の落城','加久藤城を見捨ててしまった。城を守りきれば、伊東勢は攻めあぐねて疲れたまま退いてくる。'],
+  found:['見つかった','伊東勢が退いてくる木崎原に隊を残していた。伏兵は敵の通り道ではなく、その両側にかくすもの。'],
+  timeout:['見送った','伊東勢が休んでいる朝が唯一の好機だった。囮を木崎原へ送り、敵を誘い出さねばならない。'],
+  assault:['包みきれなかった','囮には食いついたが、三方からの包囲が決まらなかった。伏兵の位置、逃げる方向、最後の判断のどれかが足りなかった。']},
+ rank:G=>G.R>=2.8?'S':G.R>=2.3?'A':'B',
+ stats:G=>[['時刻',clock(G.t)],['士気',Math.round(G.M)],['囮が逃げた先',G.retreat?N[G.retreat].n:'-']].concat(G.R?[['勝機',Math.round(G.R/NEED*100)+'%']]:[]),
+ review(G){const L=[];const R=(k,you,ok,his)=>L.push({k,you,ok,his});
+  R('加久藤城',G.held?'助けを送って守った':'助けを送らなかった',!!G.held,'加久藤城はわずかな兵で夜襲を防ぎ、伊東勢は疲れて木崎原へ退いた。');
+  if(G.held){R('白鳥山の旗',G.banners?'旗を立てさせた':'立てなかった',G.banners,'白鳥山の僧たちが島津の旗を立て、伊東勢は援軍が来たと思いこんだと伝わる。');
+  R('伏兵',G.sides!=null?['どこにも置けなかった','片側だけ','両側に置いた'][Math.min(2,G.sides)]+(G.strike?'・本隊も控えた':''):'-',G.sides>=2&&G.strike,'伏兵を道の両側にかくし、本隊と三方から敵を包んだ。');
+  if(G.retreat)R('囮',(G.rest?'休んでいる敵に':'構えている敵に')+'斬りこみ、'+N[G.retreat].n+'へ逃げた',G.retreat==='sankaku'&&G.rest,'囮が負けたふりで逃げ、敵を伏兵の待つ場所へ誘いこんだ。');
+  if(G.ans.length)R('決戦',(G.ans[0]?'三方から一斉に':'一隊ずつ')+'・'+(G.ans[1]?'大将を狙った':'雑兵を討った')+'・'+(G.ans[2]?'追い討ちした':'深追いしなかった'),G.ans.every(Boolean),'伊東祐安ら多くの将が討たれた。この敗北で伊東氏は力を失い、のちに日向を追われる。');}
+  return L;}
+};
+async function bait(G,u){G.engaged=true;G.bait=u.id;BGM.play('crisis');
+ const opts=S.adj.kizaki.filter(e=>e.to!=='kakuto'&&e.to!=='iino').map(e=>e.to);
+ const c=await E.story('@bg battle\n#'+u.name+'が、休んでいる伊東勢に斬りこんだ！\n伊東祐安：島津か！ 小勢だ、討ち取れ！\n#伊東勢が武器を取って立ち上がる。'+u.name+'は、負けたふりで背を向けた。\n?'+opts.map(k=>N[k].n+'へ逃げる').join('｜'),{place:'木崎原'});
+ const X=opts[c-1]||opts[0];G.retreat=X;u.at=X;
+ // 伏兵：X のとなりの、かくれられる場所にいる隊
+ const adjX=S.adj[X].map(e=>e.to).filter(k=>HIDE[k]&&k!=='iino'&&k!=='kakuto');
+ const sideNodes=new Set();let strike=false;
+ G.units.forEach(v=>{if(v.id===u.id)return;if(v.id==='yoshi'){if(adjX.indexOf(v.at)>=0||v.at===X)strike=true;return;}if(adjX.indexOf(v.at)>=0)sideNodes.add(v.at);else if(v.at===X&&HIDE[X])sideNodes.add('in');});
+ if(U('yoshi').at!==X&&adjX.indexOf(U('yoshi').at)<0&&sideNodes.size<2){}
+ const sides=sideNodes.size;G.sides=sides;G.strike=strike;
+ const k3=sides+(strike?1:0);const mult=k3>=3?1:k3===2?.75:k3===1?.5:.3;
+ let R=2.6*mult*(G.rest?1:.7)*(G.banners?1.15:1)*(G.M/70)*(G.spotted?.6:1)*(u.id==='yoshi'?.7:1);G.R=R;
+ await E.story('@bg field\n#伊東勢は'+N[X].n+'まで追ってきた。\n'+(k3>=3?'島津義弘：かかれぇっ！\n#左右の伏兵と義弘の本隊が、三方から一斉に飛び出した！':k3>=1?'#伏兵が飛び出した。だが、包みこむには手が足りない。':'#だが、そこには伏兵がいなかった。'),{place:N[X].n});
+ E.gauge(R,NEED);
+ if(G.banners){await E.story('#伊東の兵が、白鳥山を指さして叫んだ。\n伊東の兵：み、見ろ！ 山に島津の旗が！ 援軍だ！\n#伊東勢に動揺が走った。');}
+ const q1=await E.story('@bg battle\n#伊東勢は、思わぬ伏兵にうろたえている。\n?三方から一斉にかかれ！｜一隊ずつ順に斬りこめ');
+ if(q1===2)R*=.7;G.ans.push(q1===1);E.gauge(R,NEED);
+ const q2=await E.story('@bg battle\n#伊東祐安が馬上で兵をまとめなおそうとしている。\n伊東祐安：うろたえるな！ 敵は小勢だ！\n?大将の伊東祐安を狙え｜まわりの雑兵から討ち減らせ');
+ if(q2===2)R*=.8;G.ans.push(q2===1);E.gauge(R,NEED);
+ const q3=await E.story('@bg field\n#伊東祐安が討たれた！ 伊東勢が崩れて、小林城の方へ逃げていく。\n?追い討ちをかけて、一人でも多く討ち取れ｜深追いはするな。引き上げよ');
+ if(q3===2)R*=.85;G.ans.push(q3===1);E.gauge(R,NEED);G.R=R;await sleep(600);E.gaugeOff();
+ if(R>=NEED){SND.warcry();await E.story('@bg dawn\n#島津勢は逃げる伊東勢を追い、名のある将を次々と討ち取った。\n#三千の伊東勢のうち、討たれた者は数百。島津も多くの兵を失ったが、戦は島津の大勝に終わった。\n島津義弘：これが島津の釣り野伏せよ。\n#この戦いで、義弘の名は九州じゅうに知れわたった。\n@title 木崎原の戦い　島津の勝利');await endGame('win');}
+ else{await E.story('@bg battle\n#伏兵の囲みは薄く、伊東勢はそれを突き破った。\n#十倍の敵に押し返され、島津勢は飯野城へ逃げ帰った。\n島津義弘：……包みきれなんだか。');await endGame('assault');}}
+regStage(ST);
+})();
+</script>
+<script>/* s5.js */
+/* ===== オルレアンの乙女（1429） ===== */
+(function(){
+const NEED=2.0,DEAD=20;
+const N={
+ blois:{n:'ブロワ',x:40,y:150,t:'city'},laurent:{n:'サン・ローラン砦',x:130,y:250,t:'tower',side:'foe'},city:{n:'オルレアン',x:280,y:220,t:'city'},
+ loup:{n:'サン・ルー砦',x:420,y:200,t:'tower',side:'foe'},checy:{n:'シェシー',x:510,y:280,t:'dot'},
+ sologne:{n:'南岸の道',x:110,y:520,t:'dot'},tour:{n:'トゥーレル砦',x:280,y:390,t:'tower',side:'foe'},aug:{n:'オーギュスタン砦',x:180,y:500,t:'tower',side:'foe'},
+ sjean:{n:'サン・ジャン砦',x:420,y:480,t:'tower',side:'foe'}};
+const STR={laurent:95,loup:45,sjean:30,aug:60,tour:80};
+const U=()=>G.units[0];
+const dateOf=t=>{const d=29+Math.floor(t/2);return d<=30?'四月'+KN(d)+'日':'五月'+KN(d-30)+'日';};
+function KN(n){const k=['','一','二','三','四','五','六','七','八','九'];return n<10?k[n]+'':n<20?'十'+k[n-10]:n<30?'二十'+k[n-20]:'三十'+k[n-30];}
+const ST={id:'orleans',k:'聖',n:'オルレアンの乙女',y:'1429',vs:'フランス vs イングランド（包囲）',d:'士気で戦え。砦を落とす順番を考え、ジャンヌと共に包囲を破れ。',
+ meMon:'fleur',foeMon:'lions',
+ heroes:[H('joan','ジャンヌ','仏','魏',{fs:'oval',fw:22,sk:'#f4dcc4',age:0,hair:'bun',hc:'#5a3a1a',brow:'n',eye:'round',nose:'thin',mo:'tight',bd:'none',cl:'armor',c1:'#c8ccd4',c2:'#2a4a9a',c3:'#f4f0e6',x:['fem']}),
+  H('dunois','デュノワ','仏','魏',{fs:'long',fw:23,sk:'#f0d4b8',age:1,hair:'loose',hc:'#2a1a12',brow:'thin',eye:'narrow',nose:'hook',mo:'n',bd:'none',cl:'armor',c1:'#2a3a7a',c2:'#d8c070'}),
+  H('lahire','ラ・イル','仏','魏',{fs:'square',fw:26,sk:'#d8a888',age:2,hair:'wild',hc:'#3a2a1a',brow:'bushy',eye:'round',nose:'wide',mo:'grin',bd:'full',bc:'#3a2a1a',cl:'armor',c1:'#5a5a66',c2:'#a8842a'}),
+  H('talbot','タルボット','英','呉',{fs:'square',fw:25,sk:'#f0d0c0',age:2,hair:'knot',brow:'angry',eye:'sharp',nose:'n',mo:'frown',bd:'short',cl:'armor',c1:'#8a1a1a',c2:'#e0c060'}),
+  H('glasdale','グラスデール','英','呉',{fs:'long',fw:23,sk:'#f0d0c0',age:1,hair:'loose',hc:'#8a5a2a',brow:'angry',eye:'narrow',nose:'thin',mo:'tight',bd:'goatee',bc:'#8a5a2a',cl:'armor',c1:'#6a6a72',c2:'#b02a1a'})],
+ female:{joan:1},fv:{joan:{ew:1,eh:1.1,lift:.6,brA:11.5,brT:2.2,brE:9.6,lw:4.2,lh:.9,lc:'#b8545a',sm:.3,hs:'low',hk:0}},
+ map:{nodes:N,edges:[['blois','laurent',2,'road'],['laurent','city',1,'road'],['city','loup',1,'road'],['loup','checy',1,'road'],['checy','city',1,'road'],['blois','sologne',1,'road'],['sologne','checy',1,'sea'],
+  ['city','sjean',1,'sea'],['sjean','aug',1,'road'],['aug','tour',1,'road'],['sologne','aug',2,'road']],
+  deco:{rivers:[{w:26,pts:[[560,300],[470,320],[380,330],[280,320],[180,330],[80,350],[0,345]]}],bridges:[[280,248,280,290],[280,312,280,372]],
+   forests:[[0,420,560,300,80],[300,40,260,120,40]],texts:[{t:'ロワール川',x:470,y:345,size:13},{t:'橋は落とされている',x:340,y:305,size:11,col:'rgba(120,30,20,.85)'}]}},
+ init(){return {t:0,M:30,food:6,units:[{id:'joan',name:'ジャンヌの隊',short:'ジャンヌ',at:'blois',n:2500}],convoy:true,taken:{},inCity:false,council:null,wound:null,order:[],sunday:null,fails:0,R:null,ans:[]};},
+ sideOf:(G,k)=>G&&G.taken[k]?'me':N[k].side,
+ when:G=>[dateOf(G.t)+' '+(G.t%2?'夕':'朝'),'イングランドの包囲 '+(201+Math.floor(G.t/2))+'日目'],logTime:G=>dateOf(G.t)+(G.t%2?'夕':'朝'),
+ pills:G=>[{i:'士気',bar:G.M,col:G.M>=80?'#f1cf72':null},{i:'兵',v:fmtN(U().n)},{i:'町の食糧',v:G.convoy&&!G.inCity?G.food+'回分':G.food+'回分',warn:G.food<=2}],
+ overlay:G=>G.t%2?'dusk':null,bgm:G=>Object.keys(G.taken).length?'battle':'council',
+ canMoveAny:G=>true,costLabel:h=>h===1?'半日':h/2+'日',arriveLabel:(G,h)=>dateOf(G.t+h)+' '+((G.t+h)%2?'夕':'朝'),
+ canMove(G,u,e){if(G.taken[e.to]&&N[e.to].t==='tower')return true;return true;},
+ moveNotes(G,u,e){const o=[],k=e.to;
+  if(STR[k]&&!G.taken[k]){const s=STR[k];o.push([G.M>=s?'good':'bad','イングランドの砦。着けばそのまま攻めかかる。（落とすのに要る士気：およそ'+s+'）']);}
+  if(k==='laurent')o.push(['bad','西の守りのかなめで、いちばん固い砦。']);
+  if(k==='tour'&&!G.taken.aug)o.push(['bad','すぐ後ろのオーギュスタン砦が残っていると、背中から撃たれる。']);
+  if(e.k==='sea')o.push(['','舟でロワール川を渡る。']);
+  if(G.convoy&&k!=='city')o.push(['','食糧を積んだ荷車の列を連れている。']);return o;},
+ hour(G){if(G.t%2===1){}G.food--;G.M=clamp(G.M,0,100);},
+ at(G){if(G.food===2)toast('町の食糧が残りわずか');},
+ async arrive(G,u,k){
+  if(k==='city'&&!G.inCity){G.inCity=true;G.M+=20;let t='@bg city\n#ジャンヌがオルレアンの町に入った。\n#たいまつを手にした人々が、白い鎧の少女をひと目見ようと押し寄せる。\nデュノワ：よく来てくれた、乙女よ。町の者はみな、あなたを神の使いだと言っている。';
+   if(G.convoy){G.convoy=false;G.food+=14;G.M+=10;t+='\n#運んできた食糧の荷車が、次々と城門をくぐった。';}
+   await E.story(t+'\nジャンヌ：神さまが、この町を救えとおっしゃいました。',{place:'オルレアン'});addLog('オルレアンに入った（士気 +'+(20+(G.food>14?10:0))+'）。','good');}
+  if(STR[k]&&!G.taken[k])await siege(G,u,k);
+  if(k==='city'&&G.taken.loup&&G.council==null)await council(G);
+  if(G.taken.tour&&!G.over)await lifted(G);},
+ async after(G){if(G.over)return;if(G.food<=0){await E.story('@bg city\n#町の食糧が尽きた。\n#飢えた人々は、ついに城門を開いた。');await endGame('starve');return;}
+  if(G.t>=DEAD&&!G.taken.tour){await E.story('@bg camp\n#ファストルフ率いるイングランドの援軍が、パリから到着した。\n#包囲はさらに固くなり、オルレアンは力尽きた。');await endGame('reinforce');}},
+ acts:[
+  {k:'rest',kan:'待',lab:'待つ',on:G=>true,open(G){const b=[el('p','muted','半日、その場で待つ。町の食糧は減っていく。')];S.advice(G).slice(0,2).forEach(a=>b.push(advEl(a[0],a[1])));confirmAct('待つ',N[U().at].n,b,'半日待つ',()=>act(async()=>{await E.pass(1,{},400);}));}},
+  {k:'rally',kan:'旗',lab:'旗',on:G=>U().at==='city',open(G){confirmAct('旗をかかげる','オルレアンの町',[el('p','muted','半日かけて、ジャンヌが白い旗をかかげて町をまわり、兵と町の人々を励ます。士気が上がる。'),advEl('joan','恐れることはありません。神さまは私たちと共におられます。')],'旗をかかげる',()=>act(async()=>{await E.pass(1,{},400);G.M+=10;addLog('ジャンヌが旗をかかげて町をまわった（士気 +10）。','good');}));}}
+ ],
+ advice(G){const a=[],at=U().at;
+  if(at==='blois')a.push(['dunois','北の道はサン・ローランの砦が見張っている。食糧の荷車は、川の南を回ってシェシーで舟に乗せるのが安全だ。']);
+  if(G.inCity&&!G.taken.loup)a.push(['lahire','東のサン・ルー砦を落とせば、東からの補給の道が開く。まずはあそこだ！']);
+  if(G.taken.loup&&!G.taken.aug)a.push(['dunois','南岸を攻めるなら、舟で川を渡ってサン・ジャン、それからオーギュスタン砦だ。']);
+  if(G.taken.aug&&!G.taken.tour)a.push(['lahire','あとは橋のたもとのトゥーレル砦だけだ！ あそこを落とせば、包囲は破れる！']);
+  if(G.M<50)a.push(['joan','兵たちが下を向いています。町で旗をかかげて、皆を励ましましょう。']);
+  if(G.food<=3)a.push(['dunois','町の食糧が持たない。急がねば。']);
+  if(!a.length)a.push(['joan','神さまのお告げのままに、進みましょう。']);return a.slice(0,3);},
+ marks(G){const L=[];['laurent','loup','sjean','aug','tour'].forEach(k=>{if(!G.taken[k])L.push({x:N[k].x+38,y:N[k].y-22,l:'英軍',s:k==='laurent'?'守り固い':k==='tour'?'グラスデール':''});});return L;},
+ ev:{},
+ async prologue(G){BGM.play('council');
+  await E.story('@title オルレアンの乙女\n@bg city\n#一四二九年。フランスとイングランドの戦争は、もう九十年近く続いていた。\n#ロワール川のほとりの町オルレアンは、イングランド軍の砦にぐるりと囲まれ、半年以上も持ちこたえていた。\n#この町が落ちれば、フランスは終わる。\n@bg camp\n#そこへ、ドンレミ村の十七歳の少女があらわれた。\nジャンヌ：神さまのお告げです。わたしがオルレアンを救い、王太子さまをランスで王にします。\n#ジャンヌは白い鎧をまとい、食糧の荷車と兵を連れて、ブロワの町を出た。',{place:'ブロワ'});
+  return true;},
+ start(G){banner('出陣',dateOf(G.t)+' ブロワ');setTimeout(()=>toast('食糧を町へ届け、砦を一つずつ落とせ'),900);},
+ dbg:G=>({t:G.t,M:G.M,food:G.food,at:U().at,taken:Object.keys(G.taken).join(',')}),
+ lose:{starve:['食糧切れ','町に食糧を届けられなかった。荷車は、敵の固い砦を避けて南岸を回る必要があった。'],
+  reinforce:['援軍に間に合わなかった','トゥーレル砦を落とす前に、イングランドの援軍が来てしまった。'],
+  broken:['兵が尽きた','砦攻めに失敗しすぎた。士気が足りないまま攻めると、多くの兵を失う。'],
+  assault:['パテーで敗れた','包囲は破ったが、パテーで長弓兵に構える時間を与えてしまった。']},
+ rank:G=>G.R>=2.8&&!G.fails?'S':G.R>=2.3?'A':'B',
+ stats:G=>[['日付',dateOf(G.t)],['落とした砦',Object.keys(G.taken).map(k=>N[k].n).join('・')||'なし'],['攻めて敗れた回数',G.fails+'回'],['士気',Math.round(G.M)]].concat(G.R?[['パテーの勝機',Math.round(G.R/NEED*100)+'%']]:[]),
+ review(G){const L=[];const R=(k,you,ok,his)=>L.push({k,you,ok,his});const rt=(G.route.joan||[]);
+  R('食糧の運び方',rt.indexOf('laurent')>=0&&rt.indexOf('laurent')<rt.indexOf('city')||rt[0]==='laurent'?'北の砦の前を通った':'南岸を回り、舟で渡った',rt[0]==='sologne','荷車は川の南を回り、町の東のシェシーで舟に積んで町へ運びこんだ。');
+  R('砦を落とす順番',G.order.map(k=>N[k].n).join('→')||'-',G.order.join(',')==='loup,sjean,aug,tour'||G.order.join(',')==='loup,aug,tour','サン・ルー（5月4日）→ サン・ジャンとオーギュスタン（6日）→ トゥーレル（7日）の順に落とした。');
+  if(G.council)R('軍議',G.council===1?'将軍たちに従って待った':'「私は行く」と出撃した',G.council===2,'将軍たちは攻撃を止めようとしたが、ジャンヌは聞かずに出撃した。');
+  if(G.wound)R('負傷',G.wound===1?'矢を抜いて前線に戻った':'下がって休んだ',G.wound===1,'トゥーレル砦で肩に矢を受けたが、手当てを受けて前線に戻った。兵たちは奮い立ち、砦は夕方に落ちた。');
+  if(G.sunday)R('日曜日',G.sunday===1?'戦わずに見送った':'退く敵を追った',G.sunday===1,'5月8日は日曜日。並んで退くイングランド軍を、ジャンヌは追わせなかった。');
+  if(G.ans.length)R('パテー',(G.ans[0]?'斥候を出した':'全軍で進んだ')+'・'+(G.ans[1]?'すぐ突撃した':'隊列を整えた')+'・'+(G.ans[2]?'杭の前に踏みつぶした':'弓の外で止まった'),G.ans.every(Boolean),'森から飛び出した鹿に英兵が声を上げ、居場所がばれた。フランス騎兵は長弓兵が杭を打つ前に襲いかかり、大勝した。');
+  return L;}
+};
+async function siege(G,u,k){const s=STR[k];G.order.push(k);BGM.play('crisis');
+ if(k==='tour'&&!G.taken.aug){G.fails++;G.M-=15;const l=Math.round(u.n*.2);u.n-=l;G.order.pop();await E.story('@bg battle\n#トゥーレル砦に攻めかかった。\n#だがすぐ後ろのオーギュスタン砦から、矢と石弾が背中に降りそそぐ。\nラ・イル：だめだ、挟まれた！ 引けっ！');addLog('トゥーレル砦を攻めたが、背後から撃たれて退いた（兵 −'+fmtN(l)+'）。','bad');u.at='city';return;}
+ if(k==='tour'){const c=await E.story('@bg battle\n#五月七日。朝から、トゥーレル砦への攻撃が始まった。\n#ジャンヌは自らはしごをかけ、城壁を登ろうとした。\n#そのとき、一本の矢がジャンヌの肩を射ぬいた！\nラ・イル：乙女が撃たれた！\n#兵たちの足が止まる。グラスデールが城壁の上で笑った。\nグラスデール：魔女め、見たか！\n?矢を抜き、手当てを受けて前線に戻る｜下がって休む',{place:'トゥーレル砦'});G.wound=c;
+  if(c===1){G.M+=25;await E.story('#ジャンヌは自分で矢を引き抜いた。手当てを受けると、夕方、ふたたび旗を手に前線に立った。\nジャンヌ：旗が城壁にふれたら、砦はあなたたちのものです！\n#兵たちが叫び声を上げ、城壁へ殺到した。');}else{G.M-=10;await E.story('#ジャンヌは陣へ運ばれた。\n#乙女の姿が見えなくなると、兵たちの勢いは目に見えて落ちた。');}}
+ if(G.M>=s){G.taken[k]=true;G.M+=15;
+  const txt={laurent:'#もっとも固い西の砦が、ついに落ちた。',loup:'#五月四日。サン・ルー砦が落ちた。包囲が始まって以来、はじめての勝利だった。\nラ・イル：やったぞ！ イングランドの砦が落ちた！',sjean:'#サン・ジャン砦のイングランド兵は、攻めかかる前に砦を捨てて逃げた。',aug:'#オーギュスタン砦が落ちた。南岸に残るのは、橋のたもとのトゥーレル砦だけだ。',tour:'#夕方、トゥーレル砦が落ちた。\n#グラスデールは逃げようとして橋から川に落ち、重い鎧のまま沈んでいった。'}[k];
+  await E.story('@bg battle\n'+txt,{place:N[k].n});addLog(N[k].n+'を落とした（士気 +15）。','good');toast(N[k].n+'を落とした！');}
+ else{G.fails++;G.M-=15;const l=Math.round(u.n*.2);u.n-=l;G.order.pop();await E.story('@bg battle\n#'+N[k].n+'に攻めかかった。\n#だが兵たちの勢いが足りず、城壁の上からの矢に押し返された（兵 −'+fmtN(l)+'）。\nデュノワ：……今は無理だ。いったん町へ戻ろう。');addLog(N[k].n+'を攻めたが、押し返された（兵 −'+fmtN(l)+'）。','bad');u.at=G.inCity?'city':(G.route.joan&&G.route.joan.length>1?G.route.joan[G.route.joan.length-2]:'blois');
+  if(u.n<800){await endGame('broken');}}
+ G.M=clamp(G.M,0,100);}
+async function council(G){const c=await E.story('@bg room\n#オルレアンの館。将軍たちの軍議。\nデュノワ：サン・ルーは落とした。だが残る砦は固い。王の援軍が来るまで、町で守りを固めるべきだ。\n#将軍たちは、ジャンヌ抜きで「しばらく攻めない」と決めていた。\nジャンヌ：あなたたちは、あなたたちの考えで決めた。わたしは、神さまのお考えに従います。\n?将軍たちに従い、援軍を待つ｜「わたしは行きます」と、明日の出撃を告げる',{place:'オルレアン'});G.council=c;
+ if(c===1){G.M-=20;await E.story('#ジャンヌは黙った。\n#町の兵たちは「乙女が戦わないなら」と、肩を落とした。');await E.pass(2,{},300);addLog('将軍たちに従い、一日待った（士気 −20）。','bad');}
+ else{G.M+=10;await E.story('ジャンヌ：明日の朝、南の砦を攻めます。来たい者はついてきなさい。\nラ・イル：……ちくしょう、乙女が行くなら、おれも行く！\n#将軍たちも、ついに折れた。');addLog('ジャンヌが出撃を告げた（士気 +10）。','good');}}
+async function lifted(G){if(G.sunday!=null)return;G.M=clamp(G.M,0,100);
+ const c=await E.story('@bg river\n#五月八日、日曜日の朝。\n#イングランド軍は砦を出て、町の前に戦いの隊列を組んだ。\n#一時間、にらみ合いが続いた。\nラ・イル：乙女、やつらは誘っている。今なら、まとめて叩けるぞ！\n?今日は日曜日。こちらからは攻めず、見送る｜隊列を組んだ敵に攻めかかる',{place:'オルレアンの前'});G.sunday=c;
+ if(c===1){G.M+=10;await E.story('ジャンヌ：今日は日曜日です。向こうが攻めてこないなら、戦ってはなりません。行かせなさい。\n#やがてイングランド軍は向きを変え、去っていった。\n#二百日あまり続いた包囲が、ついに解けた。\n#町じゅうの鐘が鳴りひびいた。');}
+ else{const l=Math.round(U().n*.3);U().n-=l;G.M-=10;await E.story('#フランス軍は、隊列を組んで待つイングランド軍に攻めかかった。\n#杭の後ろから長弓が雨のように降りそそぎ、多くの兵が倒れた（兵 −'+fmtN(l)+'）。\n#それでもイングランド軍は去り、包囲は解けた。');}
+ await patay(G);}
+async function patay(G){BGM.play('crisis');
+ await E.story('@title パテーの戦い\n@bg field\n#六月十八日。ロワール川ぞいの町を次々と取り返したフランス軍は、退くイングランド軍を追っていた。\n#イングランドの強さは長弓兵。地面に杭を打ち、その後ろから矢の雨を降らせる。構えさせたら、騎兵は近づけない。\nラ・イル：やつらに杭を打たせる前に、見つけて叩かねば。',{place:'パテー'});
+ let R=2.4*(G.M/85)*clamp(U().n/2000,.6,1.1);G.R=R;E.gauge(R,NEED);
+ const q1=await E.story('@bg field\n#広い畑と森。イングランド軍の姿は見えない。\n?足の速い斥候を先に出して、敵を探す｜全軍そろって進む');
+ if(q1===2)R*=.8;G.ans.push(q1===1);E.gauge(R,NEED);
+ const q2=await E.story('@bg field\n#そのとき、森から一頭の鹿が飛び出した。\n#森の奥で「ワアッ」と声が上がる。鹿に驚いたイングランド兵が、思わず叫んだのだ。\nラ・イル：あそこだ！ 森の向こうにいるぞ！\n#長弓兵が、あわてて杭を打ちはじめている。\n?今すぐ、叫び声のした方へ突撃！｜全軍の隊列を整えてから攻める');
+ if(q2===2)R*=.6;G.ans.push(q2===1);E.gauge(R,NEED);
+ const q3=await E.story('@bg battle\n#フランス騎兵が森をまわりこむと、杭を打ちかけの長弓兵が目の前に！\n?そのまま踏みつぶせ！｜弓の届かないところで、いったん止まれ');
+ if(q3===2)R*=.6;G.ans.push(q3===1);E.gauge(R,NEED);G.R=R;await sleep(600);E.gaugeOff();
+ if(R>=NEED){SND.warcry();await E.story('@bg battle\n#杭を打つ間もなく、長弓兵は騎兵に踏みつぶされた。\n#イングランド軍は崩れ、名将タルボットも捕らえられた。\nタルボット：……あの少女に、負けたというのか。\n@bg dawn\n#七月、王太子シャルルはランスの大聖堂で戴冠し、フランス王シャルル七世となった。\n#そのかたわらには、旗を手にしたジャンヌが立っていた。\n@title オルレアンの乙女　フランスの勝利');await endGame('win');}
+ else{await E.story('@bg battle\n#イングランドの長弓兵は、杭の後ろで構えを終えていた。\n#突っこんだ騎兵に、矢の雨が降りそそぐ。\nデュノワ：引け、引けっ！');await endGame('assault');}}
+regStage(ST);
+})();
+</script>
+<script>/* s6.js */
+/* ===== 鳴梁海戦（1597） ===== */
+(function(){
+const NEED=2.0;
+const tide=t=>t<12?-1:t<13?0:1; // -1:西向き（敵を押しこむ） 0:よどみ 1:東向き（敵を押し戻す）
+const TN={'-1':'西向き（敵に有利）','0':'よどみ','1':'東向き（味方に有利）'};
+const N={base:{n:'右水営',x:70,y:230,t:'sea'},mouth:{n:'鳴梁の西口',x:220,y:360,t:'sea'},strait:{n:'鳴梁海峡',x:330,y:370,t:'sea'},east:{n:'東の海',x:480,y:420,t:'sea',side:'foe'}};
+const U=id=>G.units.find(u=>u.id===id);
+const ST={id:'myeongnyang',k:'潮',n:'鳴梁海戦',y:'1597',vs:'朝鮮水軍 13隻 vs 日本水軍 100隻以上',d:'渦潮の海峡の出口で持ちこたえ、潮の変わり目に反撃せよ。',
+ meMon:'joseon',foeMon:'wa',
+ heroes:[H('yi','李舜臣','朝','蜀',{fs:'long',fw:23,sk:'#e4c4a0',age:2,hair:'knot',brow:'thick',eye:'narrow',nose:'n',mo:'tight',bd:'long',cl:'armor',c1:'#2a2a3a',c2:'#c8a050',c3:'#6a1a14'}),
+  H('kimek','金応諴','朝','蜀',{fs:'round',fw:24,age:1,hair:'knot',brow:'soft',eye:'round',nose:'n',mo:'n',bd:'short',cl:'armor',c1:'#3a4a3a',c2:'#a8a070'}),
+  H('anwi','安衛','朝','蜀',{fs:'square',fw:25,age:1,hair:'knot',brow:'thick',eye:'round',nose:'wide',mo:'frown',bd:'mus',cl:'armor',c1:'#4a3a2a',c2:'#a08050'}),
+  H('kurushima','来島通総','日','呉',{fs:'sharp',fw:23,age:1,hair:'tail',brow:'angry',eye:'sharp',nose:'thin',mo:'grin',bd:'mus',cl:'armor',c1:'#7a1a14',c2:'#c9a22c'})],
+ map:{nodes:N,edges:[['base','mouth',1,'sea'],['mouth','strait',1,'sea'],['strait','east',1,'sea']],
+  deco:{base:'sea',north:true,polys:[{kind:'land',pts:[[-40,-40],[600,-40],[600,280],[480,330],[380,320],[320,330],[260,300],[180,280],[100,300],[40,330],[-40,320]]},
+   {kind:'land',pts:[[-40,470],[60,440],[160,430],[250,410],[320,412],[380,430],[460,480],[540,520],[600,540],[600,760],[-40,760]]}],
+   texts:[{t:'海南',x:300,y:200,size:18,disp:1,col:'rgba(70,60,40,.7)'},{t:'珍島',x:260,y:560,size:18,disp:1,col:'rgba(70,60,40,.7)'},{t:'渦潮',x:330,y:395,size:12,col:'rgba(20,50,80,.8)'}]}},
+ init(){return {t:7,M:60,hp:100,EM:100,sunk:0,units:[{id:'flag',name:'旗艦（李舜臣）',short:'旗艦',at:'mouth',n:null},{id:'fleet',name:'十二隻',short:'十二隻',at:'base',n:null}],field:null,decoy:null,speech:null,front:false,called:0,anwi:null,kurushima:false,head:null,R:null,ans:[],done:false};},
+ when:G=>['九月十六日',clock(G.t)],logTime:G=>clock(G.t),
+ pills:G=>{const td=tide(G.t);return [{i:'潮',v:TN[td],warn:td<0},{i:'旗艦',bar:G.hp,col:G.hp<35?'#ef7d7d':null},{i:'敵の士気',bar:G.EM,col:'#e05a48'},{i:'沈めた敵船',v:G.sunk+'隻'}];},
+ overlay:G=>null,bgm:G=>tide(G.t)>0?'crisis':'battle',
+ unitSub:u=>u.id==='flag'?'船体 '+Math.round(G.hp):u.at==='base'?'後ろで様子見':'前に出た',
+ hour(G,c){const td=tide(G.t);let dmg=td<0?14:td===0?7:3;if(G.front)dmg*=.5;if(G.decoy)dmg*=.9;if(c.call)dmg*=1;G.hp-=dmg;
+  const hit=G.front?3:2;G.sunk+=hit;G.EM-=G.front?5:3;G.hp=clamp(G.hp,0,100);G.EM=clamp(G.EM,0,100);G.M=clamp(G.M,0,100);},
+ at(G){if(G.t===12){toast('潮の流れが弱まってきた……');addLog('潮の流れが弱まった。');}if(G.t===13)G.q.push('turn');},
+ async after(G){if(G.over)return;if(G.hp<=0){await E.story('@bg sea\n#旗艦の船体が砕け、海水が流れこんだ。\n#将を失った朝鮮水軍は崩れ、日本の船団は鳴梁を抜けて西の海へ出ていった。');await endGame('sunk');return;}
+  if(G.t>=16&&!G.done){await E.story('@bg sea\n#日が傾いた。潮は再び西へ流れはじめた。\n#反撃の機会を逃した朝鮮水軍に、押し寄せる船団を止める力は残っていなかった。');await endGame('timeout');}},
+ acts:[
+  {k:'hold',kan:'砲',lab:'守る',hot:1,on:G=>!G.done,open(G){const td=tide(G.t);const b=[el('p','muted','一時間、海峡の出口で砲を撃ち続け、敵船を一隻も通さない。'),noteEl(td<0?'bad':'good','潮は'+TN[td]+'。'+(td<0?'敵船は潮に乗って、次々と押し寄せてくる。':'潮が敵を押し戻している。')),noteEl(G.front?'good':'bad',G.front?'十二隻が前に出て、ともに戦っている。':'十二隻は後ろで様子見。旗艦がひとりで敵を受けとめている。')];S.advice(G).slice(0,2).forEach(a=>b.push(advEl(a[0],a[1])));
+    confirmAct('持ちこたえる','鳴梁の西口',b,'撃て！',()=>act(async()=>{await E.pass(1,{},500);addLog('海峡の出口で持ちこたえた。');}));}},
+  {k:'call',kan:'旗',lab:'味方',on:G=>!G.front&&!G.done,open(G){confirmAct('招揺旗を揚げる','後ろの十二隻へ',[el('p','muted','帆柱に旗を揚げ、後ろで様子をうかがう味方の船を呼び寄せる。そのあいだも敵の攻撃は続く。'),advEl('yi','逃げる者は、軍法で斬る。それを思い出させてやれ。')],'旗を揚げよ',()=>act(async()=>{await callFleet(G);}));}},
+  {k:'target',kan:'将',lab:'敵将',on:G=>G.t>=9&&!G.kurushima&&!G.done,open(G){confirmAct('敵の将船を狙う','来島通総の船',[el('p','muted','一時間かけて、群れの中の大きな将船に砲を集中させる。'),noteEl('','将を討てば、敵の士気は大きく下がるはず。')],'将船を撃て',()=>act(async()=>{await E.pass(1,{},500);await kurushima(G);}));}},
+  {k:'back',kan:'退',lab:'下がる',on:G=>!G.done,open(G){confirmAct('下がる','旗艦を後ろへ',[noteEl('bad','旗艦が出口を離れれば、敵の船団は海峡を抜けて西の海へなだれこむ。')],'それでも下がる',()=>act(async()=>{await E.story('@bg sea\n#旗艦が向きを変えた。\n#その瞬間、日本の船団は潮に乗って海峡を抜け、西の海へ広がっていった。\n#もう、止める手だてはない。');await endGame('pass');}));}},
+  {k:'strike',kan:'反',lab:'反撃',on:G=>tide(G.t)>0&&!G.done,open(G){confirmAct('全船で反撃','潮が変わった',[el('p','muted','潮に押し戻されて固まった敵船へ、全船で攻めかかる。')],'反撃！',()=>act(async()=>{await finale(G);}));}}
+ ],
+ advice(G){const a=[],td=tide(G.t);
+  if(!G.front)a.push(['yi','後ろの船が前に出てこぬ。旗を揚げて呼べ。わしの船だけでは、いつまでも持たぬ。']);
+  if(G.t>=9&&!G.kurushima)a.push(['kimek','あの赤い大きな船が、敵の将船でございます。あれを沈めれば……！']);
+  if(td<0)a.push(['yi','今は潮が敵の味方をしている。この出口を一歩も譲るな。潮は、必ず変わる。']);
+  if(td>0)a.push(['yi','潮が変わった！ 敵の船がぶつかりあっている。今こそ反撃のときだ！']);
+  if(G.hp<40)a.push(['kimek','旗艦の傷がひどうございます！']);return a.slice(0,3);},
+ marks(G){const L=[];const n=Math.max(0,133-G.sunk);L.push({x:N.east.x+10,y:N.east.y-20,l:'日本水軍',s:'約'+n+'隻',main:1});
+  if(G.t>=9&&!G.kurushima)L.push({x:N.strait.x+50,y:N.strait.y-30,l:'来島通総',s:'将船'});
+  if(G.decoy)L.push({x:120,y:150,l:'避難民の船',s:'大艦隊に見せる',mon:'joseon',dark:1});return L;},
+ drawOver(g){const td=tide(G.t),ph=(performance.now()/700)%1;g.save();g.strokeStyle=td<0?'rgba(200,60,40,.75)':td>0?'rgba(40,120,200,.85)':'rgba(80,80,80,.5)';g.lineWidth=3;
+  if(td!==0)for(let r=0;r<3;r++)for(let i=0;i<4;i++){const p=(i/4+ph)%1;const x0=td<0?520-p*360:180+p*360;const [x,y]=toScr(x0,350+r*22+(x0-300)*.1);const d=td<0?-1:1;g.beginPath();g.moveTo(x-8*d,y-5);g.lineTo(x,y);g.lineTo(x-8*d,y+5);g.stroke();}
+  const R=mrand(3);g.fillStyle='rgba(120,20,14,.85)';const k=Math.min(60,Math.round((133-G.sunk)/2.4));for(let i=0;i<k;i++){const x=300+R()*240,y=360+R()*80+(R()-.5)*20;const [sx,sy]=toScr(x,y);g.fillRect(sx-3,sy-2,7,4);}
+  g.restore();},
+ ev:{async turn(G){await E.story('@bg sea\n#未の刻。渦を巻いていた潮が、ゆっくりと向きを変えた。\n#それまで日本の船を押しこんでいた流れが、逆に東へ押し戻しはじめる。\n#狭い海峡に詰めこまれた日本の船が、互いにぶつかりあい、身動きが取れなくなった。\n李舜臣：……来たぞ。');addLog('潮が変わった。敵の船がぶつかりあっている。','good');toast('潮が変わった！「反撃」の時だ');}},
+ async prologue(G){BGM.play('council');
+  const c=await E.story('@title 鳴梁海戦\n@bg sea\n#一五九七年。豊臣秀吉の命で、日本の大軍が再び朝鮮に攻めこんだ。\n#朝鮮水軍は漆川梁の戦いで大敗し、残った船はわずか十三隻。\n#水軍の指揮に戻った李舜臣に、王から「水軍を捨てて陸で戦え」との命令が届いた。\n李舜臣：臣にはまだ十二隻の船があります。臣が死なぬ限り、敵は我らをあなどれませぬ。\n#九月。百隻をこえる日本の船団が、西へ進んできた。\n?鳴梁海峡の出口で迎え撃つ｜広い海で、正面から戦う｜戦わずに退く',{place:'右水営'});G.field=c;
+  if(c===2){await E.story('@bg sea\n#広い海に出た十三隻は、あっという間に百隻の船団に囲まれた。\n#四方から矢と鉄砲を浴び、船は一隻、また一隻と沈んでいった。');await endGame('open');return false;}
+  if(c===3){await E.story('@bg sea\n#朝鮮水軍は退いた。\n#日本の船団は西の海へ進み、陸の軍と合わさって、さらに北へ攻め上っていった。');await endGame('retreat');return false;}
+  await E.story('李舜臣：鳴梁は狭く、潮は速い。大船団でも、一度に数隻ずつしか通れぬ。……一人が道をふさげば、千人をも防げる。');
+  const d=await E.story('@bg sea\n#港には、戦から逃れてきた民の小舟が百隻ほど集まっていた。\n?民の舟を後ろの海に並べ、大艦隊に見せかける｜民の舟は、遠くへ逃がす');G.decoy=d===1;
+  if(G.decoy){await E.story('#民の舟が、朝鮮水軍のはるか後ろに並んだ。\n#遠くから見れば、まるで大艦隊が控えているようだ。');addLog('民の舟を後ろに並べ、大艦隊に見せかけた。','good');}
+  const e=await E.story('@bg night\n#戦の前の夜。李舜臣は将たちを集めた。\n?「必ず死のうとする者は生き、生きようとする者は死ぬ」と告げる｜何も言わずに眠る');G.speech=e;
+  if(e===1){G.M+=20;await E.story('李舜臣：必死則生、必生則死。一人が道を守れば、千人をも恐れさせる。今の我らのことだ。\n#将たちは、黙ってうなずいた。');}
+  await E.story('@bg sea\n#九月十六日の朝。潮は西へ、川のような速さで流れている。\n#その流れに乗って、日本の船団が鳴梁に入ってきた。\n#朝鮮の十二隻は、なぜか後ろに下がったまま動かない。前に出たのは、李舜臣の旗艦ただ一隻だった。',{place:'鳴梁'});
+  return true;},
+ start(G){banner('鳴梁',clock(G.t));setTimeout(()=>toast('潮が変わるまで、海峡の出口で持ちこたえろ'),900);},
+ dbg:G=>({t:G.t,hp:Math.round(G.hp),EM:G.EM,front:G.front,sunk:G.sunk}),
+ lose:{open:['広い海','十三隻が広い海で百隻と戦えば、囲まれて終わる。狭い海峡なら、敵は一度に数隻しか来られない。'],
+  retreat:['退いた','戦わずに退けば、海の道は敵に開かれる。'],pass:['出口を明けわたした','旗艦が下がると、敵は海峡を抜けてしまう。潮が変わるまで、出口をふさぎ続ける必要があった。'],
+  sunk:['旗艦が沈んだ','旗艦がひとりで敵を受けとめ続けた。後ろの船を呼び寄せ、敵の将を討って勢いをそぐ必要があった。'],
+  timeout:['反撃しなかった','潮が変わった時が反撃の好機だった。'],assault:['押し返せなかった','反撃したが、敵を崩しきれなかった。']},
+ rank:G=>G.R>=2.6?'S':G.R>=2.2?'A':'B',
+ stats:G=>[['時刻',clock(G.t)],['旗艦の船体',Math.round(G.hp)],['沈めた敵船',G.sunk+'隻'],['朝鮮水軍の損失','0隻']].concat(G.R?[['勝機',Math.round(G.R/NEED*100)+'%']]:[]),
+ review(G){const L=[];const R=(k,you,ok,his)=>L.push({k,you,ok,his});
+  R('戦場',['鳴梁の出口','広い海','退いた'][G.field-1],G.field===1,'流れの速い狭い海峡・鳴梁を選び、敵が一度に押し寄せられないようにした。');
+  if(G.field!==1)return L;
+  R('民の舟',G.decoy?'後ろに並べた':'逃がした',G.decoy,'避難民の舟を後方に並べ、大艦隊がいるように見せかけたと伝わる。');
+  R('前夜',G.speech===1?'「必死則生、必生則死」':'何も言わなかった',G.speech===1,'戦の前日、将たちに「必ず死のうとする者は生き、生きようとする者は死ぬ」と告げた。');
+  R('味方を呼ぶ',G.front?clock(G.called)+'に呼び寄せた':'呼ばなかった',G.front&&G.called<=9,'旗艦が一隻で戦うなか、招揺旗を揚げて金応諴と安衛を呼び寄せ、安衛を叱りつけた。');
+  R('敵将',G.kurushima?(G.head===1?'討ち取り、首を掲げた':'討ち取った'):'狙わなかった',G.kurushima&&G.head===1,'来島通総が討たれ、その首が帆柱に掲げられると、日本の船団は勢いを失った。');
+  if(G.ans.length)R('反撃',(G.ans[0]?'固まった船を狙った':'一隻ずつ追った')+'・'+(G.ans[1]?'出口で叩いた':'外海まで追った')+'・'+(G.ans[2]?'夜のうちに退いた':'海にとどまった'),G.ans.every(Boolean),'潮が変わると、ぶつかりあう敵船を砲撃した。朝鮮側は一隻も失わず、その夜は兵力の差を考えて退いた。');
+  return L;}
+};
+async function callFleet(G){G.called=G.t;await E.pass(1,{call:1},500);
+ const c=await E.story('@bg sea\n#旗艦の帆柱に、招揺旗が揚がった。\n#ゆっくりと、金応諴の船と安衛の船が近づいてくる。\n#安衛の船は、まだ距離をとっている。\n?「安衛！ 軍法で斬られたいか。逃げてどこで生きるつもりだ！」と叱りつける｜来てくれた船だけで戦う');G.anwi=c;
+ if(c===1){G.front=true;G.M+=10;U('fleet').at='mouth';await E.story('李舜臣：安衛！ 軍法で斬られたいか！ 逃げて、どこで生きるつもりだ！\n安衛：は、ははっ！\n#安衛の船が、敵の真っただ中へ突っこんだ。続いて後ろの船も、次々と前に出てきた。');addLog('十二隻が前に出てきた。','good');}
+ else{await E.story('#金応諴の船だけが前に出た。\n#だが、ほかの船はまだ後ろで迷っている。');addLog('金応諴の船だけが前に出た。');}}
+async function kurushima(G){G.kurushima=true;G.EM-=20;G.sunk+=1;
+ const c=await E.story('@bg sea\n#砲を集中させた将船が、大きく傾いた。\n#海に落ちた赤い鎧の武者が、引き上げられる。\n#かつて日本の側から朝鮮に降った者が、その顔を見て叫んだ。\n「あれは、来島（マダシ）です！」\n?その首を帆柱に掲げ、敵に見せつける｜そのまま戦いを続ける');G.head=c;
+ if(c===1){G.EM-=20;G.M+=10;await E.story('#来島通総の首が、旗艦の帆柱に掲げられた。\n#それを見た日本の船団に、動揺が走った。');addLog('来島通総を討ち、その首を掲げた（敵の士気 大きく下がる）。','good');}
+ else addLog('来島通総を討ち取った。','good');G.EM=clamp(G.EM,0,100);}
+async function finale(G){G.done=true;BGM.play('crisis');
+ let R=2.0*((130-G.EM)/100)*clamp(G.hp/60,.5,1.2)*(G.front?1:.6)*(G.decoy?1.1:1)*(G.M/80);G.R=R;
+ await E.story('@bg sea\n李舜臣：全船、かかれぇっ！\n#朝鮮の船が、潮に乗って一斉に前へ出た。',{place:'鳴梁海峡'});E.gauge(R,NEED);
+ const q1=await E.story('@bg sea\n#日本の船は潮に押し戻され、狭い海峡で押し合っている。\n?固まった船に、火矢と砲を集めよ｜逃げる船を一隻ずつ追え');
+ if(q1===2)R*=.75;G.ans.push(q1===1);E.gauge(R,NEED);
+ const q2=await E.story('@bg sea\n#日本の船団が、東の海へ逃げていく。\n?深追いはするな。海峡の出口で叩け｜外の海まで追いかけよ');
+ if(q2===2)R*=.6;G.ans.push(q2===1);E.gauge(R,NEED);
+ const q3=await E.story('@bg night\n#日が暮れた。敵はまだ百隻近く残っている。\n?夜のうちに退いて、船を守る｜この海にとどまって、明日も戦う');
+ if(q3===2)R*=.75;G.ans.push(q3===1);E.gauge(R,NEED);G.R=R;await sleep(600);E.gaugeOff();
+ if(R>=NEED){G.sunk+=25;SND.warcry();await E.story('@bg sea\n#この日、日本の船三十隻あまりが沈み、あるいは壊れた。朝鮮側の船は、一隻も沈まなかった。\n#日本の水軍は西の海へ進むのをあきらめた。\n李舜臣：……これは、まことに天の助けであった。\n@title 鳴梁海戦　朝鮮水軍の勝利');await endGame('win');}
+ else{await E.story('@bg sea\n#反撃は、敵を崩しきるには足りなかった。\n#夜のうちに日本の船団は態勢を立てなおし、朝鮮水軍は退くしかなかった。');await endGame('assault');}}
+regStage(ST);
+})();
+</script>
+<script>/* s7.js */
+/* ===== ロルクズ・ドリフト（1879） ===== */
+(function(){
+const NEED=2.0,DAWN=15;
+const tm=t=>t<3?15*60+t*30:16*60+30+(t-3)*60;
+const N={north:{n:'北の壁',x:290,y:170,t:'wall'},hosp:{n:'病院',x:130,y:330,t:'house'},east:{n:'家畜囲い',x:450,y:330,t:'wall'},
+ south:{n:'南の壁',x:290,y:470,t:'wall'},inner:{n:'ビスケット箱の内壁',x:300,y:360,t:'wall'},hill:{n:'シヨン山',x:300,y:640,t:'hill',side:'foe'}};
+// 時刻ごとのズールー軍の攻撃（場所：強さ）
+const ATK={3:{south:35},4:{north:70,hosp:40},5:{north:85,hosp:75},6:{hosp:100,north:80,east:40},7:{east:80,north:90,hosp:90},8:{east:100,north:100},9:{north:95,east:90,south:50},10:{north:85,east:80,south:50},11:{north:70,east:60},12:{north:50,east:40},13:{north:35},14:{north:20}};
+const U=id=>G.units.find(u=>u.id===id);
+const men=G=>G.units.reduce((s,u)=>s+u.n,0);
+const BUILD={wall:['穀物袋の外の壁','穀物の袋を積み上げて、建物と建物の間をつなぐ外の壁をつくる。'],holes:['病院の銃眼','病院の壁に穴をあけ、中から撃てるようにする。'],biscuit:['ビスケット箱の内壁','重いビスケットの箱を積んで、敷地のまん中に内側の壁をつくる。外の壁が破られた時の逃げ場になる。'],redoubt:['穀物袋の高台','穀物の袋を高く積み上げ、最後に立てこもる砦をつくる。']};
+const ST={id:'rorke',k:'砦',n:'ロルクズ・ドリフト',y:'1879',vs:'英軍 約150 vs ズールー軍 約4千',d:'小さな拠点を一晩守り抜け。壁を築き、守る場所を選び、下がる時を見きわめよ。',
+ meMon:'redcoat',foeMon:'zulu',multi:true,moveLabel:'配置',
+ heroes:[H('chard','チャード','英','呉',{fs:'long',fw:23,sk:'#f0d4c0',age:1,hair:'knot',hc:'#4a3020',brow:'n',eye:'narrow',nose:'n',mo:'tight',bd:'mus',bc:'#4a3020',cl:'armor',c1:'#b8281c',c2:'#e8e0c8'}),
+  H('bromhead','ブロムヘッド','英','呉',{fs:'oval',fw:23,sk:'#f4d8c4',age:1,hair:'knot',hc:'#6a4a2a',brow:'thick',eye:'round',nose:'n',mo:'n',bd:'mus',bc:'#6a4a2a',cl:'armor',c1:'#b8281c',c2:'#e8e0c8'}),
+  H('dalton','ダルトン','英','呉',{fs:'square',fw:25,sk:'#ecc8b0',age:2,hair:'bald',brow:'bushy',eye:'narrow',nose:'wide',mo:'frown',bd:'full',bc:'#8a6a4a',cl:'robe',c1:'#2a2a3a',c2:'#a8a090'}),
+  H('hook','フック','英','呉',{fs:'oval',fw:23,sk:'#f0d0b8',age:0,hair:'knot',brow:'n',eye:'round',nose:'n',mo:'tight',bd:'mus',cl:'armor',c1:'#b8281c',c2:'#e8e0c8'}),
+  H('dabula','ダブラマンジ','ズ','南蛮',{fs:'square',fw:25,sk:'#5a3a26',age:1,hair:'knot',hc:'#1a1410',brow:'thick',eye:'sharp',nose:'wide',mo:'tight',bd:'short',cl:'south',c1:'#6a4a2a',c2:'#e8e0c8'})],
+ map:{nodes:N,edges:[['north','hosp',1,'road'],['north','east',1,'road'],['east','south',1,'road'],['south','hosp',1,'road'],['inner','north',1,'road'],['inner','hosp',1,'road'],['inner','east',1,'road'],['inner','south',1,'road']],
+  deco:{north:false,hills:[[300,680,90,1],[60,640,50],[520,660,50]],forests:[[0,560,560,60,40]],rects:[{x:90,y:300,w:80,h:60,col:'rgba(200,180,140,.6)',bd:'#6a5030'},{x:400,y:300,w:110,h:70,col:'rgba(160,140,100,.35)',bd:'#6a5030'},{x:230,y:300,w:120,h:50,col:'rgba(200,180,140,.6)',bd:'#6a5030'}],
+   texts:[{t:'倉庫',x:290,y:322,size:12},{t:'バッファロー川へ',x:300,y:40,size:12}]}},
+ init(){return {t:0,M:60,units:[{id:'brom',name:'ブロムヘッド隊',short:'ブロムヘッド',at:'north',n:50},{id:'chard',name:'チャード隊',short:'チャード',at:'south',n:50},{id:'hosp',name:'病院の兵（フック）',short:'病院の兵',at:'hosp',n:20}],sel:'brom',stay:null,built:{},evac:false,fell:false,fire:false,breaches:0,patients:false,R:null,ans:[],log2:[]};},
+ when:G=>[(G.t>=DAWN?'一月二十三日 ':'一月二十二日 ')+clockM(tm(G.t)),G.t<3?'ズールー軍の到着まで、あと少し':G.fell?'内壁に立てこもっている':'外の壁で守っている'],logTime:G=>clockM(tm(G.t)),
+ pills:G=>[{i:'兵',v:fmtN(men(G))},{i:'士気',bar:G.M},{i:'破られた回数',v:G.breaches+' / 3',warn:G.breaches>=2}],
+ overlay:G=>G.t>=6&&G.t<DAWN?'night':G.t===5?'dusk':G.t>=DAWN?'dawn':null,bgm:G=>G.t>=3?'crisis':'council',
+ burnt:(G,k)=>k==='hosp'&&G.fire,
+ canMoveAny:G=>true,costLabel:h=>'次の時刻まで',arriveLabel:(G,h)=>clockM(tm(G.t+h)),
+ canMove(G,u,e){if(G.fell&&e.to!=='inner')return '外の壁はもう捨てた';if(e.to==='hill')return 'ズールー軍の陣';return true;},
+ moveNotes(G,u,e){const o=[],a=ATK[G.t+1]||{};if(a[e.to])o.push(['','次の時刻、ここに攻撃が来そうだ。']);if(e.to==='inner'&&!G.built.biscuit)o.push(['bad','内壁はまだ築かれていない。']);return o;},
+ hour(G){const a=ATK[G.t];if(!a)return;let sum=0;
+  if(G.fell){Object.values(a).forEach(v=>sum+=v);sum*=.95;const d=defense(G,'inner');if(sum>d)breach(G,'inner',sum-d);else{G.M+=2;}return;}
+  const A={...a};if(A.hosp&&G.evac&&!G.units.some(u=>u.at==='hosp')){A.north=(A.north||0)+A.hosp*.6;delete A.hosp;}
+  Object.keys(A).forEach(k=>{const s=A[k];const d=defense(G,k);if(s>d)breach(G,k,s-d);else G.M+=1;});
+  G.M=clamp(G.M,0,100);},
+ at(G){if(G.t===3)G.q.push('arrive');if(G.t===6&&!G.fire)G.q.push('fire');if(G.t===DAWN)G.q.push('dawn');},
+ async after(G){if(G.over)return;if(G.breaches>=3||men(G)<40||G.M<15){await E.story('@bg fort\n#ズールーの戦士たちが壁を越え、敷地の中へなだれこんだ。\n#わずかな兵では、もう押し返せない。\nチャード：……ここまでか。');await endGame('overrun');}},
+ acts:[
+  {k:'wait',kan:'時',lab:'進める',hot:1,on:G=>G.t<DAWN,open(G){const a=ATK[G.t]||{};const b=[el('p','muted',(G.units.some(u=>u.order)?'配置を変えた隊が動く。':'')+'次の時刻まで、今の配置で守る。')];
+    Object.keys(a).forEach(k=>{const s=a[k],d=G.fell?defense(G,'inner'):defense(G,k);b.push(noteEl(s>(G.fell?d/1.25:d)?'bad':'good',(G.fell?'内壁':N[k].n)+'に攻撃が来そうだ（守りの強さ '+Math.round(d)+'）'));});
+    S.advice(G).slice(0,2).forEach(x=>b.push(advEl(x[0],x[1])));confirmAct('時を進める',clockM(tm(G.t)),b,'守れ！',()=>act(async()=>{await E.pass(1,{},500);}));}},
+  {k:'build',kan:'築',lab:'築く',on:G=>Object.keys(BUILD).some(k=>!G.built[k])&&G.t<DAWN,open(G){const body=[el('p','muted','一つ築くのに、次の時刻までかかる。ズールー軍は午後4時半ごろに来る。')];const foot=[btn('やめる','',closeSheet)];
+    const list=el('div');list.style.cssText='display:flex;flex-direction:column;gap:6px';Object.keys(BUILD).forEach(k=>{if(G.built[k])return;const b=btn(BUILD[k][0],'',()=>act(async()=>{G.built[k]=G.t;addLog(BUILD[k][0]+'を築いた。','good');await E.pass(1,{},500);}));b.title=BUILD[k][1];list.append(b,el('div','note',esc(BUILD[k][1])));});body.push(list);sheet('壁を築く','ダルトンの案',body,foot);}},
+  {k:'evac',kan:'患',lab:'病人',on:G=>!G.evac&&U('hosp').at==='hosp'&&G.t>=3,open(G){confirmAct('患者を運び出す','病院',[el('p','muted','病院の兵が壁に穴をあけながら部屋から部屋へ進み、病人を外へ運び出す。次の時刻までかかる。'),advEl('hook','壁をつるはしで破って、一人ずつ運び出します！')],'運び出せ',()=>act(async()=>{await E.pass(1,{},500);if(G.over)return;G.evac=true;U('hosp').at='inner';U('hosp').order=null;await E.story('@bg fort\n#フックとウィリアムズは、つるはしで病院の壁に穴をあけ、部屋から部屋へと病人を運んだ。\n#外ではズールーの戦士が扉を叩き破ろうとしている。\n#最後の病人が窓から運び出され、内側の敷地へ運ばれた。',{place:'病院'});addLog('病人をすべて運び出した。','good');}));}},
+  {k:'fall',kan:'退',lab:'下がる',on:G=>!G.fell&&G.t>=3,open(G){const b=[el('p','muted','外の壁と病院を捨て、全員でビスケット箱の内壁まで下がる。守る場所がせまくなる。')];if(!G.built.biscuit)b.push(noteEl('bad','内壁はまだない。下がっても守れない。'));if(!G.evac)b.push(noteEl('bad','病院にはまだ病人が残っている。'));
+    confirmAct('内壁まで下がる','全員',b,'下がれ！',()=>act(async()=>{G.fell=true;G.fellT=G.t;G.units.forEach(u=>{u.order=null;u.at='inner';});if(!G.evac){G.patients=true;G.M-=15;addLog('病院に病人を残してしまった。','bad');}addLog('外の壁を捨て、内壁まで下がった。');await E.story('@bg fort\nチャード：内壁まで下がれ！ ビスケット箱の後ろだ！\n#兵たちは撃ちながら、敷地のまん中の低い壁まで下がった。'+(G.built.redoubt?'\n#その後ろには、穀物袋を積み上げた高台がある。':''));}));}}
+ ],
+ advice(G){const a=[],t=G.t;
+  if(t<3){const n=Object.keys(G.built).length;a.push(['dalton',n===0?'穀物の袋とビスケットの箱で壁を築きましょう。まずは外の壁です。':n<3?'もう一つ。時間のあるうちに、築けるだけ築きましょう。':'よし、これで少しは持ちこたえられる。']);}
+  if(t>=3&&t<=5&&!G.evac)a.push(['hook','病院が持ちません！ 早く病人を運び出さないと！']);
+  if(G.evac&&!G.fell)a.push(['chard','病院は空になった。外の壁は長すぎる。内壁まで下がる時だ。']);
+  if(t>=6&&!G.fell)a.push(['bromhead','家畜囲いの方にも敵が回ってきた！ この広さは守りきれん！']);
+  if(G.fell&&!G.built.redoubt)a.push(['dalton','内壁の後ろに、穀物袋の高台を積みましょう。最後の砦になります。']);
+  if(!a.length)a.push(['chard','撃ち続けろ。夜明けまで持てば、我々の勝ちだ。']);return a.slice(0,3);},
+ marks(G){const a=ATK[G.t]||{},L=[];if(G.t>=3&&G.t<DAWN)Object.keys(a).forEach(k=>{const n=G.fell?N.inner:N[k];L.push({x:N[k].x+(k==='east'?40:k==='hosp'?-50:40),y:N[k].y+(k==='north'?-50:k==='south'?60:-30),l:'ズールー軍',s:'強さ '+a[k],main:a[k]>=80});});
+  if(G.t<3)L.push({x:N.hill.x+40,y:N.hill.y-20,l:'ズールー軍',s:'約4千 接近中',main:1});return L;},
+ drawUnder(g){g.save();const st=(k,on)=>{const n=N[k];};
+  if(G.built.wall){g.strokeStyle='rgba(150,120,70,.95)';g.lineWidth=Math.max(4,6*MV.s);g.beginPath();[[160,175],[430,175],[500,300],[500,380],[420,480],[160,480],[90,380],[90,290],[160,175]].forEach((p,i)=>{const [x,y]=toScr(p[0],p[1]);i?g.lineTo(x,y):g.moveTo(x,y);});g.stroke();}
+  if(G.built.biscuit){g.strokeStyle='rgba(110,80,40,.95)';g.lineWidth=Math.max(4,6*MV.s);const [a,b]=toScr(220,370),[c,d]=toScr(380,370);g.beginPath();g.moveTo(a,b);g.lineTo(c,d);g.stroke();}
+  if(G.built.redoubt){const [x,y]=toScr(330,400);g.fillStyle='rgba(150,120,70,.95)';g.beginPath();g.arc(x,y,14*MV.s+6,0,7);g.fill();}
+  g.restore();},
+ ev:{async arrive(G){await E.story('@bg fort\n#午後四時半。南のシヨン山の向こうから、低い歌声と足音が聞こえてきた。\n#ズールーの戦士たちが、牛の角のように左右に広がって走ってくる。\nダブラマンジ：白人の砦を落とせ！\nブロムヘッド：撃てぇっ！',{place:'ロルクズ・ドリフト'});},
+  async fire(G){G.fire=true;await E.story('@bg fire\n#日が暮れた。ズールーの戦士が、病院のかやぶき屋根に火をつけた。\n#炎が夜空を赤く照らす。'+(G.evac?'\n#病院はもう空だ。燃える屋根の明かりで、かえって敵の姿がよく見える。':'\n#中には、まだ病人が残っている！'),{place:'病院'});
+   if(!G.evac){G.evac=true;G.patients=true;G.M-=15;U('hosp').n=Math.round(U('hosp').n*.5);addLog('燃える病院から、病人を運び出しきれなかった。','bad');}},
+  async dawn(G){await finale(G);}},
+ async prologue(G){BGM.play('council');
+  const c=await E.story('@title ロルクズ・ドリフト\n@bg field\n#一八七九年一月二十二日。南アフリカ。\n#イギリス軍は、ズールー王国に攻めこんでいた。\n#川のほとりの小さな伝道所、ロルクズ・ドリフトには、病院と倉庫と、わずかな兵が残されていた。\n#午後三時すぎ、馬が駆けこんできた。\n伝令：イサンドルワナで本隊が全滅！ ズールー軍四千がこちらへ向かっている！\nブロムヘッド：四千……！ 我々は百五十人もいないぞ。\n?荷車に病人を乗せて、逃げる｜ここに残って、守りを固める',{place:'ロルクズ・ドリフト'});G.stay=c===2;
+  if(!G.stay){await E.story('ダルトン：待て！ 病人を乗せた荷車では遅すぎる。開けた土地で追いつかれたら、一人も助からんぞ！\n#それでも一行は出発した。\n@bg field\n#一時間後、ズールーの戦士たちが草原の向こうからあらわれた。\n#身を隠す壁は、どこにもなかった。');await endGame('flee');return false;}
+  await E.story('ダルトン：ここには穀物の袋も、ビスケットの箱も山ほどある。これを積み上げれば壁になる！\nチャード：よし、残って戦う。全員、袋を運べ！\n#ズールー軍が来るまで、あと一時間半。',{place:'ロルクズ・ドリフト'});return true;},
+ start(G){banner('午後三時',' ロルクズ・ドリフト');setTimeout(()=>toast('「壁を築く」で守りを固めろ。隊をタップすると配置を変えられる'),900);},
+ dbg:G=>({t:G.t,M:G.M,men:men(G),br:G.breaches,fell:G.fell,evac:G.evac,built:Object.keys(G.built).join(',')}),
+ lose:{flee:['逃げた','病人を連れた荷車では逃げきれない。壁を築いて立てこもるのが唯一の道だった。'],
+  overrun:['破られた','守りが破られすぎた。外の壁・病院の銃眼・内壁を築き、病人を運び出してから内壁へ下がる必要があった。'],
+  assault:['夜明けの判断','一晩守り抜いたが、最後の判断を誤った。']},
+ rank:G=>G.R>=2.8&&!G.patients?'S':G.R>=2.3?'A':'B',
+ stats:G=>[['時刻',clockM(tm(G.t))],['生き残った兵',fmtN(men(G))],['破られた回数',G.breaches+'回'],['築いた壁',Object.keys(G.built).map(k=>BUILD[k][0]).join('・')||'なし']].concat(G.R?[['勝機',Math.round(G.R/NEED*100)+'%']]:[]),
+ review(G){const L=[];const R=(k,you,ok,his)=>L.push({k,you,ok,his});
+  R('残るか逃げるか',G.stay?'残って守った':'逃げた',G.stay,'ダルトンが「開けた土地で追いつかれたら終わりだ」と説き、残って守ることになった。');
+  if(!G.stay)return L;
+  R('壁',Object.keys(G.built).map(k=>BUILD[k][0]).join('・')||'築かなかった',!!(G.built.wall&&G.built.holes&&G.built.biscuit),'穀物袋とビスケット箱で外の壁をつくり、病院の壁には銃眼をあけた。戦いの途中で内壁と高台も築いた。');
+  R('病人',G.patients?'運び出しきれなかった':'すべて運び出した',!G.patients,'フックとウィリアムズらが壁を破って部屋から部屋へ病人を運び、ほとんどを救い出した。');
+  R('内壁へ',G.fell?clockM(tm(G.fellT))+'に下がった':'下がらなかった',G.fell&&G.fellT<=6,'夕方、外の壁の北側を捨ててビスケット箱の内壁まで下がり、守る場所をせまくした。');
+  if(G.ans.length)R('夜明け',(G.ans[0]?'構えて待った':'打って出た')+'・'+(G.ans[1]?'援軍を迎えた':'援軍を撃とうとした'),G.ans.every(Boolean),'夜明け、ズールー軍は丘の上に姿を見せたが、やがて去った。昼前に援軍が到着した。この戦いでは11人がヴィクトリア十字勲章を受けた。');
+  return L;}
+};
+function defense(G,k){const ss=G.units.filter(u=>u.at===k&&!u.order);let m=ss.reduce((s,u)=>s+u.n,0);
+ if(k==='inner'){return (m+10)*(G.built.biscuit?2.2:1.1)*(G.built.redoubt?1.3:1);}
+ let mod=1;if(k==='hosp')mod=G.built.holes?1.7:1;else mod=G.built.wall?1.6:.9;if(k==='hosp'&&G.fire)mod*=.6;return m*mod+(G.built.wall?15:5);}
+function breach(G,k,over,empty){G.breaches++;G.M-=12;const ss=G.units.filter(u=>u.at===k);const loss=Math.round(Math.min(over/4,25));
+ if(ss.length)ss.forEach(u=>u.n=Math.max(0,u.n-Math.round(loss/ss.length)));else G.units.forEach(u=>u.n=Math.max(0,u.n-Math.round(loss/3)));
+ if(k==='hosp'&&!G.evac){G.patients=true;G.evac=true;}
+ addLog((k==='inner'?'内壁':N[k].n)+'が破られた（兵 −'+loss+'）。','bad');toast((k==='inner'?'内壁':N[k].n)+'が破られた！');}
+async function finale(G){BGM.play('crisis');let R=2.5*clamp(men(G)/110,.4,1.2)*(G.M/70)*(G.patients?.8:1);G.R=R;
+ await E.story('@bg dawn\n#夜が明けた。敷地のまわりには、数えきれない戦士が倒れている。\n#撃ち続けた銃は熱く焼け、弾は残りわずかだ。\n#そのとき、南の丘の上に、ズールー軍がふたたび姿を見せた。',{place:'夜明け'});E.gauge(R,NEED);
+ const q1=await E.story('@bg dawn\n?壁の中で構えたまま、動かずに待つ｜こちらから打って出て、追い払う');if(q1===2)R*=.5;G.ans.push(q1===1);E.gauge(R,NEED);
+ const q2=await E.story('@bg dawn\n#ズールー軍は丘の上でしばらくこちらを見ていたが、やがて向きを変え、去っていった。\n#昼前、遠くに軍勢があらわれた。\nブロムヘッド：ま、また敵か!?\n?旗を振り、味方かどうか確かめる｜近づく前に撃て');if(q2===2)R*=.7;G.ans.push(q2===1);E.gauge(R,NEED);
+ G.R=R;await sleep(600);E.gaugeOff();
+ if(R>=NEED){SND.warcry();await E.story('@bg field\n#軍勢はチェルムスフォード卿の本隊だった。\nチャード：……守りきった。我々は、守りきったぞ。\n#百五十人あまりが四千のズールー軍を相手に、一晩を持ちこたえた。\n#この戦いで、十一人がヴィクトリア十字勲章を受けた。\n@title ロルクズ・ドリフト　守備隊の勝利');await endGame('win');}
+ else{await E.story('@bg field\n#疲れきった兵たちは、最後に判断を誤った。\n#守り抜いた一夜は、悲しい結末を迎えた。');await endGame('assault');}}
+regStage(ST);
+})();
+</script>
+<script>/* s8.js */
+/* ===== カンナエの戦い（前216） ===== */
+(function(){
+const NEED=2.0,MAXT=9;
+const N={rome:{n:'ローマ軍の陣',x:300,y:40,t:'camp',side:'foe'},carth:{n:'カルタゴ軍の陣',x:300,y:668,t:'camp'},cannae:{n:'カンナエの丘',x:500,y:660,t:'hill'}};
+const ST={id:'cannae',k:'包',n:'カンナエの戦い',y:'前216',vs:'ハンニバル 約5万 vs ローマ 約8万',d:'わざと中央を下げて敵を引きこみ、両側と背後から包みこめ。',
+ foeMon:'rome',meMon:'carthage',
+ heroes:[H('hannibal','ハンニバル','カ','晋',{fs:'sharp',fw:23,sk:'#d8aa82',age:1,hair:'wild',hc:'#1a1410',brow:'thick',eye:'sharp',nose:'hook',mo:'tight',bd:'short',cl:'armor',c1:'#5a2a6a',c2:'#d8b04a',c3:'#3a1a4a',x:['patch']}),
+  H('hasdrubal','ハスドルバル','カ','晋',{fs:'square',fw:25,sk:'#c8946a',age:2,hair:'knot',brow:'bushy',eye:'round',nose:'wide',mo:'frown',bd:'full',cl:'armor',c1:'#4a3a2a',c2:'#c0a050'}),
+  H('maharbal','マハルバル','カ','晋',{fs:'long',fw:23,sk:'#c8946a',age:1,hair:'tail',brow:'angry',eye:'sharp',nose:'thin',mo:'grin',bd:'goatee',cl:'light',c1:'#6a4a2a',c2:'#d8c070'}),
+  H('varro','ウァロ','ロ','呉',{fs:'round',fw:26,sk:'#ecc8a8',age:1,hair:'knot',brow:'angry',eye:'round',nose:'wide',mo:'grin',bd:'none',cl:'royal',c1:'#9a1a14',c2:'#e8d8a0'}),
+  H('paullus','パウルス','ロ','呉',{fs:'long',fw:23,sk:'#ecc8a8',age:2,hair:'knot',hc:'#c8c6c0',brow:'white',eye:'narrow',nose:'hook',mo:'frown',bd:'none',cl:'armor',c1:'#8a1a14',c2:'#e0c060'})],
+ map:{nodes:N,edges:[],deco:{rivers:[{w:22,pts:[[40,-20],[60,160],[30,360],[55,540],[30,760]]}],polys:[{kind:'field',col:'rgba(210,180,110,.35)',pts:[[80,60],[540,60],[540,640],[80,640]]}],hills:[[500,660,40,1],[540,560,26]],
+  texts:[{t:'アウフィドゥス川',x:28,y:300,v:1,size:13},{t:'← 南東の風（ヴォルトゥルヌス） ',x:300,y:660,size:12,col:'rgba(120,80,30,.8)'}]}},
+ init(){return {t:0,M:70,c:100,depth:0,wind:null,crescent:null,wings:null,cavSide:null,romCav:'up',rear:false,pivot:false,pivotT:null,R:null,ans:[],orders:[],stage:'deploy',rome:null};},
+ when:G=>['八月二日 '+(G.t===0?'夜明け':'戦い '+G.t+'刻目'),'残り '+Math.max(0,MAXT-G.t)+'刻'],logTime:G=>G.t+'刻目',
+ pills:G=>[{i:'中央の持ちこたえ',bar:G.c,col:G.c<35?'#ef7d7d':null},{i:'引きこみ',v:G.depth+' / 3'},{i:'包囲',v:(G.pivot?'両側':'')+(G.pivot&&G.rear?'・':'')+(G.rear?'背後':'')||'まだ'}],
+ overlay:G=>null,bgm:G=>G.t>0?'battle':'council',
+ hour(G,c){let p=12*(G.wind?.8:1);if(G.depth>=3&&!G.pivot)p*=1.8;if(c.back)p*=.5;if(!G.crescent)p*=1.2;G.c=clamp(G.c-p,0,100);},
+ at(G){},
+ async after(G){if(G.over)return;if(G.c<=0){await E.story('@bg battle\n#ついに中央が破られた。\n#ローマの重装歩兵がなだれのように押し通り、カルタゴ軍は二つに裂かれた。\nウァロ：見たか、ハンニバル！');await endGame('broken');return;}
+  if(G.pivot&&G.rear){await finale(G);return;}
+  if(G.t>=MAXT){await E.story('@bg battle\n#日が高くなった。数で勝るローマ軍は、じりじりと押し続ける。\n#包囲を閉じる前に、カルタゴ軍の兵は疲れはてた。');await endGame('timeout');}},
+ acts:[
+  {k:'back',kan:'退',lab:'下げる',hot:1,on:G=>G.stage==='battle',open(G){const b=[el('p','muted','三日月の中央を、崩さないように少しずつ下げる。ローマ軍は勝っていると思い、奥へ入りこむ。')];if(!G.crescent)b.push(noteEl('bad','中央は三日月の形になっていない。下げると隙間ができる。'));if(G.depth>=3)b.push(noteEl('bad','これ以上下げると、中央が持たない。'));S.advice(G).slice(0,2).forEach(a=>b.push(advEl(a[0],a[1])));
+    confirmAct('中央を下げる','ガリア兵・イベリア兵',b,'少しずつ下がれ',()=>act(async()=>{G.orders.push('back');G.depth++;await E.pass(1,{back:1},600);if(G.depth>=4&&!G.pivot){G.c-=25;addLog('下げすぎて、中央が崩れかけている。','bad');}addLog('中央を少しずつ下げた（引きこみ '+G.depth+'）。');}));}},
+  {k:'hold',kan:'守',lab:'守る',on:G=>G.stage==='battle',open(G){confirmAct('持ちこたえる','中央',[el('p','muted','中央はその場で踏みとどまる。下がらないぶん、正面からの圧力をまともに受ける。')],'踏みとどまれ',()=>act(async()=>{G.orders.push('hold');await E.pass(1,{},600);G.c-=6;addLog('中央が踏みとどまった。');}));}},
+  {k:'cav',kan:'騎',lab:'騎兵',on:G=>G.stage==='battle'&&!G.rear,open(G){const up=G.romCav==='up';confirmAct(up?'川ぞいのローマ騎兵を討つ':'ローマ軍の背後へ回る','ハスドルバルの騎兵',[el('p','muted',up?'重騎兵で、川とローマ軍の間にいるローマの騎兵に襲いかかる。':'ローマ騎兵は崩れた。ローマ軍の後ろを回って反対側の騎兵も追い払い、背後から歩兵に襲いかかる。'),advEl('hasdrubal',up?'狭い川ぞいなら、重い騎兵が勝つ。':'お任せあれ。背中を叩いてやる！')],up?'かかれ':'背後へ回れ',()=>act(async()=>{G.orders.push(up?'cav':'rear');await E.pass(1,{},600);await cav(G);}));}},
+  {k:'pivot',kan:'包',lab:'閉じる',on:G=>G.stage==='battle'&&!G.pivot,open(G){const b=[el('p','muted','両端に控えていたアフリカの古参兵に、内側へ向きを変えさせ、入りこんだローマ軍の横腹を突かせる。')];if(G.depth<3)b.push(noteEl('bad','ローマ軍はまだ奥まで入りこんでいない。'));if(G.wings!==1)b.push(noteEl('bad','アフリカ兵が両端の後ろに控えていない。'));
+    confirmAct('両側を閉じる','アフリカの古参兵',b,'向きを変えよ',()=>act(async()=>{G.orders.push('pivot');await E.pass(1,{},600);await pivot(G);}));}}
+ ],
+ advice(G){const a=[];
+  if(G.romCav==='up')a.push(['hasdrubal','まずは川ぞいのローマ騎兵を蹴散らす。騎兵が勝てば、背後へ回れる。']);
+  if(G.depth<3)a.push(['hannibal','中央は少しずつ下げよ。ローマ兵が勝っていると思うほど、奥へ入ってくる。']);
+  if(G.depth>=3&&!G.pivot)a.push(['maharbal','ローマ軍が奥まで入った！ 今こそ両側のアフリカ兵を内へ向けるときだ！']);
+  if(G.romCav==='down'&&!G.rear)a.push(['hasdrubal','ローマの騎兵は崩れた。次の命令で背後へ回るぞ！']);
+  if(G.c<40)a.push(['hannibal','中央が持たぬ……急げ。']);return a.slice(0,3);},
+ marks(G){return [];},
+ drawOver(g){const s=MV.s,P=(x,y)=>toScr(x,y);const box=(x,y,w,h,col,txt,ang)=>{const [cx,cy]=P(x,y);g.save();g.translate(cx,cy);if(ang)g.rotate(ang);g.fillStyle=col;g.strokeStyle='rgba(20,10,4,.8)';g.lineWidth=1.5;g.fillRect(-w*s/2,-h*s/2,w*s,h*s);g.strokeRect(-w*s/2,-h*s/2,w*s,h*s);
+   if(txt){g.rotate(-(ang||0));g.fillStyle='#fff';g.font='bold '+Math.max(10,12*s)+'px '+FB();g.textAlign='center';g.textBaseline='middle';g.fillText(txt,0,0);}g.restore();};
+  const d=G.depth,pv=G.pivot;
+  // ローマ軍（深く密集）
+  box(300,170+d*42,240,110,'rgba(170,30,24,.88)','ローマ軍 約8万');
+  // ローマ騎兵
+  if(G.romCav==='up')box(110,200,50,60,'rgba(170,30,24,.8)','騎');
+  if(!G.rear)box(490,200,50,60,'rgba(170,30,24,.8)','騎');
+  // 中央の三日月
+  const [x1,y1]=P(170,340),[x2,y2]=P(430,340);const bulge=(G.crescent?-60:0)+d*34;const [cx,cy]=P(300,340+bulge);
+  g.save();g.strokeStyle='rgba(90,60,130,.9)';g.lineWidth=Math.max(10,26*s);g.lineCap='butt';g.beginPath();g.moveTo(x1,y1+d*18*s);g.quadraticCurveTo(cx,cy+d*10*s,x2,y2+d*18*s);g.stroke();
+  g.fillStyle='#fff';g.font='bold '+Math.max(10,12*s)+'px '+FB();g.textAlign='center';const [lx,ly]=P(300,342+bulge*.55+d*14);g.fillText(G.crescent?'ガリア兵・イベリア兵':'アフリカ兵（中央）',lx,ly);g.restore();
+  // アフリカ兵
+  if(G.wings===1){box(pv?205:150,pv?250+d*30:360,48,90,'rgba(70,40,100,.9)','ア',pv?.9:0);box(pv?395:450,pv?250+d*30:360,48,90,'rgba(70,40,100,.9)','ア',pv?-.9:0);}
+  else box(300,420,180,30,'rgba(90,60,130,.6)','ガリア兵');
+  // 騎兵
+  const heavyX=G.cavSide===1?110:490,numX=G.cavSide===1?490:110;
+  if(G.rear)box(300,80,180,36,'rgba(60,30,90,.9)','ハスドルバルの騎兵（背後）');
+  else box(G.romCav==='down'?heavyX:heavyX,G.romCav==='down'?200:330,56,60,'rgba(60,30,90,.9)','重騎');
+  if(!G.rear)box(numX,330,56,60,'rgba(100,70,40,.9)','ヌ騎');
+  // 風
+  if(G.wind){g.save();g.strokeStyle='rgba(180,140,80,.55)';g.lineWidth=2;const ph=(performance.now()/900)%1;for(let i=0;i<8;i++){const p=(i/8+ph)%1;const [x,y]=P(520-p*420,620-p*420);g.beginPath();g.moveTo(x,y);g.lineTo(x-14,y-10);g.stroke();}g.restore();}},
+ ev:{},
+ async prologue(G){BGM.play('council');
+  await E.story('@title カンナエの戦い\n@bg field\n#紀元前二一六年、夏。イタリア南部、アウフィドゥス川のほとり。\n#アルプスを越えてローマに攻めこんだカルタゴの将ハンニバルは、ローマの大軍と向かい合っていた。\n#ローマ軍、約八万。カルタゴ軍、約五万。\n#ローマの執政官ウァロは、兵を何重にも重ね、数の力で正面から押しつぶそうとしている。\nウァロ：あれだけの兵の厚みだ。押せば必ず破れる！\nパウルス：……ハンニバルは、ただでは押させぬ男だぞ。',{place:'カンナエ'});
+  const w=await E.story('@bg field\nマハルバル：将軍、この季節は昼になると、南東から乾いた風が吹きます。土ぼこりを巻き上げる強い風です。\n?風を背にして陣を敷く（ローマ兵の顔に土ぼこりが当たる）｜風に向かって陣を敷く');G.wind=w===1;
+  const c=await E.story('@bg field\nハンニバル：中央には、誰を並べるか。\n?ガリア兵とイベリア兵を、前にふくらんだ三日月の形に並べる｜いちばん強いアフリカの古参兵を、中央に厚く並べる');G.crescent=c===1;
+  if(G.crescent){const k=await E.story('ハンニバル：アフリカの古参兵はどこに置く。\n?三日月の両端の、少し後ろに控えさせる｜三日月と同じ列に、横一列に並べる');G.wings=k;}else G.wings=2;
+  const cv=await E.story('@bg field\nハスドルバル：騎兵の配置は？ 川ぞいは狭く、反対側は広い原です。\n?重い騎兵を川ぞいに、速いヌミディア騎兵を広い原に｜ヌミディア騎兵を川ぞいに、重い騎兵を広い原に');G.cavSide=cv;
+  await E.story('@bg battle\n#カルタゴ軍の陣が整った。ハンニバル自身は、弟マゴと共に中央の三日月の中にいる。\nハンニバル：……さあ、来い。'+(G.wind?'\n#南東から、乾いた風が吹きはじめた。':''));
+  G.stage='battle';G.t=1;return true;},
+ start(G){banner('開戦','八月二日 カンナエ');setTimeout(()=>toast('下の命令を一つずつ。中央を下げ、騎兵で背後へ、最後に両側を閉じる'),900);},
+ dbg:G=>({t:G.t,c:Math.round(G.c),d:G.depth,cav:G.romCav,rear:G.rear,pivot:G.pivot}),
+ lose:{broken:['中央が破られた','中央は「下げる」もの。踏みとどまり続けると、ローマの重装歩兵の厚みに押し破られる。'],
+  timeout:['包みきれなかった','包囲を閉じる前に時間がたった。中央を下げる・騎兵で背後へ回る・両側を閉じる、の三つがそろって包囲が完成する。'],
+  early:['早すぎた','ローマ軍が奥まで入りこむ前に両側を閉じても、包みこめない。'],
+  assault:['包囲が破れた','包囲はしたが、締めつけが足りなかった。']},
+ rank:G=>G.R>=2.8?'S':G.R>=2.3?'A':'B',
+ stats:G=>[['刻',G.t+'刻目'],['中央の持ちこたえ',Math.round(G.c)],['引きこみ',G.depth],['命令',G.orders.map(o=>({back:'下げ',hold:'守',cav:'騎兵',rear:'背後',pivot:'閉'}[o])).join('→')]].concat(G.R?[['勝機',Math.round(G.R/NEED*100)+'%']]:[]),
+ review(G){const L=[];const R=(k,you,ok,his)=>L.push({k,you,ok,his});
+  R('風',G.wind?'風を背にした':'風に向かった',G.wind,'南東の風ヴォルトゥルヌスを背にし、ローマ兵は土ぼこりで前がよく見えなかったと伝わる。');
+  R('中央',G.crescent?'ガリア兵・イベリア兵の三日月':'アフリカ兵を中央に',G.crescent,'弱いガリア兵・イベリア兵を前にふくらんだ三日月に並べ、少しずつ下がらせた。ハンニバル自身もそこにいた。');
+  R('両端',G.wings===1?'アフリカ兵を後ろに控えさせた':'横一列に並べた',G.wings===1,'最も強いアフリカの古参兵を両端の後ろに置き、ローマ軍が入りこんだところで内へ向けた。');
+  R('騎兵',G.cavSide===1?'重騎兵を川ぞいに':'ヌミディア騎兵を川ぞいに',G.cavSide===1,'狭い川ぞいで重騎兵がローマ騎兵を破り、そのまま背後を回って反対側の騎兵も崩し、ローマ歩兵の背中を突いた。');
+  R('引きこむ時',G.pivotT!=null?'引きこみ'+G.depth+'で両側を閉じた':'閉じなかった',G.pivotT!=null&&G.depth>=3,'ローマ軍が三日月の奥深くまで入りこんだところで、両側のアフリカ兵が向きを変えた。');
+  if(G.ans.length)R('包囲',G.ans[0]?'締めつけた':'逃げ道を開けた',G.ans[0],'ローマ軍は前後左右を囲まれ、身動きもとれないまま、その大半が討たれるか捕らえられた。');
+  if(G.rome)R('そのあと',G.rome===1?'すぐローマへ進んだ':'兵を休ませた',null,'マハルバルは「すぐローマへ」と進言したが、ハンニバルは進まなかった。マハルバルは「あなたは勝ち方は知っているが、勝利の使い方を知らない」と言ったと伝わる。');
+  return L;}
+};
+async function cav(G){if(G.romCav==='up'){if(G.cavSide===1){G.romCav='down';await E.story('@bg battle\n#ハスドルバルの重騎兵が、狭い川ぞいでローマ騎兵にぶつかった。\n#馬を下りての押し合いの末、ローマ騎兵は崩れ、川へ追い落とされた。',{place:'川ぞい'});addLog('川ぞいのローマ騎兵を破った。','good');}
+  else{G.cavSide=1.5;await E.story('@bg battle\n#身軽なヌミディア騎兵は、狭い川ぞいでは思うように動けない。\n#ローマ騎兵と、いつまでも押し合いが続く。\nハスドルバル：だめだ、場所が悪い。もう一度だ！');addLog('川ぞいの騎兵戦は決着がつかなかった。','bad');G.cavSide=1;}}
+ else{G.rear=true;await E.story('@bg battle\n#ハスドルバルの騎兵はローマ軍の後ろを駆け抜け、反対側の同盟軍騎兵に襲いかかった。\n#同盟軍の騎兵が逃げ散ると、騎兵は向きを変え、ローマ歩兵の背中に突っこんだ！',{place:'ローマ軍の背後'});addLog('騎兵がローマ軍の背後に回った。','good');}}
+async function pivot(G){if(G.wings!==1){G.c-=10;await E.story('@bg battle\n#アフリカ兵は横一列に並んでいて、内へ向きを変えるだけの間がない。\n#ローマ軍は前へ押し続ける。');addLog('アフリカ兵が向きを変えられなかった。','bad');return;}
+ if(G.depth<3){G.c-=10;await E.story('@bg battle\n#アフリカ兵が内へ向きを変えた。\n#だがローマ軍はまだ奥まで入りこんでおらず、横腹を突くことはできなかった。\nマハルバル：早すぎた……！');G.pivotFail=(G.pivotFail||0)+1;if(G.pivotFail>=2){await endGame('early');}return;}
+ G.pivot=true;G.pivotT=G.t;await E.story('@bg battle\n#三日月の奥深くまで入りこんだローマ軍の左右で、アフリカの古参兵がいっせいに向きを変えた。\n#ローマ兵の横腹に、槍が突き刺さる。\nパウルス：横からだと!? しまった、罠だ！',{place:'カンナエ'});addLog('両側のアフリカ兵が内へ向いた。','good');}
+async function finale(G){BGM.play('crisis');let R=2.6*clamp(G.c/45,.6,1.2)*(G.wind?1:.8)*(G.crescent?1:.6)*(G.wings===1?1:.5);G.R=R;
+ await E.story('@bg battle\n#前は三日月、左右はアフリカ兵、後ろは騎兵。\n#八万のローマ軍は、四方を囲まれた。\n#外側の兵は内側へ押され、内側の兵は剣を振るう場所もないほど詰めこまれていく。',{place:'カンナエ'});E.gauge(R,NEED);
+ const q1=await E.story('@bg battle\nマハルバル：将軍、包囲が閉じました！\n?締めつけよ。囲みを解くな｜一か所、逃げ道を開けておけ');if(q1===2)R*=.8;G.ans.push(q1===1);E.gauge(R,NEED);
+ G.R=R;await sleep(700);E.gaugeOff();
+ if(R>=NEED){SND.warcry();await E.story('@bg battle\n#日が沈むころ、戦いは終わった。\n#ローマ軍は数万の兵を失い、執政官パウルスも討たれた。ウァロはわずかな騎兵と逃げのびた。\n#数で劣る軍が、敵を丸ごと包みこんで滅ぼした。この戦いは、二千年後の今も「包囲戦の手本」として学ばれている。');
+  const r=await E.story('@bg camp\nマハルバル：将軍、今すぐローマへ進みましょう！ 五日後には、カピトリウムで勝利の宴をひらけます！\n?すぐにローマへ進む｜兵を休ませ、まずはイタリアの町々を味方につける');G.rome=r;
+  await E.story(r===1?'#カルタゴ軍はローマへ向かった。だが高い城壁と、まだ残るローマの兵が待っていた。……歴史に「もし」はない。':'#ハンニバルはローマへ進まなかった。\nマハルバル：あなたは勝ち方を知っている。だが、勝利の使い方を知らない。\n#ローマはこのあと立ち直り、長い戦争の末、カルタゴを破ることになる。\n@title カンナエの戦い　カルタゴの勝利');
+  await endGame('win');}
+ else{await E.story('@bg battle\n#包囲の一か所が破れ、ローマ兵が次々と外へ流れ出した。\n#大軍は崩れはしたが、滅びはしなかった。');await endGame('assault');}}
+regStage(ST);
+})();
+</script>
+<script>/* boot.js */
 bindUI();loop();showTitle();
 </script>
 </body></html>
