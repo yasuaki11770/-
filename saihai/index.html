@@ -1051,13 +1051,14 @@ function rbStart(opt){return new Promise(done=>{
  rbCmd();rbMsg(opt.intro||'兵は自動で戦う。要所の選択肢を選べ',3.5);
  if(opt.bgm)BGM.play(opt.bgm);SND.horn();
  let last=performance.now();
- const frame=now=>{if(!BT||BT.root!==root)return;const raw=Math.min(.05,(now-last)/1000);last=now;
-  if(!BT.over&&!BT.ask){BT.acc=(BT.acc||0)+raw*(BT.sel?.4:1)*(BT.speed||1);let k=0;while(BT.acc>=RB_DT&&k<8&&!BT.over&&!BT.ask){BT.acc-=RB_DT;BT.time+=RB_DT;rbStep(RB_DT);k++;}if(k>=8)BT.acc=0;}
-  rbDraw(g);requestAnimationFrame(frame);};
+ const frame=now=>{if(!BT||BT.root!==root)return;const raw=Math.min(.05,(now-last)/1000);last=now;const B=BT,slow=B.slowUntil&&now<B.slowUntil?.22:1;let adv=0;
+  if(!B.over&&!B.ask){const sp=(B.speed||1)*(window.RB_SPEED||1)*slow;B.acc=(B.acc||0)+raw*sp;let k=0;const cap=Math.ceil(8*sp)+1;while(B.acc>=RB_DT&&k<cap&&!B.over&&!B.ask){B.acc-=RB_DT;B.time+=RB_DT;rbStep(RB_DT);k++;adv+=RB_DT;}if(k>=cap)B.acc=0;}
+  else if(B.over)adv=raw*slow;
+  B.vdt=adv;rbDraw(g);requestAnimationFrame(frame);};
  requestAnimationFrame(frame);});}
 function rbSquad(o){const T=RB_T[o.type]||RB_T.yari;return Object.assign({id:o.id||('q'+Math.random().toString(36).slice(2,7)),side:o.side||'me',type:o.type||'yari',name:o.name||T.n,n:o.n,n0:o.n,x:o.x,y:o.y,
   tx:null,ty:null,tgt:null,mode:o.mode||(o.side==='foe'?'hold':'attack'),morale:o.morale==null?100:o.morale,dis:o.dis||0,hidden:!!o.hidden,gen:!!o.gen,mon:o.mon,face:o.side==='foe'?Math.PI/2:-Math.PI/2,
-  alive:true,routed:false,fight:0,charge:0,atkMul:o.atk||1,defMul:o.def||1,spdMul:o.spd||1,floor:o.floor!=null?o.floor:(o.gen?5:null),aggro:o.aggro==null?16:o.aggro,home:o.home,per:o.per||null,ai:o.ai,label:o.label,wp:o.wp?o.wp.slice():null},o.extra||{});}
+  kit:o.kit,fm:o.fm,alive:true,routed:false,fight:0,charge:0,atkMul:o.atk||1,defMul:o.def||1,spdMul:o.spd||1,floor:o.floor!=null?o.floor:(o.gen?5:null),aggro:o.aggro==null?16:o.aggro,home:o.home,per:o.per||null,ai:o.ai,label:o.label,wp:o.wp?o.wp.slice():null},o.extra||{});}
 const rbFoes=q=>BT.sq.filter(e=>e.alive&&!e.routed&&e.side!==q.side&&!(e.hidden&&q.side==='foe'));
 const rbSide=s=>BT.sq.filter(q=>q.side===s);
 const rbAlive=q=>q.alive&&!q.routed;
@@ -1080,7 +1081,7 @@ function rbStep(dt){const B=BT,O=B.opt;if(B.later&&B.later.length){const due=B.l
   if(tgt){const d=Math.hypot(tgt.x-q.x,tgt.y-q.y),reach=rbRad(q)+rbRad(tgt)+.5;
    if(T.rng&&d<=T.rng&&!q.melee){mx=null;q.face=Math.atan2(tgt.y-q.y,tgt.x-q.x);q.shootT=(q.shootT||0)-dt;if(q.shootT<=0){q.shootT=1.1+rbRnd()*.4;rbShoot(q,tgt);} }
    else if(d>reach){mx=tgt.x;my=tgt.y;}else{mx=null;}}
-  if(mx!=null){const dx=mx-q.x,dy=my-q.y,d=Math.hypot(dx,dy);if(d>.6){const sp=T.spd*q.spdMul*(TERM[rbTer(q.x,q.y)]||TERM.plain).spd*(q.charge>0?1.35:1)*(O.spdMul?O.spdMul(q,B):1);const st=Math.min(d,sp*dt);q.x+=dx/d*st;q.y+=dy/d*st;q.face=Math.atan2(dy,dx);q.moving=true;}else{q.moving=false;if(!tgt){q.tx=q.ty=null;if(q.mode==='move')q.mode='idle';}}}else q.moving=false;
+  if(mx!=null){const dx=mx-q.x,dy=my-q.y,d=Math.hypot(dx,dy);if(d>.6){let blk=1;if(q.melee&&q.melee.length&&!q.ghost&&!q.push){const m0=q.melee[0];if((m0.x-q.x)*dx+(m0.y-q.y)*dy>0)blk=(q.charge>0||q.type==='kiba')?.5:.25;}const sp=blk*T.spd*q.spdMul*(TERM[rbTer(q.x,q.y)]||TERM.plain).spd*(q.charge>0?1.35:1)*(O.spdMul?O.spdMul(q,B):1);const st=Math.min(d,sp*dt);q.x+=dx/d*st;q.y+=dy/d*st;q.face=Math.atan2(dy,dx);q.moving=true;}else{q.moving=false;if(!tgt){q.tx=q.ty=null;if(q.mode==='move')q.mode='idle';}}}else q.moving=false;
   if(q.charge>0)q.charge-=dt;if(q.ambushT>0)q.ambushT-=dt;
  }
  // 近接戦闘
@@ -1113,8 +1114,8 @@ function rbHurt(t,dmg,src,attackers){if(!t.alive||t.routed||dmg<=0)return;if(t.f
  if(rbRnd()<lost*.02)BT.fx.push({x:t.x+(rbRnd()-.5)*rbRad(t)*1.6,y:t.y+(rbRnd()-.5)*rbRad(t),t:0,d:2.5,k:'dead',side:t.side});
  if(t.n<1){t.alive=false;rbFell(t,src);return;}
  if(t.morale<=0){t.routed=true;t.tgt=null;rbText(t.x,t.y-6,'潰走！','#ffb0a0');rbFell(t,src);BT.sq.forEach(o=>{if(o!==t&&rbAlive(o)&&o.side===t.side&&Math.hypot(o.x-t.x,o.y-t.y)<25)o.morale-=10;});}}
-function rbFell(t,src){if(t.gen){rbText(t.x,t.y-8,t.side==='foe'?t.name+'を討ち取った！':t.name+'が討たれた！','#ffd36a',1);SND.warcry();BT.sq.forEach(o=>{if(o.side===t.side&&rbAlive(o))o.morale-=40;});}if(BT.opt.onFall)BT.opt.onFall(t,BT);}
-function rbShoot(q,t){const dmg=rbPow(q,t,false)*1.2;BT.proj.push({x:q.x,y:q.y,tx:t.x,ty:t.y,t:0,d:.55,k:q.type});rbAfter(()=>{if(BT&&!BT.over)rbHurt(t,dmg,q,1);},300);if(q.type==='gun'||q.type==='ship')SND.boom();else SND.arrow();}
+function rbFell(t,src){if(t.gen){BT.slowUntil=performance.now()+2400;BT.focus={x:t.x,y:t.y,until:performance.now()+3400};try{SND.gong(.2);}catch(e){}rbText(t.x,t.y-8,t.side==='foe'?t.name+'を討ち取った！':t.name+'が討たれた！','#ffd36a',1);SND.warcry();BT.sq.forEach(o=>{if(o.side===t.side&&rbAlive(o))o.morale-=40;});}if(BT.opt.onFall)BT.opt.onFall(t,BT);}
+function rbShoot(q,t){(BT.vfx=BT.vfx||[]).push({q,t});if(BT.vfx.length>60)BT.vfx.shift();const dmg=rbPow(q,t,false)*1.2;BT.proj.push({x:q.x,y:q.y,tx:t.x,ty:t.y,t:0,d:.55,k:q.type});rbAfter(()=>{if(BT&&!BT.over)rbHurt(t,dmg,q,1);},300);if(q.type==='gun'||q.type==='ship')SND.boom();else SND.arrow();}
 function rbText(x,y,s,col,big){BT.txt.push({x,y,s,col:col||'#fff',t:0,d:big?2.6:1.5,big});}
 function rbMsg(s,sec){const m=BT.root.querySelector('.rb-msg');m.textContent=s;m.classList.add('on');clearTimeout(BT._mt);BT._mt=setTimeout(()=>m.classList.remove('on'),(sec||3)*1000);}
 function rbAI(q,dt){const O=BT.opt;if(q.ai&&q.ai(q,BT,dt))return;
@@ -1166,7 +1167,7 @@ function rbDraw(g){const B=BT,L=B.L,O=B.opt;if(!L.W)return;g.setTransform(L.dpr,
  // 命令の矢印
  if(O.auto===false)B.sq.forEach(q=>{if(!rbAlive(q)||q.side!=='me')return;let tx=q.tx,ty=q.ty;if(q.tgt){tx=q.tgt.x;ty=q.tgt.y;}if(tx==null)return;const [a,b]=rbW2S(q.x,q.y),[c,d]=rbW2S(tx,ty);g.strokeStyle=q.tgt?'rgba(255,120,80,.55)':'rgba(255,230,140,.5)';g.lineWidth=2;g.setLineDash([5,5]);g.beginPath();g.moveTo(a,b);g.lineTo(c,d);g.stroke();g.setLineDash([]);});
  const order=B.sq.filter(q=>q.alive).sort((a,b)=>a.y-b.y);order.forEach(q=>rbDrawSq(g,q));
- B.proj.forEach(p=>{const k=p.t/p.d;const x=p.x+(p.tx-p.x)*k,y=p.y+(p.ty-p.y)*k-(B.g3?0:Math.sin(k*Math.PI)*(p.k==='yumi'?8:2));const [sx,sy]=B.g3?rbW2S(x,y,1.5+Math.sin(k*Math.PI)*(p.k==='yumi'?9:3)):rbW2S(x,y);
+ if(!B.g3)B.proj.forEach(p=>{const k=p.t/p.d;const x=p.x+(p.tx-p.x)*k,y=p.y+(p.ty-p.y)*k-(B.g3?0:Math.sin(k*Math.PI)*(p.k==='yumi'?8:2));const [sx,sy]=B.g3?rbW2S(x,y,1.5+Math.sin(k*Math.PI)*(p.k==='yumi'?9:3)):rbW2S(x,y);
   if(p.k==='yumi'){g.strokeStyle='rgba(40,30,20,.85)';g.lineWidth=1;for(let i=0;i<4;i++){g.beginPath();g.moveTo(sx+i*3-4,sy+i*2-3);g.lineTo(sx+i*3-1,sy+i*2-6);g.stroke();}}else{g.fillStyle='rgba(30,30,30,.9)';g.beginPath();g.arc(sx,sy,2.4,0,7);g.fill();}});
  if(O.drawOver)O.drawOver(g,B);
  B.txt.forEach(t=>{const [x,y]=B.g3?rbW2S(t.x,t.y,6+t.t*3):rbW2S(t.x,t.y-t.t*3);g.save();g.globalAlpha=Math.min(1,(t.d-t.t)*1.5);g.font=(t.big?'bold 20px ':'bold 14px ')+FD();g.textAlign='center';g.lineWidth=4;g.strokeStyle='rgba(20,8,4,.9)';g.strokeText(t.s,x,y);g.fillStyle=t.col;g.fillText(t.s,x,y);g.restore();});
@@ -1214,9 +1215,9 @@ function rbDrawSq(g,q){const B=BT,L=B.L,k=rbFigs(q);if(!k)return;const vis=q.sid
  const pw=w,pr=clamp(q.n/q.n0,0,1),mr=clamp(q.morale/100,0,1);g.fillStyle='rgba(0,0,0,.6)';g.fillRect(fx-pw/2,fy+18,pw,4);g.fillStyle=q.side==='me'?'#7fb0ff':'#ff8a70';g.fillRect(fx-pw/2,fy+18,pw*pr,2);g.fillStyle='#f1cf72';g.fillRect(fx-pw/2,fy+20,pw*mr,2);
  if(B.sel===q){g.strokeStyle='rgba(255,230,120,.95)';g.lineWidth=2.5;const [cx,cy]=rbW2S(q.x,q.y);g.beginPath();g.arc(cx,cy,(rbRad(q)+2)*L.s,0,7);g.stroke();}
  g.restore();}
-function rbEnd(res){if(BT.over)return;BT.over=true;const B=BT;if(res==='escaped'){B.flags.escaped=1;res='lose';}const win=res==='win';
+function rbEnd(res){if(BT.over)return;BT.over=true;const B=BT;if(res==='escaped'){B.flags.escaped=1;res='lose';}const win=res==='win';B.won=win;
  const m=el('div','rb-end',(win?'勝利':'敗北')+'<small>'+(B.opt.endText?esc(B.opt.endText(win,B)):'')+'</small>');B.root.appendChild(m);if(win)SND.warcry();
- setTimeout(()=>{const st={win,time:B.time,me:rbSide('me').filter(rbAlive).reduce((s,q)=>s+q.n,0),foe:rbSide('foe').filter(rbAlive).reduce((s,q)=>s+q.n,0),flags:B.flags};B.unlay();B.root.remove();BT=null;B.done(st);},2600);}
+ setTimeout(()=>{const st={win,time:B.time,me:rbSide('me').filter(rbAlive).reduce((s,q)=>s+q.n,0),foe:rbSide('foe').filter(rbAlive).reduce((s,q)=>s+q.n,0),flags:B.flags};B.unlay();B.root.remove();BT=null;B.done(st);},window.RB_SPEED?600:3800);}
 
 /* 決戦を始めて、結果を G に書きこむ */
 async function rbBattle(G,cfg){E.gaugeOff();const me0=cfg.squads.filter(q=>q.side!=='foe').reduce((a,q)=>a+q.n,0)||1;
@@ -1271,41 +1272,134 @@ function rb3Init(B,glCanvas){const O=B.opt;const R={};B.g3=R;
  // ---- 壁・柵
  const wallSegs=[];zones.filter(z=>z.k==='wall'||z.k==='camp').forEach(z=>{for(let i=0;i<z.pts.length;i++){const a=z.pts[i],b=z.pts[(i+1)%z.pts.length];const L=Math.hypot(b[0]-a[0],b[1]-a[1]);const n=Math.max(1,Math.round(L/2));for(let k=0;k<n;k++){const t=(k+.5)/n;wallSegs.push([a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,Math.atan2(b[0]-a[0],b[1]-a[1]),z.k]);}}});
  if(wallSegs.length){const wm=new THREE.InstancedMesh(new THREE.BoxGeometry(.7,1.3,2.1).translate(0,.65,0),new THREE.MeshLambertMaterial({color:0x8a6a3a}),wallSegs.length);const dm=new THREE.Object3D();wallSegs.forEach((w,i)=>{dm.position.set(w[0]-50,rb3H(w[0],w[1]),w[1]-75);dm.rotation.set(0,w[2],0);dm.scale.set(1,w[3]==='camp'?1.6:1,1);dm.updateMatrix();wm.setMatrixAt(i,dm.matrix);});sc.add(wm);}
- // ---- 兵の形（まとめて描く）
- const mk=(geo,col,n,ic)=>{const m=new THREE.InstancedMesh(geo,new THREE.MeshLambertMaterial({color:col}),n);m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);if(ic){m.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(n*3).fill(1),3);m.instanceColor.setUsage(THREE.DynamicDrawUsage);}m.count=0;m.frustumCulled=false;sc.add(m);return m;};
- const bG=new THREE.CylinderGeometry(.32,.44,1.2,6).translate(0,.6,0),hG=new THREE.SphereGeometry(.27,7,5).translate(0,1.43,0),sG=new THREE.BoxGeometry(1.8,1.6,.06).translate(0,2.6,0);
- const C=(c,d)=>new THREE.Color(c||d);R.bodyMe=mk(bG,C(O.meCol,'#1e2a44'),6000);R.bodyFoe=mk(bG,C(O.foeCol,'#8a1e14'),6000);R.headMe=mk(hG,C(O.meTrim,'#e8c060'),6000);R.headFoe=mk(hG,C(O.foeTrim,'#f0e0c0'),6000);
- R.spear=mk(new THREE.BoxGeometry(.07,2.6,.07).translate(0,1.3,0),0x3a2a18,11000);
- R.horse=mk(new THREE.BoxGeometry(.6,.8,1.6).translate(0,.6,0),0x6a4424,4000);
- R.hull=mk(new THREE.BoxGeometry(1.5,.9,3.8).translate(0,.25,0),0x5a3a1e,900);
- R.mast=mk(new THREE.BoxGeometry(.14,3.6,.14).translate(0,2.2,0),0x3a2a18,900);
- R.sailMe=mk(sG,C(O.meTrim,'#e8c060'),500);R.sailFoe=mk(sG,C(O.foeTrim,'#f0e0c0'),500);
- R.dm=new THREE.Object3D();R.col=new THREE.Color();
- R.resize=()=>{const r=glCanvas.getBoundingClientRect();R.W=r.width;R.H=r.height;ren.setSize(r.width,r.height,false);cam.aspect=r.width/Math.max(1,r.height);cam.updateProjectionMatrix();};R.resize();
+ // ---- 兵の部品（形は共通、色ごとにまとめて描く）
+ const T=THREE;R.G={leg:new T.BoxGeometry(.15,.62,.17).translate(0,-.31,0),body:new T.CylinderGeometry(.24,.3,.66,6).translate(0,.33,0),head:new T.SphereGeometry(.19,6,5),
+  hatCone:new T.ConeGeometry(.32,.2,8),hatDome:new T.SphereGeometry(.215,7,4,0,6.3,0,1.6),crest:new T.BoxGeometry(.05,.2,.36),
+  spear:new T.BoxGeometry(.05,1,.05).translate(0,.5,0),sword:new T.BoxGeometry(.05,.72,.1).translate(0,.36,0),bow:new T.TorusGeometry(.42,.025,4,8,Math.PI).rotateZ(Math.PI/2).rotateY(Math.PI/2),gun:new T.BoxGeometry(.06,.06,1.1).translate(0,0,.35),
+  shRect:new T.BoxGeometry(.5,.82,.07),shRound:new T.CylinderGeometry(.34,.34,.06,10).rotateX(Math.PI/2),shOval:new T.SphereGeometry(.3,8,6).scale(1,1.7,.25),
+  hbody:new T.BoxGeometry(.46,.55,1.5).translate(0,.95,0),hneck:new T.BoxGeometry(.2,.66,.26).translate(0,.3,0),hleg:new T.BoxGeometry(.12,.7,.12).translate(0,-.35,0),
+  fpole:new T.BoxGeometry(.04,1.3,.04).translate(0,.65,0),fcloth:new T.BoxGeometry(.03,.55,.36).translate(0,0,-.18),bpole:new T.BoxGeometry(.07,3.6,.07).translate(0,1.8,0),bcloth:new T.BoxGeometry(.04,1.15,.85).translate(0,0,-.43),
+  litter:new T.BoxGeometry(.9,.75,1.5).translate(0,.9,0),hull:new T.BoxGeometry(1.5,.9,3.8).translate(0,.25,0),mast:new T.BoxGeometry(.14,3.6,.14).translate(0,2.2,0),sail:new T.BoxGeometry(1.8,1.6,.06).translate(0,2.6,0),arrow:new T.BoxGeometry(.04,.04,.9)};
+ R.M={};R.dm=new T.Object3D();R.m1=new T.Matrix4();R.m2=new T.Matrix4();R.m3=new T.Matrix4();R.m4=new T.Matrix4();R.aid=1;R.shake=0;B.corpses=[];B.arrows=[];R.P=[];
+ // ---- 土ぼこり・煙・火花
+ const PN=900,pg=new T.BufferGeometry();R.pp=new Float32Array(PN*3);R.pc=new Float32Array(PN*3);R.ps=new Float32Array(PN);R.pa=new Float32Array(PN);
+ pg.setAttribute('position',new T.BufferAttribute(R.pp,3));pg.setAttribute('aCol',new T.BufferAttribute(R.pc,3));pg.setAttribute('aSize',new T.BufferAttribute(R.ps,1));pg.setAttribute('aAlpha',new T.BufferAttribute(R.pa,1));
+ R.pmat=new T.ShaderMaterial({transparent:true,depthWrite:false,uniforms:{uS:{value:800}},vertexShader:'attribute float aSize;attribute float aAlpha;attribute vec3 aCol;varying float vA;varying vec3 vC;uniform float uS;void main(){vA=aAlpha;vC=aCol;vec4 mv=modelViewMatrix*vec4(position,1.);gl_PointSize=aSize*uS/-mv.z;gl_Position=projectionMatrix*mv;}',fragmentShader:'varying float vA;varying vec3 vC;void main(){float d=length(gl_PointCoord-.5);if(d>.5)discard;gl_FragColor=vec4(vC,vA*(1.-d*2.));}'});
+ R.pts=new T.Points(pg,R.pmat);R.pts.frustumCulled=false;pg.setDrawRange(0,0);sc.add(R.pts);R.PN=PN;R.sea=sea;R.dust=new T.Color(O.dust||(sea?'#e8f4fa':'#cdbd92'));
+ R.resize=()=>{const r=glCanvas.getBoundingClientRect();R.W=r.width;R.H=r.height;ren.setSize(r.width,r.height,false);cam.aspect=r.width/Math.max(1,r.height);cam.updateProjectionMatrix();R.pmat.uniforms.uS.value=r.height*ren.getPixelRatio()*1.1;};R.resize();
  return R;}
-function rb3Render(B){const R=B.g3,O=B.opt,t=B.time;if(!R.W)R.resize();
- // カメラ：戦っている所を追う
+function rb3Mesh(R,geo,col,cap){const key=geo+col;let m=R.M[key];if(!m){cap=cap||(geo==='leg'||geo==='hleg'?3400:1700);m=new THREE.InstancedMesh(R.G[geo],new THREE.MeshLambertMaterial({color:new THREE.Color(col)}),cap);m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);m.frustumCulled=false;m._n=0;m._cap=cap;m.count=0;R.sc.add(m);R.M[key]=m;}return m;}
+function rb3Part(R,x,y,z,life,size,col,alpha,vx,vy,vz,grow){if(R.P.length>=R.PN)R.P.shift();R.P.push({x,y,z,l:0,d:life,s:size,c:col,a:alpha,vx:vx||0,vy:vy||0,vz:vz||0,g:grow||0});}
+/* 部隊ごとの装備と陣形 */
+function rb3Kit(q){if(q._kit)return q._kit;const O=BT.opt,me=q.side==='me';const base={body:me?(O.meCol||'#1e2a44'):(O.foeCol||'#8a1e14'),trim:me?(O.meTrim||'#e8c060'):(O.foeTrim||'#f0e0c0')};
+ const byT={yari:{w:'spear',len:2.8,fm:'line'},yumi:{w:'bow',fm:'loose'},kiba:{w:'spear',len:3.1,fm:'wedge',mount:1},gen:{w:'spear',len:2.6,fm:'square'},gun:{w:'gun',fm:'loose'},ship:{ship:1,fm:'ship'}}[q.type]||{w:'spear',len:2.8,fm:'line'};
+ const sk=(O.kits&&O.kits[q.side])||{};const M=MONS[q.mon||(me?S.meMon:S.foeMon)]||{};
+ const K=Object.assign({hat:'cone',skin:'#dcae88',horse:'#6a4424',leash:3.5},base,byT,sk.all||{},sk[q.type]||{},q.kit||{});if(q.boat){K.ship=1;K.fm='ship';}
+ if(!K.hatCol)K.hatCol=K.trim;if(!K.shieldCol)K.shieldCol=K.trim;if(!K.banner)K.banner=M.bg||K.trim;q._kit=K;return K;}
+function rb3Slot(q,K,i,k,a,o){const fm=q.fm||K.fm;let f=0,l=0;
+ if(fm==='square'){const c=Math.ceil(Math.sqrt(k)),r=Math.floor(i/c),rows=Math.ceil(k/c);l=(i%c-(c-1)/2)*.98;f=((rows-1)/2-r)*.98;}
+ else if(fm==='loose'){const c=Math.max(3,Math.ceil(Math.sqrt(k*3.5))),r=Math.floor(i/c),rows=Math.ceil(k/c);l=(i%c-(c-1)/2)*1.5+(r%2?.75:0);f=((rows-1)/2-r)*1.6;}
+ else if(fm==='wedge'){const r=Math.floor(Math.sqrt(i)),j=i-r*r,Rr=Math.floor(Math.sqrt(Math.max(0,k-1)));l=(j-r)*1.5;f=(Rr/2-r)*1.7;}
+ else if(fm==='mob'){const c=Math.ceil(Math.sqrt(k*1.4)),r=Math.floor(i/c),rows=Math.ceil(k/c);l=(i%c-(c-1)/2)*1.35+a.jx*.9;f=((rows-1)/2-r)*1.35+a.jy*.9;}
+ else if(fm==='circle'){let m=1,left=k,rings=[];while(left>0){const n=Math.min(left,Math.round(6.28*(m*.95+.5)/.95));rings.push(n);left-=n;m++;}let idx=i,ri=rings.length-1;while(ri>0&&idx>=rings[ri]){idx-=rings[ri];ri--;}const rad=(ri+1)*.95+.5,an=idx/rings[ri]*6.283;l=Math.sin(an)*rad;f=Math.cos(an)*rad;a.of=an;}
+ else if(fm==='column'){const c=5,r=Math.floor(i/c),rows=Math.ceil(k/c);l=(i%c-(c-1)/2)*1.05;f=((rows-1)/2-r)*1.2;}
+ else if(fm==='ship'){const c=Math.max(1,Math.round(Math.sqrt(k*1.7))),r=Math.floor(i/c),rows=Math.ceil(k/c);l=(i%c-(c-1)/2)*4.4;f=((rows-1)/2-r)*4.6;}
+ else{const c=Math.max(3,Math.ceil(Math.sqrt(k*3))),r=Math.floor(i/c),rows=Math.ceil(k/c);l=(i%c-(c-1)/2)*1.05;f=((rows-1)/2-r)*1.15;const half=(c-1)/2*1.05||1,u=l/half;if(fm==='crescent')f+=u*u*4.5;if(fm==='bulge')f+=(1-u*u)*4.5;}
+ if(fm!=='circle')a.of=null;const cf=Math.cos(q.vf),sf=Math.sin(q.vf);o[0]=q.x+f*cf-l*sf;o[1]=q.y+f*sf+l*cf;}
+function rb3Kill(B,q,a){a.dead=true;const K=rb3Kit(q);B.corpses.push({x:a.x,y:a.y,f:a.f,h:a.h||0,vh:a.vh||0,kvx:a.kvx||0,kvy:a.kvy||0,K,mt:a.mt,dr:Math.random()<.5?1:-1,dt:0,sc:a.sc,big:a.big,v:a.v,ph:a.ph,ship:K.ship,lit:a.lit});if(B.corpses.length>520)B.corpses.shift();}
+function rb3Ang(a,b,k){let d=b-a;while(d>Math.PI)d-=6.2832;while(d<-Math.PI)d+=6.2832;return a+d*Math.min(1,k);}
+/* 兵ひとりずつの動き：持ち場へ歩く、敵に当たれば押し合う、突撃されれば吹き飛ぶ */
+function rb3Agents(B,dt){const R=B.g3,O=B.opt;R.fr=(R.fr||0)+1;const per0=O.per||100,act=[];let tot=0;
+ for(const q of B.sq){if(!q.alive||(q.side==='foe'&&q.hidden)){if(q.ag){if(!q.alive&&!q.routed)q.ag.forEach(a=>rb3Kill(B,q,a));q.ag=null;}continue;}
+  const K=rb3Kit(q);q._w=K.ship?clamp(Math.ceil(q.n/(q.per||per0)*.6),1,12):clamp(Math.ceil(q.n/(q.per||per0)*2.2),6,110);tot+=q._w;act.push(q);}
+ const scl=tot>1500?1500/tot:1,o=[0,0];
+ for(const q of act){const K=q._kit,want=Math.max(K.ship?1:4,Math.round(q._w*scl));if(q.vf==null)q.vf=q.face;
+  let tf=q.face;if(q.melee&&q.melee.length&&!q.routed)tf=Math.atan2(q.melee[0].y-q.y,q.melee[0].x-q.x);q.vf=rb3Ang(q.vf,tf,dt*3.5);
+  if(q._px!=null&&dt>0)q._sp=Math.hypot(q.x-q._px,q.y-q._py)/dt;q._px=q.x;q._py=q.y;
+  if(!q.ag)q.ag=[];const ag=q.ag;
+  while(ag.length<want){const a={q,id:R.aid++,f:q.vf,ph:Math.random()*6,sp:0,h:0,vh:0,kb:0,kvx:0,kvy:0,lu:0,at:Math.random(),r:Math.random(),sc:.9+Math.random()*.2,v:Math.random()<.45,jx:Math.random()-.5,jy:Math.random()-.5,e:null,cr:0};
+   rb3Slot(q,K,ag.length,want,a,o);a.x=o[0];a.y=o[1];a.mt=!!K.mount||(q.gen&&ag.length===0&&!K.litter&&!K.ship);if(q.gen&&ag.length===0){a.big=1.25;a.lit=!!K.litter;a.gen=1;}ag.push(a);}
+  if(ag.length>want&&!q.routed){let nk=Math.min(ag.length-want,Math.max(1,Math.ceil((ag.length-want)*.25)));while(nk-->0&&ag.length>1){let bi=-1,bs=-1;for(let i=q.gen?1:0;i<ag.length;i++){const a=ag[i];let s=Math.random()*.5;if(a.kb>0)s+=3;if(a.en)s+=2;else if(i<ag.length*.4)s+=.6;if(s>bs){bs=s;bi=i;}}
+    if(bi<0)break;rb3Kill(B,q,ag[bi]);ag[bi]=ag[ag.length-1];ag.pop();}}}
+ // 場所の表（近くの兵をすばやく探す）
+ const grid=new Map(),CS=1.7,key=(cx,cy)=>cx*4096+cy;
+ for(const q of act)for(const a of q.ag){a.cx=Math.floor(a.x/CS);a.cy=Math.floor(a.y/CS);const k=key(a.cx,a.cy);let c=grid.get(k);if(!c){c=[];grid.set(k,c);}c.push(a);}
+ const won=B.over&&B.won!=null;
+ for(const q of act){const K=q._kit,ag=q.ag,k=ag.length,fighting=!!(q.melee&&q.melee.length)||q.charge>0,rest=q.dis>.45&&!fighting&&!q.moving;
+  const baseSp=(K.mount?13:K.ship?6:7.5),maxSp=Math.max(baseSp,(q._sp||0)*1.35),leash=K.leash*(q.charge>0?1.6:1);
+  for(let i=0;i<k;i++){const a=ag[i];rb3Slot(q,K,i,k,a,o);let gx=o[0],gy=o[1];
+   if(q.routed){gx=q.x+a.jx*14;gy=q.y+a.jy*10+(q.side==='me'?6:-6);a.e=null;}
+   else{if(fighting&&(R.fr+a.id)%7===0){let best=null,bd=5.2;for(let dx=-3;dx<=3;dx++)for(let dy=-3;dy<=3;dy++){const c=grid.get(key(a.cx+dx,a.cy+dy));if(!c)continue;for(const b of c){if(b.q.side===q.side||b.q.routed)continue;const d=Math.hypot(b.x-a.x,b.y-a.y);if(d<bd){bd=d;best=b;}}}a.e=best;}
+    if(a.e&&(a.e.dead||!fighting))a.e=null;
+    if(a.e&&K.w!=='bow'&&K.w!=='gun'||a.e&&q.melee){const ex=a.e.x-a.x,ey=a.e.y-a.y,ed=Math.hypot(ex,ey)||1,rr=K.ship?3.4:(K.w==='spear'&&K.len>3.5?1.5:1.0);let tx=a.e.x-ex/ed*rr,ty=a.e.y-ey/ed*rr;const lx=tx-gx,ly=ty-gy,ld=Math.hypot(lx,ly);if(ld>leash){tx=gx+lx/ld*leash;ty=gy+ly/ld*leash;}gx=tx;gy=ty;a.en=ed<rr+.7;}else a.en=false;}
+   let vx=(gx-a.x)*5,vy=(gy-a.y)*5;const vd=Math.hypot(vx,vy),ms=q.routed?9.5:maxSp*(vd>30?1.5:1);if(vd>ms){vx*=ms/vd;vy*=ms/vd;}
+   if(a.kb>0){a.kb-=dt;a.x+=a.kvx*dt;a.y+=a.kvy*dt;a.kvx*=.92;a.kvy*=.92;vx*=.15;vy*=.15;}
+   if(a.h>0||a.vh>0){a.h+=a.vh*dt;a.vh-=24*dt;if(a.h<=0){a.h=0;a.vh=0;}}
+   a.x+=vx*dt;a.y+=vy*dt;const sp=Math.hypot(vx,vy);a.sp+=(sp-a.sp)*.2;a.ph+=dt*(K.mount?1.1:1.9)*Math.min(sp,9);
+   let tf=q.vf;if(a.en&&a.e)tf=Math.atan2(a.e.y-a.y,a.e.x-a.x);else if(sp>1.2)tf=Math.atan2(vy,vx);else if(a.of!=null)tf=q.vf+a.of;a.f=rb3Ang(a.f,tf,dt*8);
+   if(a.en){const p=a.lu;a.at+=dt*(1.6+a.r*1.4);const sn=Math.sin(a.at*6.283);a.lu=sn>0?sn*sn:0;if(p<.85&&a.lu>=.85&&a.e&&Math.random()<.35){const mx=(a.x+a.e.x)/2-50,mz=(a.y+a.e.y)/2-75;rb3Part(R,mx,rb3H(a.x,a.y)+1.3,mz,.16,.9,[1,.92,.6],.9,0,1,0);}}else a.lu*=.85;
+   a.cr+=((rest||(q.hidden&&q.side==='me')?1:0)-a.cr)*.1;
+   if(won&&((q.side==='me')===B.won)&&!q.routed){a.h=Math.max(0,Math.sin(performance.now()*.011+a.r*9))*.55;a.lu=.0;a.cheer=1;}
+   if(sp>3.5&&dt>0&&Math.random()<dt*(K.mount?4:K.ship?3:.8)){const d=R.dust;rb3Part(R,a.x-50,rb3H(a.x,a.y)+.2,a.y-75,K.ship?1.1:.9,K.mount?2.6:1.8,[d.r,d.g,d.b],K.ship?.5:.32,0,.6,0,2);}}}
+ // ぶつかり：兵は重ならない。突撃を受けた兵は吹き飛ぶ
+ for(const q of act)for(const a of q.ag){const Ka=q._kit,ra=Ka.ship?1.7:a.mt?.62:.42;for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++){const c=grid.get(key(a.cx+dx,a.cy+dy));if(!c)continue;for(const b of c){if(b.id<=a.id||b.dead)continue;
+    const Kb=b.q._kit,rb=Kb.ship?1.7:b.mt?.62:.42,foe=b.q.side!==q.side,md=ra+rb+(foe?.12:0);let ux=b.x-a.x,uy=b.y-a.y,d=Math.hypot(ux,uy);if(d>=md)continue;if(d<.001){ux=Math.random()-.5;uy=Math.random()-.5;d=Math.hypot(ux,uy);}ux/=d;uy/=d;const ov=(md-d)*.5;
+    const wa=a.kb>0?.2:1,wb=b.kb>0?.2:1;a.x-=ux*ov*wb/(wa+wb)*2*.9;a.y-=uy*ov*wb/(wa+wb)*2*.9;b.x+=ux*ov*wa/(wa+wb)*2*.9;b.y+=uy*ov*wa/(wa+wb)*2*.9;
+    if(foe&&!q.routed&&!b.q.routed){const ca=(q.charge>0&&a.sp>3)||(a.mt&&a.sp>6.5),cb=(b.q.charge>0&&b.sp>3)||(b.mt&&b.sp>6.5);
+     if(ca&&!cb&&b.kb<=0&&!Kb.ship)rb3Knock(R,a,b,ux,uy);else if(cb&&!ca&&a.kb<=0&&!Ka.ship)rb3Knock(R,b,a,-ux,-uy);}}}}
+ // 倒れた兵・矢・煙
+ for(const c of B.corpses){c.dt+=dt;if(c.h>0||c.vh>0){c.h+=c.vh*dt;c.vh-=24*dt;c.x+=c.kvx*dt;c.y+=c.kvy*dt;if(c.h<=0){c.h=0;c.vh=0;c.kvx=c.kvy=0;}}}
+ for(const e of (B.vfx||[])){const q=e.q,t=e.t;if(!q.ag||!q.ag.length)continue;const K=q._kit;const n=K.w==='bow'?Math.min(9,q.ag.length):Math.min(5,q.ag.length);
+  for(let i=0;i<n;i++){const a=q.ag[Math.floor(Math.random()*q.ag.length)];const h0=rb3H(a.x,a.y)+1.4;
+   if(K.w==='bow'){const tx=t.x+(Math.random()-.5)*rbRad(t)*1.6,ty=t.y+(Math.random()-.5)*rbRad(t)*1.6;B.arrows.push({x0:a.x,y0:a.y,h0,x1:tx,y1:ty,h1:rb3H(tx,ty)+.2,t:-Math.random()*.2,d:.75+Math.random()*.25});}
+   else{const fx=Math.cos(a.f),fy=Math.sin(a.f);rb3Part(R,a.x-50+fx*.9,h0,a.y-75+fy*.9,K.ship?1.6:1.0,K.ship?5:2.4,[.92,.92,.9],.6,fx*1.5,.8,fy*1.5,3);rb3Part(R,a.x-50+fx*.8,h0,a.y-75+fy*.8,.09,K.ship?3:1.5,[1,.85,.4],1,0,0,0);
+    if(K.ship&&i<2){const tx=t.x+(Math.random()-.5)*6,ty=t.y+(Math.random()-.5)*6;rb3Part(R,tx-50,.3,ty-75,.7,3.2,[1,1,1],.7,0,3,0,2);}}}}
+ if(B.vfx)B.vfx.length=0;if(B.arrows.length>420)B.arrows.splice(0,B.arrows.length-420);
+ for(const a of B.arrows)a.t+=dt;B.arrows=B.arrows.filter(a=>a.t<a.d+7);
+ for(const p of R.P){p.l+=dt>0?dt:0.016;p.x+=p.vx*dt;p.y+=p.vy*dt;p.z+=p.vz*dt;}R.P=R.P.filter(p=>p.l<p.d);}
+function rb3Knock(R,a,b,ux,uy){const big=a.mt,f=big?9:4.2;b.kb=big?.75:.45;b.kvx=ux*f+(Math.random()-.5)*3;b.kvy=uy*f+(Math.random()-.5)*3;b.vh=big?5.5+Math.random()*2:2.4;b.h=Math.max(b.h,.05);R.shake=Math.min(.7,R.shake+(big?.07:.02));
+ const d=R.dust;rb3Part(R,b.x-50,rb3H(b.x,b.y)+.4,b.y-75,.7,big?3.2:2,[d.r,d.g,d.b],.45,ux*2,1.5,uy*2,3);if(big){SND.horse();}SND.clash();}
+function rb3Render(B){const R=B.g3,O=B.opt,t=B.time,now=performance.now();if(!R.W)R.resize();rb3Agents(B,B.vdt||0);
+ // カメラ：戦っている所を追う。総大将が討たれた時は寄る
  const act=B.sq.filter(q=>q.alive&&!q.routed&&!(q.side==='foe'&&q.hidden));const fight=act.filter(q=>q.melee&&q.melee.length);const use=fight.length?fight:act;
- let cx=50,cy=75;if(use.length){cx=use.reduce((s,q)=>s+q.x,0)/use.length;cy=use.reduce((s,q)=>s+q.y,0)/use.length;}
- let spread=0;act.forEach(q=>{spread=Math.max(spread,Math.hypot(q.x-cx,(q.y-cy)*.8));});
- const want=clamp(spread*1.05+34,48,120);R.tx+=(cx-50-R.tx)*.03;R.tz+=(cy-75-R.tz)*.03;R.dist+=(want-R.dist)*.02;R.orb=Math.sin(performance.now()/9000)*.28;
- const cam=R.cam;cam.position.set(R.tx+Math.sin(R.orb)*R.dist*.5,R.dist*.5,R.tz+Math.cos(R.orb)*R.dist*.85);cam.lookAt(R.tx,0,R.tz-10);
- // 兵を置く
- const dm=R.dm;const n={bodyMe:0,bodyFoe:0,headMe:0,headFoe:0,sailMe:0,sailFoe:0,spear:0,horse:0,hull:0,mast:0};const cap={bodyMe:6000,bodyFoe:6000,headMe:6000,headFoe:6000,sailMe:500,sailFoe:500,spear:11000,horse:4000,hull:900,mast:900};
- const put=(k,x,h,z,ry,rx,s)=>{if(n[k]>=cap[k])return;dm.position.set(x,h,z);dm.rotation.set(rx||0,ry,0,'YXZ');dm.scale.set(s,s,s);dm.updateMatrix();R[k].setMatrixAt(n[k]++,dm.matrix);};
- for(const q of B.sq){if(!q.alive)continue;if(q.side==='foe'&&q.hidden)continue;const isShip=q.type==='ship'||q.boat;const k=isShip?Math.min(14,q.n>0?Math.max(2,Math.ceil(rbFigs(q)*.6)):0):Math.min(130,q.n>0?Math.max(8,Math.ceil(rbFigs(q)*2.6)):0);const cols=Math.max(1,Math.round(Math.sqrt(k*1.7))),sp=isShip?4.2:1.15;const ca=Math.cos(q.face),sa=Math.sin(q.face);
-  const ry=Math.atan2(ca,sa),sd=q.side==='me'?'Me':'Foe';const fightQ=q.melee&&q.melee.length;const crouch=q.hidden?.72:1;
-  for(let i=0;i<k;i++){const r=Math.floor(i/cols),c=i%cols;let lx=(r-(Math.ceil(k/cols)-1)/2)*sp*-1,ly=(c-(cols-1)/2)*sp;
-   if(q.routed){lx+=Math.sin(i*7.1)*3;ly+=Math.cos(i*3.3)*3;}
-   let jx=0,jy=0,bob=0,lean=0;if(fightQ){jx=Math.sin(t*9+i*1.7)*.45;jy=Math.cos(t*8+i*2.3)*.45;lean=Math.sin(t*12+i)*.35;}else if(q.moving){bob=Math.abs(Math.sin(t*10+i))*.18;}
-   const wx=q.x+lx*ca-ly*sa+jx,wy=q.y+lx*sa+ly*ca+jy,X=wx-50,Z=wy-75,h=rb3H(wx,wy)+bob;
-   if(isShip){const hh=Math.max(h,0)+.1+Math.sin(t*1.5+i)*.12;put('hull',X,hh,Z,ry,0,1);put('mast',X,hh,Z,ry,0,1);put('sail'+sd,X,hh,Z,ry,0,1);continue;}
-   const mounted=q.type==='kiba'||(q.type==='gen'&&i<3);let hy=h;
-   if(mounted){put('horse',X,h,Z,ry,0,1);hy=h+.75;}
-   const ry2=q.routed?ry+Math.PI:ry,tilt=q.routed?.35:lean*.4;
-   put('body'+sd,X,hy,Z,ry2,tilt,crouch);put('head'+sd,X,hy,Z,ry2,tilt,crouch);
-   if(q.type!=='yumi'&&q.type!=='gun')put('spear',X+Math.sin(ry)*.35,hy,Z+Math.cos(ry)*.35,ry,fightQ?.9+lean:(q.routed?1.2:.18),crouch);}}
- Object.keys(n).forEach(k=>{const m=R[k];m.count=n[k];m.instanceMatrix.needsUpdate=true;});
+ let cx=50,cy=75,rate=.03;if(use.length){cx=use.reduce((s,q)=>s+q.x,0)/use.length;cy=use.reduce((s,q)=>s+q.y,0)/use.length;}
+ let spread=0;use.forEach(q=>{spread=Math.max(spread,Math.hypot(q.x-cx,(q.y-cy)*.8));});let want=clamp(spread*1.1+30,38,112);
+ if(B.focus&&now<B.focus.until){cx=B.focus.x;cy=B.focus.y;want=26;rate=.09;}
+ R.tx+=(cx-50-R.tx)*rate;R.tz+=(cy-75-R.tz)*rate;R.dist+=(want-R.dist)*(rate*.8);R.orb=Math.sin(now/9000)*.3;R.shake*=.88;
+ const cam=R.cam,sh=R.shake;cam.position.set(R.tx+Math.sin(R.orb)*R.dist*.5+(Math.random()-.5)*sh*2.5,R.dist*.44+(Math.random()-.5)*sh*2.5,R.tz+Math.cos(R.orb)*R.dist*.86);cam.lookAt(R.tx,1,R.tz-6);
+ for(const k in R.M)R.M[k]._n=0;
+ const dm=R.dm,root=R.m1,loc=R.m2,out=R.m3,rid=R.m4;
+ const put=(geo,col,M)=>{const m=rb3Mesh(R,geo,col);if(m._n<m._cap)m.setMatrixAt(m._n++,M);};
+ const part=(base,geo,col,x,y,z,rx,sy)=>{loc.makeRotationX(rx||0);if(sy){const e=loc.elements;e[4]*=sy;e[5]*=sy;e[6]*=sy;}loc.setPosition(x,y,z);out.multiplyMatrices(base,loc);put(geo,col,out);};
+ const man=(a,q,K,dead)=>{const fall=dead?Math.min(1,a.dt/.3):0,S0=1.3*(a.sc||1)*(a.big||1),cr=1-(a.cr||0)*.36;
+  const yaw=Math.atan2(Math.cos(a.f),Math.sin(a.f)),mv=dead?0:Math.min(1,a.sp/3),sw=Math.sin(a.ph)*mv*.75,lu=dead?0:a.lu,Y=rb3H(a.x,a.y)+(a.h||0);
+  if(K.ship){dm.position.set(a.x-50,Math.max(Y,0)+.1+Math.sin(t*1.5+a.x)*.1-fall*Math.min(2.6,a.dt*.5),a.y-75);dm.rotation.set(fall*.25,yaw,fall*.9*a.dr,'YXZ');dm.scale.set(1,1,1);dm.updateMatrix();root.copy(dm.matrix);
+   put('hull','#5a3a1e',root);put('mast','#3a2a18',root);put('sail',K.banner,root);return;}
+  dm.position.set(a.x-50,Y+(dead?0:Math.abs(Math.sin(a.ph))*mv*(a.mt?.16:.05)),a.y-75);dm.rotation.set(dead?0:(a.mt?Math.sin(a.ph)*mv*.08:lu*.22+mv*.08),yaw,fall*1.5*(a.dr||1),'YXZ');dm.scale.set(S0,S0*(a.mt?1:cr),S0);dm.updateMatrix();root.copy(dm.matrix);
+  let base=root;
+  if(a.lit){part(root,'litter','#8a1a14',0,0,0);loc.makeTranslation(0,.55,0);rid.multiplyMatrices(root,loc);base=rid;}
+  else if(a.mt){part(root,'hbody',K.horse,0,0,0);part(root,'hneck',K.horse,0,1.12,.68,.55);const g=Math.sin(a.ph)*mv*.9;part(root,'hleg','#3a2414',-.16,.72,.56,g);part(root,'hleg','#3a2414',.16,.72,.56,g*.8);part(root,'hleg','#3a2414',-.16,.72,-.56,-g);part(root,'hleg','#3a2414',.16,.72,-.56,-g*.8);
+   loc.makeTranslation(0,.72,0);rid.multiplyMatrices(root,loc);base=rid;}
+  else{part(base,'leg','#2a2420',-.13,.62,0,sw);part(base,'leg','#2a2420',.13,.62,0,-sw);}
+  part(base,'body',a.v&&K.body2?K.body2:K.body,0,.62,0);part(base,'head',K.skin,0,1.47,0);
+  const hc=a.gen?'#f1cf72':K.hatCol;if(K.hat==='cone')part(base,'hatCone',hc,0,1.66,0);else if(K.hat==='dome'||K.hat==='crest'){part(base,'hatDome',hc,0,1.5,0);if(K.hat==='crest'||a.gen)part(base,'crest',a.gen?'#b8281c':K.trim,0,1.78,0);}
+  if(K.shield)part(base,K.shield==='rect'?'shRect':K.shield==='oval'?'shOval':'shRound',K.shieldCol,-.36,1.02,.2);
+  const eng=!dead&&(a.en||(q.charge>0&&a.sp>3)||(a.of!=null&&!q.moving));
+  if(K.w==='spear'){const th=dead?1.5:a.cheer?-.1:eng?1.3:.14,len=K.len||2.8,hz=.12+lu*.55,py=.95-Math.cos(th)*len*.3,pz=hz-Math.sin(th)*len*.3;part(base,'spear','#3a2a18',.3,py,pz,th,len);}
+  else if(K.w==='sword')part(base,'sword','#c8c8d0',.32,1.0,.14,dead?1.5:a.cheer?-.2:eng?-.6+lu*2.0:.25);
+  else if(K.w==='bow')part(base,'bow','#4a3218',-.3,1.05,.26);
+  else if(K.w==='gun')part(base,'gun','#3a2a18',.2,1.25,.1,q.tgt&&!dead?0:-.9);
+  if(K.backFlag&&!a.mt&&a.id%2===0&&!dead){part(base,'fpole','#2a1a0c',0,1.05,-.24);part(base,'fcloth',K.backFlag,0,2.05,-.24);}
+  if(a.std&&!dead){part(base,'bpole','#2a1a0c',-.3,0,-.1);loc.makeRotationY(Math.sin(t*3+a.r*6)*.35);loc.setPosition(-.3,3.0,-.1);out.multiplyMatrices(base,loc);put('bcloth',K.banner,out);}};
+ for(const q of B.sq){if(!q.ag)continue;const K=q._kit,ag=q.ag,si=q.gen?0:Math.min(ag.length-1,2);for(let i=0;i<ag.length;i++){const a=ag[i];a.std=i===si&&!K.ship;man(a,q,K,false);}}
+ for(const c of B.corpses){if(c.dt>26)continue;man(c,null,c.K,true);}
+ // 矢
+ for(const a of B.arrows){const k=clamp(a.t/a.d,0,1);if(a.t<0)continue;const x=a.x0+(a.x1-a.x0)*k,y=a.y0+(a.y1-a.y0)*k,arc=Math.sin(k*Math.PI)*7,h=a.h0+(a.h1-a.h0)*k+arc;
+  const dxx=a.x1-a.x0,dyy=a.y1-a.y0,hd=Math.hypot(dxx,dyy)||1,vy=k>=1?-.9*hd:(a.h1-a.h0)+Math.cos(k*Math.PI)*7*Math.PI;dm.position.set(x-50,h,y-75);dm.rotation.set(-Math.atan2(vy,hd),Math.atan2(dxx,dyy),0,'YXZ');dm.scale.set(1,1,1);dm.updateMatrix();put('arrow','#2a2018',dm.matrix);}
+ for(const k in R.M){const m=R.M[k];m.count=m._n;m.instanceMatrix.updateRange.count=m._n*16;m.instanceMatrix.needsUpdate=true;}
+ // 煙
+ const n=R.P.length,pp=R.pp,pc=R.pc,ps=R.ps,pa=R.pa;for(let i=0;i<n;i++){const p=R.P[i],u=p.l/p.d;pp[i*3]=p.x;pp[i*3+1]=p.y;pp[i*3+2]=p.z;pc[i*3]=p.c[0];pc[i*3+1]=p.c[1];pc[i*3+2]=p.c[2];ps[i]=p.s*(1+u*p.g);pa[i]=p.a*(1-u);}
+ const g=R.pts.geometry;g.setDrawRange(0,n);g.attributes.position.needsUpdate=true;g.attributes.aCol.needsUpdate=true;g.attributes.aSize.needsUpdate=true;g.attributes.aAlpha.needsUpdate=true;
  R.ren.render(R.sc,cam);}
 </script>
 <script>/* s1.js */
@@ -1464,7 +1558,7 @@ async function assault(G){G.arrT=G.t;BGM.play('crisis');
  const T=U().n,dis=clamp((75-G.A)/85,.1,.85)+(c.rainB===30?.15:c.rainB?.1:0),fm=clamp(55+G.A*.6,40,110);
  const guard=(x,y,n,nm)=>({side:'foe',name:nm,type:'yari',n,x,y,mode:'guard',dis,morale:fm,aggro:20});
  const yo=()=>rbQ('yoshi');
- const win=await rbBattle(G,{title:'桶狭間 本陣突入',bgm:'crisis',limit:120,per:20,K:.05,meCol:'#1c1814',meTrim:'#d8ac4c',foeCol:'#e8e0cc',foeTrim:'#8a1e12',
+ const win=await rbBattle(G,{title:'桶狭間 本陣突入',kits:{me:{all:{hat:'cone',hatCol:'#d8ac4c',backFlag:'#d8ac4c'},kiba:{backFlag:null}},foe:{all:{hat:'cone',hatCol:'#8a1e12',backFlag:'#f4f0e6'},yari:{fm:'mob'},gen:{litter:1,fm:'circle'}}},bgm:'crisis',limit:120,per:20,K:.05,meCol:'#1c1814',meTrim:'#d8ac4c',foeCol:'#e8e0cc',foeTrim:'#8a1e12',
   intro:'織田勢が今川本陣へ駆け上がる。要所で采配をふるえ',
   base:'#8a9a5a',baseTop:'#6a7a44',zones:[{k:'hill',pts:[[25,8],[75,8],[85,40],[60,55],[40,55],[15,40]],label:'桶狭間山',ly:12},{k:'marsh',pts:[[0,95],[30,92],[35,110],[0,115]]},{k:'forest',pts:[[70,95],[100,90],[100,120],[78,118]]}],trees:[[85,105,12,30],[8,60,8,18]],
   overlay:B=>B.time<6&&c.rainB?'rgba(30,40,60,'+(.4-B.time*.06)+')':null,
@@ -1582,7 +1676,7 @@ async function finale(G){G.attackN=G.n;G.attackT=G.t;BGM.play('crisis');SND.horn
  const sq=[{id:'wal',name:'ウォレス隊',type:'gen',n:pres('wal'),x:40,y:136,gen:1,mode:'attack'},{id:'mor',name:'モレーの槍兵',type:'yari',n:pres('mor'),x:66,y:134,mode:'attack'}];
  if(U('watch').at==='craig')sq.push({name:'見張り隊',type:'yari',n:300,x:16,y:140,mode:'hold',aggro:20});
  sq.push({side:'foe',name:'クレッシンガム',type:'yari',n:n*.35,x:50,y:44,dis,morale:fm,mode:'hold',aggro:26},{side:'foe',name:'重騎兵',type:'kiba',n:n*.35,x:52,y:62,dis,morale:fm,mode:'attack',atk:1.5},{side:'foe',name:'英歩兵',type:'yari',n:n*.35,x:48,y:28,dis,morale:fm,mode:'hold',aggro:24});
- const win=await rbBattle(G,{title:'スターリング橋',bgm:'crisis',limit:140,per:40,K:.05,meCol:'#1f3a6a',meTrim:'#e8e8f0',foeCol:'#e8e4da',foeTrim:'#b0201a',
+ const win=await rbBattle(G,{title:'スターリング橋',kits:{me:{all:{hat:'none',w:'spear',len:4.2,body2:'#2a5a3a'}},foe:{all:{hat:'dome',hatCol:'#b8bcc4',shield:'rect',shieldCol:'#b0201a'},kiba:{horse:'#8a8a90'}}},bgm:'crisis',limit:140,per:40,K:.05,meCol:'#1f3a6a',meTrim:'#e8e8f0',foeCol:'#e8e4da',foeTrim:'#b0201a',
   intro:'スコットランド軍が丘を駆け下りる。要所で采配をふるえ',
   base:'#7a9a5a',baseTop:'#6a8a4a',zones:[{k:'river',pts:[[0,6],[100,6],[100,15],[0,15]]},{k:'bridge',pts:[[47,4],[53,4],[53,17],[47,17]]},{k:'marsh',pts:[[0,20],[42,20],[42,110],[0,110]],label:'湿地',lx:20},{k:'marsh',pts:[[58,20],[100,20],[100,110],[58,110]],label:'湿地',lx:80},{k:'road',pts:[[43,17],[57,17],[57,112],[43,112]]},{k:'hill',pts:[[10,118],[90,118],[100,150],[0,150]],label:'アビー・クレイグ',ly:146}],
   ter:(x,y)=>y>=6&&y<=15?(x>=47&&x<=53?'bridge':'river'):(y>20&&y<110&&(x<42||x>58))?'marsh':(y>118?'hill':'road'),
@@ -1595,7 +1689,7 @@ async function finale(G){G.attackN=G.n;G.attackT=G.t;BGM.play('crisis');SND.horn
   events:(flank?[{t:18,fn:B=>{rbAdd({side:'foe',name:'浅瀬の英騎兵',type:'kiba',n:500,x:2,y:128,mode:'attack',morale:90});rbMsg('西の浅瀬を渡った英騎兵が、背後から！',3);}}]:[]).concat([
    {t:40,fn:B=>{if(B.flags.held)return;for(let i=0;i<3;i++)rbAdd({side:'foe',name:'英軍本隊',type:i===1?'kiba':'yari',n:2200,x:34+i*16,y:18,mode:'attack',morale:120,def:1.2});B.flags.noHold=1;rbMsg('橋のたもとを押さえられず、イングランド軍の本隊が北岸に渡りきった！',4);}},
    {key:'bridge',t:1.5,who:'moray',ask:1,text:'渡った敵は、湿地の中の土手道に細長く並んでいる。どうする、ウィリアム？',opts:[{l:'モレー隊を川ぞいに走らせ、橋のたもとを奪え',ok:true,fn:B=>{const m=rbQ('mor');m.ghost=1;m.tgt=null;m.mode='run';m.spdMul=2;m.ai=(q,B)=>{if(q.mode!=='run')return false;q.tgt=null;q.tx=50;q.ty=20;if(Math.hypot(q.x-50,q.y-20)<3){q.ghost=0;q.mode='hold';q.hx=50;q.hy=20;q.spdMul=1;q.aggro=10;q.anchor=1;q.defMul=1.4;q.floor=8;B.flags.moray=1;rbText(50,24,'モレー隊が橋のたもとへ！','#ffd36a',1);}return true;};},say:'モレーの槍兵が、橋のたもとへ走る！'},{l:'全軍で正面から斬りこめ',ok:false}]},
-   {key:'schil',when:B=>B.sq.some(q=>q.side==='foe'&&q.type==='kiba'&&rbAlive(q)&&rbMe().some(m=>Math.hypot(m.x-q.x,m.y-q.y)<22)),who:'wallace',ask:1,text:'イングランドの重騎兵が、槍をそろえて突っこんでくる！',opts:[{l:'槍を外に向けて密集し、壁をつくれ',ok:true,fn:B=>{B.flags.schil=true;},say:'槍の壁（シルトロン）！ 騎兵が止まった'},{l:'散らばって、馬の足を狙え',ok:false,fn:B=>{B.flags.scatter=true;}}]},
+   {key:'schil',when:B=>B.sq.some(q=>q.side==='foe'&&q.type==='kiba'&&rbAlive(q)&&rbMe().some(m=>Math.hypot(m.x-q.x,m.y-q.y)<22)),who:'wallace',ask:1,text:'イングランドの重騎兵が、槍をそろえて突っこんでくる！',opts:[{l:'槍を外に向けて密集し、壁をつくれ',ok:true,fn:B=>{B.flags.schil=true;rbMe().forEach(q=>{if(!q.ghost)q.fm='circle';});},say:'槍の壁（シルトロン）！ 騎兵が止まった'},{l:'散らばって、馬の足を狙え',ok:false,fn:B=>{B.flags.scatter=true;}}]},
    {key:'cross',when:B=>B.flags.held&&B.time>(B.flags.heldT||0)+6,who:'moray',ask:1,text:'南岸のサリー伯が、橋の上に兵を送りこもうとしている。勢いに乗って南岸へ攻めこむか？',opts:[{l:'橋のたもとを守り、北岸の敵を討ち尽くせ',ok:true},{l:'勢いのまま橋を渡り、南岸へ攻めこめ',ok:false,fn:B=>{['mor','wal'].forEach(id=>rbSet(rbQ(id),'move',[50,3,'attack']));B.flags.held=false;B.flags.noHold=1;for(let i=0;i<3;i++)rbAdd({side:'foe',name:'南岸の英軍',type:i?'yari':'kiba',n:2500,x:35+i*15,y:2,mode:'attack',morale:120,def:1.2});}}]}]),
   check:B=>{const w=B.sq.find(q=>q.gen&&q.side==='me');if(!rbAlive(w))return 'lose';if(!rbSide('foe').some(rbAlive)&&(B.flags.held||B.time>20))return 'win';return null;},
   goal:B=>B.flags.held?'北岸に残った敵を討ち尽くせ':'橋のたもと（上の橋）を押さえろ ・ 渡ってきた敵 約'+fmtN((B.flags.cross||0)+n),endText:w=>w?'渡った敵を討ち尽くした！':'押しかえされた'});
@@ -1698,7 +1792,7 @@ const ST={id:'seisui',k:'背',n:'背水の陣',y:'前204',vs:'韓信 約3万 vs 
 async function finale(G){BGM.play('crisis');const kan=U('kan'),sen=U('sen');
  await E.story('@bg battle\n#からっぽになった趙の砦に、二千の騎兵が駆けこんだ。\n#趙の旗を引き抜き、漢の赤い旗を立てていく。\n#だが川岸では、趙の大軍が漢軍を押しつぶそうとしている。',{place:'綿蔓水の岸'});
  const fl=G.beisui?12:null,flagT=G.kiHidden?20:34,ym=clamp(70+G.Y*.4,60,110),zdis=clamp(G.Y/200,0,.35);
- const win=await rbBattle(G,{title:'背水の陣',bgm:'crisis',limit:170,per:200,K:.05,meCol:'#8a1e14',meTrim:'#f0d070',foeCol:'#1a1a22',foeTrim:'#c0c0c8',
+ const win=await rbBattle(G,{title:'背水の陣',kits:{me:{all:{hat:'dome',hatCol:'#3a2a20',shield:'rect',shieldCol:'#5a1a10'}},foe:{all:{hat:'dome',hatCol:'#8a8a94',fm:'square'},kiba:{fm:'wedge'}}},bgm:'crisis',limit:170,per:200,K:.05,meCol:'#8a1e14',meTrim:'#f0d070',foeCol:'#1a1a22',foeTrim:'#c0c0c8',
   intro:'後ろは川。持ちこたえろ。砦に赤い旗が立ったら反撃だ',
   base:'#9a9a64',baseTop:'#86885a',zones:[{k:'river',pts:[[0,138],[100,136],[100,150],[0,150]],label:'綿蔓水',ly:145},{k:'camp',pts:[[30,0],[70,0],[74,14],[26,14]],label:'趙の砦',ly:8},{k:'hill',pts:[[70,0],[100,0],[100,30],[80,26]]}],
   ter:(x,y)=>y>137?'river':y<14&&x>26&&x<74?'wall':'plain',
@@ -1825,7 +1919,7 @@ async function bait(G,u){G.engaged=true;G.bait=u.id;BGM.play('crisis');
  const sp=G.spotted,dis=G.rest?.35:.1,im=clamp(G.M+10,60,90);
  const foe=[['伊東祐安',400,1],['伊東勢',800],['伊東勢',800],['伊東勢',700]].map((a,k)=>({side:'foe',name:a[0],type:a[2]?'gen':'yari',n:a[1],gen:!!a[2],x:50+(k%2?8:-8),y:20-k*12,dis,morale:im,wp:[[50,62],[50,86],[50,118]],aggro:sp?16:4}));
  await E.story('@bg field\n#伊東勢は、逃げる囮を追って'+N[X].n+'へなだれこんでくる。\n島津義弘：まだだ……もっと引きつけよ。',{place:N[X].n});
- const win=await rbBattle(G,{title:'釣り野伏せ',bgm:'crisis',limit:120,per:15,K:.05,meCol:'#f4f0e6',meTrim:'#1a1410',foeCol:'#2a3a5a',foeTrim:'#e8e0c8',
+ const win=await rbBattle(G,{title:'釣り野伏せ',kits:{me:{all:{hat:'cone',hatCol:'#1a1410',backFlag:'#f4f0e6',fm:'mob',leash:6}},foe:{all:{hat:'cone',hatCol:'#c8c0a0',backFlag:'#2a3a5a',fm:'column'}}},bgm:'crisis',limit:120,per:15,K:.05,meCol:'#f4f0e6',meTrim:'#1a1410',foeCol:'#2a3a5a',foeTrim:'#e8e0c8',
   intro:'囮が伊東勢を引きつけてくる。伏兵を出す時を選べ',
   base:'#8aa060',baseTop:'#9a9a6a',zones:[{k:'forest',pts:[[0,55],[28,58],[30,110],[0,112]],label:'森',lx:10},{k:'hill',pts:[[72,58],[100,55],[100,112],[70,110]],label:'丘',lx:90},{k:'road',pts:[[44,0],[56,0],[56,150],[44,150]]},{k:'forest',pts:[[30,125],[70,125],[70,150],[30,150]]}],trees:[[12,82,14,40],[50,138,14,26]],
   ter:(x,y)=>(x<29&&y>55&&y<112)?'forest':(x>71&&y>55&&y<112)?'hill':(x>43&&x<57)?'road':'plain',
@@ -1944,7 +2038,7 @@ async function lifted(G){if(G.sunday!=null)return;G.M=clamp(G.M,0,100);
 async function patay(G){BGM.play('crisis');
  await E.story('@title パテーの戦い\n@bg field\n#六月十八日。ロワール川ぞいの町を次々と取り返したフランス軍は、退くイングランド軍を追っていた。\n#イングランドの強さは長弓兵。地面に杭を打ち、その後ろから矢の雨を降らせる。構えさせたら、騎兵は近づけない。\n#そのとき、森から一頭の鹿が飛び出した。森の奥で、驚いたイングランド兵が声を上げた。\nラ・イル：あそこだ！ 杭を打たれる前に突っこめ！',{place:'パテー'});
  const stakeT=Math.round(13+G.M/9),n=U().n,fm=clamp(G.M,40,110);
- const win=await rbBattle(G,{title:'パテーの戦い',bgm:'crisis',limit:120,per:50,K:.05,meCol:'#1f3a8a',meTrim:'#f0d070',foeCol:'#b0201a',foeTrim:'#e8c060',
+ const win=await rbBattle(G,{title:'パテーの戦い',kits:{me:{all:{hat:'dome',hatCol:'#c8ccd4',shield:'rect',shieldCol:'#1f3a8a',horse:'#d8d4cc'}},foe:{all:{hat:'dome',hatCol:'#8a8a90'},yumi:{hat:'cone',hatCol:'#5a4a30',body2:'#6a5a3a'}}},bgm:'crisis',limit:120,per:50,K:.05,meCol:'#1f3a8a',meTrim:'#f0d070',foeCol:'#b0201a',foeTrim:'#e8c060',
   intro:'長弓兵が杭を打ち終わる前に（'+stakeT+'秒）、騎兵がたどり着けるか',
   base:'#8a9a58',baseTop:'#7a8a4a',zones:[{k:'forest',pts:[[0,0],[100,0],[100,14],[0,18]],label:'森',ly:8},{k:'forest',pts:[[0,60],[18,58],[20,96],[0,98]]},{k:'road',pts:[[40,18],[60,18],[60,150],[40,150]]}],trees:[[50,6,40,50],[8,78,9,20]],
   ter:(x,y)=>y<16?'forest':(x<19&&y>58&&y<97)?'forest':'plain',
@@ -1953,7 +2047,7 @@ async function patay(G){BGM.play('crisis');
    {id:'bow1',side:'foe',name:'長弓兵',type:'yumi',n:1500,x:32,y:46,mode:'hold',dis:.5,aggro:26},{id:'bow2',side:'foe',name:'長弓兵',type:'yumi',n:1500,x:68,y:46,mode:'hold',dis:.5,aggro:26},
    {side:'foe',name:'ファストルフ隊',type:'yari',n:2000,x:84,y:22,mode:'hold',aggro:14}],
   powMul:(a,t,B)=>{if(!B.flags.stakes)return 1;if(t.type==='yumi'&&a.type==='kiba')return .2;if(a.type==='yumi')return t.type==='kiba'?2.6:1.8;return 1;},
-  events:[{key:'ima',t:.6,who:'lahire',ask:1,text:'森の奥で声がした！ 長弓兵が、あわてて杭を打ちはじめている！',opts:[{l:'今すぐ、叫び声のした方へ突撃！',ok:true,fn:B=>{rbSet(rbQ('lahire'),'charge',rbQ('bow1'));rbSet(rbQ('cav2'),'charge',rbQ('bow2'));rbSet(rbQ('joan'),'attack');}},{l:'全軍の隊列を整えてから攻める',ok:false,fn:B=>{rbAfter(()=>{if(!BT)return;rbSet(rbQ('lahire'),'charge',rbQ('bow1'));rbSet(rbQ('cav2'),'charge',rbQ('bow2'));rbSet(rbQ('joan'),'attack');},15000);}}]},
+  events:[{key:'ima',t:.6,who:'lahire',ask:1,text:'森の奥で声がした！ 長弓兵が、あわてて杭を打ちはじめている！',opts:[{l:'今すぐ、叫び声のした方へ突撃！',ok:true,fn:B=>{rbSet(rbQ('lahire'),'charge',rbQ('bow1'));rbSet(rbQ('cav2'),'charge',rbQ('bow2'));rbSet(rbQ('joan'),'attack');}},{l:'全軍の隊列を整えてから攻める',ok:false,fn:B=>{rbAfter(()=>{if(!BT)return;rbSet(rbQ('lahire'),'charge',rbQ('bow1'));rbSet(rbQ('cav2'),'charge',rbQ('bow2'));rbSet(rbQ('joan'),'attack');},22000);}}]},
    {key:'fumi',when:B=>['lahire','cav2'].some(id=>{const q=rbQ(id);return rbAlive(q)&&B.sq.some(b=>b.type==='yumi'&&rbAlive(b)&&Math.hypot(b.x-q.x,b.y-q.y)<20);}),who:'lahire',ask:1,text:'杭を打ちかけの長弓兵が、目の前に！',opts:[{l:'そのまま踏みつぶせ！',ok:true},{l:'弓の届かないところで、いったん止まれ',ok:false,fn:B=>{['lahire','cav2'].forEach(id=>{const q=rbQ(id);if(rbAlive(q))rbSet(q,'move',[q.x,Math.min(146,q.y+26),'hold']);});rbAfter(()=>{if(!BT)return;['lahire','cav2'].forEach(id=>rbSet(rbQ(id),'charge'));},14000);}}]},
    {t:stakeT,fn:B=>{B.flags.stakes=true;B.sq.forEach(q=>{if(q.type==='yumi'&&rbAlive(q))q.dis=0;if(q.name==='ファストルフ隊'&&rbAlive(q))q.mode='attack';});rbMsg('杭が立った！ 騎兵では近づけない',3);}},{when:B=>{const t=B.sq.find(q=>q.id==='talbot');return t&&!rbAlive(t);},fn:B=>{B.sq.forEach(q=>{if(q.side==='foe'&&rbAlive(q))q.mode='flee';});}}],
   drawOver:(g,B)=>{const k=B.flags.stakes?1:clamp(B.time/stakeT,0,1);B.sq.filter(q=>q.type==='yumi'&&rbAlive(q)).forEach(q=>{const n=Math.round(10*k);for(let i=0;i<n;i++){const [x,y]=rbW2S(q.x-10+i*2.2,q.y+rbRad(q)+1.5);g.strokeStyle='#4a3218';g.lineWidth=2;g.beginPath();g.moveTo(x,y+3);g.lineTo(x+3,y-4);g.stroke();}});},
@@ -2171,7 +2265,7 @@ async function finale(G){BGM.play('crisis');
  const pos=[[36,82],[50,78],[64,82],[50,92]];const sq=units.map((u,k)=>({id:u.id,name:u.name,type:'gun',n:Math.max(8,u.n),x:pos[k][0],y:pos[k][1],atk:30,def:wallDef,morale:gm,floor:8,per:4,mode:'hold',aggro:34}));
  if(G.built.redoubt)sq.push({name:'穀物袋の高台',type:'gun',n:15,x:50,y:88,atk:22,def:wallDef*1.3,morale:gm,floor:8,per:4,mode:'hold',aggro:34});
  let wave=0;const spawn=B=>{wave++;const xs=[[50,2],[8,30],[92,30],[4,70],[96,70]];const p=xs[wave%xs.length];rbAdd({side:'foe',name:'ズールー軍',type:'yari',n:350+wave*20,x:p[0],y:p[1],mode:'attack',morale:110,mon:'zulu'});};
- const win=await rbBattle(G,{title:'最後の夜',bgm:'crisis',limit:75,per:25,K:.05,meCol:'#b8281c',meTrim:'#f0e0b0',foeCol:'#3a2416',foeTrim:'#f0e6d0',
+ const win=await rbBattle(G,{title:'最後の夜',night:1,kits:{me:{all:{hat:'dome',hatCol:'#f0e8d0',fm:'line'}},foe:{all:{hat:'none',skin:'#4a2e1c',body:'#5a3a22',shield:'oval',shieldCol:'#f0e6d0',w:'spear',len:1.5,fm:'crescent',leash:7}}},bgm:'crisis',limit:75,per:25,K:.05,meCol:'#b8281c',meTrim:'#f0e0b0',foeCol:'#3a2416',foeTrim:'#f0e6d0',
   intro:'夜明けまで持ちこたえろ。要所で号令をかけよ',base:'#6a5a3a',baseTop:'#4a3e2a',outside:'#140e08',
   zones:[{k:'wall',pts:[[28,74],[72,74],[72,100],[28,100]],col:'rgba(120,90,50,.55)',label:inner?'内壁':'外の壁',ly:97},{k:'camp',pts:[[33,78],[67,78],[67,96],[33,96]],col:'rgba(160,130,90,.35)'}],
   ter:(x,y)=>(x>=28&&x<=72&&y>=74&&y<=100)?'wall':'plain',
@@ -2282,14 +2376,14 @@ async function cannaeBattle(G){BGM.play('crisis');
  const legion=(x,y)=>({side:'foe',name:'ローマ軍団',type:'yari',n:16000,x,y,mode:'attack',dis,morale:135,extra:{roman:1}});
  L.push(legion(36,38),legion(64,38),legion(36,54),legion(64,54),{id:'paullus',side:'foe',name:'パウルス',type:'gen',n:3000,x:50,y:24,gen:1,mode:'hold',aggro:14},
   {id:'rcav',side:'foe',name:'ローマ騎兵',type:'kiba',n:2400,x:12,y:48,mode:'attack',morale:90},{id:'acav',side:'foe',name:'同盟軍騎兵',type:'kiba',n:3600,x:88,y:48,mode:'attack',morale:90});
- if(G.crescent)L.push({id:'g1',name:'ガリア兵',type:'yari',n:11000,x:41,y:gx,def:2.0,floor:10,mode:'hold',aggro:10},{id:'g2',name:'イベリア兵',type:'yari',n:11000,x:59,y:gx,def:2.0,floor:10,mode:'hold',aggro:10});
+ if(G.crescent)L.push({id:'g1',name:'ガリア兵',type:'yari',n:11000,x:41,y:gx,def:2.0,floor:10,mode:'hold',aggro:10,kit:{hat:'none',body:'#7a6a3a',body2:'#5a6a4a',shield:'oval',shieldCol:'#6a4a2a',w:'sword',fm:'bulge',leash:5}},{id:'g2',name:'イベリア兵',type:'yari',n:11000,x:59,y:gx,def:2.0,floor:10,mode:'hold',aggro:10,kit:{hat:'dome',hatCol:'#4a3a2a',body:'#e8e0d0',body2:'#d8c8b0',shield:'round',shieldCol:'#8a2a1a',w:'sword',fm:'bulge',leash:5}});
  else L.push({id:'g1',name:'アフリカ兵',type:'yari',n:11000,x:41,y:gx,def:1.3},{id:'g2',name:'アフリカ兵',type:'yari',n:11000,x:59,y:gx,def:1.3});
  L.push({id:'han',name:'ハンニバル',type:'gen',n:2000,x:50,y:104,gen:1,mode:'hold',aggro:8});
  if(G.crescent){const wy=G.wings===1?104:gx;L.push({id:'a1',name:'アフリカ兵',type:'yari',n:5000,x:20,y:wy,def:1.3,atk:1.2,mode:'hold',aggro:4},{id:'a2',name:'アフリカ兵',type:'yari',n:5000,x:80,y:wy,def:1.3,atk:1.2,mode:'hold',aggro:4});}
  const hv={id:'hv',name:'ハスドルバルの重騎兵',type:'kiba',n:6500,atk:1.2,mode:'target'},nu={id:'nu',name:'ヌミディア騎兵',type:'kiba',n:3500,mode:'target'};
  if(G.cavSide===1){Object.assign(hv,{x:9,y:96});Object.assign(nu,{x:91,y:96});}else{Object.assign(hv,{x:91,y:96});Object.assign(nu,{x:9,y:96});}L.push(hv,nu);
  const romFront=B=>{const r=B.sq.filter(q=>q.roman&&rbAlive(q));return r.length?Math.max(...r.map(q=>q.y)):0;};
- const win=await rbBattle(G,{title:'カンナエの戦い',bgm:'crisis',limit:200,per:500,K:.05,meCol:'#4a2a6a',meTrim:'#e8c060',foeCol:'#a01a14',foeTrim:'#e8d8a0',disDecay:G.wind?0:.012,
+ const win=await rbBattle(G,{title:'カンナエの戦い',kits:{foe:{all:{hat:'crest',hatCol:'#b8a860',shield:'rect',shieldCol:'#8a1410',w:'sword',fm:'square'},kiba:{w:'spear',fm:'wedge',shield:'round'},gen:{w:'spear'}},me:{all:{hat:'dome',hatCol:'#8a7a4a',shield:'round',shieldCol:'#e8c060'}}},bgm:'crisis',limit:200,per:500,K:.05,meCol:'#4a2a6a',meTrim:'#e8c060',foeCol:'#a01a14',foeTrim:'#e8d8a0',disDecay:G.wind?0:.012,
   intro:'両軍がぶつかる。要所で采配をふるえ',base:'#c0a86a',baseTop:'#b09a60',
   zones:[{k:'river',pts:[[0,0],[5,0],[4,150],[0,150]]},{k:'hill',pts:[[70,135],[100,128],[100,150],[66,150]],label:'カンナエ',lx:88,ly:144}],
   ter:(x,y)=>x<5?'river':'plain',squads:L,
@@ -2300,7 +2394,7 @@ async function cannaeBattle(G){BGM.play('crisis');
    {key:'tojiru2',when:B=>B.flags.wait&&(romFront(B)>=106||B.time>(B.flags.waitT||1e9)),who:'maharbal',ask:1,text:'ローマ軍が、深く入りこんだ！ 中央が苦しい！',opts:[{l:'今だ！ 両側を閉じよ！',ok:true,fn:B=>pivotNow(B)},{l:'もう少し待て',ok:false,fn:B=>{rbAfter(()=>{if(BT)pivotNow(BT);},12000);}}]},
    {when:B=>{const r=rbQ('rcav');return r&&!rbAlive(r);},fn:B=>{B.flags.cavWon=B.time;}},
    {t:0,fn:B=>{const h=rbQ('hv'),n=rbQ('nu');rbSet(h,'charge',G.cavSide===1?rbQ('rcav'):rbQ('acav'));rbSet(n,'target',G.cavSide===1?rbQ('acav'):rbQ('rcav'));}}],
-  tick:(B,dt)=>{if(B.flags.backing&&!B.flags.pivot&&B.flags.backN<4&&B.time-B.flags.backT>6){B.flags.backT=B.time;B.flags.backN++;['g1','g2','han'].forEach(id=>{const q=rbQ(id);if(q&&rbAlive(q)){rbSet(q,'move',[q.x,Math.min(140,q.y+9),'hold']);q.spdMul=.45;}});rbText(50,110,'少しずつ下がれ！','#ffd36a');}
+  tick:(B,dt)=>{if(B.flags.backing&&!B.flags.pivot&&B.flags.backN<4&&B.time-B.flags.backT>6){B.flags.backT=B.time;B.flags.backN++;['g1','g2','han'].forEach(id=>{const q=rbQ(id);if(q&&rbAlive(q)){rbSet(q,'move',[q.x,Math.min(140,q.y+9),'hold']);q.spdMul=.45;q.push=1;}});rbText(50,110,'少しずつ下がれ！','#ffd36a');}
    const h=B.sq.find(q=>q.id==='hv');if(h&&rbAlive(h)&&h.y<36&&B.sq.some(q=>q.roman&&rbAlive(q)&&q.y>h.y+6))B.flags.rear=true;},
   check:B=>{const p=B.sq.find(q=>q.id==='paullus'),h=B.sq.find(q=>q.id==='han');if(!rbAlive(h))return 'lose';
    if(!['g1','g2'].some(id=>{const q=B.sq.find(x=>x.id===id);return rbAlive(q);}))return 'lose';
