@@ -5,153 +5,370 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
-/* Layout: one narrow case-file column; a sticky dossier header, an evidence strip, scene text, then choices. */
+/* Layout: one narrow column. A kamishibai stage (wooden frame + sliding picture card), a dialogue box under it, then choices. */
 :root{
   --bg:#e9edf1; --paper:#f8fafb; --ink:#18202a; --mute:#5d6874; --line:#c9d1d9;
   --tag:#e8b923; --tagink:#2a2205; --stamp:#b8322a; --ok:#2f7d55;
+  --wood1:#8a5a33; --wood2:#5e3a1e; --woodline:#3d2410;
+  --dlg:#141a22; --dlgink:#eef2f6; --dlgmute:#9aa6b2;
   --f-disp:'Dela Gothic One','Hiragino Sans','Yu Gothic',sans-serif;
   --f-body:'Zen Kaku Gothic New','Hiragino Sans','Yu Gothic',system-ui,sans-serif;
   --f-mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#0f141a; --paper:#18202a; --ink:#e4e9ee; --mute:#94a0ac; --line:#2c3743;
-  --tag:#e3b42a; --tagink:#221b03; --stamp:#e2574c; --ok:#5cbf8a; color-scheme:dark}}
+  --tag:#e3b42a; --tagink:#221b03; --stamp:#e2574c; --ok:#5cbf8a;
+  --wood1:#6e4527; --wood2:#452a14; --woodline:#22140a;
+  --dlg:#0a0e13; --dlgink:#eef2f6; --dlgmute:#8a96a2; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0f141a; --paper:#18202a; --ink:#e4e9ee; --mute:#94a0ac; --line:#2c3743;
-  --tag:#e3b42a; --tagink:#221b03; --stamp:#e2574c; --ok:#5cbf8a; color-scheme:dark}
+  --tag:#e3b42a; --tagink:#221b03; --stamp:#e2574c; --ok:#5cbf8a;
+  --wood1:#6e4527; --wood2:#452a14; --woodline:#22140a;
+  --dlg:#0a0e13; --dlgink:#eef2f6; --dlgmute:#8a96a2; color-scheme:dark}
 *{box-sizing:border-box}
 html,body{background:var(--bg);color:var(--ink)}
 body{font-family:var(--f-body);font-size:16px;line-height:1.8;margin:0}
-.wrap{max-width:720px;margin:0 auto;padding-block:20px 48px;
+.wrap{max-width:720px;margin:0 auto;padding-block:16px 48px;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 button{font:inherit;color:inherit;cursor:pointer}
-button:focus-visible{outline:3px solid var(--tag);outline-offset:2px}
+button:focus-visible,.dlg:focus-visible{outline:3px solid var(--tag);outline-offset:2px}
 h1,h2,h3{margin:0;text-wrap:balance;font-weight:400}
 .mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
 .eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.12em;color:var(--mute);text-transform:uppercase}
 
 /* title */
-.hero{display:grid;gap:14px;padding-block:24px 8px}
+.hero{display:grid;gap:14px;padding-block:20px 8px}
 .hero h1{font-family:var(--f-disp);font-size:clamp(34px,9vw,58px);line-height:1.1;letter-spacing:.02em}
 .hero h1 .strike{position:relative;display:inline-block}
 .hero h1 .strike::after{content:"";position:absolute;left:-4%;right:-4%;top:52%;height:.12em;background:var(--stamp);transform:rotate(-4deg)}
 .hero p{margin:0;color:var(--mute);max-width:60ch}
 .rules{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
 .rules span{font-size:13px;border:1px solid var(--line);border-radius:4px;padding:2px 10px;background:var(--paper)}
-
-.list{display:grid;gap:10px;margin-top:24px}
-.case{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;text-align:left;
-  background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:14px 16px;width:100%}
+.list{display:grid;gap:10px;margin-top:22px}
+.case{display:grid;grid-template-columns:104px 1fr auto;gap:14px;align-items:center;text-align:left;
+  background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:10px 14px 10px 10px;width:100%}
 .case:hover{border-color:var(--mute)}
-.case .yr{font-family:var(--f-mono);font-weight:600;font-size:15px;color:var(--mute);width:3.2em}
+.thumb{width:104px;aspect-ratio:5/3;border-radius:3px;overflow:hidden;border:3px solid var(--wood2);background:#000}
+.thumb svg{display:block;width:100%;height:100%}
+.thumb svg *{animation:none!important}
 .case .nm{min-width:0}
-.case .nm b{display:block;font-weight:700;font-size:16.5px;line-height:1.5}
+.case .nm .yr{font-family:var(--f-mono);font-weight:600;font-size:13px;color:var(--mute)}
+.case .nm b{display:block;font-weight:700;font-size:16.5px;line-height:1.45}
 .case .nm small{color:var(--mute);font-size:13px}
 .seal{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;border:2px solid var(--stamp);color:var(--stamp);
   padding:1px 6px;border-radius:3px;transform:rotate(-6deg);white-space:nowrap}
 .seal.none{border-color:var(--line);color:var(--mute);transform:none}
 
-/* case screen */
-.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:10px;
-  display:flex;gap:12px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}
+/* bar */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:8px;
+  display:flex;gap:10px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
-.back{background:none;border:1px solid var(--line);border-radius:4px;padding:4px 12px;font-size:14px}
+.bar .l{display:flex;gap:8px}
+.sbtn{background:none;border:1px solid var(--line);border-radius:4px;padding:3px 10px;font-size:13.5px}
 .delay{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--mute)}
-.delay i{width:12px;height:12px;border-radius:50%;border:2px solid var(--stamp);display:inline-block}
+.delay i{width:12px;height:12px;border-radius:50%;border:2px solid var(--stamp);display:inline-block;transition:background .3s}
 .delay i.on{background:var(--stamp)}
-.file{display:grid;gap:6px;padding-block:22px 6px}
-.file h2{font-family:var(--f-disp);font-size:clamp(24px,6vw,34px);line-height:1.3}
-.file .meta{font-family:var(--f-mono);font-size:13px;color:var(--mute)}
-.board{display:flex;flex-wrap:wrap;gap:8px;min-height:32px;padding-block:12px}
+.file{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;padding-block:12px 4px}
+.file h2{font-family:var(--f-disp);font-size:clamp(20px,5vw,28px);line-height:1.3}
+.file .meta{font-family:var(--f-mono);font-size:12.5px;color:var(--mute)}
+.board{display:flex;flex-wrap:wrap;gap:6px;min-height:30px;padding-block:6px 10px}
 .board .lbl{font-size:12px;color:var(--mute);align-self:center;margin-right:2px}
-.chip{background:var(--tag);color:var(--tagink);font-size:13px;font-weight:700;padding:3px 10px 3px 18px;border-radius:2px;position:relative;line-height:1.5}
+.chip{background:var(--tag);color:var(--tagink);font-size:12.5px;font-weight:700;padding:2px 9px 2px 17px;border-radius:2px;position:relative;line-height:1.5}
 .chip::before{content:"";position:absolute;left:6px;top:50%;width:6px;height:6px;margin-top:-3px;border-radius:50%;background:var(--bg)}
-.chip.new{animation:pop .5s ease}
-@keyframes pop{0%{transform:scale(.6)}70%{transform:scale(1.08)}100%{transform:scale(1)}}
-.scene{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:18px 18px 8px;margin-top:6px}
-.scene p{margin:0 0 12px}
-.step{font-family:var(--f-mono);font-size:12px;color:var(--mute);letter-spacing:.1em;margin-bottom:6px}
-.choices{display:grid;gap:10px;margin-top:16px}
-.ch{text-align:left;background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--ink);border-radius:4px;padding:12px 14px;line-height:1.6}
+.chip.new{animation:pop .6s cubic-bezier(.3,1.6,.5,1)}
+@keyframes pop{0%{transform:translateY(-30px) scale(.4);opacity:0}100%{transform:none;opacity:1}}
+
+/* kamishibai stage */
+.stage{position:relative;padding:12px;border-radius:6px;
+  background:linear-gradient(135deg,var(--wood1),var(--wood2));box-shadow:inset 0 0 0 2px var(--woodline),0 6px 18px rgba(0,0,0,.25)}
+.stage::before,.stage::after{content:"";position:absolute;top:50%;width:10px;height:44px;margin-top:-22px;background:var(--woodline);border-radius:3px}
+.stage::before{left:-4px}.stage::after{right:-4px}
+.card{position:relative;aspect-ratio:5/3;max-width:100%;overflow:hidden;border-radius:2px;background:#000;box-shadow:inset 0 0 0 2px var(--woodline)}
+.layer{position:absolute;inset:0}
+.layer svg{display:block;width:100%;height:100%}
+.layer.out{animation:pull .7s cubic-bezier(.6,0,.4,1) forwards;z-index:2;box-shadow:6px 0 14px rgba(0,0,0,.5)}
+@keyframes pull{to{transform:translateX(-104%)}}
+.stampov{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;z-index:3}
+.stampov span{font-family:var(--f-disp);font-size:clamp(26px,8vw,48px);padding:2px 16px;border:5px solid;border-radius:6px;transform:rotate(-8deg);
+  animation:slam .9s ease forwards;background:rgba(0,0,0,.25)}
+.stampov.bad span{color:#ff6b5e;border-color:#ff6b5e}
+.stampov.good span{color:#ffd23f;border-color:#ffd23f}
+@keyframes slam{0%{transform:rotate(-8deg) scale(2.4);opacity:0}25%{transform:rotate(-8deg) scale(1);opacity:1}75%{opacity:1}100%{opacity:0}}
+.card.shake{animation:shake .4s}
+@keyframes shake{25%{transform:translateX(-6px)}50%{transform:translateX(6px)}75%{transform:translateX(-3px)}}
+
+/* dialogue */
+.dlg{position:relative;margin-top:12px;background:var(--dlg);color:var(--dlgink);border-radius:6px;padding:22px 18px 26px;min-height:128px;cursor:pointer;user-select:none}
+.dlg .who{position:absolute;top:-13px;left:14px;font-weight:700;font-size:14px;padding:1px 12px;border-radius:3px;color:#111;background:#cfd6de}
+.dlg .who[hidden]{display:none}
+.dlg .txt{font-size:16.5px;line-height:1.85;min-height:3.6em;white-space:pre-wrap}
+.dlg .txt.narr{color:#d6dde4}
+.dlg .txt.think{color:var(--dlgmute)}
+.dlg .more{position:absolute;right:14px;bottom:6px;font-size:12px;color:var(--dlgmute);animation:bob 1s ease-in-out infinite alternate}
+@keyframes bob{to{transform:translateY(3px)}}
+.choices{display:grid;gap:10px;margin-top:14px}
+.ch{text-align:left;background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--ink);border-radius:4px;padding:12px 14px;line-height:1.6;
+  animation:rise .35s ease both}
+.ch:nth-child(2){animation-delay:.07s}.ch:nth-child(3){animation-delay:.14s}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}}
 .ch:hover:not(:disabled){border-color:var(--ink)}
 .ch:disabled{opacity:.45;cursor:default;text-decoration:line-through;border-left-color:var(--stamp)}
-.res{margin-top:16px;border-radius:6px;padding:14px 16px;border:2px solid var(--ok);background:var(--paper)}
-.res.bad{border-color:var(--stamp)}
-.res h3{font-size:15px;font-weight:700;margin-bottom:4px;color:var(--ok)}
-.res.bad h3{color:var(--stamp)}
-.res p{margin:0}
-.go{margin-top:14px;width:100%;background:var(--ink);color:var(--bg);border:0;border-radius:4px;padding:12px;font-weight:700;font-size:16px}
+.hint{font-size:12.5px;color:var(--mute);margin-top:8px}
 
 /* ending */
-.verdict{text-align:center;padding-block:28px 10px;display:grid;gap:10px;justify-items:center}
-.verdict .big{font-family:var(--f-disp);font-size:clamp(30px,8vw,46px);color:var(--stamp);border:4px solid var(--stamp);padding:4px 18px;transform:rotate(-3deg);border-radius:4px}
+.verdict{text-align:center;padding-block:24px 6px;display:grid;gap:10px;justify-items:center}
+.verdict .big{font-family:var(--f-disp);font-size:clamp(30px,8vw,46px);color:var(--stamp);border:4px solid var(--stamp);padding:4px 18px;border-radius:4px;
+  animation:endslam .7s cubic-bezier(.3,1.4,.5,1) both;transform:rotate(-3deg)}
+@keyframes endslam{from{transform:rotate(-3deg) scale(2.5);opacity:0}}
 .verdict .big.cold{color:var(--mute);border-color:var(--mute)}
 .sec{margin-top:22px}
 .sec h3{font-family:var(--f-disp);font-size:18px;margin-bottom:8px}
 .sec p{margin:0 0 10px}
-.facts{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:14.5px;background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:14px 16px}
+.facts{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:14.5px;background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:14px 16px;margin:0}
 .facts dt{font-family:var(--f-mono);color:var(--mute);font-size:13px;padding-top:2px}
 .facts dd{margin:0;min-width:0}
+.go{margin-top:18px;width:100%;background:var(--ink);color:var(--bg);border:0;border-radius:4px;padding:12px;font-weight:700;font-size:16px}
 .note{font-size:13px;color:var(--mute);margin-top:28px;max-width:60ch}
-@media (prefers-reduced-motion:reduce){.chip.new{animation:none}}
-@media (max-width:420px){.case{grid-template-columns:1fr auto}.case .yr{grid-column:1/-1;width:auto}}
+@media (max-width:440px){.case{grid-template-columns:84px 1fr}.thumb{width:84px}.case .seal{grid-column:2;justify-self:start}}
+
+/* scene animations (inside the picture card) */
+svg .a-fog{animation:fog 20s ease-in-out infinite alternate}
+@keyframes fog{from{transform:translateX(-90px)}to{transform:translateX(90px)}}
+svg .a-flick{animation:flick 2.6s infinite}
+@keyframes flick{0%,100%{opacity:.9}44%{opacity:.55}50%{opacity:.95}56%{opacity:.7}}
+svg .a-blink{animation:blink 6s infinite}
+@keyframes blink{0%,60%,100%{opacity:1}65%,90%{opacity:.25}}
+svg .a-sway{transform-box:fill-box;transform-origin:50% 100%;animation:sway 3.4s ease-in-out infinite alternate}
+svg .a-swing{transform-box:fill-box;transform-origin:50% 0;animation:sway 2.6s ease-in-out infinite alternate}
+@keyframes sway{from{transform:rotate(-5deg)}to{transform:rotate(5deg)}}
+svg .a-wave{animation:wave 5s linear infinite}
+@keyframes wave{to{transform:translateX(-80px)}}
+svg .a-rise{animation:up 3s ease-in infinite}
+@keyframes up{0%{transform:translateY(0);opacity:0}20%{opacity:1}100%{transform:translateY(-46px);opacity:0}}
+svg .a-smoke{transform-box:fill-box;transform-origin:center;animation:smoke 5s ease-out infinite}
+@keyframes smoke{0%{transform:translate(0,0) scale(.5);opacity:0}20%{opacity:.7}100%{transform:translate(30px,-60px) scale(1.8);opacity:0}}
+svg .a-pulse{transform-box:fill-box;transform-origin:50% 100%;animation:pulse 1.6s ease-out infinite}
+@keyframes pulse{0%{transform:scale(.3);opacity:1}100%{transform:scale(1.3);opacity:0}}
+svg .a-spin{transform-box:fill-box;transform-origin:center;animation:spin 9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+svg .a-fly{animation:fly 11s linear infinite}
+@keyframes fly{from{transform:translate(-80px,40px)}to{transform:translate(480px,-40px)}}
+svg .a-drive{animation:drive 2.6s linear infinite}
+@keyframes drive{from{transform:translateX(-140px)}to{transform:translateX(540px)}}
+svg .a-bob{animation:sbob 2.8s ease-in-out infinite alternate}
+@keyframes sbob{to{transform:translateY(5px) rotate(1deg)}}
+svg .a-dust{animation:dust 7s ease-in-out infinite alternate}
+@keyframes dust{to{transform:translate(14px,24px);opacity:.2}}
+svg .a-magn{animation:magn 6s ease-in-out infinite alternate}
+@keyframes magn{0%{transform:translate(-50px,10px)}50%{transform:translate(20px,-14px)}100%{transform:translate(50px,12px)}}
+svg .a-cur{animation:cur 1s steps(1) infinite}
+@keyframes cur{50%{opacity:0}}
+svg .a-draw{stroke-dasharray:260;stroke-dashoffset:260;animation:draw 2.4s ease forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+svg .a-glow{animation:glow 1.4s ease-in-out infinite alternate}
+@keyframes glow{from{opacity:.3}to{opacity:1}}
+svg .a-in{animation:inz 1.2s cubic-bezier(.2,1.2,.4,1) both}
+@keyframes inz{from{transform:translate(200px,120px) rotate(-30deg) scale(.1);opacity:0}}
+@media (prefers-reduced-motion:reduce){*,svg *{animation:none!important;transition:none!important}}
 </style>
 
 <div class="wrap" id="app"></div>
 
 <script>
+/* ======================= picture cards (SVG) ======================= */
+let gid = 0;
+const W = (inner, defs='') => `<svg viewBox="0 0 400 240" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>${defs}</defs>${inner}</svg>`;
+function sky(a,b){ const id='g'+(++gid); return [`<linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient>`, `<rect width="400" height="240" fill="url(#${id})"/>`]; }
+function glow(cx,cy,r,col,cls='a-flick'){ const id='g'+(++gid); return [`<radialGradient id="${id}"><stop offset="0" stop-color="${col}" stop-opacity=".75"/><stop offset="1" stop-color="${col}" stop-opacity="0"/></radialGradient>`, `<circle class="${cls}" cx="${cx}" cy="${cy}" r="${r}" fill="url(#${id})"/>`]; }
+// silhouette person: x = center, y = feet
+function man(x,y,s=1,hat='fedora',col='#0b0e13'){
+  const h = 78*s, hw=15*s, hr=8.5*s, top=y-h;
+  let hatS='';
+  if(hat==='top') hatS=`<rect x="${x-7*s}" y="${top-14*s}" width="${14*s}" height="${14*s}" fill="${col}"/><rect x="${x-11*s}" y="${top-1*s}" width="${22*s}" height="${3*s}" fill="${col}"/>`;
+  if(hat==='fedora') hatS=`<path d="M${x-8*s} ${top+1*s} Q${x} ${top-11*s} ${x+8*s} ${top+1*s}Z" fill="${col}"/><rect x="${x-13*s}" y="${top}" width="${26*s}" height="${3*s}" rx="${1.5*s}" fill="${col}"/>`;
+  if(hat==='cap') hatS=`<path d="M${x-9*s} ${top+3*s} Q${x} ${top-8*s} ${x+9*s} ${top+3*s}Z" fill="${col}"/><rect x="${x-2*s}" y="${top+1*s}" width="${13*s}" height="${2.5*s}" fill="${col}"/>`;
+  const dress = hat==='dress';
+  const body = dress
+   ? `<path d="M${x-8*s} ${top+18*s} L${x+8*s} ${top+18*s} L${x+20*s} ${y} L${x-20*s} ${y}Z" fill="${col}"/>`
+   : `<path d="M${x-hw} ${top+22*s} Q${x} ${top+12*s} ${x+hw} ${top+22*s} L${x+hw-2*s} ${y-30*s} L${x+6*s} ${y-30*s} L${x+7*s} ${y} L${x+1*s} ${y} L${x} ${y-26*s} L${x-1*s} ${y} L${x-7*s} ${y} L${x-6*s} ${y-30*s} L${x-hw+2*s} ${y-30*s}Z" fill="${col}"/>`;
+  const hair = dress ? `<circle cx="${x}" cy="${top+6*s}" r="${hr+2*s}" fill="${col}"/>` : '';
+  return `${hair}<circle cx="${x}" cy="${top+9*s}" r="${hr}" fill="${col}"/>${body}${hatS}`;
+}
+function fogs(col='#c8d0dc', op=.13){ return [0,1,2].map(k=>`<ellipse class="a-fog" style="animation-duration:${16+k*7}s;animation-delay:-${k*5}s" cx="${120+k*90}" cy="${170+k*22}" rx="220" ry="${18+k*5}" fill="${col}" opacity="${op}"/>`).join(''); }
+function stars(n=24, seed=3){ let s='',r=seed; for(let k=0;k<n;k++){ r=(r*9301+49297)%233280; const x=r/233280*400; r=(r*9301+49297)%233280; const y=r/233280*110; s+=`<circle class="${k%3?'':'a-blink'}" style="animation-delay:-${k}s" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${k%4?0.8:1.3}" fill="#fff" opacity=".7"/>`; } return s; }
+function pine(x,y,s,col){ return `<path d="M${x} ${y-60*s} L${x+16*s} ${y-30*s} L${x+8*s} ${y-30*s} L${x+22*s} ${y} L${x-22*s} ${y} L${x-8*s} ${y-30*s} L${x-16*s} ${y-30*s}Z" fill="${col}"/>`; }
+
+const ITEMS = {
+  glasses:`<g transform="translate(200 150)"><circle cx="-34" cy="0" r="24" fill="#9fc6d9" fill-opacity=".25" stroke="#1a1a1a" stroke-width="7"/><circle cx="34" cy="0" r="24" fill="#9fc6d9" fill-opacity=".25" stroke="#1a1a1a" stroke-width="7"/><path d="M-10 -4 Q0 -12 10 -4" stroke="#1a1a1a" stroke-width="6" fill="none"/><path d="M-58 -6 L-92 -14 M58 -6 L92 -14" stroke="#1a1a1a" stroke-width="5"/><rect x="54" y="-11" width="8" height="8" fill="#e8b923" class="a-glow"/></g>`,
+  ladder:`<g transform="translate(200 160) rotate(-62)"><rect x="-80" y="-26" width="170" height="8" fill="#b48a55"/><rect x="-80" y="18" width="170" height="8" fill="#b48a55"/>${[-66,-38,-10,18,46,74].map((x,k)=>`<rect x="${x}" y="-20" width="7" height="40" fill="${k===3?'#e8b923':'#9a7244'}" ${k===3?'class="a-glow"':''}/>`).join('')}</g>`,
+  bill:`<g transform="translate(200 152) rotate(-6)"><rect x="-90" y="-40" width="180" height="80" rx="3" fill="#d8c47a"/><rect x="-82" y="-32" width="164" height="64" fill="none" stroke="#7a6420" stroke-width="2"/><circle cx="0" cy="0" r="20" fill="none" stroke="#7a6420" stroke-width="3"/><text x="0" y="-18" text-anchor="middle" font-size="9" font-family="serif" fill="#5a4a10" dy="-6">GOLD CERTIFICATE</text><text x="-60" y="26" font-size="12" font-family="serif" fill="#5a4a10">10</text><text x="48" y="26" font-size="12" font-family="serif" fill="#5a4a10">10</text><text x="-70" y="56" font-size="11" fill="#e8e3d3" font-family="monospace" class="a-glow">4U-13-41 N.Y.</text></g>`,
+  typewriter:`<g transform="translate(200 160)"><rect x="-40" y="-70" width="80" height="50" fill="#f0ece0"/><g fill="#555">${[0,1,2,3].map(k=>`<rect x="-30" y="${-62+k*10}" width="${50-k*8}" height="3"/>`).join('')}</g><path d="M-70 -20 L70 -20 L84 30 L-84 30Z" fill="#232323"/><rect x="-76" y="-28" width="152" height="10" rx="5" fill="#333"/>${[0,1,2].map(r=>[...Array(9)].map((_,c)=>`<circle cx="${-56+c*14+r*4}" cy="${-4+r*11}" r="4.5" fill="#d8d0b8"/>`).join('')).join('')}</g>`,
+  sandwich:`<g transform="translate(200 160)"><path d="M-80 0 Q-80 -30 -40 -32 L60 -32 Q86 -30 84 0 Z" fill="#d9a35c"/><rect x="-82" y="-4" width="168" height="10" fill="#b8323a"/><circle cx="-50" cy="1" r="9" fill="#d24b52"/><circle cx="-14" cy="1" r="9" fill="#d24b52"/><circle cx="22" cy="1" r="9" fill="#d24b52"/><rect x="-84" y="6" width="170" height="16" rx="6" fill="#d9a35c"/><circle cx="84" cy="-6" r="22" fill="#1a1814"/><circle cx="70" cy="-26" r="12" fill="#1a1814"/></g>`,
+  vial:`<g transform="translate(200 150) rotate(12)"><rect x="-14" y="-70" width="28" height="120" rx="14" fill="#cfe3ea" fill-opacity=".35" stroke="#e6eef2" stroke-width="3"/><rect x="-11" y="-10" width="22" height="57" rx="11" fill="#9b1c24"/><rect x="-18" y="-80" width="36" height="14" rx="3" fill="#2a6fb0"/><rect x="-10" y="-50" width="20" height="18" fill="#f6f2e6"/><text x="0" y="-37" text-anchor="middle" font-size="7" font-family="monospace" fill="#333">1986.5</text></g>`,
+  letter:`<g transform="translate(200 150) rotate(-4)"><rect x="-70" y="-70" width="140" height="130" fill="#efe9d8"/>${[...Array(9)].map((_,k)=>`<path d="M-56 ${-52+k*12} q20 -3 40 0 t40 0 t30 0" stroke="#2a2a2a" stroke-width="1.6" fill="none" class="a-draw" style="animation-delay:${k*.15}s"/>`).join('')}</g>`,
+  floppy:`<g transform="translate(200 150) rotate(-8)"><rect x="-60" y="-60" width="120" height="120" rx="4" fill="#26303c"/><rect x="-30" y="-60" width="64" height="40" fill="#b9c2cb"/><rect x="10" y="-54" width="14" height="28" fill="#26303c"/><rect x="-46" y="0" width="92" height="52" fill="#f2efe6"/><text x="0" y="22" text-anchor="middle" font-size="10" font-family="monospace" fill="#333">Test.A</text><text x="0" y="38" text-anchor="middle" font-size="8" font-family="monospace" fill="#b8322a" class="a-glow">Dennis?</text></g>`
+};
+
+const SCENES = {
+ london(){ const [d1,s]=sky('#0d1426','#2c3654'); const [d2,g]=glow(112,112,48,'#ffd27a');
+   const houses=`<path d="M0 200 L0 110 L40 90 L80 110 L80 92 L120 70 L160 92 L160 200Z M220 200 L220 100 L260 80 L300 100 L300 86 L340 66 L380 86 L400 86 L400 200Z" fill="#090d16"/>`;
+   const win=[[20,130],[50,150],[100,110],[130,140],[240,120],[270,150],[320,104],[350,140],[372,120]].map(([x,y],k)=>`<rect class="a-blink" style="animation-delay:-${k*1.3}s" x="${x}" y="${y}" width="10" height="14" fill="#f2c35b"/>`).join('');
+   return W(`${s}${stars(18)}<circle cx="320" cy="44" r="16" fill="#efe8cc" opacity=".85"/>${houses}${win}<rect y="200" width="400" height="40" fill="#121722"/>${g}<rect x="110" y="110" width="4" height="92" fill="#1b1f27"/><path d="M103 104 L121 104 L117 116 L107 116Z" fill="#2a2f38"/><rect x="108" y="106" width="8" height="8" fill="#ffe7a6" class="a-flick"/>${man(250,212,.95,'dress','#06080d')}${man(282,214,1,'top','#06080d')}${fogs()}`, d1+d2); },
+ office(){ const [d1,s]=sky('#2d313b','#3a3f4b'); const id='g'+(++gid);
+   return W(`${s}<rect x="250" y="34" width="110" height="90" fill="#16202e"/><g stroke="#4a5160" stroke-width="3">${[0,1,2,3,4,5,6].map(k=>`<line x1="250" y1="${40+k*12}" x2="360" y2="${40+k*12}"/>`).join('')}</g><circle cx="80" cy="50" r="16" fill="#e5e0d0"/><circle cx="80" cy="50" r="13" fill="#2d313b"/><line x1="80" y1="50" x2="80" y2="41" stroke="#e5e0d0" stroke-width="2"/><line x1="80" y1="50" x2="87" y2="52" stroke="#e5e0d0" stroke-width="2"/><g class="a-swing" style="animation-duration:1s"><line x1="80" y1="66" x2="80" y2="92" stroke="#c9a85a" stroke-width="2"/><circle cx="80" cy="95" r="5" fill="#c9a85a"/></g>
+   <polygon class="a-flick" points="186,92 214,92 260,200 140,200" fill="url(#${id})"/>${man(110,206,1.05,'fedora','#0b0d12')}${man(292,206,1,'none','#0b0d12')}<rect x="60" y="176" width="280" height="18" fill="#3b2a1d"/><rect x="70" y="194" width="10" height="46" fill="#2a1d13"/><rect x="320" y="194" width="10" height="46" fill="#2a1d13"/><path d="M190 92 L210 92 L216 104 L184 104Z" fill="#2f6b47"/><rect x="198" y="104" width="4" height="70" fill="#222"/><rect x="186" y="170" width="28" height="6" fill="#222"/><rect x="150" y="166" width="40" height="10" fill="#efe9d8"/>`,
+   d1+`<linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe9a8" stop-opacity=".5"/><stop offset="1" stop-color="#ffe9a8" stop-opacity="0"/></linearGradient>`); },
+ cellar(){ const id='g'+(++gid); const [d2,g]=glow(200,70,110,'#ffb75e');
+   return W(`<rect width="400" height="240" fill="#2a1a14"/><rect width="400" height="240" fill="url(#${id})"/>${g}<rect y="176" width="400" height="64" fill="#3b2419"/><g fill="#5c3626" stroke="#2a1a14" stroke-width="2">${[0,1,2,3].map(r=>[...Array(9)].map((_,c)=>`<rect x="${c*48-(r%2)*24}" y="${180+r*15}" width="46" height="13"/>`).join('')).join('')}</g><ellipse cx="236" cy="206" rx="48" ry="14" fill="#0e0806"/><rect x="270" y="190" width="30" height="12" fill="#6b4030" transform="rotate(18 285 196)"/><rect x="186" y="214" width="30" height="12" fill="#6b4030" transform="rotate(-12 200 220)"/><g class="a-swing"><line x1="200" y1="0" x2="200" y2="58" stroke="#111" stroke-width="2"/><rect x="190" y="58" width="20" height="26" rx="3" fill="#ffd27a" stroke="#111" stroke-width="3"/></g>${man(128,214,1.05,'fedora','#0d0705')}<line x1="150" y1="120" x2="196" y2="204" stroke="#0d0705" stroke-width="5"/>`,
+   `<pattern id="${id}" width="48" height="30" patternUnits="userSpaceOnUse"><rect width="48" height="30" fill="#3a2219"/><rect x="1" y="1" width="46" height="13" fill="#4a2c20"/><rect x="-23" y="16" width="46" height="13" fill="#4a2c20"/><rect x="25" y="16" width="46" height="13" fill="#4a2c20"/></pattern>`+d2); },
+ lab(){ const id='g'+(++gid);
+   return W(`<rect width="400" height="240" fill="#101820"/><polygon class="a-flick" points="140,0 200,0 290,190 60,190" fill="url(#${id})"/><rect y="186" width="400" height="54" fill="#1d2731"/><rect y="182" width="400" height="6" fill="#2d3a46"/>
+   <g fill="#05080b"><rect x="120" y="170" width="70" height="12" rx="3"/><rect x="146" y="90" width="12" height="80"/><path d="M150 96 L190 70 L198 80 L160 108Z"/><rect x="186" y="52" width="14" height="30" rx="3" transform="rotate(-32 193 67)"/><rect x="130" y="140" width="50" height="6"/></g>
+   <g><path d="M270 120 L270 150 L250 182 L314 182 L294 150 L294 120Z" fill="#7ad1c4" fill-opacity=".3" stroke="#a8d8e0" stroke-width="2"/><path d="M256 172 L308 172 L314 182 L250 182Z" fill="#3fb59a"/>${[0,1,2,3].map(k=>`<circle class="a-rise" style="animation-delay:-${k*.8}s" cx="${272+k*6}" cy="176" r="${2+k%2}" fill="#bff3e6"/>`).join('')}</g>
+   <rect x="330" y="130" width="14" height="52" rx="7" fill="#c4dfe8" fill-opacity=".35" stroke="#dbe9ee"/><rect x="332" y="156" width="10" height="24" rx="5" fill="#9b1c24"/>${man(70,206,1,'none','#05080b')}`,
+   `<linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e8f4ff" stop-opacity=".45"/><stop offset="1" stop-color="#e8f4ff" stop-opacity="0"/></linearGradient>`); },
+ ship(){ const [d1,s]=sky('#071222','#1d3554');
+   const waves=k=>`<path class="a-wave" style="animation-duration:${4+k*2}s" d="M0 ${180+k*18} ${[...Array(8)].map((_,i)=>`q20 -8 40 0 t40 0`).join(' ')} V240 H0Z" fill="${['#173251','#10263f','#0a1a2d'][k]}"/>`;
+   return W(`${s}${stars(30,7)}<circle cx="60" cy="48" r="13" fill="#efe8cc" opacity=".8"/>
+   <g class="a-bob"><path d="M90 160 L330 160 L310 190 L106 190Z" fill="#05090f"/><rect x="130" y="138" width="160" height="22" fill="#0b121b"/><rect x="170" y="108" width="20" height="30" fill="#0b121b"/><rect x="220" y="104" width="20" height="34" fill="#0b121b"/>${[...Array(10)].map((_,i)=>`<circle class="a-blink" style="animation-delay:-${i*.7}s" cx="${140+i*15}" cy="148" r="2.2" fill="#ffd27a"/>`).join('')}<line x1="300" y1="160" x2="300" y2="60" stroke="#0b121b" stroke-width="3"/><line x1="110" y1="160" x2="110" y2="80" stroke="#0b121b" stroke-width="3"/><line x1="110" y1="80" x2="300" y2="60" stroke="#0b121b" stroke-width="1"/>
+   ${[0,1,2].map(k=>`<ellipse class="a-smoke" style="animation-delay:-${k*1.6}s" cx="${180+((k%2)*50)}" cy="98" rx="12" ry="8" fill="#55606d"/>`).join('')}
+   ${[0,1,2].map(k=>`<path class="a-pulse" style="animation-delay:${k*.5}s" d="M285 52 Q300 36 315 52" stroke="#ffd23f" stroke-width="3" fill="none"/>`).join('')}</g>
+   ${waves(0)}${waves(1)}${waves(2)}`, d1); },
+ marsh(){ const [d1,s]=sky('#e8a86c','#5a4a6e');
+   return W(`${s}<circle cx="300" cy="150" r="34" fill="#ffd89a" opacity=".9"/><path d="M0 150 Q100 136 200 150 T400 146 V240 H0Z" fill="#2c2a3c"/><rect y="176" width="400" height="64" fill="#3c4a5c"/><path d="M0 190 q30 -4 60 0 t60 0 t60 0 t60 0 t60 0 t60 0 t60 0" stroke="#7a8aa0" stroke-width="2" fill="none" class="a-wave" style="animation-duration:9s"/>
+   <ellipse cx="120" cy="178" rx="30" ry="24" fill="#5a5a5e"/><ellipse cx="120" cy="178" rx="20" ry="16" fill="#111"/>
+   ${[...Array(22)].map((_,i)=>`<path class="a-sway" style="animation-delay:-${(i*.37).toFixed(2)}s" d="M${8+i*18} 200 q${i%2?4:-4} -30 ${i%3} -${40+(i*7)%26}" stroke="#1a1824" stroke-width="3" fill="none"/>`).join('')}${man(220,206,.9,'cap','#141320')}`, d1); },
+ evidence(arg){ const id='g'+(++gid); const it = ITEMS[arg]||ITEMS.letter;
+   return W(`<rect width="400" height="240" fill="#16130f"/><polygon points="150,0 250,0 330,230 70,230" fill="url(#${id})"/><ellipse cx="200" cy="200" rx="170" ry="34" fill="#2e231a"/>${it}
+   <g class="a-magn"><circle cx="210" cy="140" r="34" fill="#cfe7ff" fill-opacity=".12" stroke="#d6c9a8" stroke-width="6"/><line x1="234" y1="164" x2="270" y2="200" stroke="#5a3b22" stroke-width="10" stroke-linecap="round"/></g>`,
+   `<linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff2c8" stop-opacity=".35"/><stop offset="1" stop-color="#fff2c8" stop-opacity=".05"/></linearGradient>`); },
+ mansion(){ const [d1,s]=sky('#081020','#1b2840'); const [d2,g]=glow(232,96,30,'#ffd27a');
+   return W(`${s}${stars(26,11)}<circle cx="70" cy="44" r="15" fill="#efe8cc" opacity=".8"/><rect y="196" width="400" height="44" fill="#0c1410"/>
+   <path d="M110 196 L110 100 L200 52 L290 100 L290 196Z" fill="#0a0f19"/><rect x="200" y="56" width="16" height="30" fill="#0a0f19"/>${g}<rect x="222" y="84" width="22" height="26" fill="#ffd27a" class="a-flick"/><rect x="140" y="130" width="18" height="24" fill="#26324a"/><rect x="180" y="130" width="18" height="24" fill="#26324a"/><rect x="245" y="130" width="18" height="24" fill="#26324a"/>
+   <g stroke="#6b4d2b" stroke-width="3"><line x1="200" y1="196" x2="226" y2="112"/><line x1="214" y1="198" x2="240" y2="114"/>${[0,1,2,3,4,5].map(k=>`<line x1="${202+k*4.3}" y1="${186-k*14}" x2="${216+k*4.3}" y2="${187-k*14}"/>`).join('')}</g>
+   <path class="a-sway" d="M40 196 Q30 120 60 110 Q70 80 54 70 Q90 80 84 120 Q100 150 76 196Z" fill="#060b09"/><path class="a-sway" style="animation-delay:-1.4s" d="M330 196 Q320 110 350 96 Q362 70 344 58 Q384 76 376 112 Q396 150 368 196Z" fill="#060b09"/>${fogs('#a8b4c8',.1)}`, d1+d2); },
+ cemetery(){ const [d1,s]=sky('#0a1020','#26304a');
+   return W(`${s}${stars(20,5)}<circle cx="300" cy="50" r="22" fill="#efe8cc" opacity=".85"/><rect y="190" width="400" height="50" fill="#0b1210"/>
+   ${[[40,190,22,40],[90,192,18,32],[300,192,20,36],[350,190,24,44]].map(([x,y,w,h])=>`<path d="M${x} ${y} L${x} ${y-h+w/2} A${w/2} ${w/2} 0 0 1 ${x+w} ${y-h+w/2} L${x+w} ${y}Z" fill="#141c26"/>`).join('')}<path d="M150 190 L150 130 L144 130 L144 120 L150 120 L150 112 L158 112 L158 120 L164 120 L164 130 L158 130 L158 190Z" fill="#141c26"/>
+   <g stroke="#0e141c" stroke-width="3">${[...Array(20)].map((_,i)=>`<line x1="${i*20+5}" y1="200" x2="${i*20+5}" y2="172"/>`).join('')}<line x1="0" y1="178" x2="400" y2="178"/></g>
+   ${man(205,214,1,'fedora','#05070c')}${man(250,214,.96,'fedora','#05070c')}<rect x="216" y="168" width="20" height="14" fill="#8a7a50"/>${fogs('#b0bccc',.16)}`, d1); },
+ gasstation(){ const [d1,s]=sky('#f2d8a2','#e9b37a');
+   return W(`${s}<rect y="190" width="400" height="50" fill="#8c7a62"/><rect x="200" y="96" width="170" height="94" fill="#efe6d2"/><rect x="190" y="88" width="190" height="12" fill="#b8322a"/><text x="285" y="128" text-anchor="middle" font-family="Georgia,serif" font-weight="700" font-size="20" fill="#b8322a">GAS · OIL</text><rect x="300" y="140" width="40" height="50" fill="#5c4632"/><rect x="220" y="144" width="56" height="30" fill="#9fc0d0"/>
+   <rect x="150" y="110" width="22" height="80" fill="#c43b2e"/><circle cx="161" cy="104" r="11" fill="#fff2c6" class="a-glow"/><rect x="154" y="126" width="14" height="14" fill="#f2efe6"/>
+   <g class="a-bob"><path d="M10 190 L10 168 Q20 150 50 148 L70 130 L116 130 L130 150 L146 154 L146 190Z" fill="#26302a"/><circle cx="40" cy="190" r="12" fill="#111"/><circle cx="120" cy="190" r="12" fill="#111"/><rect x="74" y="136" width="34" height="14" fill="#9fc0d0"/></g>${man(188,206,.9,'cap','#2a2420')}`, d1); },
+ attic(){ const id='g'+(++gid);
+   return W(`<rect width="400" height="240" fill="#1d140d"/><path d="M0 0 L200 0 L0 150Z M400 0 L200 0 L400 150Z" fill="#2c1e13"/><g stroke="#3e2b1b" stroke-width="10"><line x1="0" y1="150" x2="200" y2="-10"/><line x1="400" y1="150" x2="200" y2="-10"/></g>
+   <rect x="184" y="18" width="32" height="26" fill="#ffe7ad"/><polygon points="184,44 216,44 300,240 120,240" fill="url(#${id})"/>
+   <g stroke="#2a1c11" stroke-width="2">${[...Array(10)].map((_,i)=>`<line x1="0" y1="${150+i*10}" x2="400" y2="${150+i*10}"/>`).join('')}</g><rect y="150" width="400" height="90" fill="#6b4b2d" opacity=".55"/>
+   <rect x="232" y="196" width="90" height="10" fill="#070403"/><rect x="236" y="198" width="82" height="6" fill="#e8b923" opacity=".35" class="a-glow"/>
+   ${[...Array(16)].map((_,i)=>`<circle class="a-dust" style="animation-delay:-${i*.5}s" cx="${170+(i*29)%100}" cy="${70+(i*37)%140}" r="1.2" fill="#fff4cc"/>`).join('')}${man(110,214,1.05,'fedora','#0a0603')}`,
+   `<linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe7ad" stop-opacity=".45"/><stop offset="1" stop-color="#ffe7ad" stop-opacity="0"/></linearGradient>`); },
+ island(){ const [d1,s]=sky('#5ab3e0','#cfeefa');
+   return W(`${s}<circle cx="330" cy="46" r="22" fill="#fff6c8"/><path d="M0 150 L400 150 L400 240 L0 240Z" fill="#1e8fb3"/><path class="a-wave" d="M0 170 ${[...Array(8)].map(()=>'q20 -5 40 0 t40 0').join(' ')}" stroke="#bfefff" stroke-width="2" fill="none"/><path d="M0 200 Q120 180 260 196 T400 190 V240 H0Z" fill="#f2e2b4"/>
+   <rect x="230" y="96" width="120" height="70" fill="#f8f4ea"/>${[0,1,2].map(r=>[0,1,2,3].map(c=>`<rect x="${242+c*26}" y="${106+r*18}" width="14" height="10" fill="#7fb8d0"/>`).join('')).join('')}
+   <path d="M80 210 Q86 150 100 110" stroke="#6a4a2a" stroke-width="7" fill="none"/><g class="a-sway" style="transform-origin:100px 110px">${[[-50,10],[-30,-20],[10,-30],[44,-6],[40,22]].map(([dx,dy])=>`<path d="M100 110 Q${100+dx/2} ${110+dy-16} ${100+dx} ${110+dy}" stroke="#2f8a4a" stroke-width="9" fill="none" stroke-linecap="round"/>`).join('')}</g>
+   <g class="a-fly"><path d="M0 0 L36 0 L44 -4 L36 4 L0 4Z M14 0 L24 -10 L28 0Z M14 4 L24 14 L28 4Z" fill="#f8f8f8"/></g>`, d1); },
+ airport(){ const [d1,s]=sky('#f0a46e','#5a6a9a');
+   return W(`${s}<rect y="170" width="400" height="70" fill="#3a3e4a"/><g stroke="#e8e6dc" stroke-width="3" stroke-dasharray="18 14"><line x1="0" y1="206" x2="400" y2="206"/></g>
+   <rect x="20" y="118" width="190" height="52" fill="#d8d2c4"/><rect x="20" y="110" width="190" height="10" fill="#9a4a3a"/>${[...Array(7)].map((_,i)=>`<rect x="${32+i*25}" y="130" width="16" height="22" fill="#5a7a9a"/>`).join('')}<rect x="150" y="80" width="18" height="30" fill="#c8c0b0"/><rect x="142" y="70" width="34" height="12" fill="#5a7a9a"/>
+   <g class="a-fly" style="animation-duration:14s"><path d="M0 0 L54 0 L66 -6 L54 6 L0 6Z M20 0 L36 -16 L42 0Z M20 6 L36 22 L42 6Z" fill="#f4f4f4"/></g>${man(260,206,.9,'none','#1a1c26')}${man(300,206,.86,'dress','#1a1c26')}`, d1); },
+ village(){ const [d1,s]=sky('#0b1222','#25304a');
+   return W(`${s}${stars(22,9)}<rect y="186" width="400" height="54" fill="#0f1612"/><path d="M0 186 L0 120 L50 96 L100 120 L100 186Z M260 186 L260 116 L320 88 L380 116 L380 186Z" fill="#0a0f19"/><rect x="120" y="122" width="110" height="64" fill="#0e131e"/><path d="M110 124 L175 92 L240 124Z" fill="#0a0f19"/>
+   ${[[20,140],[66,140],[136,140],[200,140],[284,136],[340,136]].map(([x,y],k)=>`<rect class="a-blink" style="animation-delay:-${k*1.7}s" x="${x}" y="${y}" width="14" height="16" fill="#ffc46a"/>`).join('')}
+   <line x1="236" y1="120" x2="256" y2="120" stroke="#0a0f19" stroke-width="3"/><g class="a-swing"><line x1="250" y1="120" x2="250" y2="128" stroke="#0a0f19" stroke-width="2"/><rect x="238" y="128" width="26" height="20" fill="#5a3a22" stroke="#0a0f19" stroke-width="2"/></g>
+   <path d="M150 240 Q190 210 230 186" stroke="#2a3428" stroke-width="18" fill="none"/>${fogs('#b4c0d0',.12)}`, d1); },
+ pub(){ const [d2,g]=glow(200,40,150,'#ffbf6a');
+   return W(`<rect width="400" height="240" fill="#2a1a10"/>${g}<rect y="0" width="400" height="20" fill="#1a0f08"/><g>${[...Array(12)].map((_,i)=>`<rect x="${40+i*28}" y="${70-(i%3)*6}" width="10" height="${28+(i%3)*6}" rx="3" fill="${['#3c6b3c','#7a2e22','#b0802e'][i%3]}"/>`).join('')}</g><rect x="20" y="102" width="360" height="6" fill="#4a2e18"/>
+   <rect y="150" width="400" height="90" fill="#3e2614"/><rect y="146" width="400" height="10" fill="#5c3a1e"/>${man(90,240,1.15,'none','#120a05')}${man(150,240,1.1,'cap','#120a05')}${man(300,240,1.1,'dress','#120a05')}<rect x="112" y="128" width="12" height="20" fill="#e3b44a" opacity=".9"/><rect x="200" y="130" width="12" height="18" fill="#e3b44a" opacity=".9"/>`, d2); },
+ newspaper(){ return W(`<rect width="400" height="240" fill="#22262c"/><g class="a-in" style="transform-origin:200px 120px"><g transform="rotate(-5 200 120)"><rect x="70" y="20" width="260" height="200" fill="#efeadc"/><rect x="84" y="32" width="232" height="26" fill="#1f1f1f"/><text x="200" y="51" text-anchor="middle" fill="#efeadc" font-family="Georgia,serif" font-weight="700" font-size="16" letter-spacing="2">THE DAILY</text>
+   <rect x="84" y="66" width="232" height="18" fill="#3a3a3a"/>${[...Array(10)].map((_,i)=>`<rect x="84" y="${92+i*11}" width="${i%4===3?70:110}" height="5" fill="#8a867a"/><rect x="206" y="${92+i*11}" width="${i%3===2?60:110}" height="5" fill="#8a867a"/>`).join('')}</g></g>`); },
+ cabin(){ const [d1,s]=sky('#9fb6cc','#e2e8ee');
+   return W(`${s}<path d="M0 140 L70 70 L130 120 L200 50 L270 120 L330 80 L400 130 V240 H0Z" fill="#7d8ea0"/><path d="M200 50 L222 72 L210 70 L200 80 L190 70 L178 72Z" fill="#f4f7fa"/><rect y="170" width="400" height="70" fill="#f1f4f6"/>
+   ${[[30,180],[70,176],[330,178],[370,182],[300,174]].map(([x,y])=>pine(x,y,1.1,'#2c3c34')).join('')}<rect x="160" y="140" width="80" height="44" fill="#4a3220"/><path d="M152 142 L200 112 L248 142Z" fill="#33231a"/><rect x="220" y="110" width="10" height="22" fill="#33231a"/><rect x="176" y="156" width="14" height="28" fill="#1a110b"/><rect x="206" y="152" width="18" height="14" fill="#c8a860"/>
+   ${[0,1,2].map(k=>`<ellipse class="a-smoke" style="animation-delay:-${k*1.7}s" cx="225" cy="104" rx="8" ry="6" fill="#d8dde2"/>`).join('')}${man(90,214,.8,'cap','#1a2026')}${man(116,216,.82,'cap','#1a2026')}${man(300,214,.8,'cap','#1a2026')}`, d1); },
+ vault(){ const [d1,s]=sky('#3a4048','#22272e');
+   return W(`${s}<g>${[0,1,2,3,4].map(r=>[...Array(6)].map((_,c)=>{const open=(r*6+c)%3!==1; return `<rect x="${206+c*30}" y="${30+r*36}" width="27" height="33" fill="${open?'#0d1014':'#8a929c'}" stroke="#5a626c"/>${open?`<rect x="${210+c*30}" y="${44+r*36}" width="19" height="8" fill="#aab2bc" transform="rotate(${(c*13+r*7)%30-15} ${219+c*30} ${48+r*36})"/>`:''}`}).join('')).join('')}</g>
+   <circle cx="96" cy="118" r="84" fill="#5a626c"/><circle cx="96" cy="118" r="72" fill="#7a838e" stroke="#4a525c" stroke-width="4"/><g class="a-spin"><circle cx="96" cy="118" r="26" fill="#3a4048"/>${[...Array(12)].map((_,i)=>`<line x1="96" y1="94" x2="96" y2="100" stroke="#cfd6de" stroke-width="2" transform="rotate(${i*30} 96 118)"/>`).join('')}</g>${[0,1,2,3].map(k=>`<line x1="96" y1="118" x2="96" y2="56" stroke="#4a525c" stroke-width="7" transform="rotate(${k*90+45} 96 118)"/>`).join('')}<circle cx="96" cy="118" r="10" fill="#2a3038"/>
+   <rect y="210" width="400" height="30" fill="#14181d"/>${[...Array(8)].map((_,i)=>`<path d="M${210+i*22} 212 l6 -4 l6 4 l-6 6Z" fill="#dff4ff" class="a-blink" style="animation-delay:-${i*.7}s"/>`).join('')}`, d1); },
+ forest(){ const [d1,s]=sky('#4a5878','#c8a07a');
+   return W(`${s}<rect y="150" width="400" height="22" fill="#2e3038"/><g class="a-drive"><rect x="0" y="156" width="40" height="3" fill="#ffe6a0"/><rect x="60" y="162" width="30" height="3" fill="#ff6a5a"/></g><g class="a-drive" style="animation-delay:-1.3s;animation-duration:3.4s"><rect x="0" y="158" width="36" height="3" fill="#ffe6a0"/></g>
+   <rect y="172" width="400" height="68" fill="#1e2a1c"/>${[[20,180],[60,184],[110,182],[300,186],[350,180],[390,184],[250,182]].map(([x,y],k)=>pine(x,y,1.3+(k%2)*.3,'#0f1a12')).join('')}
+   <g><path d="M150 214 Q146 190 166 188 Q186 184 188 200 Q194 214 186 220Z" fill="#26282c"/><path d="M180 222 Q178 200 198 196 Q220 196 220 212 Q224 222 214 226Z" fill="#33363b"/><rect x="200" y="212" width="20" height="10" fill="#efe9d8" transform="rotate(-14 210 217)"/><circle cx="165" cy="204" r="3" fill="#e8b923" class="a-glow"/></g>${man(270,222,.9,'cap','#0a120c')}`, d1); },
+ screen(arg='C:\\>'){ const lines = String(arg).split('/');
+   return W(`<rect width="400" height="240" fill="#0b0f12"/><rect x="80" y="28" width="240" height="170" rx="14" fill="#2a2e2a"/><rect x="98" y="44" width="204" height="130" rx="8" fill="#0a1a0e"/>
+   ${lines.map((t,i)=>`<text x="108" y="${66+i*18}" font-family="IBM Plex Mono,monospace" font-size="12" fill="#6dff9a" class="${i===lines.length-1?'a-glow':''}">${esc(t)}</text>`).join('')}<rect class="a-cur" x="108" y="${70+lines.length*18-12}" width="8" height="13" fill="#6dff9a"/>
+   <rect x="170" y="198" width="60" height="14" fill="#2a2e2a"/><rect x="130" y="212" width="140" height="8" fill="#1d201d"/><rect x="40" y="228" width="320" height="12" fill="#23272b"/>`); },
+ suburb(){ const [d1,s]=sky('#f0a46e','#7a8ab8');
+   return W(`${s}<circle cx="80" cy="150" r="30" fill="#ffd89a" opacity=".85"/><rect y="186" width="400" height="54" fill="#5a6a4a"/><rect y="196" width="400" height="14" fill="#8a8a86"/>
+   <rect x="150" y="128" width="170" height="58" fill="#e6d8c0"/><path d="M140 130 L235 100 L330 130Z" fill="#7a4a34"/><rect x="180" y="146" width="30" height="22" fill="#ffd27a" class="a-flick"/><rect x="230" y="146" width="24" height="40" fill="#5a4030"/><rect x="270" y="146" width="30" height="22" fill="#3a4a6a"/>
+   <path d="M360 196 Q362 150 368 112" stroke="#5a4028" stroke-width="5" fill="none"/><g class="a-sway" style="transform-origin:368px 112px">${[[-30,6],[-20,-14],[10,-20],[30,-2],[26,16]].map(([dx,dy])=>`<path d="M368 112 Q${368+dx/2} ${112+dy-10} ${368+dx} ${112+dy}" stroke="#2c4a2a" stroke-width="7" fill="none" stroke-linecap="round"/>`).join('')}</g>
+   <path d="M30 196 L30 182 Q40 170 64 170 L76 160 L110 160 L120 172 L130 176 L130 196Z" fill="#2a2a34"/>${man(50,212,.86,'cap','#1a1a22')}`, d1); },
+ tree(){ const N=[[200,30],[120,80],[280,80],[70,130],[160,130],[240,130],[330,130],[40,182],[100,182],[200,182],[300,182],[360,182]];
+   const E=[[0,1],[0,2],[1,3],[1,4],[2,5],[2,6],[3,7],[3,8],[5,9],[6,10],[6,11]];
+   return W(`<rect width="400" height="240" fill="#0e141c"/><g stroke="#4a6a8a" stroke-width="2.5" fill="none">${E.map(([a,b],k)=>`<path class="a-draw" style="animation-delay:${k*.18}s" d="M${N[a][0]} ${N[a][1]} V${(N[a][1]+N[b][1])/2} H${N[b][0]} V${N[b][1]}"/>`).join('')}</g>
+   ${N.map(([x,y],k)=>`<circle cx="${x}" cy="${y}" r="${k===10?11:8}" fill="${k===10?'#e8b923':k===7?'#5cbf8a':'#2a3a4c'}" stroke="#8aa8c8" stroke-width="2" ${k===10?'class="a-glow"':''}/>`).join('')}<text x="40" y="214" text-anchor="middle" font-size="10" fill="#5cbf8a" font-family="monospace">DNA一致</text><text x="300" y="214" text-anchor="middle" font-size="10" fill="#e8b923" font-family="monospace">?</text>`); },
+ port(){ const [d1,s]=sky('#f6c89a','#9ab8d0');
+   return W(`${s}<circle cx="320" cy="120" r="26" fill="#fff0c8"/><rect y="130" width="400" height="110" fill="#3a7a9a"/><path class="a-wave" d="M0 150 ${[...Array(8)].map(()=>'q20 -5 40 0 t40 0').join(' ')}" stroke="#bfe8f8" stroke-width="2" fill="none"/>
+   ${[[70,162],[180,150]].map(([x,y],k)=>`<g class="a-bob" style="animation-delay:-${k}s"><path d="M${x-36} ${y} L${x+36} ${y} L${x+26} ${y+16} L${x-26} ${y+16}Z" fill="#f2efe6"/><rect x="${x-6}" y="${y-22}" width="18" height="22" fill="#d8d2c4"/><line x1="${x-14}" y1="${y}" x2="${x-14}" y2="${y-40}" stroke="#333" stroke-width="2"/></g>`).join('')}
+   <rect x="240" y="180" width="160" height="60" fill="#6a5a48"/><rect x="260" y="164" width="40" height="18" fill="#3a6aa8"/><g fill="#c8b46a">${[0,1,2,3,4].map(i=>`<ellipse cx="${268+i*6}" cy="${170+(i%2)*4}" rx="7" ry="3"/>`).join('')}</g><rect x="320" y="164" width="34" height="18" fill="#3a6aa8"/>${man(370,240,1,'cap','#2a221a')}`, d1); }
+};
+function sceneSVG(spec){ const [name,...rest]=String(spec).split(':'); const f=SCENES[name]||SCENES.office; return f(rest.join(':')||undefined); }
+
+/* ======================= cases ======================= */
+// Line format: "名前|台詞" = dialogue, plain = narration, "@scene" = change the picture card.
 const CASES = [
 {
- id:"crippen", year:1910, place:"イギリス・ロンドン", title:"地下室の煉瓦", sub:"クリッペン事件",
- role:"あなたはロンドン警視庁（スコットランドヤード）のウォルター・デュー警部。",
- intro:["1910年2月。ロンドン北部ヒルドロップ・クレセント39番地に住むアメリカ人医師ホーリー・ハーヴェイ・クリッペンの妻で、舞台歌手のコーラ（芸名ベル・エルモア）が突然姿を消した。",
- "夫は「親族に会いにアメリカへ行った」と言い、しばらくして「向こうで病死した」と知らせた。遺体も死亡証明もない。歌手仲間の女性たちが不審に思い、警察に相談してきた。"],
+ id:"crippen", year:1910, place:"イギリス・ロンドン", title:"地下室の煉瓦", sub:"クリッペン事件", bg:"london", me:"デュー",
+ intro:["@london","1910年2月。霧のロンドン北部、ヒルドロップ・クレセント39番地。","アメリカ人医師ホーリー・ハーヴェイ・クリッペンの妻で、舞台歌手のコーラ（芸名ベル・エルモア）が、突然姿を消した。",
+  "夫は「親族に会いにアメリカへ行った」と言い、しばらくして「向こうで病死した」と知らせた。遺体も、死亡証明もない。",
+  "@office","夫人の友人|警部さん、ベルが私たちに何も言わずにアメリカへ行くなんて、ありえないんです。","夫人の友人|それに、向こうで亡くなったなんて……お葬式の話ひとつ出てこないんですよ。","デュー|分かりました。調べてみましょう。",
+  "あなたはロンドン警視庁（スコットランドヤード）のウォルター・デュー警部。"],
  steps:[
-  {q:"夫人の友人たちの話を聞いた。まず何を確かめる？",c:[
-   {t:"夫の周辺に変わったことがないか確かめる",ok:1,ev:"夫人の宝石をつけた愛人",r:"夫の若い秘書エセル・ル・ニーヴが同居を始め、夫人のブローチや毛皮を身につけて舞踏会に現れていた。妻を亡くしたばかりの男にしては、あまりに早い。"},
+  {bg:"office",d:["デュー|（妻を亡くしたばかりの夫、か。……さて、どこから手をつける）"],q:"夫人の友人たちの話を聞いた。まず何を確かめる？",c:[
+   {t:"夫の周辺に変わったことがないか確かめる",ok:1,ev:"夫人の宝石をつけた愛人",bg:"london",s:["夫人の友人|舞踏会で見たんです。あの秘書の娘が、ベルのブローチをつけていたのを！"],r:"夫の若い秘書エセル・ル・ニーヴが同居を始め、夫人の宝石や毛皮を身につけて人前に出ていた。妻を亡くしたばかりの男にしては、あまりに早い。"},
    {t:"アメリカに死亡記録を照会し、返事を待つ",r:"大西洋をまたぐ照会には何週間もかかる。その間、夫は何事もなく暮らし続けた。"},
-   {t:"根拠はなくても夫をすぐ逮捕する",r:"遺体も証拠もない段階での逮捕は認められない。上司に止められ、時間だけが過ぎた。"}]},
-  {q:"7月8日、クリッペンに事情聴取した。彼はあっさり「死んだというのは嘘だった。妻は別の男とアメリカへ駆け落ちした。恥をかきたくなかった」と認めた。家の中を見せてもらったが、異常は見つからない。どうする？",c:[
-   {t:"長い供述を一言ずつ書き取り、署名させる",ok:1,ev:"嘘を認めた供述書",r:"供述書は数時間がかりになった。この記録が、後で彼の説明の矛盾を突く材料になる。数日後に再訪すると、クリッペンとエセルは姿を消していた。逃げたこと自体が何よりの答えだった。"},
-   {t:"話の筋は通っているので、捜査を終える",r:"上司に報告書を出しかけたところで、彼らが突然いなくなったと知らせが来た。初動の遅れは取り戻せない。"},
-   {t:"駆け落ち相手の男を新聞広告で探す",r:"名乗り出る者はいない。そもそもその男が実在するのかも分からない。"}]},
-  {q:"二人は逃げた。空き家になった家を前に、何をする？",c:[
-   {t:"家じゅう、特に地下の石炭庫を徹底的に調べる",ok:1,ev:"煉瓦床の下の遺体",r:"3日目、地下室の煉瓦の床を火かき棒で突くと、一部がゆるんでいた。掘り下げると、石灰に包まれた人の遺体の一部が見つかった。頭部も骨格もない。"},
-   {t:"ロンドン中の港に見張りを立てる",r:"すでに大陸へ渡った後だった。家に何が残っているかを見ないまま、時間を使ってしまった。"},
-   {t:"エセルの家族を問い詰める",r:"家族は本当に何も知らなかった。"}]},
-  {q:"遺体には頭部も骨もなく、男か女かさえ簡単には分からない。身元を示すものは？",c:[
-   {t:"皮膚片に残った古い手術痕を調べる",ok:1,ev:"手術痕のある皮膚片",r:"病理学者バーナード・スピルズベリーが顕微鏡で調べ、腹部の手術の傷跡だと証言した。コーラ夫人は以前、腹部の手術を受けていた。"},
-   {t:"一緒に埋まっていた寝間着の切れ端を調べる",ok:1,ev:"寝間着のラベル",r:"ラベルから、クリッペン夫妻が引っ越した後に売られた品だと分かった。遺体は前の住人ではなく、夫妻が住んでいた時期に埋められたことになる。"},
-   {t:"骨格から身長を推定する",r:"骨がない。犯人は身元が分からないよう、骨と頭部をどこかへ処分していた。"}]},
-  {q:"遺体からは植物性の毒ヒヨスチンが検出された。そこへ大西洋上の客船モントローズ号から無線電報が届く。「クリッペンと共犯者らしき二人が乗船。連れは少年に変装している」。どうする？",c:[
-   {t:"もっと速い船ローレンティック号で先回りする",ok:1,ev:"船長の無線電報",r:"デューはモントローズ号より先にカナダへ着き、水先案内人に変装して乗り込んだ。「おはようございます、クリッペン先生。私をご存じですね」。"},
-   {t:"カナダに着くまで待ち、現地の警察に任せる",r:"大西洋の上では管轄も手続きもあいまいになる。確実に身柄を押さえる機会を逃しかけた。"},
-   {t:"船長に、その場で二人を拘束させる",r:"民間の船長に逮捕の権限はない。下手に騒げば二人に気づかれる。"}]}
+   {t:"根拠はなくても夫をすぐ逮捕する",s:["上司|遺体も証拠もなしに逮捕だと？ 正気かね、デュー。"],r:"証拠のない逮捕は認められない。時間だけが過ぎた。"}]},
+  {bg:"office",d:["デュー|クリッペン先生、奥様はアメリカで亡くなったと伺いましたが。","クリッペン|……実は、嘘をつきました。","クリッペン|妻は別の男と、アメリカへ逃げたのです。恥ずかしくて、本当のことはとても言えなかった。","クリッペン|家の中もどうぞご覧ください。隠すことは何もありません。","デュー|（家を一通り見たが、おかしなところはない……）"],q:"嘘は認めた。だが説明の筋は通っている。どうする？",c:[
+   {t:"長い供述を一言ずつ書き取り、署名させる",ok:1,ev:"嘘を認めた供述書",s:["デュー|念のため、今のお話をすべて書き留めます。署名をお願いします。","クリッペン|ええ、もちろん。"],r:"供述書は何時間もかかった。数日後、もう一度訪ねると、クリッペンとエセルは姿を消していた。逃げたこと自体が、何よりの答えだった。"},
+   {t:"話の筋は通っている。捜査を終える",r:"報告書を書きかけたところで、二人が突然いなくなったと知らせが来た。初動の遅れは取り戻せない。"},
+   {t:"駆け落ち相手の男を新聞広告で探す",r:"名乗り出る者はいない。そもそも、そんな男が実在するのかも分からない。"}]},
+  {bg:"cellar",d:["部下|警部、家はもぬけの殻です。ほとんど何も持たずに出ていってます。","デュー|逃げた……。あの男は、何を恐れた？"],q:"空き家になった家を前に、何をする？",c:[
+   {t:"家じゅう、特に地下の石炭庫を徹底的に調べる",ok:1,ev:"煉瓦床の下の遺体",s:["部下|警部！ この煉瓦、ここだけ動きます！","デュー|掘れ。慎重にだ。"],r:"煉瓦の床の下から、石灰にまみれた人の遺体の一部が見つかった。頭部も、骨格もない。"},
+   {t:"ロンドン中の港に見張りを立てる",r:"二人はすでに大陸へ渡った後だった。家に何が残されているかを見ないまま、時間を使ってしまった。"},
+   {t:"エセルの家族を問い詰める",s:["エセルの母|あの子がどこにいるか、私たちのほうが知りたいくらいです！"],r:"家族は本当に何も知らなかった。"}]},
+  {bg:"lab",d:["スピルズベリー|頭も骨もない。男か女かさえ、すぐには言えません。","デュー|それでも、身元を示すものはあるはずだ。","スピルズベリー|ええ。皮膚と布は、嘘をつきませんよ。"],q:"何を手がかりに身元を確かめる？",c:[
+   {t:"皮膚片に残った古い手術痕を調べる",ok:1,ev:"手術痕のある皮膚片",s:["スピルズベリー|顕微鏡で見てください。これは腹部の手術の傷跡です。"],r:"コーラ夫人は以前、腹部の手術を受けていた。病理学者バーナード・スピルズベリーは法廷でそう証言した。"},
+   {t:"一緒に埋まっていた寝間着の切れ端を調べる",ok:1,ev:"寝間着のラベル",r:"ラベルから、夫妻がこの家に越してきた後に売られた品だと分かった。遺体は前の住人ではない。夫妻が住んでいた間に埋められたのだ。"},
+   {t:"骨格から身長を推定する",s:["スピルズベリー|警部、骨がないと申し上げたはずですが。"],r:"犯人は身元が分からないよう、骨と頭部をどこかへ処分していた。"}]},
+  {bg:"ship",d:["スピルズベリー|遺体から植物性の毒、ヒヨスチンが出ました。","部下|クリッペンは1月に、薬局でまさにその薬を買っています！","通信士|警部宛てに無線です！ 大西洋上の客船モントローズ号、ケンドール船長から！","通信士|『クリッペンと共犯者らしき二人が乗船中。連れは少年の格好をしているが、明らかに女性』"],q:"船はカナダへ向かっている。どうする？",c:[
+   {t:"もっと速い船ローレンティック号で先回りする",ok:1,ev:"船長の無線電報",s:["デュー|（水先案内人の制服を借りて、乗り込む）","デュー|おはようございます、クリッペン先生。私をご存じですね。","クリッペン|……ありがたい、終わった。不安で、もう耐えられなかった。"],r:"1910年7月31日、カナダのセントローレンス川河口で、デューは二人を逮捕した。"},
+   {t:"カナダに着くまで待ち、現地の警察に任せる",r:"大西洋の上では管轄も手続きもあいまいだ。確実に身柄を押さえる機会を逃しかけた。"},
+   {t:"船長に、その場で二人を拘束させる",r:"民間の船長に逮捕の権限はない。下手に騒げば、二人に気づかれる。"}]}
  ],
  flaw:"死んだとする嘘と、妻の宝石を身につけた愛人。そして事情聴取の後の逃亡が、疑いを確信に変えた。",
  key:"顕微鏡による皮膚片の鑑定と、当時最新だった船の無線電信。逃亡中の容疑者が無線のおかげで捕まった、最初期の例として知られる。",
- history:"1910年7月31日、カナダのファーザー・ポイント沖で逮捕。クリッペンは有罪となり、同年11月に絞首刑。エセルは無罪になった。なお2007年、米国の研究者が遺体の組織のDNAを調べ、女性ではなかった可能性を報告した。この結果には異論もあり、議論は今も続いている。"
+ history:"クリッペンは有罪となり、1910年11月に絞首刑になった。エセルは無罪になった。なお2007年、米国の研究者が遺体の組織のDNAを調べ、女性ではなかった可能性を報告した。この結果には異論もあり、議論は今も続いている。"
 },
 {
- id:"leopold", year:1924, place:"アメリカ・シカゴ", title:"天才たちの「完全犯罪」", sub:"レオポルドとローブ事件",
- role:"あなたはシカゴ警察と検察の捜査チームの一員。",
- intro:["1924年5月21日、シカゴの名門校に通う14歳のボビー・フランクスが下校途中に姿を消した。その夜、家族のもとに「ジョージ・ジョンソン」と名乗る人物から、身代金1万ドルを要求するタイプ打ちの手紙が届く。",
- "しかし翌朝、少年はインディアナ州境に近い湿地の排水溝で遺体となって見つかった。身元を隠そうとした跡もある。犯人は、自分たちを法の外にいる「超人」だと考え、完全犯罪を計画していた。"],
+ id:"leopold", year:1924, place:"アメリカ・シカゴ", title:"天才たちの「完全犯罪」", sub:"レオポルドとローブ事件", bg:"marsh", me:"あなた",
+ intro:["@marsh","1924年5月21日。シカゴの名門校に通う14歳のボビー・フランクスが、下校途中に姿を消した。","その夜、家族のもとに「ジョージ・ジョンソン」と名乗る人物から、身代金1万ドルを要求するタイプ打ちの手紙が届く。",
+  "作業員|おい……排水溝に何か詰まってる。……子どもだ！","翌朝、少年はインディアナ州境に近い湿地で、遺体となって見つかった。身元を隠そうとした跡がある。",
+  "犯人は、自分たちを法の外にいる「超人」だと信じ、完全犯罪を計画していた。","あなたはシカゴ警察と検察の捜査チームの一員だ。"],
  steps:[
-  {q:"遺体のそばを調べた。何を優先する？",c:[
-   {t:"排水溝の近くに落ちていた角縁の眼鏡",ok:1,ev:"現場の眼鏡",r:"少年のものではない。犯人が落としたのかもしれない。"},
-   {t:"身代金の受け渡し場所で張り込む",r:"遺体が見つかったと報じられ、犯人は現れなかった。"},
-   {t:"少年の学校の教師たちを取り調べる",r:"実際にも教師が疑われて拘束されたが、無関係だった。見当違いの捜査で数日が過ぎた。"}]},
-  {q:"眼鏡のレンズはありふれた度数だった。どこを追う？",c:[
-   {t:"蝶番（ちょうつがい）の製造元と販売先",ok:1,ev:"珍しい蝶番",r:"ニューヨークのボブロー社の特殊な蝶番だった。シカゴでこの眼鏡を扱ったのは1店だけで、買ったのは3人。そのうちの1人が、19歳の大学院生ネイサン・レオポルドだった。"},
+  {bg:"marsh",d:["相棒|身代金の手紙が届いた翌朝に、遺体か。","あなた|犯人は最初から、子どもを返すつもりがなかったのかもしれない。"],q:"現場を調べる。何を優先する？",c:[
+   {t:"排水溝の近くに落ちていた角縁の眼鏡",ok:1,ev:"現場の眼鏡",bg:"evidence:glasses",r:"少年のものではない。犯人が落としたのかもしれない。"},
+   {t:"身代金の受け渡し場所で張り込む",r:"遺体の発見が報じられ、犯人は現れなかった。"},
+   {t:"少年の学校の教師たちを取り調べる",s:["教師|私は何もしていない！ 生徒を手にかけるなんて……！"],r:"実際にも教師が疑われて拘束されたが、無関係だった。見当違いの捜査で数日が過ぎた。"}]},
+  {bg:"evidence:glasses",d:["鑑識|レンズはよくある度数ですね。シカゴじゅうに、同じ眼鏡の持ち主がいますよ。","あなた|レンズ以外は？"],q:"眼鏡のどこを追う？",c:[
+   {t:"蝶番（ちょうつがい）の製造元と販売先",ok:1,ev:"珍しい蝶番",s:["眼鏡店の店員|この蝶番はボブロー社の特注品です。シカゴではうちしか扱っていません。売れたのは3本だけ。"],r:"3人の買い手のうち1人が、19歳の大学院生ネイサン・レオポルドだった。"},
    {t:"市内の眼科医を総当たりする",r:"同じ度数の患者は数え切れない。手がかりは埋もれた。"},
    {t:"眼鏡についた指紋を採る",r:"当時の技術と現場の状態では、使える指紋は採れなかった。"}]},
-  {q:"レオポルドは「野鳥観察であの辺りへ行ったとき落とした」と言う。事件当日は友人リチャード・ローブと、自分の車で女の子二人とドライブしていたという。どこを崩す？",c:[
-   {t:"レオポルド家のお抱え運転手に、当日の車の様子を聞く",ok:1,ev:"崩れたアリバイ",r:"運転手は「あの日、車は一日じゅう車庫で修理していた」と答えた。二人が乗っていたという車は、どこにも行っていない。"},
-   {t:"ドライブ相手の女の子二人を探す",r:"名前もあだ名だけで、見つからない。それ自体があやしいが、決め手にならない。"},
-   {t:"ローブの家族に話を聞く",r:"裕福な家族は弁護士を通じてしか話さなかった。"}]},
-  {q:"身代金を要求する手紙はタイプライターで打たれていた。二人は「タイプライターなど持っていない」と言う。",c:[
-   {t:"レオポルドの勉強仲間のタイプ打ちノートと字体を比べる",ok:1,ev:"同じ字体の勉強ノート",r:"法律の勉強会のノートは、レオポルドの持つアンダーウッド社の携帯用タイプライターで打たれていた。字のくせが身代金の手紙とぴったり一致した。"},
+  {bg:"office",d:["レオポルド|ええ、僕の眼鏡です。あの辺りにはよく野鳥を見に行くので、そのとき落としたんでしょう。","あなた|事件の日は、何を？","レオポルド|友人のリチャード・ローブと、僕の車でドライブしてました。途中で女の子を二人拾って。","あなた|その子たちの名前は？","レオポルド|メイと、エドナ……だったかな。名字までは。"],q:"アリバイのどこを崩す？",c:[
+   {t:"レオポルド家のお抱え運転手に、当日の車の様子を聞く",ok:1,ev:"崩れたアリバイ",s:["運転手|あの日ですか？ 車は一日じゅう車庫にありましたよ。私が修理していましたから。"],r:"二人が乗っていたという車は、どこにも行っていなかった。"},
+   {t:"ドライブ相手の女の子二人を探す",r:"名前も曖昧で、見つからない。それ自体があやしいが、決め手にはならない。"},
+   {t:"ローブの家族に話を聞く",r:"裕福な家族は、弁護士を通じてしか話さなかった。"}]},
+  {bg:"evidence:typewriter",d:["検事|身代金の手紙は、タイプライターで打たれている。","レオポルド|タイプライター？ そんなもの、持っていませんよ。","あなた|（本当にそうか？）"],q:"タイプライターの線をどう追う？",c:[
+   {t:"レオポルドの勉強仲間のタイプ打ちノートと字体を比べる",ok:1,ev:"同じ字体の勉強ノート",s:["同級生|勉強会のノート？ ネイサンがいつも、自分の携帯用タイプライターで打ってくれてました。"],r:"ノートの文字のくせは、身代金の手紙とぴったり一致した。"},
    {t:"手紙の筆跡を鑑定する",r:"手紙はタイプ打ちだ。筆跡は残っていない。"},
    {t:"手紙の紙の産地を調べる",r:"どこでも売っている紙だった。"}]}
  ],
@@ -160,137 +377,133 @@ const CASES = [
  history:"アリバイが崩れると、ローブが先に自白し、レオポルドも続いた。二人は互いに相手が実行犯だと言い張った。弁護士クラレンス・ダロウの弁論で死刑を免れ、終身刑と懲役99年。タイプライターはのちにジャクソン公園の池から引き揚げられた。ローブは1936年に刑務所内で殺され、レオポルドは1958年に仮釈放された。"
 },
 {
- id:"lindbergh", year:1932, place:"アメリカ・ニュージャージー", title:"手製の梯子", sub:"リンドバーグ愛児誘拐事件",
- role:"あなたはニュージャージー州警察の捜査員。",
- intro:["1932年3月1日夜。大西洋単独無着陸飛行の英雄チャールズ・リンドバーグの自宅から、生後20か月の長男が連れ去られた。窓の下には壊れた手製の梯子と、身代金5万ドルを要求する手紙が残されていた。",
- "世界中が注目するなか、犯人は手紙でやり取りを続け、決して姿を見せない。"],
+ id:"lindbergh", year:1932, place:"アメリカ・ニュージャージー", title:"手製の梯子", sub:"リンドバーグ愛児誘拐事件", bg:"mansion", me:"あなた",
+ intro:["@mansion","1932年3月1日、夜。大西洋単独無着陸飛行の英雄、チャールズ・リンドバーグの屋敷。","乳母|赤ちゃんが……ベッドにいません！","リンドバーグ|誰かが連れ去った。窓の下を見ろ！",
+  "窓の下には壊れた手製の梯子と、身代金5万ドルを要求する手紙が残されていた。","世界中が注目するなか、犯人は手紙でやり取りを続け、決して姿を見せない。","あなたはニュージャージー州警察の捜査員だ。"],
  steps:[
-  {q:"現場の証拠をどう扱う？",c:[
-   {t:"手製の梯子を一本残らず保存する",ok:1,ev:"手製の梯子",r:"三つに分かれる組み立て式の梯子で、横木の一本が折れていた。誰が、どこの木で作ったのか。木そのものが証人になるかもしれない。"},
-   {t:"梯子より、周辺の聞き込みを優先する",r:"押し寄せた野次馬と記者に現場は踏み荒らされ、足跡はほとんど消えてしまった。"},
+  {bg:"mansion",d:["相棒|梯子は三つに分かれる組み立て式だ。横木が一本、折れてる。","相棒|まずいぞ、記者と野次馬が押し寄せてきた！"],q:"現場の証拠をどう扱う？",c:[
+   {t:"手製の梯子を一本残らず保存する",ok:1,ev:"手製の梯子",bg:"evidence:ladder",r:"誰が、どこの木で作ったのか。木そのものが証人になるかもしれない。"},
+   {t:"梯子より、周辺の聞き込みを優先する",r:"押し寄せた人々に現場は踏み荒らされ、足跡はほとんど消えてしまった。"},
    {t:"手紙の内容を新聞に公開して情報を募る",r:"偽の犯人や詐欺師が次々と現れ、捜査は混乱した。"}]},
-  {q:"仲介役のジョン・コンドン博士が、墓地で犯人とされる男に身代金を渡すことになった。お金をどう準備する？",c:[
-   {t:"すべての紙幣の番号を控え、金証券を多く混ぜる",ok:1,ev:"番号を控えた金証券",r:"金証券（金と交換できる紙幣）は目立つ。翌1933年に政府が金証券の回収を始めると、使われた金証券はさらに目立つようになった。"},
-   {t:"本物に見える偽札を用意する",r:"見破られれば子どもの身が危ない。家族も反対した。"},
+  {bg:"cemetery",d:["コンドン|犯人は『ジョン』と名乗りました。夜の墓地で会うことになっています。","財務省の捜査官|お金の準備は、私たちに任せてもらえますか。"],q:"身代金をどう準備する？",c:[
+   {t:"すべての紙幣の番号を控え、金証券を多く混ぜる",ok:1,ev:"番号を控えた金証券",bg:"evidence:bill",s:["財務省の捜査官|金証券は目立ちます。使われれば、必ず誰かが気づく。"],r:"翌1933年、政府が金証券の回収を始めると、使われる金証券はさらに目立つようになった。"},
+   {t:"本物に見える偽札を用意する",s:["リンドバーグ|見破られたら、息子はどうなる？ 許可できない。"],r:"家族は子どもの身を案じ、反対した。"},
    {t:"身代金の支払いを拒む",r:"家族は子どもを取り戻すため、支払うと決めていた。"}]},
-  {q:"5万ドルは支払われた。だが5月12日、子どもは自宅から数km離れた森で、遺体で見つかった。誘拐の夜に亡くなっていたとみられる。手がかりは梯子と紙幣だけ。",c:[
-   {t:"木材の専門家アーサー・ケーラーに梯子の鑑定を頼む",ok:1,ev:"鉋（かんな）の刃の傷",r:"ケーラーは木材にかんなの刃が残した細かい傷を調べ、製材所の機械まで突き止めた。木はニューヨーク・ブロンクスの材木店で売られていた。"},
+  {bg:"evidence:ladder",d:["5万ドルは墓地で支払われた。だが子どもは戻らなかった。","相棒|……5月12日、屋敷から数km先の森で、子どもが見つかった。","相棒|誘拐の夜に、もう亡くなっていたらしい。","あなた|残された手がかりは、梯子と、番号を控えた紙幣だけだ。"],q:"何を頼りにする？",c:[
+   {t:"木材の専門家アーサー・ケーラーに梯子の鑑定を頼む",ok:1,ev:"鉋（かんな）の刃の傷",s:["ケーラー|木は語りますよ。このかんなの傷を残した機械を探せばいい。"],r:"ケーラーは木材に残った細かな刃の傷から製材所の機械を突き止め、木がニューヨーク・ブロンクスの材木店で売られたことまでたどった。"},
    {t:"誘拐の手口から、前科者の名簿を当たる",r:"数百人を調べたが、つながる者はいなかった。"},
-   {t:"リンドバーグ家の使用人を厳しく取り調べる",r:"疑われたメイドの一人が自ら命を絶つ悲劇が起きた。彼女は無関係だった。"}]},
-  {q:"1934年9月、ブロンクスのガソリンスタンドで10ドルの金証券が使われた。店員は不審に思い、客の車のナンバーを紙幣の余白に書き留めていた。",c:[
-   {t:"ナンバーから車の持ち主を調べる",ok:1,ev:"紙幣に書かれたナンバー",r:"持ち主は、ドイツ出身の大工ブルーノ・リチャード・ハウプトマン。彼のガレージからは身代金の金証券が1万4千ドル以上見つかった。"},
-   {t:"スタンドの周辺で次の金証券を待つ",r:"同じ店に二度来るとは限らない。"},
-   {t:"店員に似顔絵を描かせ、新聞に載せる",r:"犯人に警戒されてしまうおそれがある。"}]},
-  {q:"ハウプトマンは「お金は友人から預かっていただけだ」と言う。家のどこを調べる？",c:[
-   {t:"屋根裏部屋の床板",ok:1,ev:"屋根裏の床板",r:"床板の一部が切り取られていた。梯子の「16番目の横木」と年輪がつながり、釘穴の位置も一致したとされる。"},
-   {t:"クローゼットの内側",ok:1,ev:"戸棚に書かれた住所",r:"扉の内側に、仲介役コンドン博士の住所と電話番号が鉛筆で書かれていた。"},
+   {t:"屋敷の使用人を厳しく取り調べる",r:"疑われたメイドの一人が自ら命を絶つ悲劇が起きた。彼女は無関係だった。"}]},
+  {bg:"gasstation",d:["1934年9月、ニューヨーク・ブロンクスのガソリンスタンド。","店員|お客さん、金証券なんて今どき珍しいですね。","客の男|家にまだ100枚ほどあるよ。","男が去ったあと、店員は念のため、紙幣の余白に車のナンバーを書き留めた。"],q:"銀行から連絡が入った。番号が身代金と一致する。",c:[
+   {t:"ナンバーから車の持ち主を調べる",ok:1,ev:"紙幣に書かれたナンバー",r:"持ち主は、ドイツ出身の大工ブルーノ・リチャード・ハウプトマン。ガレージからは身代金の金証券が1万4千ドル以上見つかった。"},
+   {t:"スタンドで次の金証券を待つ",r:"同じ店に二度来るとは限らない。"},
+   {t:"店員に似顔絵を描かせ、新聞に載せる",r:"犯人に警戒されてしまう。"}]},
+  {bg:"attic",d:["ハウプトマン|その金は、ドイツに帰った友人のフィッシュから預かっていただけだ！","あなた|では、家の中を見せてもらう。"],q:"家のどこを調べる？",c:[
+   {t:"屋根裏部屋の床板",ok:1,ev:"屋根裏の床板",s:["ケーラー|この床板を見てください。切り取られた跡がある。梯子の16番目の横木と、年輪がつながります。"],r:"釘穴の位置も一致したとされた。"},
+   {t:"クローゼットの扉の内側",ok:1,ev:"戸棚に書かれた住所",r:"扉の内側に、仲介役コンドン博士の住所と電話番号が鉛筆で書かれていた。"},
    {t:"台所の食器棚",r:"何も見つからない。"}]}
  ],
  flaw:"番号を記録されたお金を使ったこと。特に、回収が始まって目立つようになった金証券を使い続けたことが命取りになった。",
  key:"ガソリンスタンド店員の機転と、木材の傷から製材所までたどった鑑定。木材が法廷証拠になった有名な例。",
- history:"ハウプトマンは1935年の裁判で有罪となり、1936年4月に死刑が執行された。最後まで無実を訴え、「お金は亡くなった友人イジドア・フィッシュから預かった」と話した。捜査や証拠の扱いには今も疑問の声があり、冤罪説も根強く残っている。この事件をきっかけに、誘拐を連邦犯罪とする「リンドバーグ法」が作られた。"
+ history:"ハウプトマンは1935年の裁判で有罪となり、1936年4月に死刑が執行された。最後まで無実を訴えた。捜査や証拠の扱いには今も疑問の声があり、冤罪説も根強い。この事件をきっかけに、誘拐を連邦犯罪とする「リンドバーグ法」が作られた。"
 },
 {
- id:"torikabuto", year:1986, place:"日本・沖縄", title:"一時間半のアリバイ", sub:"トリカブト保険金殺人事件",
- role:"あなたは事件を追う捜査員。法医学者が残した一本の血液が、捜査の行方を握る。",
- intro:["1986年5月、33歳の女性が友人3人と石垣島へ旅行した。夫は那覇空港まで同行したが「急用ができた」と言って別れ、大阪へ戻った。",
- "妻は石垣島のホテルに着いて間もなく、激しく苦しんで倒れ、亡くなった。夫と別れてから1時間以上たってからのことだった。夫が妻に毒を飲ませたとしても、そんなに遅れて効くはずがない。誰もがそう考えた。"],
+ id:"torikabuto", year:1986, place:"日本・沖縄", title:"一時間半のアリバイ", sub:"トリカブト保険金殺人事件", bg:"island", me:"あなた",
+ intro:["@airport","1986年5月、那覇空港。33歳の女性が、友人3人と石垣島へ向かおうとしていた。","夫|ごめん、急な仕事が入った。大阪に戻らないといけない。みんなで楽しんでおいで。","妻|うん。行ってくるね。",
+  "@island","石垣島のホテルに着いて間もなく、妻は激しく苦しみ出し、倒れた。","友人|しっかりして！ 誰か、救急車を！","妻はそのまま亡くなった。夫と別れてから1時間以上たってからのことだった。",
+  "夫が毒を飲ませたとしても、そんなに遅れて効くはずがない。誰もがそう考えた。","あなたはこの事件を追う捜査員。そして、一人の法医学者の判断が、捜査の行方を握る。"],
  steps:[
-  {q:"健康だった女性の突然の死。解剖した琉球大学の医師は、心筋梗塞と判断したが、腑に落ちない。",c:[
-   {t:"血液と臓器の一部を、保存しておく",ok:1,ev:"保存された血液",r:"医師（大野曜吉氏）は、急死の原因を確かめるため血液を冷凍保存した。この一本が、数年後に事件を動かす。"},
-   {t:"心不全として処理し、遺体を家族に返す",r:"一度失われた試料は二度と取り戻せない。真相に迫る手段がなくなる。"},
-   {t:"夫を呼び出し、すぐに追及する",r:"死因も分からないまま追及しても、何も言わないだろう。"}]},
-  {q:"夫は「自分は那覇で別れた。妻が倒れたとき、そばにいなかった」と言う。アリバイは完璧に見える。",c:[
-   {t:"妻にかけられていた生命保険を調べる",ok:1,ev:"約1億8500万円の保険",r:"結婚して間もない妻に、4社で計約1億8500万円の生命保険がかけられていた。保険会社は支払いを拒み、夫は裁判を起こした。"},
+  {bg:"lab",d:["医師|33歳で、持病もない。心筋梗塞と書くしかないが……何かがおかしい。"],q:"あなたが解剖した医師の立場なら？",c:[
+   {t:"血液と臓器の一部を保存しておく",ok:1,ev:"保存された血液",bg:"evidence:vial",s:["医師|原因が分かるまで、この血液は捨てずに冷凍しておこう。"],r:"琉球大学の大野曜吉医師が残したこの血液が、数年後に事件を動かすことになる。"},
+   {t:"心不全として処理し、すべて家族に返す",r:"一度失われた試料は二度と取り戻せない。真相に迫る手段がなくなる。"},
+   {t:"夫を呼び出して、すぐに追及する",r:"死因も分からないまま追及しても、何も出てこない。"}]},
+  {bg:"office",d:["夫|僕は那覇で別れたんですよ。妻が倒れたとき、そばにはいなかった。","あなた|（アリバイは完璧だ。……完璧すぎる）"],q:"どこから崩す？",c:[
+   {t:"妻にかけられていた生命保険を調べる",ok:1,ev:"約1億8500万円の保険",s:["保険会社の担当者|結婚して間もない奥様に、4社で合わせて約1億8500万円です。支払いはお断りしています。"],r:"夫は保険金の支払いを求めて、保険会社を訴えていた。"},
    {t:"アリバイ成立とみて、病死で片づける",r:"誰もがそう考えた。だからこそ、犯人は「遅れて効く毒」を選んだのかもしれない。"},
-   {t:"同行した友人たちを疑う",r:"友人たちは最後まで妻を介抱していた。"}]},
-  {q:"保存されていた血液を調べると、トリカブトの毒アコニチンが検出された。だが、アコニチンは本来すぐ効く毒だ。なぜ1時間以上も遅れたのか？",c:[
-   {t:"別の毒も同時に使われていないか調べる",ok:1,ev:"二つの毒の打ち消し合い",r:"血液からはフグ毒テトロドトキシンも見つかった。二つの毒は体の中で互いの働きを打ち消し合う。先にフグ毒の効き目が弱まると、トリカブトの毒が一気に現れる。発症を遅らせるための組み合わせとみられた。"},
+   {t:"同行した友人たちを疑う",r:"友人たちは最後まで、彼女を必死に介抱していた。"}]},
+  {bg:"evidence:vial",d:["分析担当|保存されていた血液から、トリカブトの毒、アコニチンが出ました！","あなた|だが、アコニチンは飲めばすぐに効く毒のはずだ。1時間以上も遅れるか？"],q:"時間の謎をどう解く？",c:[
+   {t:"別の毒も同時に使われていないか調べる",ok:1,ev:"二つの毒の打ち消し合い",bg:"lab",s:["分析担当|もう一つ出ました。フグ毒、テトロドトキシンです！","医師|この二つは、体の中で互いの働きを打ち消し合う。フグ毒の効き目が先に切れると、トリカブトの毒が一気に現れるんです。"],r:"発症を遅らせ、アリバイの時間を作るための組み合わせとみられた。"},
    {t:"カプセルに入れて溶けるのを遅らせた、と考える",r:"捜査の初めには実際にこう考えられた。だが溶け方だけでは、時間の遅れを説明しきれなかった。"},
-   {t:"偶然、食べ物に毒が混じったと考える",r:"トリカブトとフグ毒が同時に偶然入るとは考えにくい。"}]},
-  {q:"この毒はどこから来たのか？",c:[
-   {t:"夫の周りの花屋や漁師を当たる",ok:1,ev:"大量の購入記録",r:"夫は花屋からトリカブトの鉢植えを大量に買い、漁師からは千匹を超えるクサフグを買い集めていた。借りていた部屋で毒を抽出していた疑いが強まった。"},
+   {t:"食べ物に偶然毒が混じったと考える",r:"トリカブトとフグ毒が同時に偶然入るとは考えにくい。"}]},
+  {bg:"port",d:["あなた|これだけの毒を、どこで手に入れた？"],q:"入手経路を追う。",c:[
+   {t:"夫の周りの花屋や漁師を当たる",ok:1,ev:"大量の購入記録",s:["花屋|トリカブトの鉢植えを、何十鉢もまとめて買っていった男の人がいましたよ。","漁師|クサフグを千匹以上。何に使うのかと思ったよ。"],r:"夫が借りていた部屋で、毒を取り出していた疑いが強まった。"},
    {t:"製薬会社の在庫を調べる",r:"毒は市販品ではなかった。"},
-   {t:"沖縄の植物園を当たる",r:"トリカブトは沖縄の植物ではない。手がかりにはならなかった。"}]},
-  {q:"夫の過去も気になる。",c:[
+   {t:"沖縄の植物園を当たる",r:"トリカブトは沖縄に生える植物ではない。手がかりにはならなかった。"}]},
+  {bg:"office",d:["あなた|この男の過去も、洗っておきたい。"],q:"何を調べる？",c:[
    {t:"夫の前の妻たちについて調べる",ok:1,ev:"前妻2人の急死",r:"夫の前の妻2人も、いずれも心臓の病気で突然亡くなっていた。"},
-   {t:"夫の勤め先の評判を聞く",r:"評判は悪くなかった。それ以上は分からない。"}]}
+   {t:"勤め先での評判を聞く",r:"評判は悪くなかった。それ以上は分からない。"}]}
  ],
  flaw:"「アリバイがある時刻に発症させる」という仕掛けは、毒を見つけられなければ完璧だった。誤算は、腑に落ちなかった医師が血液を捨てずに残したことだった。",
  key:"一人の法医学者の判断で保存された血液と、アコニチンとテトロドトキシンが打ち消し合うという毒物学の知見。",
- history:"夫は1991年に別の容疑（会社のお金の横領）で逮捕され、その後殺人の疑いで再逮捕された。最後まで否認したが、状況証拠を積み重ねて無期懲役が確定し、2012年に服役中に病死した。保険金目当ての毒殺と、時間差を使ったアリバイ工作として、日本の犯罪史に残る事件となった。"
+ history:"夫は1991年に別の容疑（会社のお金の横領）で逮捕され、その後殺人の疑いで再逮捕された。最後まで否認したが、状況証拠を積み重ねて無期懲役が確定し、2012年に服役中に病死した。"
 },
 {
- id:"pitchfork", year:1987, place:"イギリス・レスターシャー", title:"身代わりの血", sub:"ナーバラ事件",
- role:"あなたはレスターシャー警察の捜査員。",
- intro:["1983年と1986年、イングランドのナーバラ周辺で、15歳の少女が相次いで殺害された。手口はよく似ている。",
- "2件目の事件のあと、地元の17歳の少年が取り調べで犯行を認めた。捜査は解決に向かうかに見えた。"],
+ id:"pitchfork", year:1987, place:"イギリス・レスターシャー", title:"身代わりの血", sub:"ナーバラ事件", bg:"village", me:"あなた",
+ intro:["@village","1983年と1986年。イングランドの静かな村ナーバラの周辺で、15歳の少女が相次いで殺害された。手口はよく似ている。","村の住民|また同じ小道で……。もう子どもたちを外に出せないよ。",
+  "2件目の事件のあと、地元の17歳の少年が、取り調べで犯行を認めた。捜査は解決に向かうかに見えた。","あなたはレスターシャー警察の捜査員だ。"],
  steps:[
-  {q:"少年は2件目を自白したが、1件目は認めない。どうする？",c:[
-   {t:"レスター大学で開発されたばかりの「DNA指紋法」で照合する",ok:1,ev:"少年の無実",r:"遺伝学者アレック・ジェフリーズが鑑定すると、2件は同一人物による犯行で、しかも少年ではないと分かった。DNA鑑定で容疑者の無実が証明された世界最初の例とされる。"},
-   {t:"自白があるので、そのまま起訴する",r:"もし起訴していたら、無実の少年が罪を負い、真犯人は野放しになっていた。"},
+  {bg:"office",d:["少年|……僕が、やりました。","あなた|3年前の1件目は？","少年|それは……知りません。"],q:"少年は2件目だけを認めた。どうする？",c:[
+   {t:"レスター大学で開発されたばかりの「DNA指紋法」で照合する",ok:1,ev:"少年の無実",bg:"lab",s:["ジェフリーズ|結果が出ました。二つの事件は同じ人物の犯行です。","ジェフリーズ|そして、それはこの少年ではありません。"],r:"遺伝学者アレック・ジェフリーズの鑑定は、DNAで容疑者の無実が証明された世界最初の例とされる。"},
+   {t:"自白があるので、そのまま起訴する",r:"起訴していたら、無実の少年が罪を負い、真犯人は野放しになっていた。"},
    {t:"1件目についてさらに厳しく取り調べる",r:"自白を無理に引き出しても、真実には近づかない。"}]},
-  {q:"真犯人は別にいる。だが容疑者の当てがない。",c:[
-   {t:"周辺の村の成人男性全員に、血液と唾液の提供を求める",ok:1,ev:"約5000人のDNA調査",r:"世界初の大規模DNA調査が始まった。約5000人が協力したが、一致する者は出なかった。"},
-   {t:"前科のある人物だけに絞って調べる",r:"真犯人には目立つ前科がなかった。網にかからない。"},
+  {bg:"village",d:["上司|真犯人は別にいる。だが、手がかりが何もない。"],q:"どうやって探す？",c:[
+   {t:"周辺の村の成人男性全員に、血液と唾液の提供を求める",ok:1,ev:"約5000人のDNA調査",r:"世界で初めての大規模なDNA調査が始まった。約5000人が協力した。……だが、一致する者は出なかった。"},
+   {t:"前科のある人物だけに絞って調べる",r:"真犯人は、この網にはかからなかった。"},
    {t:"目撃情報を待つ",r:"新しい情報はほとんど来なかった。"}]},
-  {q:"5000人を調べても一致なし。迷宮入りの声も上がる。",c:[
-   {t:"誰かが身代わりで血液を出した可能性を考え、情報を募り続ける",ok:1,ev:"パブでの立ち話",r:"1987年、パブで一人の男が「同僚の代わりに血液を出した」と話しているのを、女性客が聞いていた。代わりに検査を受けた男イアン・ケリーは、パン工場の同僚コリン・ピッチフォークに頼まれていた。"},
-   {t:"「DNA鑑定は役に立たない」と見切りをつける",r:"科学ではなく、人のずるさが穴を開けていた。そこに気づかなければ解決はない。"},
-   {t:"範囲を広げて、もう一度全員に検査を求める",r:"同じ手口でまた身代わりを立てられたら、結果は変わらない。"}]},
-  {q:"ピッチフォークの身柄を確保した。",c:[
-   {t:"本人の血液を採り、現場の試料とDNAを照合する",ok:1,ev:"DNAの一致",r:"DNAは2件の現場の試料と一致した。"},
-   {t:"ケリーの証言だけで起訴する",r:"証言は重要だが、身代わりを頼んだ事実だけでは殺人を証明できない。"}]}
+  {bg:"pub",d:["上司|5000人調べて、一致なしか……。迷宮入りだな。","あなた|いや。網の目から、誰かがこぼれている。"],q:"何を疑う？",c:[
+   {t:"誰かが身代わりで血液を出した可能性を考え、情報を待つ",ok:1,ev:"パブでの立ち話",s:["女性客|パブで聞いちゃったの。パン工場の人が、同僚の代わりに血を採られたって。","ケリー|頼まれたんだよ。警察にいやな思い出があるから、代わりに行ってくれって……。"],r:"代わりに検査を受けたイアン・ケリーに頼んだのは、パン工場の同僚コリン・ピッチフォークだった。"},
+   {t:"DNA鑑定は役に立たないと見切りをつける",r:"科学ではなく、人のずるさが穴を開けていた。そこに気づかなければ解決はない。"},
+   {t:"範囲を広げて、もう一度全員を検査する",r:"同じ手口で身代わりを立てられたら、結果は変わらない。"}]},
+  {bg:"lab",d:["あなた|コリン・ピッチフォーク。今度こそ、本人の血だ。"],q:"身柄を確保した。",c:[
+   {t:"本人の血液を採り、現場の試料と照合する",ok:1,ev:"DNAの一致",s:["ジェフリーズ|一致しました。2件とも、です。"],r:"DNAが、ついに真犯人を名指しした。"},
+   {t:"ケリーの証言だけで起訴する",r:"身代わりを頼んだ事実だけでは、殺人は証明できない。"}]}
  ],
  flaw:"大規模なDNA調査をすり抜けるため、同僚に身代わりを頼んだこと。科学の網は破れたが、人の口までは封じられなかった。",
  key:"DNA指紋法の初の捜査利用。真犯人を突き止めただけでなく、無実の少年を救った。",
  history:"コリン・ピッチフォークは1988年に終身刑を言い渡された。DNA鑑定で有罪となった世界最初の人物とされる。2021年に仮釈放されたが、条件違反で数か月後に再び収監された。"
 },
 {
- id:"unabomber", year:1995, place:"アメリカ各地", title:"17年目の論文", sub:"ユナボマー事件",
- role:"あなたはFBIの特別捜査班（UNABOM捜査班）の一員。",
- intro:["1978年から17年間、大学や航空会社の関係者などに小包爆弾が送られ続けた。16個の爆弾で3人が亡くなり、20人以上が負傷した。",
- "爆弾は廃材から手作りされ、部品から店をたどることもできない。犯人は姿を見せず、FBI史上もっとも長く費用のかかった捜査の一つになっていた。"],
+ id:"unabomber", year:1995, place:"アメリカ各地", title:"17年目の論文", sub:"ユナボマー事件", bg:"cabin", me:"あなた",
+ intro:["@newspaper","1978年から17年間。大学や航空会社の関係者などに、小包爆弾が送られ続けた。","16個の爆弾で3人が亡くなり、20人以上が負傷した。",
+  "爆弾は廃材から手作りされ、部品から店をたどることもできない。犯人は姿を見せず、FBI史上もっとも長く費用のかかった捜査の一つになっていた。","あなたはFBIの特別捜査班の一員だ。"],
  steps:[
-  {q:"1995年、犯人から新聞社に手紙が届く。「3万5千語の論文を掲載すれば、人を殺す爆弾はやめる」。",c:[
-   {t:"掲載を勧める。誰かが文章に見覚えを持つかもしれない",ok:1,ev:"公開された論文",r:"司法長官とFBI長官の判断を受け、ワシントン・ポスト紙が1995年9月、ニューヨーク・タイムズ紙と費用を分け合って論文「産業社会とその未来」を掲載した。"},
+  {bg:"newspaper",d:["1995年。犯人から新聞社に手紙が届く。","犯人の手紙|3万5千語の論文を掲載せよ。そうすれば、人を殺す爆弾はやめる。","上司|新聞に載せろというのか。テロに屈したと言われるぞ。","上司|君の意見を聞かせてくれ。"],q:"どう進言する？",c:[
+   {t:"掲載を勧める。誰かが文章に見覚えを持つかもしれない",ok:1,ev:"公開された論文",r:"司法長官とFBI長官の判断を受け、1995年9月、ワシントン・ポスト紙がニューヨーク・タイムズ紙と費用を分け合って論文「産業社会とその未来」を掲載した。"},
    {t:"テロに屈するわけにはいかない。掲載を拒む",r:"爆弾は続き、手がかりはないまま。大事な機会を逃す。"},
-   {t:"偽の論文掲載で犯人をおびき出す",r:"犯人を怒らせれば、次の爆弾を招くおそれがある。"}]},
-  {q:"何千件もの情報が寄せられた。どれに注目する？",c:[
-   {t:"「兄の書く文章に似ている」という家族からの相談",ok:1,ev:"兄の昔の手紙",r:"デイヴィッド・カジンスキーは、妻に勧められて論文を読み、兄テッドの書く文章にそっくりだと気づいた。悩んだ末、弁護士を通じて兄の昔の手紙をFBIに渡した。"},
+   {t:"偽の掲載で犯人をおびき出す",r:"犯人を怒らせれば、次の爆弾を招くおそれがある。"}]},
+  {bg:"office",d:["電話番|情報提供の電話が鳴りやみません！ もう何千件です！"],q:"どれに注目する？",c:[
+   {t:"「兄の書く文章に似ている」という家族からの相談",ok:1,ev:"兄の昔の手紙",s:["デイヴィッド|兄を売るような気がして、何度も迷いました。","デイヴィッド|でも、もしまた誰かが死んだら……。"],r:"デイヴィッド・カジンスキーは妻に勧められて論文を読み、兄テッドの文章にそっくりだと気づいた。悩んだ末、弁護士を通じて兄の昔の手紙をFBIに渡した。"},
    {t:"論文の思想から、全米の大学の研究者を洗い出す",r:"対象が広すぎる。情報の山に埋もれていく。"},
    {t:"爆弾の部品から再び販売店をたどる",r:"17年やって分からなかったことは、もう一度やっても分からない。"}]},
-  {q:"論文と手紙をどう比べる？",c:[
-   {t:"独特の言い回しや綴りのくせを比べる",ok:1,ev:"独特の言い回し",r:"どちらにも、ふつうと逆の語順のことわざ「ケーキを食べつつ、持っておくことはできない」や、「冷静な論理家」といった表現が使われていた。言葉のくせを根拠に、捜索令状が認められた。"},
-   {t:"手紙の紙とインクの成分を比べる",r:"論文と手紙では書かれた時期も道具も違う。比べても答えは出ない。"},
-   {t:"ここで公開して、本人の反応を見る",r:"名前を出せば、証拠を処分されるおそれがある。"}]},
-  {q:"テッド・カジンスキーはモンタナ州リンカーンの山奥の小屋で、電気も水道もない暮らしをしていた。",c:[
-   {t:"小屋を囲み、令状を持って捜索する",ok:1,ev:"小屋の中の爆弾",r:"1996年4月3日、捜査員が小屋に入ると、作りかけの爆弾、部品、そして論文の原稿が見つかった。"},
-   {t:"町で本人を逮捕してから小屋を調べる",r:"町に出ない日も多い。その間に気づかれれば、小屋ごと証拠を失うかもしれない。"}]}
+  {bg:"evidence:letter",d:["言語分析官|論文と、兄の昔の手紙。並べてみましょう。"],q:"何を比べる？",c:[
+   {t:"独特の言い回しや綴りのくせ",ok:1,ev:"独特の言い回し",s:["言語分析官|ほら、どちらにも『ケーキを食べつつ、持っておくことはできない』と、ことわざを逆の順番で書いています。","言語分析官|『冷静な論理家』という言い方も同じだ。"],r:"言葉のくせを主な根拠に、捜索令状が認められた。"},
+   {t:"紙とインクの成分",r:"論文と手紙では書かれた時期も道具も違う。比べても答えは出ない。"},
+   {t:"ここで名前を公開して反応を見る",r:"名前を出せば、証拠を処分されるおそれがある。"}]},
+  {bg:"cabin",d:["モンタナ州リンカーン。山奥の小屋。","捜査員|電気も水道もない小屋です。煙突から煙が出ています。中にいます。"],q:"どう動く？",c:[
+   {t:"小屋を囲み、令状を持って捜索する",ok:1,ev:"小屋の中の爆弾",s:["捜査員|作りかけの爆弾を発見！ 部品と、論文の原稿もあります！"],r:"1996年4月3日、テッド・カジンスキーは逮捕された。"},
+   {t:"町に出てきたところを逮捕してから小屋を調べる",r:"何日も町に出ないことがある。その間に気づかれれば、証拠を失うかもしれない。"}]}
  ],
  flaw:"自分の思想を世に出したいという欲求。17年隠れおおせた男を捕まえたのは、指紋でも部品でもなく、文章のくせだった。",
  key:"文章のくせから書き手を特定する「法言語学」と、家族の重い決断。",
- history:"テッド・カジンスキーは元数学者で、若くしてカリフォルニア大学バークレー校の助教授になった人物だった。1998年に罪を認め、仮釈放なしの終身刑となり、2023年に獄中で亡くなった。弟デイヴィッドは、兄に死刑を求めないよう訴えていた。"
+ history:"テッド・カジンスキーは元数学者で、若くしてカリフォルニア大学バークレー校の助教授になった人物だった。1998年に罪を認めて仮釈放なしの終身刑となり、2023年に獄中で亡くなった。弟デイヴィッドは、兄に死刑を求めないよう訴えていた。"
 },
 {
- id:"antwerp", year:2003, place:"ベルギー・アントワープ", title:"食べかけのサンドイッチ", sub:"アントワープ・ダイヤモンド盗難事件",
- role:"あなたはベルギー警察のダイヤモンド犯罪担当の捜査員。",
- intro:["2003年2月の月曜の朝。世界のダイヤモンド取引の中心アントワープで、ダイヤモンド・センターの地下金庫が空になっているのが見つかった。",
- "金庫は地下2階。熱センサー、地震センサー、磁気センサー、1億通りの組み合わせのダイヤル錠など、何重もの防犯で守られていた。どこにも壊された跡がない。被害は1億ドル以上とも言われる。"],
+ id:"antwerp", year:2003, place:"ベルギー・アントワープ", title:"食べかけのサンドイッチ", sub:"アントワープ・ダイヤモンド盗難事件", bg:"vault", me:"あなた",
+ intro:["@vault","2003年2月、月曜の朝。世界のダイヤモンド取引の中心、アントワープ。","警備員|金庫の中の貸金庫が……ほとんど全部、空です！",
+  "地下2階の金庫は、熱センサー、磁気センサー、1億通りの組み合わせのダイヤル錠など、何重もの防犯で守られていた。","金庫の扉にも建物にも、こじ開けた跡がない。被害は1億ドル以上とも言われる。","あなたはベルギー警察のダイヤモンド犯罪担当の捜査員だ。"],
  steps:[
-  {q:"壊された跡がない。犯人はどうやって入った？",c:[
-   {t:"センターに事務所を借りていた者を洗う",ok:1,ev:"2年半前からのテナント",r:"イタリア人の宝石商レオナルド・ノタルバルトロは、2年半以上前から事務所と貸金庫を借り、建物に自由に出入りできた。内部を下見し続けていた疑いがある。"},
+  {bg:"vault",d:["あなた|扉を壊さずに、どうやってこの防犯を抜けた？","警備主任|鍵とダイヤルの番号を知らないと、絶対に無理ですよ。"],q:"どこから洗う？",c:[
+   {t:"センターに事務所を借りていた者を洗う",ok:1,ev:"2年半前からのテナント",r:"イタリア人の宝石商レオナルド・ノタルバルトロは、2年半以上前から事務所と貸金庫を借り、建物に自由に出入りしていた。内部を下見し続けていた疑いがある。"},
    {t:"外から侵入した痕跡を探し続ける",r:"何日探しても、穴もこじ開けた跡も見つからない。"},
    {t:"警備員を疑って取り調べる",r:"警備員は普段どおり見回りをしていた。何も見ていない。"}]},
-  {q:"事件の翌日、高速道路沿いの森の持ち主から「ゴミが不法投棄されている」と通報があった。ありふれた通報だ。",c:[
-   {t:"すぐに現場へ行き、ゴミを全部回収する",ok:1,ev:"森に捨てられたゴミ",r:"ダイヤモンド・センターの封筒、金庫の防犯カメラのビデオテープ、道具類、そして食べかけのサラミ・サンドイッチが見つかった。犯人たちは逃げる途中でゴミを燃やすつもりが、そのまま捨てていったらしい。"},
+  {bg:"forest",d:["森の持ち主（電話）|うちの森にゴミが捨てられてるんだ。ダイヤモンドなんとかって書いた封筒もあるぞ。","相棒|ただの不法投棄の通報ですよ。地元の役所の仕事でしょう。"],q:"どうする？",c:[
+   {t:"すぐに現場へ行き、ゴミを全部回収する",ok:1,ev:"森に捨てられたゴミ",r:"ダイヤモンド・センターの封筒、金庫の防犯カメラのビデオテープ、道具類、そして食べかけのサラミ・サンドイッチ。犯人たちは逃げる途中で燃やすつもりだったゴミを、そのまま捨てていったらしい。"},
    {t:"地元の役所に任せる",r:"ゴミが片づけられていたら、事件の最大の手がかりが消えていた。"},
    {t:"盗まれたダイヤの売り先を先に追う",r:"闇市場は口が堅い。何も出てこない。"}]},
-  {q:"ゴミの中で、犯人に直接つながりそうなものは？",c:[
-   {t:"サンドイッチに残った唾液のDNA",ok:1,ev:"サンドイッチのDNA",r:"DNAは、ノタルバルトロの仲間の一人フェルディナンド・フィノットのものと一致した。"},
+  {bg:"evidence:sandwich",d:["鑑識|サラミのサンドイッチ、食べかけです。唾液が残ってますね。"],q:"ゴミの中で、犯人に直接つながるものは？",c:[
+   {t:"サンドイッチに残った唾液のDNA",ok:1,ev:"サンドイッチのDNA",s:["鑑識|一致しました。フェルディナンド・フィノット。ノタルバルトロの仲間です。"],r:"食べかけのひと口が、犯人の名前を告げた。"},
    {t:"書類やレシートを一枚ずつ調べる",ok:1,ev:"犯行グループを示す書類",r:"書類の中から、ノタルバルトロたちの関わりを示すものが見つかった。"},
    {t:"道具の購入先を全国で探す",r:"どこでも手に入る道具だった。"}]},
-  {q:"事件後、ノタルバルトロはセンターに姿を見せた。どうする？",c:[
+  {bg:"office",d:["ノタルバルトロ|事件？ ひどい話だ。私の貸金庫は無事かね？"],q:"何食わぬ顔でセンターに現れた。どうする？",c:[
    {t:"事情を聴き、身柄を押さえる",ok:1,ev:"本人の確保",r:"彼は事件と無関係のふりをしていたが、集めた証拠がそれを許さなかった。"},
    {t:"泳がせて、仲間とダイヤの行方を追う",r:"国外に出られたら、二度と手が届かないかもしれない。"}]}
  ],
@@ -299,143 +512,205 @@ const CASES = [
  history:"ノタルバルトロは懲役10年の判決を受け、仲間たちも有罪になった。しかし盗まれたダイヤモンドのほとんどは今も見つかっていない。ノタルバルトロは後に「実は保険金詐欺に協力させられた」とも語ったが、真相は分かっていない。"
 },
 {
- id:"btk", year:2005, place:"アメリカ・カンザス州", title:"フロッピーの名前", sub:"BTK事件",
- role:"あなたはウィチタ警察の捜査員。",
- intro:["1974年から1991年にかけて、カンザス州ウィチタ周辺で10人が殺害された。犯人は自ら「BTK」と名乗り、新聞社や警察に挑発的な手紙を送りつけていた。",
- "事件はやがて途絶え、迷宮入りしたと思われた。だが2004年、事件30年を伝える新聞記事のあと、犯人から再び手紙が届き始めた。"],
+ id:"btk", year:2005, place:"アメリカ・カンザス州", title:"フロッピーの名前", sub:"BTK事件", bg:"screen:A:\\>dir/Test.A.rtf", me:"あなた",
+ intro:["@suburb","1974年から1991年。カンザス州ウィチタ周辺で、10人が殺害された。","犯人は自ら「BTK」と名乗り、新聞社や警察に挑発的な手紙を送りつけていた。",
+  "事件はやがて途絶え、迷宮入りしたと思われた。","@newspaper","だが2004年、事件30年を伝える新聞記事のあと。","記者|警察宛ての手紙が、うちに届きました。……BTKからです。","あなたはウィチタ警察の捜査員だ。"],
  steps:[
-  {q:"30年ぶりに届いた手紙。本物だと分かった。どうする？",c:[
-   {t:"報道を通じて、犯人とのやり取りを続ける",ok:1,ev:"犯人との文通",r:"犯人は自分の事件が忘れられることに耐えられないようだった。手紙や小包が次々と届き、そのたびに手がかりが増えた。"},
+  {bg:"newspaper",d:["上司|30年ぶりに、奴が出てきた。手紙は本物だ。"],q:"どうする？",c:[
+   {t:"報道を通じて、犯人とのやり取りを続ける",ok:1,ev:"犯人との文通",r:"犯人は、自分の事件が忘れられることに耐えられないようだった。手紙や小包が次々と届き、そのたびに手がかりが増えた。"},
    {t:"犯人を刺激しないよう、報道を止める",r:"注目されないと分かれば、犯人はまた沈黙するだろう。"},
    {t:"偽の情報を流して犯人を怒らせる",r:"新たな被害を招くおそれがある。"}]},
-  {q:"犯人からの質問。「フロッピーディスクで送ったら、私の居場所は分かるか？正直に答えろ。新聞の広告欄で」。",c:[
-   {t:"「レックス、大丈夫だ」と広告を出す",ok:1,ev:"罠の返答",r:"警察は犯人の求めどおり、新聞に返事を載せた。2005年2月、地元テレビ局にフロッピーディスクが届いた。"},
+  {bg:"evidence:letter",d:["あなた|犯人からの新しいメモだ。","BTKのメモ|フロッピーディスクで送ったら、私の居場所は分かるか？ 正直に答えろ。新聞の広告欄で。"],q:"どう答える？",c:[
+   {t:"「大丈夫だ」と広告を出す",ok:1,ev:"罠の返答",bg:"newspaper",s:["新聞広告|『レックス、大丈夫だ』"],r:"2005年2月、地元テレビ局に、紫色のフロッピーディスクが届いた。"},
    {t:"正直に「追跡できる」と答える",r:"犯人はフロッピーを使わないだろう。大きな機会が消える。"},
    {t:"返事をしない",r:"犯人は様子を見るだけだった。"}]},
-  {q:"フロッピーディスクには文書が一つだけ入っていた。どこを調べる？",c:[
-   {t:"消されたデータとファイルの作成者情報",ok:1,ev:"「クライスト・ルーテル教会」「デニス」",r:"作成者情報に「クライスト・ルーテル教会」と、「デニス」という名前が残っていた。教会のウェブサイトを見ると、教会評議会の会長はデニス・レイダー。"},
+  {bg:"evidence:floppy",d:["分析担当|中身は文書が一つだけ。でも、消したデータが残ってるかもしれません。"],q:"どこを調べる？",c:[
+   {t:"消されたデータとファイルの作成者情報",ok:1,ev:"「クライスト・ルーテル教会」「デニス」",bg:"screen:Author: Dennis/Org: Christ Lutheran Church",s:["分析担当|出ました！ 作成者『Dennis』。組織名『Christ Lutheran Church』！","あなた|教会のサイトを見ろ。評議会の会長は……デニス・レイダー。"],r:"30年追い続けた影に、名前がついた。"},
    {t:"文書の文面の言葉遣い",r:"手がかりにはなるが、それだけでは誰か分からない。"},
    {t:"フロッピーの購入店",r:"どこでも売っている品だった。"}]},
-  {q:"デニス・レイダーは町の条例監督官で、二人の子の父だった。逮捕の決め手が欲しい。",c:[
-   {t:"令状を取り、娘が以前受けた検査の保存試料のDNAを調べる",ok:1,ev:"家族のDNA",r:"娘の試料のDNAは、現場の試料の主の近親者のものだと示した。犯人は父親である可能性がきわめて高い。"},
+  {bg:"suburb",d:["あなた|デニス・レイダー。教会の評議会長で、町の条例監督官。二人の子の父親……。","上司|名前が残っていただけじゃ、殺人の証拠にはならんぞ。"],q:"逮捕の決め手をどう得る？",c:[
+   {t:"令状を取り、娘が以前受けた検査の保存試料を調べる",ok:1,ev:"家族のDNA",bg:"lab",s:["鑑識|娘さんのDNAは、現場の試料の主の近親者のものです。","あなた|父親だ。"],r:"2005年2月25日、デニス・レイダーは逮捕された。"},
    {t:"本人に直接DNAを出してほしいと頼む",r:"本人に警戒され、証拠を処分されるおそれがある。"},
    {t:"教会の名前だけで逮捕する",r:"名前が残っていただけでは、殺人の証拠にならない。"}]}
  ],
  flaw:"「注目されたい」という欲求で、30年の沈黙を自ら破ったこと。そして警察の「大丈夫」という言葉を信じたこと。",
  key:"フロッピーディスクに残った作成者情報（メタデータ）と、家族のDNAによる絞り込み。",
- history:"デニス・レイダーは2005年2月25日に逮捕され、10件の殺人を認めた。連続10回の終身刑となり、仮釈放の可能性はない。"
+ history:"デニス・レイダーは10件の殺人を認め、連続10回の終身刑となった。仮釈放の可能性はない。"
 },
 {
- id:"gsk", year:2018, place:"アメリカ・カリフォルニア州", title:"遠い親戚のDNA", sub:"ゴールデン・ステート・キラー事件",
- role:"あなたは未解決事件を追う捜査員。",
- intro:["1970年代から80年代にかけて、カリフォルニア州で少なくとも13人の殺害と、数十件の性的暴行、100件以上の侵入窃盗が起きた。犯人は覆面をかぶり、慎重に痕跡を消していた。",
- "現場の試料からDNAは採れていた。しかし、警察のDNAデータベースのどれとも一致しない。犯人は捕まったことがないのだ。事件から40年近くがたっていた。"],
+ id:"gsk", year:2018, place:"アメリカ・カリフォルニア州", title:"遠い親戚のDNA", sub:"ゴールデン・ステート・キラー事件", bg:"tree", me:"あなた",
+ intro:["@suburb","1970年代から80年代。カリフォルニア州で、少なくとも13人の殺害と数十件の性的暴行、100件以上の侵入窃盗が起きた。","犯人は覆面をかぶり、慎重に痕跡を消していた。",
+  "@lab","現場の試料からDNAは採れていた。しかし、警察のどのデータベースとも一致しない。犯人は、一度も捕まったことがないのだ。","事件から40年近くがたっていた。","あなたは未解決事件を追う捜査員だ。"],
  steps:[
-  {q:"警察のデータベースに一致はない。次の手は？",c:[
-   {t:"一般の人が先祖探しに使う家系図サイトにDNAを登録する",ok:1,ev:"遠い親戚の一致",r:"家系図サイト「GEDmatch」で照合すると、犯人の「またいとこ」程度の遠い親戚が見つかった。本人ではないが、家系の入り口になる。"},
+  {bg:"lab",d:["あなた|40年前の試料から採ったDNAだ。どのデータベースにも一致がない。","相棒|このまま、誰にも知られずに逃げ切るつもりか。"],q:"次の手は？",c:[
+   {t:"一般の人が先祖探しに使う家系図サイトにDNAを登録する",ok:1,ev:"遠い親戚の一致",bg:"tree",s:["相棒|出た！ 一致……ただし、またいとこ程度の遠い親戚だ。"],r:"家系図サイト「GEDmatch」で、犯人の遠い親戚が見つかった。本人ではないが、家系の入り口になる。"},
    {t:"同じデータベースで、もう一度照合し直す",r:"結果は変わらない。"},
    {t:"40年前の目撃証言を洗い直す",r:"記憶はとうに薄れていた。"}]},
-  {q:"遠い親戚から、家系図を作っていく。候補は何千人にもなる。",c:[
-   {t:"年齢、事件当時の住所、体格などで絞り込む",ok:1,ev:"家系図",r:"系図の専門家と数か月かけて系図を組み上げ、条件に合う一人が浮かんだ。72歳の元警察官、ジョセフ・ジェームズ・ディアンジェロ。"},
+  {bg:"tree",d:["系図の専門家|遠い親戚から何世代もさかのぼって、また下りてくる。地道な作業ですよ。","系図の専門家|候補は、何千人にもなります。"],q:"どう絞り込む？",c:[
+   {t:"年齢、事件当時の住所、体格などで絞り込む",ok:1,ev:"家系図",s:["系図の専門家|残ったのは、一人です。"],r:"72歳の元警察官、ジョセフ・ジェームズ・ディアンジェロ。"},
    {t:"親戚全員にDNAの提供を頼む",r:"人数が多すぎるうえ、話が本人に伝わってしまう。"}]},
-  {q:"候補者が見つかった。だがまだ決め手がない。",c:[
-   {t:"本人が捨てたものからDNAを採る",ok:1,ev:"捨てられたDNA",r:"捜査員は、ディアンジェロの車のドアハンドルと、ゴミとして捨てられたティッシュからDNAを採った。現場の試料と一致した。"},
-   {t:"本人に会って、DNAの提供を頼む",r:"元警察官の彼は、捜査の手口をよく知っている。警戒させるだけだ。"},
-   {t:"すぐに逮捕する",r:"一致を確かめる前に逮捕すれば、間違いだったとき取り返しがつかない。"}]}
+  {bg:"suburb",d:["あなた|元警察官……。捜査の手口を、誰よりもよく知っている男だ。","相棒|まだ決め手がない。どうする？"],q:"本人と確かめる方法は？",c:[
+   {t:"本人が捨てたものからDNAを採る",ok:1,ev:"捨てられたDNA",s:["捜査員|車のドアハンドルと、ゴミのティッシュから採取しました。","鑑識|……一致です。"],r:"2018年4月24日、ディアンジェロは自宅前で逮捕された。"},
+   {t:"本人に会って、DNAの提供を頼む",r:"警戒させるだけだ。"},
+   {t:"すぐに逮捕する",r:"一致を確かめる前に逮捕して間違いだったら、取り返しがつかない。"}]}
  ],
  flaw:"自分のDNAは残しても、警察のデータベースにない限り安全だと思っていたこと。だが、親戚のDNAまでは消せなかった。",
  key:"一般向け家系図サイトを使った「遺伝的系図捜査」。これ以降、多くの未解決事件がこの方法で解かれた。",
- history:"ディアンジェロは2018年4月24日に逮捕された。2020年に13件の殺人などを認め、仮釈放なしの終身刑となった。家系図サイトのデータを捜査に使うことには、プライバシーの面から議論が起き、サイト側の規約も見直された。"
+ history:"ディアンジェロは2020年に13件の殺人などを認め、仮釈放なしの終身刑となった。家系図サイトのデータを捜査に使うことには、プライバシーの面から議論が起き、サイト側の規約も見直された。"
 }
 ];
 
+/* ======================= engine ======================= */
 const LIMIT = 3;
-const app = document.getElementById('app');
-let S = null; // current case state
-let cleared = {};
-try{ cleared = JSON.parse(localStorage.getItem('abake-cleared')||'{}')||{}; }catch(e){ cleared = {}; }
-function save(){ try{ localStorage.setItem('abake-cleared', JSON.stringify(cleared)); }catch(e){} }
-const esc = s => String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const RANK = ['完全解明','解明','辛くも解明'];
+const app = document.getElementById('app');
+function esc(s){ return String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+let cleared={}, sound=true;
+try{ cleared = JSON.parse(localStorage.getItem('abake-cleared')||'{}')||{}; sound = localStorage.getItem('abake-sound')!=='0'; }catch(e){}
+function save(){ try{ localStorage.setItem('abake-cleared', JSON.stringify(cleared)); localStorage.setItem('abake-sound', sound?'1':'0'); }catch(e){} }
 
+/* sound: 拍子木 on card change, soft ticks while text types */
+let AC=null;
+function ac(){ if(!sound) return null; try{ AC = AC || new (window.AudioContext||window.webkitAudioContext)(); if(AC.state==='suspended') AC.resume(); }catch(e){ AC=null; } return AC; }
+function clack(){ const a=ac(); if(!a) return; [0,.13].forEach(t=>{ const n=a.createBufferSource(), b=a.createBuffer(1,a.sampleRate*.06,a.sampleRate), d=b.getChannelData(0);
+  for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,6); n.buffer=b; const f=a.createBiquadFilter(); f.type='bandpass'; f.frequency.value=1700+t*900; f.Q.value=6;
+  const g=a.createGain(); g.gain.value=.9; n.connect(f).connect(g).connect(a.destination); n.start(a.currentTime+t); }); }
+function tick(){ const a=ac(); if(!a) return; const o=a.createOscillator(), g=a.createGain(); o.frequency.value=720+Math.random()*80; g.gain.setValueAtTime(.025,a.currentTime); g.gain.exponentialRampToValueAtTime(.0001,a.currentTime+.04); o.connect(g).connect(a.destination); o.start(); o.stop(a.currentTime+.05); }
+function thud(bad){ const a=ac(); if(!a) return; const o=a.createOscillator(), g=a.createGain(); o.type=bad?'sawtooth':'triangle'; o.frequency.setValueAtTime(bad?140:520,a.currentTime); o.frequency.exponentialRampToValueAtTime(bad?60:880,a.currentTime+.25); g.gain.setValueAtTime(.12,a.currentTime); g.gain.exponentialRampToValueAtTime(.0001,a.currentTime+.35); o.connect(g).connect(a.destination); o.start(); o.stop(a.currentTime+.4); }
+
+let S=null;
 function home(){
-  S = null;
-  const done = Object.keys(cleared).length;
+  S=null;
+  const done = Object.values(cleared).filter(v=>v!=='cold').length;
   app.innerHTML = `
   <header class="hero">
     <div class="eyebrow">Case files · 実在の事件 ${CASES.length}件</div>
     <h1><span class="strike">完全犯罪</span>を暴け</h1>
-    <p>「完全犯罪」に近かった実在の事件を、捜査する側から追うゲーム。ひとつの判断ミスで、捜査は何週間、何年も遅れる。誤りが${LIMIT}回たまると事件は迷宮入りになる。犯人が見落とした一点を見つけ出そう。</p>
-    <div class="rules"><span>選択で証拠を集める</span><span>誤り${LIMIT}回で迷宮入り</span><span>解決後に史実の解説</span><span class="mono">解決 ${done}/${CASES.length}</span></div>
+    <p>「完全犯罪」に近かった実在の事件を、捜査する側から追う紙芝居ゲーム。関係者の話を聞き、証拠を選ぶ。判断を誤るたびに捜査は遅れ、${LIMIT}回で迷宮入りになる。犯人が見落とした一点を見つけ出そう。</p>
+    <div class="rules"><span>タップで話が進む</span><span>選択で証拠を集める</span><span>誤り${LIMIT}回で迷宮入り</span><span class="mono">解決 ${done}/${CASES.length}</span></div>
   </header>
   <div class="list">
-    ${CASES.map((c,i)=>{
-      const r = cleared[c.id];
-      const seal = r==null ? `<span class="seal none">未着手</span>` : (r==='cold'?`<span class="seal none">迷宮入り</span>`:`<span class="seal">${RANK[r]}</span>`);
-      return `<button class="case" data-i="${i}"><span class="yr">${c.year}</span><span class="nm"><b>${esc(c.title)}</b><small>${esc(c.sub)}・${esc(c.place)}</small></span>${seal}</button>`;
-    }).join('')}
+    ${CASES.map((c,i)=>{ const r=cleared[c.id];
+      const seal = r==null?`<span class="seal none">未着手</span>`:(r==='cold'?`<span class="seal none">迷宮入り</span>`:`<span class="seal">${RANK[r]}</span>`);
+      return `<button class="case" data-i="${i}"><span class="thumb">${sceneSVG(c.intro[0][0]==='@'?c.intro[0].slice(1):c.bg)}</span><span class="nm"><span class="yr">${c.year} ・ ${esc(c.place)}</span><b>${esc(c.title)}</b><small>${esc(c.sub)}</small></span>${seal}</button>`; }).join('')}
   </div>
-  <p class="note">登場する事件はすべて実在の事件です。亡くなった方とご家族がいる出来事として、暴力の描写は控えています。史実を元に、ゲームとして場面と選択肢を組み立てました。事実関係に諸説ある部分は解説で触れています。</p>`;
+  <p class="note">登場する事件はすべて実在の事件です。亡くなった方とご家族がいる出来事として、暴力の描写は控えています。史実をもとに、場面と会話はゲーム用に組み立てた創作を含みます。事実関係に諸説ある部分は解説で触れています。</p>`;
   app.querySelectorAll('.case').forEach(b=>b.onclick=()=>start(+b.dataset.i));
   window.scrollTo(0,0);
 }
 
 function start(i){
-  S = {i, step:-1, strikes:0, ev:[], dis:new Set(), res:null, fresh:null};
-  render();
+  const c=CASES[i];
+  S={i, step:-1, strikes:0, ev:[], dis:new Set(), queue:[], qi:0, after:null, typing:null, full:'', scene:null};
+  app.innerHTML = `
+  <div class="bar"><div class="l"><button class="sbtn" id="back">← 事件一覧</button><button class="sbtn" id="snd">音 ${sound?'ON':'OFF'}</button></div><div class="delay" id="delay"></div></div>
+  <div class="file"><h2>${esc(c.title)}</h2><div class="meta">${c.year} ・ ${esc(c.place)} ・ ${esc(c.sub)}</div></div>
+  <div class="board" id="board"></div>
+  <div class="stage"><div class="card" id="card"></div></div>
+  <div class="dlg" id="dlg" tabindex="0" role="button" aria-label="次へ"><span class="who" id="who" hidden></span><div class="txt" id="txt"></div><span class="more" id="more">▼ タップで次へ</span></div>
+  <div class="choices" id="choices"></div>`;
+  document.getElementById('back').onclick=()=>{ stopType(); home(); };
+  document.getElementById('snd').onclick=e=>{ sound=!sound; save(); e.target.textContent='音 '+(sound?'ON':'OFF'); };
+  const dlg=document.getElementById('dlg');
+  dlg.onclick=advance; dlg.onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); advance(); } };
+  drawDelay(); drawBoard();
+  setScene(c.bg, true);
+  play(c.intro, ()=>startStep(0));
 }
 
-function header(c){
-  return `<div class="bar"><button class="back" id="back">← 事件一覧</button>
-  <div class="delay">捜査の遅れ ${Array.from({length:LIMIT},(_,k)=>`<i class="${k<S.strikes?'on':''}"></i>`).join('')}</div></div>
-  <div class="file"><div class="meta">${c.year} ・ ${esc(c.place)} ・ ${esc(c.sub)}</div><h2>${esc(c.title)}</h2></div>
-  <div class="board"><span class="lbl">証拠</span>${S.ev.length?S.ev.map(e=>`<span class="chip ${e===S.fresh?'new':''}">${esc(e)}</span>`).join(''):'<span class="lbl">まだない</span>'}</div>`;
+function drawDelay(){ document.getElementById('delay').innerHTML='捜査の遅れ '+Array.from({length:LIMIT},(_,k)=>`<i class="${k<S.strikes?'on':''}"></i>`).join(''); }
+function drawBoard(fresh){ document.getElementById('board').innerHTML = `<span class="lbl">証拠</span>`+(S.ev.length?S.ev.map(e=>`<span class="chip ${e===fresh?'new':''}">${esc(e)}</span>`).join(''):'<span class="lbl">まだない</span>'); }
+
+function setScene(spec, instant){
+  if(!spec || spec===S.scene) return;
+  S.scene=spec;
+  const card=document.getElementById('card'); if(!card) return;
+  const old=card.querySelector('.layer:not(.out)');
+  const nl=document.createElement('div'); nl.className='layer'; nl.innerHTML=sceneSVG(spec);
+  card.insertBefore(nl, card.firstChild);
+  if(old && !instant){ old.classList.add('out'); clack(); setTimeout(()=>old.remove(),720); }
+  else if(old) old.remove();
+}
+function stamp(text, bad){
+  const card=document.getElementById('card'); if(!card) return;
+  const s=document.createElement('div'); s.className='stampov '+(bad?'bad':'good'); s.innerHTML=`<span>${esc(text)}</span>`;
+  card.appendChild(s); setTimeout(()=>s.remove(),950);
+  if(bad){ card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake'); }
+  thud(bad);
 }
 
-function render(){
-  const c = CASES[S.i];
-  if(S.step===-1){
-    app.innerHTML = header(c) + `<div class="scene"><div class="step">事件の概要</div>${c.intro.map(p=>`<p>${esc(p)}</p>`).join('')}<p><b>${esc(c.role)}</b></p></div>
-    <button class="go" id="go">捜査を始める</button>`;
-    bind(); document.getElementById('go').onclick=()=>{S.step=0;S.dis=new Set();S.res=null;render();window.scrollTo(0,0)};
-    return;
-  }
-  const st = c.steps[S.step];
-  let html = header(c) + `<div class="scene"><div class="step mono">捜査 ${S.step+1} / ${c.steps.length}</div><p>${esc(st.q)}</p></div>`;
-  if(S.res && S.res.ok){
-    html += `<div class="res"><h3>手がかりを得た：${esc(S.res.ev)}</h3><p>${esc(S.res.r)}</p></div>
-      <button class="go" id="next">${S.step+1<c.steps.length?'次の捜査へ':'捜査の結末へ'}</button>`;
-  } else {
-    html += `<div class="choices">${st.c.map((ch,k)=>`<button class="ch" data-k="${k}" ${S.dis.has(k)?'disabled':''}>${esc(ch.t)}</button>`).join('')}</div>`;
-    if(S.res) html += `<div class="res bad"><h3>捜査が遅れた</h3><p>${esc(S.res.r)}</p></div>`;
-  }
-  app.innerHTML = html; bind();
-  app.querySelectorAll('.ch').forEach(b=>b.onclick=()=>pick(+b.dataset.k));
-  const n = document.getElementById('next');
-  if(n) n.onclick=()=>{ S.step++; S.dis=new Set(); S.res=null; S.fresh=null; if(S.step>=c.steps.length) end(false); else {render(); window.scrollTo(0,0);} };
+function play(lines, after){ S.queue=lines.slice(); S.qi=0; S.after=after; document.getElementById('choices').innerHTML=''; showLine(); }
+function showLine(){
+  while(S.qi<S.queue.length && S.queue[S.qi][0]==='@'){ setScene(S.queue[S.qi].slice(1)); S.qi++; }
+  if(S.qi>=S.queue.length){ const f=S.after; S.after=null; if(f) f(); return; }
+  const line=S.queue[S.qi]; const k=line.indexOf('|');
+  const who=document.getElementById('who'), txt=document.getElementById('txt');
+  let name='', body=line;
+  if(k>0){ name=line.slice(0,k); body=line.slice(k+1); }
+  if(name){ who.hidden=false; who.textContent=name; who.style.background = nameColor(name); }
+  else who.hidden=true;
+  txt.className='txt'+(name?'':' narr')+(/^（.*）$/.test(body)?' think':'');
+  typeText(txt, body);
+  document.getElementById('more').hidden=false;
+}
+function nameColor(n){ const me=CASES[S.i].me; if(n===me||n==='あなた') return '#e8b923';
+  const pal=['#cfd6de','#f0b7a8','#a8d0f0','#b8e0b0','#e0c8f0','#f0d8a0']; let h=0; for(const ch of n) h=(h*31+ch.charCodeAt(0))%997; return pal[h%pal.length]; }
+function typeText(el, s){
+  stopType(); S.full=s; el.textContent=''; let i=0;
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduce){ el.textContent=s; return; }
+  S.typing=setInterval(()=>{ i++; el.textContent=s.slice(0,i); if(i%3===0) tick(); if(i>=s.length) stopType(); }, 32);
+}
+function stopType(){ if(S&&S.typing){ clearInterval(S.typing); S.typing=null; } }
+function advance(){
+  if(!S || S.qi>=S.queue.length) return;
+  if(S.typing){ stopType(); document.getElementById('txt').textContent=S.full; return; }
+  S.qi++; showLine();
 }
 
-function bind(){ const b=document.getElementById('back'); if(b) b.onclick=home; }
-
+function startStep(k){
+  const c=CASES[S.i]; S.step=k; S.dis=new Set();
+  const st=c.steps[k];
+  setScene(st.bg);
+  play([...(st.d||[]), st.q], showChoices);
+}
+function showChoices(){
+  const st=CASES[S.i].steps[S.step];
+  document.getElementById('more').hidden=true;
+  const box=document.getElementById('choices');
+  box.innerHTML = `<div class="hint mono">捜査 ${S.step+1} / ${CASES[S.i].steps.length}</div>` + st.c.map((ch,k)=>`<button class="ch" data-k="${k}" ${S.dis.has(k)?'disabled':''}>${esc(ch.t)}</button>`).join('');
+  box.querySelectorAll('.ch').forEach(b=>b.onclick=()=>pick(+b.dataset.k));
+  ac();
+}
 function pick(k){
-  const ch = CASES[S.i].steps[S.step].c[k];
+  const c=CASES[S.i], st=c.steps[S.step], ch=st.c[k];
+  document.getElementById('choices').innerHTML='';
+  if(ch.bg) setScene(ch.bg);
   if(ch.ok){
-    S.res = ch; S.ev.push(ch.ev); S.fresh = ch.ev;
+    S.ev.push(ch.ev);
+    setTimeout(()=>{ stamp('証拠', false); drawBoard(ch.ev); }, ch.bg?650:0);
+    play([...(ch.s||[]), ch.r, `手がかりを得た：${ch.ev}`], ()=>{
+      if(S.step+1<c.steps.length) startStep(S.step+1); else end(false);
+    });
   } else {
-    S.res = ch; S.dis.add(k); S.strikes++;
-    if(S.strikes>=LIMIT){ render(); setTimeout(()=>end(true), 0); return; }
+    S.dis.add(k); S.strikes++; drawDelay(); stamp('捜査遅延', true);
+    play([...(ch.s||[]), ch.r], ()=>{
+      if(S.strikes>=LIMIT) end(true);
+      else { setScene(st.bg); play([st.q], showChoices); }
+    });
   }
-  render();
 }
 
 function end(cold){
-  const c = CASES[S.i];
-  const prev = cleared[c.id];
+  stopType();
+  const c=CASES[S.i], prev=cleared[c.id];
   if(cold){ if(prev==null) cleared[c.id]='cold'; }
-  else { const r = Math.min(S.strikes,2); if(prev==null||prev==='cold'||r<prev) cleared[c.id]=r; }
+  else { const r=Math.min(S.strikes,2); if(prev==null||prev==='cold'||r<prev) cleared[c.id]=r; }
   save();
-  const last = cold ? `<div class="res bad" style="margin-top:18px"><h3>最後の誤り</h3><p>${esc(S.res.r)}</p></div>` : '';
-  app.innerHTML = header(c) + last + `
+  app.innerHTML = `
+  <div class="bar"><div class="l"><button class="sbtn" id="back">← 事件一覧</button></div><div class="delay" id="delay"></div></div>
+  <div class="file"><h2>${esc(c.title)}</h2><div class="meta">${c.year} ・ ${esc(c.place)} ・ ${esc(c.sub)}</div></div>
+  <div class="board" id="board"></div>
   <div class="verdict">
     <div class="big ${cold?'cold':''}">${cold?'迷宮入り':RANK[Math.min(S.strikes,2)]}</div>
     <div class="mono" style="color:var(--mute);font-size:13px">誤り ${S.strikes} 回 ・ 証拠 ${S.ev.length} 点</div>
@@ -444,9 +719,10 @@ function end(cold){
   <div class="sec"><h3>犯人の誤算</h3><p>${esc(c.flaw)}</p></div>
   <div class="sec"><h3>捜査を動かしたもの</h3><p>${esc(c.key)}</p></div>
   <div class="sec"><h3>その後の史実</h3><p>${esc(c.history)}</p></div>
-  <div class="sec"><h3>正しい捜査の流れ</h3><dl class="facts">${c.steps.map((s,k)=>{const g=s.c.filter(x=>x.ok);return `<dt>${k+1}</dt><dd>${g.map(x=>esc(x.t)).join(' / ')}</dd>`}).join('')}</dl></div>
+  <div class="sec"><h3>正しい捜査の流れ</h3><dl class="facts">${c.steps.map((s,k)=>`<dt>${k+1}</dt><dd>${s.c.filter(x=>x.ok).map(x=>esc(x.t)).join(' / ')}</dd>`).join('')}</dl></div>
   <button class="go" id="retry">${cold?'もう一度捜査する':'別の事件へ'}</button>`;
-  bind();
+  drawDelay(); drawBoard();
+  document.getElementById('back').onclick=home;
   document.getElementById('retry').onclick = cold ? ()=>start(S.i) : home;
   window.scrollTo(0,0);
 }
