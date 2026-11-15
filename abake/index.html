@@ -1,0 +1,455 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>完全犯罪を暴け</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout: one narrow case-file column; a sticky dossier header, an evidence strip, scene text, then choices. */
+:root{
+  --bg:#e9edf1; --paper:#f8fafb; --ink:#18202a; --mute:#5d6874; --line:#c9d1d9;
+  --tag:#e8b923; --tagink:#2a2205; --stamp:#b8322a; --ok:#2f7d55;
+  --f-disp:'Dela Gothic One','Hiragino Sans','Yu Gothic',sans-serif;
+  --f-body:'Zen Kaku Gothic New','Hiragino Sans','Yu Gothic',system-ui,sans-serif;
+  --f-mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f141a; --paper:#18202a; --ink:#e4e9ee; --mute:#94a0ac; --line:#2c3743;
+  --tag:#e3b42a; --tagink:#221b03; --stamp:#e2574c; --ok:#5cbf8a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f141a; --paper:#18202a; --ink:#e4e9ee; --mute:#94a0ac; --line:#2c3743;
+  --tag:#e3b42a; --tagink:#221b03; --stamp:#e2574c; --ok:#5cbf8a; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{font-family:var(--f-body);font-size:16px;line-height:1.8;margin:0}
+.wrap{max-width:720px;margin:0 auto;padding-block:20px 48px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:3px solid var(--tag);outline-offset:2px}
+h1,h2,h3{margin:0;text-wrap:balance;font-weight:400}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.12em;color:var(--mute);text-transform:uppercase}
+
+/* title */
+.hero{display:grid;gap:14px;padding-block:24px 8px}
+.hero h1{font-family:var(--f-disp);font-size:clamp(34px,9vw,58px);line-height:1.1;letter-spacing:.02em}
+.hero h1 .strike{position:relative;display:inline-block}
+.hero h1 .strike::after{content:"";position:absolute;left:-4%;right:-4%;top:52%;height:.12em;background:var(--stamp);transform:rotate(-4deg)}
+.hero p{margin:0;color:var(--mute);max-width:60ch}
+.rules{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.rules span{font-size:13px;border:1px solid var(--line);border-radius:4px;padding:2px 10px;background:var(--paper)}
+
+.list{display:grid;gap:10px;margin-top:24px}
+.case{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;text-align:left;
+  background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:14px 16px;width:100%}
+.case:hover{border-color:var(--mute)}
+.case .yr{font-family:var(--f-mono);font-weight:600;font-size:15px;color:var(--mute);width:3.2em}
+.case .nm{min-width:0}
+.case .nm b{display:block;font-weight:700;font-size:16.5px;line-height:1.5}
+.case .nm small{color:var(--mute);font-size:13px}
+.seal{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;border:2px solid var(--stamp);color:var(--stamp);
+  padding:1px 6px;border-radius:3px;transform:rotate(-6deg);white-space:nowrap}
+.seal.none{border-color:var(--line);color:var(--mute);transform:none}
+
+/* case screen */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:10px;
+  display:flex;gap:12px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.back{background:none;border:1px solid var(--line);border-radius:4px;padding:4px 12px;font-size:14px}
+.delay{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--mute)}
+.delay i{width:12px;height:12px;border-radius:50%;border:2px solid var(--stamp);display:inline-block}
+.delay i.on{background:var(--stamp)}
+.file{display:grid;gap:6px;padding-block:22px 6px}
+.file h2{font-family:var(--f-disp);font-size:clamp(24px,6vw,34px);line-height:1.3}
+.file .meta{font-family:var(--f-mono);font-size:13px;color:var(--mute)}
+.board{display:flex;flex-wrap:wrap;gap:8px;min-height:32px;padding-block:12px}
+.board .lbl{font-size:12px;color:var(--mute);align-self:center;margin-right:2px}
+.chip{background:var(--tag);color:var(--tagink);font-size:13px;font-weight:700;padding:3px 10px 3px 18px;border-radius:2px;position:relative;line-height:1.5}
+.chip::before{content:"";position:absolute;left:6px;top:50%;width:6px;height:6px;margin-top:-3px;border-radius:50%;background:var(--bg)}
+.chip.new{animation:pop .5s ease}
+@keyframes pop{0%{transform:scale(.6)}70%{transform:scale(1.08)}100%{transform:scale(1)}}
+.scene{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:18px 18px 8px;margin-top:6px}
+.scene p{margin:0 0 12px}
+.step{font-family:var(--f-mono);font-size:12px;color:var(--mute);letter-spacing:.1em;margin-bottom:6px}
+.choices{display:grid;gap:10px;margin-top:16px}
+.ch{text-align:left;background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--ink);border-radius:4px;padding:12px 14px;line-height:1.6}
+.ch:hover:not(:disabled){border-color:var(--ink)}
+.ch:disabled{opacity:.45;cursor:default;text-decoration:line-through;border-left-color:var(--stamp)}
+.res{margin-top:16px;border-radius:6px;padding:14px 16px;border:2px solid var(--ok);background:var(--paper)}
+.res.bad{border-color:var(--stamp)}
+.res h3{font-size:15px;font-weight:700;margin-bottom:4px;color:var(--ok)}
+.res.bad h3{color:var(--stamp)}
+.res p{margin:0}
+.go{margin-top:14px;width:100%;background:var(--ink);color:var(--bg);border:0;border-radius:4px;padding:12px;font-weight:700;font-size:16px}
+
+/* ending */
+.verdict{text-align:center;padding-block:28px 10px;display:grid;gap:10px;justify-items:center}
+.verdict .big{font-family:var(--f-disp);font-size:clamp(30px,8vw,46px);color:var(--stamp);border:4px solid var(--stamp);padding:4px 18px;transform:rotate(-3deg);border-radius:4px}
+.verdict .big.cold{color:var(--mute);border-color:var(--mute)}
+.sec{margin-top:22px}
+.sec h3{font-family:var(--f-disp);font-size:18px;margin-bottom:8px}
+.sec p{margin:0 0 10px}
+.facts{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:14.5px;background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:14px 16px}
+.facts dt{font-family:var(--f-mono);color:var(--mute);font-size:13px;padding-top:2px}
+.facts dd{margin:0;min-width:0}
+.note{font-size:13px;color:var(--mute);margin-top:28px;max-width:60ch}
+@media (prefers-reduced-motion:reduce){.chip.new{animation:none}}
+@media (max-width:420px){.case{grid-template-columns:1fr auto}.case .yr{grid-column:1/-1;width:auto}}
+</style>
+
+<div class="wrap" id="app"></div>
+
+<script>
+const CASES = [
+{
+ id:"crippen", year:1910, place:"イギリス・ロンドン", title:"地下室の煉瓦", sub:"クリッペン事件",
+ role:"あなたはロンドン警視庁（スコットランドヤード）のウォルター・デュー警部。",
+ intro:["1910年2月。ロンドン北部ヒルドロップ・クレセント39番地に住むアメリカ人医師ホーリー・ハーヴェイ・クリッペンの妻で、舞台歌手のコーラ（芸名ベル・エルモア）が突然姿を消した。",
+ "夫は「親族に会いにアメリカへ行った」と言い、しばらくして「向こうで病死した」と知らせた。遺体も死亡証明もない。歌手仲間の女性たちが不審に思い、警察に相談してきた。"],
+ steps:[
+  {q:"夫人の友人たちの話を聞いた。まず何を確かめる？",c:[
+   {t:"夫の周辺に変わったことがないか確かめる",ok:1,ev:"夫人の宝石をつけた愛人",r:"夫の若い秘書エセル・ル・ニーヴが同居を始め、夫人のブローチや毛皮を身につけて舞踏会に現れていた。妻を亡くしたばかりの男にしては、あまりに早い。"},
+   {t:"アメリカに死亡記録を照会し、返事を待つ",r:"大西洋をまたぐ照会には何週間もかかる。その間、夫は何事もなく暮らし続けた。"},
+   {t:"根拠はなくても夫をすぐ逮捕する",r:"遺体も証拠もない段階での逮捕は認められない。上司に止められ、時間だけが過ぎた。"}]},
+  {q:"7月8日、クリッペンに事情聴取した。彼はあっさり「死んだというのは嘘だった。妻は別の男とアメリカへ駆け落ちした。恥をかきたくなかった」と認めた。家の中を見せてもらったが、異常は見つからない。どうする？",c:[
+   {t:"長い供述を一言ずつ書き取り、署名させる",ok:1,ev:"嘘を認めた供述書",r:"供述書は数時間がかりになった。この記録が、後で彼の説明の矛盾を突く材料になる。数日後に再訪すると、クリッペンとエセルは姿を消していた。逃げたこと自体が何よりの答えだった。"},
+   {t:"話の筋は通っているので、捜査を終える",r:"上司に報告書を出しかけたところで、彼らが突然いなくなったと知らせが来た。初動の遅れは取り戻せない。"},
+   {t:"駆け落ち相手の男を新聞広告で探す",r:"名乗り出る者はいない。そもそもその男が実在するのかも分からない。"}]},
+  {q:"二人は逃げた。空き家になった家を前に、何をする？",c:[
+   {t:"家じゅう、特に地下の石炭庫を徹底的に調べる",ok:1,ev:"煉瓦床の下の遺体",r:"3日目、地下室の煉瓦の床を火かき棒で突くと、一部がゆるんでいた。掘り下げると、石灰に包まれた人の遺体の一部が見つかった。頭部も骨格もない。"},
+   {t:"ロンドン中の港に見張りを立てる",r:"すでに大陸へ渡った後だった。家に何が残っているかを見ないまま、時間を使ってしまった。"},
+   {t:"エセルの家族を問い詰める",r:"家族は本当に何も知らなかった。"}]},
+  {q:"遺体には頭部も骨もなく、男か女かさえ簡単には分からない。身元を示すものは？",c:[
+   {t:"皮膚片に残った古い手術痕を調べる",ok:1,ev:"手術痕のある皮膚片",r:"病理学者バーナード・スピルズベリーが顕微鏡で調べ、腹部の手術の傷跡だと証言した。コーラ夫人は以前、腹部の手術を受けていた。"},
+   {t:"一緒に埋まっていた寝間着の切れ端を調べる",ok:1,ev:"寝間着のラベル",r:"ラベルから、クリッペン夫妻が引っ越した後に売られた品だと分かった。遺体は前の住人ではなく、夫妻が住んでいた時期に埋められたことになる。"},
+   {t:"骨格から身長を推定する",r:"骨がない。犯人は身元が分からないよう、骨と頭部をどこかへ処分していた。"}]},
+  {q:"遺体からは植物性の毒ヒヨスチンが検出された。そこへ大西洋上の客船モントローズ号から無線電報が届く。「クリッペンと共犯者らしき二人が乗船。連れは少年に変装している」。どうする？",c:[
+   {t:"もっと速い船ローレンティック号で先回りする",ok:1,ev:"船長の無線電報",r:"デューはモントローズ号より先にカナダへ着き、水先案内人に変装して乗り込んだ。「おはようございます、クリッペン先生。私をご存じですね」。"},
+   {t:"カナダに着くまで待ち、現地の警察に任せる",r:"大西洋の上では管轄も手続きもあいまいになる。確実に身柄を押さえる機会を逃しかけた。"},
+   {t:"船長に、その場で二人を拘束させる",r:"民間の船長に逮捕の権限はない。下手に騒げば二人に気づかれる。"}]}
+ ],
+ flaw:"死んだとする嘘と、妻の宝石を身につけた愛人。そして事情聴取の後の逃亡が、疑いを確信に変えた。",
+ key:"顕微鏡による皮膚片の鑑定と、当時最新だった船の無線電信。逃亡中の容疑者が無線のおかげで捕まった、最初期の例として知られる。",
+ history:"1910年7月31日、カナダのファーザー・ポイント沖で逮捕。クリッペンは有罪となり、同年11月に絞首刑。エセルは無罪になった。なお2007年、米国の研究者が遺体の組織のDNAを調べ、女性ではなかった可能性を報告した。この結果には異論もあり、議論は今も続いている。"
+},
+{
+ id:"leopold", year:1924, place:"アメリカ・シカゴ", title:"天才たちの「完全犯罪」", sub:"レオポルドとローブ事件",
+ role:"あなたはシカゴ警察と検察の捜査チームの一員。",
+ intro:["1924年5月21日、シカゴの名門校に通う14歳のボビー・フランクスが下校途中に姿を消した。その夜、家族のもとに「ジョージ・ジョンソン」と名乗る人物から、身代金1万ドルを要求するタイプ打ちの手紙が届く。",
+ "しかし翌朝、少年はインディアナ州境に近い湿地の排水溝で遺体となって見つかった。身元を隠そうとした跡もある。犯人は、自分たちを法の外にいる「超人」だと考え、完全犯罪を計画していた。"],
+ steps:[
+  {q:"遺体のそばを調べた。何を優先する？",c:[
+   {t:"排水溝の近くに落ちていた角縁の眼鏡",ok:1,ev:"現場の眼鏡",r:"少年のものではない。犯人が落としたのかもしれない。"},
+   {t:"身代金の受け渡し場所で張り込む",r:"遺体が見つかったと報じられ、犯人は現れなかった。"},
+   {t:"少年の学校の教師たちを取り調べる",r:"実際にも教師が疑われて拘束されたが、無関係だった。見当違いの捜査で数日が過ぎた。"}]},
+  {q:"眼鏡のレンズはありふれた度数だった。どこを追う？",c:[
+   {t:"蝶番（ちょうつがい）の製造元と販売先",ok:1,ev:"珍しい蝶番",r:"ニューヨークのボブロー社の特殊な蝶番だった。シカゴでこの眼鏡を扱ったのは1店だけで、買ったのは3人。そのうちの1人が、19歳の大学院生ネイサン・レオポルドだった。"},
+   {t:"市内の眼科医を総当たりする",r:"同じ度数の患者は数え切れない。手がかりは埋もれた。"},
+   {t:"眼鏡についた指紋を採る",r:"当時の技術と現場の状態では、使える指紋は採れなかった。"}]},
+  {q:"レオポルドは「野鳥観察であの辺りへ行ったとき落とした」と言う。事件当日は友人リチャード・ローブと、自分の車で女の子二人とドライブしていたという。どこを崩す？",c:[
+   {t:"レオポルド家のお抱え運転手に、当日の車の様子を聞く",ok:1,ev:"崩れたアリバイ",r:"運転手は「あの日、車は一日じゅう車庫で修理していた」と答えた。二人が乗っていたという車は、どこにも行っていない。"},
+   {t:"ドライブ相手の女の子二人を探す",r:"名前もあだ名だけで、見つからない。それ自体があやしいが、決め手にならない。"},
+   {t:"ローブの家族に話を聞く",r:"裕福な家族は弁護士を通じてしか話さなかった。"}]},
+  {q:"身代金を要求する手紙はタイプライターで打たれていた。二人は「タイプライターなど持っていない」と言う。",c:[
+   {t:"レオポルドの勉強仲間のタイプ打ちノートと字体を比べる",ok:1,ev:"同じ字体の勉強ノート",r:"法律の勉強会のノートは、レオポルドの持つアンダーウッド社の携帯用タイプライターで打たれていた。字のくせが身代金の手紙とぴったり一致した。"},
+   {t:"手紙の筆跡を鑑定する",r:"手紙はタイプ打ちだ。筆跡は残っていない。"},
+   {t:"手紙の紙の産地を調べる",r:"どこでも売っている紙だった。"}]}
+ ],
+ flaw:"現場に落とした眼鏡。そして、自分たちの頭脳を過信して用意したアリバイが、家の運転手のひと言で崩れた。",
+ key:"ありふれたレンズではなく、珍しい「蝶番」に目をつけたこと。小さな部品の流通経路から持ち主を絞り込んだ。",
+ history:"アリバイが崩れると、ローブが先に自白し、レオポルドも続いた。二人は互いに相手が実行犯だと言い張った。弁護士クラレンス・ダロウの弁論で死刑を免れ、終身刑と懲役99年。タイプライターはのちにジャクソン公園の池から引き揚げられた。ローブは1936年に刑務所内で殺され、レオポルドは1958年に仮釈放された。"
+},
+{
+ id:"lindbergh", year:1932, place:"アメリカ・ニュージャージー", title:"手製の梯子", sub:"リンドバーグ愛児誘拐事件",
+ role:"あなたはニュージャージー州警察の捜査員。",
+ intro:["1932年3月1日夜。大西洋単独無着陸飛行の英雄チャールズ・リンドバーグの自宅から、生後20か月の長男が連れ去られた。窓の下には壊れた手製の梯子と、身代金5万ドルを要求する手紙が残されていた。",
+ "世界中が注目するなか、犯人は手紙でやり取りを続け、決して姿を見せない。"],
+ steps:[
+  {q:"現場の証拠をどう扱う？",c:[
+   {t:"手製の梯子を一本残らず保存する",ok:1,ev:"手製の梯子",r:"三つに分かれる組み立て式の梯子で、横木の一本が折れていた。誰が、どこの木で作ったのか。木そのものが証人になるかもしれない。"},
+   {t:"梯子より、周辺の聞き込みを優先する",r:"押し寄せた野次馬と記者に現場は踏み荒らされ、足跡はほとんど消えてしまった。"},
+   {t:"手紙の内容を新聞に公開して情報を募る",r:"偽の犯人や詐欺師が次々と現れ、捜査は混乱した。"}]},
+  {q:"仲介役のジョン・コンドン博士が、墓地で犯人とされる男に身代金を渡すことになった。お金をどう準備する？",c:[
+   {t:"すべての紙幣の番号を控え、金証券を多く混ぜる",ok:1,ev:"番号を控えた金証券",r:"金証券（金と交換できる紙幣）は目立つ。翌1933年に政府が金証券の回収を始めると、使われた金証券はさらに目立つようになった。"},
+   {t:"本物に見える偽札を用意する",r:"見破られれば子どもの身が危ない。家族も反対した。"},
+   {t:"身代金の支払いを拒む",r:"家族は子どもを取り戻すため、支払うと決めていた。"}]},
+  {q:"5万ドルは支払われた。だが5月12日、子どもは自宅から数km離れた森で、遺体で見つかった。誘拐の夜に亡くなっていたとみられる。手がかりは梯子と紙幣だけ。",c:[
+   {t:"木材の専門家アーサー・ケーラーに梯子の鑑定を頼む",ok:1,ev:"鉋（かんな）の刃の傷",r:"ケーラーは木材にかんなの刃が残した細かい傷を調べ、製材所の機械まで突き止めた。木はニューヨーク・ブロンクスの材木店で売られていた。"},
+   {t:"誘拐の手口から、前科者の名簿を当たる",r:"数百人を調べたが、つながる者はいなかった。"},
+   {t:"リンドバーグ家の使用人を厳しく取り調べる",r:"疑われたメイドの一人が自ら命を絶つ悲劇が起きた。彼女は無関係だった。"}]},
+  {q:"1934年9月、ブロンクスのガソリンスタンドで10ドルの金証券が使われた。店員は不審に思い、客の車のナンバーを紙幣の余白に書き留めていた。",c:[
+   {t:"ナンバーから車の持ち主を調べる",ok:1,ev:"紙幣に書かれたナンバー",r:"持ち主は、ドイツ出身の大工ブルーノ・リチャード・ハウプトマン。彼のガレージからは身代金の金証券が1万4千ドル以上見つかった。"},
+   {t:"スタンドの周辺で次の金証券を待つ",r:"同じ店に二度来るとは限らない。"},
+   {t:"店員に似顔絵を描かせ、新聞に載せる",r:"犯人に警戒されてしまうおそれがある。"}]},
+  {q:"ハウプトマンは「お金は友人から預かっていただけだ」と言う。家のどこを調べる？",c:[
+   {t:"屋根裏部屋の床板",ok:1,ev:"屋根裏の床板",r:"床板の一部が切り取られていた。梯子の「16番目の横木」と年輪がつながり、釘穴の位置も一致したとされる。"},
+   {t:"クローゼットの内側",ok:1,ev:"戸棚に書かれた住所",r:"扉の内側に、仲介役コンドン博士の住所と電話番号が鉛筆で書かれていた。"},
+   {t:"台所の食器棚",r:"何も見つからない。"}]}
+ ],
+ flaw:"番号を記録されたお金を使ったこと。特に、回収が始まって目立つようになった金証券を使い続けたことが命取りになった。",
+ key:"ガソリンスタンド店員の機転と、木材の傷から製材所までたどった鑑定。木材が法廷証拠になった有名な例。",
+ history:"ハウプトマンは1935年の裁判で有罪となり、1936年4月に死刑が執行された。最後まで無実を訴え、「お金は亡くなった友人イジドア・フィッシュから預かった」と話した。捜査や証拠の扱いには今も疑問の声があり、冤罪説も根強く残っている。この事件をきっかけに、誘拐を連邦犯罪とする「リンドバーグ法」が作られた。"
+},
+{
+ id:"torikabuto", year:1986, place:"日本・沖縄", title:"一時間半のアリバイ", sub:"トリカブト保険金殺人事件",
+ role:"あなたは事件を追う捜査員。法医学者が残した一本の血液が、捜査の行方を握る。",
+ intro:["1986年5月、33歳の女性が友人3人と石垣島へ旅行した。夫は那覇空港まで同行したが「急用ができた」と言って別れ、大阪へ戻った。",
+ "妻は石垣島のホテルに着いて間もなく、激しく苦しんで倒れ、亡くなった。夫と別れてから1時間以上たってからのことだった。夫が妻に毒を飲ませたとしても、そんなに遅れて効くはずがない。誰もがそう考えた。"],
+ steps:[
+  {q:"健康だった女性の突然の死。解剖した琉球大学の医師は、心筋梗塞と判断したが、腑に落ちない。",c:[
+   {t:"血液と臓器の一部を、保存しておく",ok:1,ev:"保存された血液",r:"医師（大野曜吉氏）は、急死の原因を確かめるため血液を冷凍保存した。この一本が、数年後に事件を動かす。"},
+   {t:"心不全として処理し、遺体を家族に返す",r:"一度失われた試料は二度と取り戻せない。真相に迫る手段がなくなる。"},
+   {t:"夫を呼び出し、すぐに追及する",r:"死因も分からないまま追及しても、何も言わないだろう。"}]},
+  {q:"夫は「自分は那覇で別れた。妻が倒れたとき、そばにいなかった」と言う。アリバイは完璧に見える。",c:[
+   {t:"妻にかけられていた生命保険を調べる",ok:1,ev:"約1億8500万円の保険",r:"結婚して間もない妻に、4社で計約1億8500万円の生命保険がかけられていた。保険会社は支払いを拒み、夫は裁判を起こした。"},
+   {t:"アリバイ成立とみて、病死で片づける",r:"誰もがそう考えた。だからこそ、犯人は「遅れて効く毒」を選んだのかもしれない。"},
+   {t:"同行した友人たちを疑う",r:"友人たちは最後まで妻を介抱していた。"}]},
+  {q:"保存されていた血液を調べると、トリカブトの毒アコニチンが検出された。だが、アコニチンは本来すぐ効く毒だ。なぜ1時間以上も遅れたのか？",c:[
+   {t:"別の毒も同時に使われていないか調べる",ok:1,ev:"二つの毒の打ち消し合い",r:"血液からはフグ毒テトロドトキシンも見つかった。二つの毒は体の中で互いの働きを打ち消し合う。先にフグ毒の効き目が弱まると、トリカブトの毒が一気に現れる。発症を遅らせるための組み合わせとみられた。"},
+   {t:"カプセルに入れて溶けるのを遅らせた、と考える",r:"捜査の初めには実際にこう考えられた。だが溶け方だけでは、時間の遅れを説明しきれなかった。"},
+   {t:"偶然、食べ物に毒が混じったと考える",r:"トリカブトとフグ毒が同時に偶然入るとは考えにくい。"}]},
+  {q:"この毒はどこから来たのか？",c:[
+   {t:"夫の周りの花屋や漁師を当たる",ok:1,ev:"大量の購入記録",r:"夫は花屋からトリカブトの鉢植えを大量に買い、漁師からは千匹を超えるクサフグを買い集めていた。借りていた部屋で毒を抽出していた疑いが強まった。"},
+   {t:"製薬会社の在庫を調べる",r:"毒は市販品ではなかった。"},
+   {t:"沖縄の植物園を当たる",r:"トリカブトは沖縄の植物ではない。手がかりにはならなかった。"}]},
+  {q:"夫の過去も気になる。",c:[
+   {t:"夫の前の妻たちについて調べる",ok:1,ev:"前妻2人の急死",r:"夫の前の妻2人も、いずれも心臓の病気で突然亡くなっていた。"},
+   {t:"夫の勤め先の評判を聞く",r:"評判は悪くなかった。それ以上は分からない。"}]}
+ ],
+ flaw:"「アリバイがある時刻に発症させる」という仕掛けは、毒を見つけられなければ完璧だった。誤算は、腑に落ちなかった医師が血液を捨てずに残したことだった。",
+ key:"一人の法医学者の判断で保存された血液と、アコニチンとテトロドトキシンが打ち消し合うという毒物学の知見。",
+ history:"夫は1991年に別の容疑（会社のお金の横領）で逮捕され、その後殺人の疑いで再逮捕された。最後まで否認したが、状況証拠を積み重ねて無期懲役が確定し、2012年に服役中に病死した。保険金目当ての毒殺と、時間差を使ったアリバイ工作として、日本の犯罪史に残る事件となった。"
+},
+{
+ id:"pitchfork", year:1987, place:"イギリス・レスターシャー", title:"身代わりの血", sub:"ナーバラ事件",
+ role:"あなたはレスターシャー警察の捜査員。",
+ intro:["1983年と1986年、イングランドのナーバラ周辺で、15歳の少女が相次いで殺害された。手口はよく似ている。",
+ "2件目の事件のあと、地元の17歳の少年が取り調べで犯行を認めた。捜査は解決に向かうかに見えた。"],
+ steps:[
+  {q:"少年は2件目を自白したが、1件目は認めない。どうする？",c:[
+   {t:"レスター大学で開発されたばかりの「DNA指紋法」で照合する",ok:1,ev:"少年の無実",r:"遺伝学者アレック・ジェフリーズが鑑定すると、2件は同一人物による犯行で、しかも少年ではないと分かった。DNA鑑定で容疑者の無実が証明された世界最初の例とされる。"},
+   {t:"自白があるので、そのまま起訴する",r:"もし起訴していたら、無実の少年が罪を負い、真犯人は野放しになっていた。"},
+   {t:"1件目についてさらに厳しく取り調べる",r:"自白を無理に引き出しても、真実には近づかない。"}]},
+  {q:"真犯人は別にいる。だが容疑者の当てがない。",c:[
+   {t:"周辺の村の成人男性全員に、血液と唾液の提供を求める",ok:1,ev:"約5000人のDNA調査",r:"世界初の大規模DNA調査が始まった。約5000人が協力したが、一致する者は出なかった。"},
+   {t:"前科のある人物だけに絞って調べる",r:"真犯人には目立つ前科がなかった。網にかからない。"},
+   {t:"目撃情報を待つ",r:"新しい情報はほとんど来なかった。"}]},
+  {q:"5000人を調べても一致なし。迷宮入りの声も上がる。",c:[
+   {t:"誰かが身代わりで血液を出した可能性を考え、情報を募り続ける",ok:1,ev:"パブでの立ち話",r:"1987年、パブで一人の男が「同僚の代わりに血液を出した」と話しているのを、女性客が聞いていた。代わりに検査を受けた男イアン・ケリーは、パン工場の同僚コリン・ピッチフォークに頼まれていた。"},
+   {t:"「DNA鑑定は役に立たない」と見切りをつける",r:"科学ではなく、人のずるさが穴を開けていた。そこに気づかなければ解決はない。"},
+   {t:"範囲を広げて、もう一度全員に検査を求める",r:"同じ手口でまた身代わりを立てられたら、結果は変わらない。"}]},
+  {q:"ピッチフォークの身柄を確保した。",c:[
+   {t:"本人の血液を採り、現場の試料とDNAを照合する",ok:1,ev:"DNAの一致",r:"DNAは2件の現場の試料と一致した。"},
+   {t:"ケリーの証言だけで起訴する",r:"証言は重要だが、身代わりを頼んだ事実だけでは殺人を証明できない。"}]}
+ ],
+ flaw:"大規模なDNA調査をすり抜けるため、同僚に身代わりを頼んだこと。科学の網は破れたが、人の口までは封じられなかった。",
+ key:"DNA指紋法の初の捜査利用。真犯人を突き止めただけでなく、無実の少年を救った。",
+ history:"コリン・ピッチフォークは1988年に終身刑を言い渡された。DNA鑑定で有罪となった世界最初の人物とされる。2021年に仮釈放されたが、条件違反で数か月後に再び収監された。"
+},
+{
+ id:"unabomber", year:1995, place:"アメリカ各地", title:"17年目の論文", sub:"ユナボマー事件",
+ role:"あなたはFBIの特別捜査班（UNABOM捜査班）の一員。",
+ intro:["1978年から17年間、大学や航空会社の関係者などに小包爆弾が送られ続けた。16個の爆弾で3人が亡くなり、20人以上が負傷した。",
+ "爆弾は廃材から手作りされ、部品から店をたどることもできない。犯人は姿を見せず、FBI史上もっとも長く費用のかかった捜査の一つになっていた。"],
+ steps:[
+  {q:"1995年、犯人から新聞社に手紙が届く。「3万5千語の論文を掲載すれば、人を殺す爆弾はやめる」。",c:[
+   {t:"掲載を勧める。誰かが文章に見覚えを持つかもしれない",ok:1,ev:"公開された論文",r:"司法長官とFBI長官の判断を受け、ワシントン・ポスト紙が1995年9月、ニューヨーク・タイムズ紙と費用を分け合って論文「産業社会とその未来」を掲載した。"},
+   {t:"テロに屈するわけにはいかない。掲載を拒む",r:"爆弾は続き、手がかりはないまま。大事な機会を逃す。"},
+   {t:"偽の論文掲載で犯人をおびき出す",r:"犯人を怒らせれば、次の爆弾を招くおそれがある。"}]},
+  {q:"何千件もの情報が寄せられた。どれに注目する？",c:[
+   {t:"「兄の書く文章に似ている」という家族からの相談",ok:1,ev:"兄の昔の手紙",r:"デイヴィッド・カジンスキーは、妻に勧められて論文を読み、兄テッドの書く文章にそっくりだと気づいた。悩んだ末、弁護士を通じて兄の昔の手紙をFBIに渡した。"},
+   {t:"論文の思想から、全米の大学の研究者を洗い出す",r:"対象が広すぎる。情報の山に埋もれていく。"},
+   {t:"爆弾の部品から再び販売店をたどる",r:"17年やって分からなかったことは、もう一度やっても分からない。"}]},
+  {q:"論文と手紙をどう比べる？",c:[
+   {t:"独特の言い回しや綴りのくせを比べる",ok:1,ev:"独特の言い回し",r:"どちらにも、ふつうと逆の語順のことわざ「ケーキを食べつつ、持っておくことはできない」や、「冷静な論理家」といった表現が使われていた。言葉のくせを根拠に、捜索令状が認められた。"},
+   {t:"手紙の紙とインクの成分を比べる",r:"論文と手紙では書かれた時期も道具も違う。比べても答えは出ない。"},
+   {t:"ここで公開して、本人の反応を見る",r:"名前を出せば、証拠を処分されるおそれがある。"}]},
+  {q:"テッド・カジンスキーはモンタナ州リンカーンの山奥の小屋で、電気も水道もない暮らしをしていた。",c:[
+   {t:"小屋を囲み、令状を持って捜索する",ok:1,ev:"小屋の中の爆弾",r:"1996年4月3日、捜査員が小屋に入ると、作りかけの爆弾、部品、そして論文の原稿が見つかった。"},
+   {t:"町で本人を逮捕してから小屋を調べる",r:"町に出ない日も多い。その間に気づかれれば、小屋ごと証拠を失うかもしれない。"}]}
+ ],
+ flaw:"自分の思想を世に出したいという欲求。17年隠れおおせた男を捕まえたのは、指紋でも部品でもなく、文章のくせだった。",
+ key:"文章のくせから書き手を特定する「法言語学」と、家族の重い決断。",
+ history:"テッド・カジンスキーは元数学者で、若くしてカリフォルニア大学バークレー校の助教授になった人物だった。1998年に罪を認め、仮釈放なしの終身刑となり、2023年に獄中で亡くなった。弟デイヴィッドは、兄に死刑を求めないよう訴えていた。"
+},
+{
+ id:"antwerp", year:2003, place:"ベルギー・アントワープ", title:"食べかけのサンドイッチ", sub:"アントワープ・ダイヤモンド盗難事件",
+ role:"あなたはベルギー警察のダイヤモンド犯罪担当の捜査員。",
+ intro:["2003年2月の月曜の朝。世界のダイヤモンド取引の中心アントワープで、ダイヤモンド・センターの地下金庫が空になっているのが見つかった。",
+ "金庫は地下2階。熱センサー、地震センサー、磁気センサー、1億通りの組み合わせのダイヤル錠など、何重もの防犯で守られていた。どこにも壊された跡がない。被害は1億ドル以上とも言われる。"],
+ steps:[
+  {q:"壊された跡がない。犯人はどうやって入った？",c:[
+   {t:"センターに事務所を借りていた者を洗う",ok:1,ev:"2年半前からのテナント",r:"イタリア人の宝石商レオナルド・ノタルバルトロは、2年半以上前から事務所と貸金庫を借り、建物に自由に出入りできた。内部を下見し続けていた疑いがある。"},
+   {t:"外から侵入した痕跡を探し続ける",r:"何日探しても、穴もこじ開けた跡も見つからない。"},
+   {t:"警備員を疑って取り調べる",r:"警備員は普段どおり見回りをしていた。何も見ていない。"}]},
+  {q:"事件の翌日、高速道路沿いの森の持ち主から「ゴミが不法投棄されている」と通報があった。ありふれた通報だ。",c:[
+   {t:"すぐに現場へ行き、ゴミを全部回収する",ok:1,ev:"森に捨てられたゴミ",r:"ダイヤモンド・センターの封筒、金庫の防犯カメラのビデオテープ、道具類、そして食べかけのサラミ・サンドイッチが見つかった。犯人たちは逃げる途中でゴミを燃やすつもりが、そのまま捨てていったらしい。"},
+   {t:"地元の役所に任せる",r:"ゴミが片づけられていたら、事件の最大の手がかりが消えていた。"},
+   {t:"盗まれたダイヤの売り先を先に追う",r:"闇市場は口が堅い。何も出てこない。"}]},
+  {q:"ゴミの中で、犯人に直接つながりそうなものは？",c:[
+   {t:"サンドイッチに残った唾液のDNA",ok:1,ev:"サンドイッチのDNA",r:"DNAは、ノタルバルトロの仲間の一人フェルディナンド・フィノットのものと一致した。"},
+   {t:"書類やレシートを一枚ずつ調べる",ok:1,ev:"犯行グループを示す書類",r:"書類の中から、ノタルバルトロたちの関わりを示すものが見つかった。"},
+   {t:"道具の購入先を全国で探す",r:"どこでも手に入る道具だった。"}]},
+  {q:"事件後、ノタルバルトロはセンターに姿を見せた。どうする？",c:[
+   {t:"事情を聴き、身柄を押さえる",ok:1,ev:"本人の確保",r:"彼は事件と無関係のふりをしていたが、集めた証拠がそれを許さなかった。"},
+   {t:"泳がせて、仲間とダイヤの行方を追う",r:"国外に出られたら、二度と手が届かないかもしれない。"}]}
+ ],
+ flaw:"ほぼ完璧に金庫を破ったあと、逃走中に捨てたゴミ袋。犯行そのものより、後始末の手抜きが命取りになった。",
+ key:"ありふれた不法投棄の通報を見過ごさなかったこと。そしてサンドイッチから採れたDNA。",
+ history:"ノタルバルトロは懲役10年の判決を受け、仲間たちも有罪になった。しかし盗まれたダイヤモンドのほとんどは今も見つかっていない。ノタルバルトロは後に「実は保険金詐欺に協力させられた」とも語ったが、真相は分かっていない。"
+},
+{
+ id:"btk", year:2005, place:"アメリカ・カンザス州", title:"フロッピーの名前", sub:"BTK事件",
+ role:"あなたはウィチタ警察の捜査員。",
+ intro:["1974年から1991年にかけて、カンザス州ウィチタ周辺で10人が殺害された。犯人は自ら「BTK」と名乗り、新聞社や警察に挑発的な手紙を送りつけていた。",
+ "事件はやがて途絶え、迷宮入りしたと思われた。だが2004年、事件30年を伝える新聞記事のあと、犯人から再び手紙が届き始めた。"],
+ steps:[
+  {q:"30年ぶりに届いた手紙。本物だと分かった。どうする？",c:[
+   {t:"報道を通じて、犯人とのやり取りを続ける",ok:1,ev:"犯人との文通",r:"犯人は自分の事件が忘れられることに耐えられないようだった。手紙や小包が次々と届き、そのたびに手がかりが増えた。"},
+   {t:"犯人を刺激しないよう、報道を止める",r:"注目されないと分かれば、犯人はまた沈黙するだろう。"},
+   {t:"偽の情報を流して犯人を怒らせる",r:"新たな被害を招くおそれがある。"}]},
+  {q:"犯人からの質問。「フロッピーディスクで送ったら、私の居場所は分かるか？正直に答えろ。新聞の広告欄で」。",c:[
+   {t:"「レックス、大丈夫だ」と広告を出す",ok:1,ev:"罠の返答",r:"警察は犯人の求めどおり、新聞に返事を載せた。2005年2月、地元テレビ局にフロッピーディスクが届いた。"},
+   {t:"正直に「追跡できる」と答える",r:"犯人はフロッピーを使わないだろう。大きな機会が消える。"},
+   {t:"返事をしない",r:"犯人は様子を見るだけだった。"}]},
+  {q:"フロッピーディスクには文書が一つだけ入っていた。どこを調べる？",c:[
+   {t:"消されたデータとファイルの作成者情報",ok:1,ev:"「クライスト・ルーテル教会」「デニス」",r:"作成者情報に「クライスト・ルーテル教会」と、「デニス」という名前が残っていた。教会のウェブサイトを見ると、教会評議会の会長はデニス・レイダー。"},
+   {t:"文書の文面の言葉遣い",r:"手がかりにはなるが、それだけでは誰か分からない。"},
+   {t:"フロッピーの購入店",r:"どこでも売っている品だった。"}]},
+  {q:"デニス・レイダーは町の条例監督官で、二人の子の父だった。逮捕の決め手が欲しい。",c:[
+   {t:"令状を取り、娘が以前受けた検査の保存試料のDNAを調べる",ok:1,ev:"家族のDNA",r:"娘の試料のDNAは、現場の試料の主の近親者のものだと示した。犯人は父親である可能性がきわめて高い。"},
+   {t:"本人に直接DNAを出してほしいと頼む",r:"本人に警戒され、証拠を処分されるおそれがある。"},
+   {t:"教会の名前だけで逮捕する",r:"名前が残っていただけでは、殺人の証拠にならない。"}]}
+ ],
+ flaw:"「注目されたい」という欲求で、30年の沈黙を自ら破ったこと。そして警察の「大丈夫」という言葉を信じたこと。",
+ key:"フロッピーディスクに残った作成者情報（メタデータ）と、家族のDNAによる絞り込み。",
+ history:"デニス・レイダーは2005年2月25日に逮捕され、10件の殺人を認めた。連続10回の終身刑となり、仮釈放の可能性はない。"
+},
+{
+ id:"gsk", year:2018, place:"アメリカ・カリフォルニア州", title:"遠い親戚のDNA", sub:"ゴールデン・ステート・キラー事件",
+ role:"あなたは未解決事件を追う捜査員。",
+ intro:["1970年代から80年代にかけて、カリフォルニア州で少なくとも13人の殺害と、数十件の性的暴行、100件以上の侵入窃盗が起きた。犯人は覆面をかぶり、慎重に痕跡を消していた。",
+ "現場の試料からDNAは採れていた。しかし、警察のDNAデータベースのどれとも一致しない。犯人は捕まったことがないのだ。事件から40年近くがたっていた。"],
+ steps:[
+  {q:"警察のデータベースに一致はない。次の手は？",c:[
+   {t:"一般の人が先祖探しに使う家系図サイトにDNAを登録する",ok:1,ev:"遠い親戚の一致",r:"家系図サイト「GEDmatch」で照合すると、犯人の「またいとこ」程度の遠い親戚が見つかった。本人ではないが、家系の入り口になる。"},
+   {t:"同じデータベースで、もう一度照合し直す",r:"結果は変わらない。"},
+   {t:"40年前の目撃証言を洗い直す",r:"記憶はとうに薄れていた。"}]},
+  {q:"遠い親戚から、家系図を作っていく。候補は何千人にもなる。",c:[
+   {t:"年齢、事件当時の住所、体格などで絞り込む",ok:1,ev:"家系図",r:"系図の専門家と数か月かけて系図を組み上げ、条件に合う一人が浮かんだ。72歳の元警察官、ジョセフ・ジェームズ・ディアンジェロ。"},
+   {t:"親戚全員にDNAの提供を頼む",r:"人数が多すぎるうえ、話が本人に伝わってしまう。"}]},
+  {q:"候補者が見つかった。だがまだ決め手がない。",c:[
+   {t:"本人が捨てたものからDNAを採る",ok:1,ev:"捨てられたDNA",r:"捜査員は、ディアンジェロの車のドアハンドルと、ゴミとして捨てられたティッシュからDNAを採った。現場の試料と一致した。"},
+   {t:"本人に会って、DNAの提供を頼む",r:"元警察官の彼は、捜査の手口をよく知っている。警戒させるだけだ。"},
+   {t:"すぐに逮捕する",r:"一致を確かめる前に逮捕すれば、間違いだったとき取り返しがつかない。"}]}
+ ],
+ flaw:"自分のDNAは残しても、警察のデータベースにない限り安全だと思っていたこと。だが、親戚のDNAまでは消せなかった。",
+ key:"一般向け家系図サイトを使った「遺伝的系図捜査」。これ以降、多くの未解決事件がこの方法で解かれた。",
+ history:"ディアンジェロは2018年4月24日に逮捕された。2020年に13件の殺人などを認め、仮釈放なしの終身刑となった。家系図サイトのデータを捜査に使うことには、プライバシーの面から議論が起き、サイト側の規約も見直された。"
+}
+];
+
+const LIMIT = 3;
+const app = document.getElementById('app');
+let S = null; // current case state
+let cleared = {};
+try{ cleared = JSON.parse(localStorage.getItem('abake-cleared')||'{}')||{}; }catch(e){ cleared = {}; }
+function save(){ try{ localStorage.setItem('abake-cleared', JSON.stringify(cleared)); }catch(e){} }
+const esc = s => String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const RANK = ['完全解明','解明','辛くも解明'];
+
+function home(){
+  S = null;
+  const done = Object.keys(cleared).length;
+  app.innerHTML = `
+  <header class="hero">
+    <div class="eyebrow">Case files · 実在の事件 ${CASES.length}件</div>
+    <h1><span class="strike">完全犯罪</span>を暴け</h1>
+    <p>「完全犯罪」に近かった実在の事件を、捜査する側から追うゲーム。ひとつの判断ミスで、捜査は何週間、何年も遅れる。誤りが${LIMIT}回たまると事件は迷宮入りになる。犯人が見落とした一点を見つけ出そう。</p>
+    <div class="rules"><span>選択で証拠を集める</span><span>誤り${LIMIT}回で迷宮入り</span><span>解決後に史実の解説</span><span class="mono">解決 ${done}/${CASES.length}</span></div>
+  </header>
+  <div class="list">
+    ${CASES.map((c,i)=>{
+      const r = cleared[c.id];
+      const seal = r==null ? `<span class="seal none">未着手</span>` : (r==='cold'?`<span class="seal none">迷宮入り</span>`:`<span class="seal">${RANK[r]}</span>`);
+      return `<button class="case" data-i="${i}"><span class="yr">${c.year}</span><span class="nm"><b>${esc(c.title)}</b><small>${esc(c.sub)}・${esc(c.place)}</small></span>${seal}</button>`;
+    }).join('')}
+  </div>
+  <p class="note">登場する事件はすべて実在の事件です。亡くなった方とご家族がいる出来事として、暴力の描写は控えています。史実を元に、ゲームとして場面と選択肢を組み立てました。事実関係に諸説ある部分は解説で触れています。</p>`;
+  app.querySelectorAll('.case').forEach(b=>b.onclick=()=>start(+b.dataset.i));
+  window.scrollTo(0,0);
+}
+
+function start(i){
+  S = {i, step:-1, strikes:0, ev:[], dis:new Set(), res:null, fresh:null};
+  render();
+}
+
+function header(c){
+  return `<div class="bar"><button class="back" id="back">← 事件一覧</button>
+  <div class="delay">捜査の遅れ ${Array.from({length:LIMIT},(_,k)=>`<i class="${k<S.strikes?'on':''}"></i>`).join('')}</div></div>
+  <div class="file"><div class="meta">${c.year} ・ ${esc(c.place)} ・ ${esc(c.sub)}</div><h2>${esc(c.title)}</h2></div>
+  <div class="board"><span class="lbl">証拠</span>${S.ev.length?S.ev.map(e=>`<span class="chip ${e===S.fresh?'new':''}">${esc(e)}</span>`).join(''):'<span class="lbl">まだない</span>'}</div>`;
+}
+
+function render(){
+  const c = CASES[S.i];
+  if(S.step===-1){
+    app.innerHTML = header(c) + `<div class="scene"><div class="step">事件の概要</div>${c.intro.map(p=>`<p>${esc(p)}</p>`).join('')}<p><b>${esc(c.role)}</b></p></div>
+    <button class="go" id="go">捜査を始める</button>`;
+    bind(); document.getElementById('go').onclick=()=>{S.step=0;S.dis=new Set();S.res=null;render();window.scrollTo(0,0)};
+    return;
+  }
+  const st = c.steps[S.step];
+  let html = header(c) + `<div class="scene"><div class="step mono">捜査 ${S.step+1} / ${c.steps.length}</div><p>${esc(st.q)}</p></div>`;
+  if(S.res && S.res.ok){
+    html += `<div class="res"><h3>手がかりを得た：${esc(S.res.ev)}</h3><p>${esc(S.res.r)}</p></div>
+      <button class="go" id="next">${S.step+1<c.steps.length?'次の捜査へ':'捜査の結末へ'}</button>`;
+  } else {
+    html += `<div class="choices">${st.c.map((ch,k)=>`<button class="ch" data-k="${k}" ${S.dis.has(k)?'disabled':''}>${esc(ch.t)}</button>`).join('')}</div>`;
+    if(S.res) html += `<div class="res bad"><h3>捜査が遅れた</h3><p>${esc(S.res.r)}</p></div>`;
+  }
+  app.innerHTML = html; bind();
+  app.querySelectorAll('.ch').forEach(b=>b.onclick=()=>pick(+b.dataset.k));
+  const n = document.getElementById('next');
+  if(n) n.onclick=()=>{ S.step++; S.dis=new Set(); S.res=null; S.fresh=null; if(S.step>=c.steps.length) end(false); else {render(); window.scrollTo(0,0);} };
+}
+
+function bind(){ const b=document.getElementById('back'); if(b) b.onclick=home; }
+
+function pick(k){
+  const ch = CASES[S.i].steps[S.step].c[k];
+  if(ch.ok){
+    S.res = ch; S.ev.push(ch.ev); S.fresh = ch.ev;
+  } else {
+    S.res = ch; S.dis.add(k); S.strikes++;
+    if(S.strikes>=LIMIT){ render(); setTimeout(()=>end(true), 0); return; }
+  }
+  render();
+}
+
+function end(cold){
+  const c = CASES[S.i];
+  const prev = cleared[c.id];
+  if(cold){ if(prev==null) cleared[c.id]='cold'; }
+  else { const r = Math.min(S.strikes,2); if(prev==null||prev==='cold'||r<prev) cleared[c.id]=r; }
+  save();
+  const last = cold ? `<div class="res bad" style="margin-top:18px"><h3>最後の誤り</h3><p>${esc(S.res.r)}</p></div>` : '';
+  app.innerHTML = header(c) + last + `
+  <div class="verdict">
+    <div class="big ${cold?'cold':''}">${cold?'迷宮入り':RANK[Math.min(S.strikes,2)]}</div>
+    <div class="mono" style="color:var(--mute);font-size:13px">誤り ${S.strikes} 回 ・ 証拠 ${S.ev.length} 点</div>
+    ${cold?`<p style="margin:0;max-width:52ch">あなたの捜査は行き詰まった。だが現実の捜査員たちは、ここで見落とさなかった。実際に何が起きたのかを見てみよう。</p>`:''}
+  </div>
+  <div class="sec"><h3>犯人の誤算</h3><p>${esc(c.flaw)}</p></div>
+  <div class="sec"><h3>捜査を動かしたもの</h3><p>${esc(c.key)}</p></div>
+  <div class="sec"><h3>その後の史実</h3><p>${esc(c.history)}</p></div>
+  <div class="sec"><h3>正しい捜査の流れ</h3><dl class="facts">${c.steps.map((s,k)=>{const g=s.c.filter(x=>x.ok);return `<dt>${k+1}</dt><dd>${g.map(x=>esc(x.t)).join(' / ')}</dd>`}).join('')}</dl></div>
+  <button class="go" id="retry">${cold?'もう一度捜査する':'別の事件へ'}</button>`;
+  bind();
+  document.getElementById('retry').onclick = cold ? ()=>start(S.i) : home;
+  window.scrollTo(0,0);
+}
+
+home();
+</script>
