@@ -1937,7 +1937,7 @@ const ST={id:'kizakibaru',k:'釣',n:'木崎原の戦い',y:'1572',vs:'島津 約
   if(to==='kizaki')o.push([itoAt(G.t+e.h)==='kizaki'?'':'bad',itoAt(G.t+e.h)==='kizaki'?'伊東勢のいる原。この隊が囮になって斬りこみ、逃げて敵を誘う。':'今は誰もいない原。だが伊東勢がここへ退いてくると、見つかってしまう。']);
   if(to==='sankaku')o.push(['bad','見晴らしのよい田んぼ。木崎原から丸見えで、かくれる場所がない。']);
   if(to==='kakuto')o.push([G.t<3?'good':'',G.t<3?'伊東勢に攻められている城。夜明け前に助けが要る。':'加久藤城。']);return o;},
- hour(G){G.M=clamp(G.M,0,100);},
+ hour(G){G.M=clamp(G.M,0,100);G.preK=G.units.filter(u=>u.at==='kizaki'&&!u.order).map(u=>u.id);},
  at(G){const t=G.t;if(t===1)G.q.push('kakutoAtk');if(t===3)G.q.push('kakutoRes');if(t===4)G.q.push('withdraw');if(t===5)G.q.push('rest');
   if(t>=4&&t<8&&!G.spotted&&G.units.some(u=>u.at==='sankaku')){G.spotted=true;addLog('三角田にいる隊が、伊東勢の物見に見つかった。','bad');toast('三角田の隊が敵に見つかった');}},
  async arrive(G,u,k){
@@ -1965,7 +1965,7 @@ const ST={id:'kizakibaru',k:'釣',n:'木崎原の戦い',y:'1572',vs:'島津 約
   async kakutoRes(G){const h=G.units.some(u=>u.at==='kakuto');G.held=h;
    if(h){G.M+=10;await E.story('@bg fort\n#加久藤城に駆けつけた島津の兵が、城の守りに加わった。\n#石や丸太を投げ落とし、伊東勢を寄せつけない。\n伊東祐安：ちっ、小さな城と思ったが、しぶとい。……いったん引くぞ。');addLog('加久藤城が伊東勢を追い返した（士気 +10）。','good');}
    else{await E.story('@bg fire\n#加久藤城に助けは来なかった。\n#夜明け前、城は伊東勢の手に落ちた。\n#義弘の妻子は捕らえられ、島津の兵たちは戦う力を失った。');await endGame('kakuto');}},
-  async withdraw(G){const here=G.units.filter(u=>u.at==='kizaki');
+  async withdraw(G){const here=G.units.filter(u=>u.at==='kizaki'&&(G.preK||[]).indexOf(u.id)>=0);
    await E.story('@bg dawn\n#伊東勢は加久藤城を落とせず、木崎原まで退いてきた。\n伊東祐安：島津はたった三百。わしらは三千だ。慌てることはない。ここで休もう。',{place:'木崎原'});
    if(here.length){await E.story('#木崎原にいた島津の'+here.map(u=>u.name).join('・')+'が、伊東勢に見つかった。\n伊東祐安：なんだ、こんな所に島津の兵が。囲め、囲め！\n#わずかな兵は、三千に飲みこまれた。');await endGame('found');}},
   async rest(G){G.rest=true;await E.story('@bg river\n#朝。伊東勢は木崎原に陣をとき、池島川で体を洗いはじめた。\n#夜通し戦った兵たちは、鎧を脱いで横になっている。\n島津義弘：……今じゃ。敵は油断しておる。',{place:'木崎原'});addLog('伊東勢が木崎原で休んでいる。鎧を脱ぐ者もいる。','good');}
