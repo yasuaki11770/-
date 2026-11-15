@@ -173,8 +173,8 @@ tr.me td{background:color-mix(in srgb,var(--red) 9%,var(--sheet))}
 .kiai:active{transform:translateY(3px);box-shadow:0 1px 0 color-mix(in srgb,var(--red) 55%,#000)}
 .kiai b{font-family:var(--f-head);font-weight:800;font-size:26px;letter-spacing:.12em;line-height:1}
 .kiai small{display:block;font-size:11.5px;opacity:.9}
-.kiai .pips{display:flex;gap:5px}
-.kiai .pips i{width:13px;height:13px;border-radius:50%;background:currentColor;opacity:1}
+.kiai .pips{display:flex;flex-wrap:wrap;gap:4px;max-width:120px}
+.kiai .pips i{width:10px;height:10px;border-radius:50%;background:currentColor;opacity:1}
 .kiai .pips i.used{opacity:.25}
 .kiai:disabled{opacity:.45;box-shadow:none}
 .seg{display:inline-flex;border:1px solid var(--ink);border-radius:2px;overflow:hidden}
@@ -280,7 +280,7 @@ const H_RAW = [
  ['アワノアラシ','TS','徳島',92,78,80,84,78,'SABC','逃','B','鹿毛','阿波の嵐','鳴門の渦潮のように激しいダッシュ力。','賢さ・持久78。',[92,78,80,84,82],'416点の集中を分散。嵐の荒々しさを表すため賢さ−4。'],
  ['サヌキコンピラ','KG','香川',78,88,86,80,80,'DBAA','先','A','鹿毛','金毘羅の石段','785段の石段で鍛えた脚。坂のあるコースで真価を発揮する。','速さ78。',[80,88,86,82,80],'416点の集中を分散。石段で鍛えた力は残し、速さ・根性を−2。'],
  ['イヨノサファイア','EH','愛媛',88,82,78,82,84,'ASAC','差','C','芦毛','伊予の蒼玉','瀬戸内の海のような青い輝き。賢く立ち回るマイラー。','力78。重馬場が苦手。',[88,84,78,82,84],'416点の集中を分散。マイラーらしく持久−2。'],
- ['トサネイチャー','KC','高知',80,90,84,88,76,'DBAS','先','A','栗毛','土佐の大自然','四万十と太平洋の大自然が育てたタフネス。持久・根性型で消耗戦に強い。','速さ80。瞬発力勝負では分が悪い。',[84,90,86,88,76],'合計424点は方針の上限420点を超えていたため、消耗戦型の個性（持久90・根性88）は残して速さ−4・力−2。'],
+ ['トサネイチャー','KC','高知',80,90,84,100,76,'DBAS','先','A','栗毛','土佐の大自然','四万十と太平洋の大自然が育てたタフネス。根性100、競り合いになったら絶対に退かない。消耗戦に強い。','速さ80。瞬発力勝負では分が悪い。',[84,90,86,88,76],'企画者の指定で根性を100に（合計430点・全馬で唯一の上限超え）。速さ−4・力−2は上限調整の名残。'],
  ['ハカタノオウジャ','FO','福岡',92,78,82,82,82,'SABC','先','B','鹿毛','博多の王者','九州最強の呼び声高い快速馬。好位から抜け出す王道の競馬。','持久78。'],
  ['アリタセラミック','SA','佐賀',78,84,90,86,76,'CBAB','先','A','芦毛','有田の白磁','焼き物のように硬く締まった体。力のいる馬場で崩れない。','速さ78。',[78,84,92,86,76],'416点の集中を分散。力92はロッコウ・ヒゴと並ぶため−2。'],
  ['デジマノファントム','NS','長崎',90,80,76,79,88,'ASBC','追','C','青鹿毛','出島の幻影','異国の風を感じさせる変幻自在の末脚。後方から一気に飛んでくる。','力76・根性79。',[90,80,76,82,88],'416点の集中を分散。幻影らしく競り合いには弱く、根性−3。'],
@@ -354,7 +354,7 @@ function todayFactor(h, cfg, cond) {
 function makeRace(cfg, rng) {
   rng = rng || Math.random;
   const D = cfg.dist, L = babaLevel(cfg), straight = cfg.course.straight;
-  const R = { cfg, D, L, t: 0, rng, horses: [], done: 0, ev: [], leader: null, flags: {}, kiaiLeft: 3 };
+  const R = { cfg, D, L, t: 0, rng, horses: [], done: 0, ev: [], leader: null, flags: {}, kiaiLeft: 10 };
   cfg.ids.forEach((id, i) => {
     const h = HORSES[id], s = h.s, tf = todayFactor(h, cfg, cfg.conds[i]);
     const hp0 = s.sta * 2.08, day = 1 + gauss(rng) * 0.011;   // その日の出来（見えない上下）
@@ -765,7 +765,7 @@ function viewTitle(m) {
     <div>
       <p class="kick">全国代表馬 日本一決定戦</p>
       <h1>四十八<span>駿</span></h1>
-      <p class="lead">47都道府県から選ばれた48頭（東京都は東東京・西東京の2頭）が、4頭立てのレースを勝ち抜いて日本一を争います。決勝ではアメリカからの招待馬アメリカンエクスプレスが待っています。あなたは1頭を応援し、レース中に3回だけ<b>気合い</b>を入れられます。</p>
+      <p class="lead">47都道府県から選ばれた48頭（東京都は東東京・西東京の2頭）が、4頭立てのレースを勝ち抜いて日本一を争います。決勝ではアメリカからの招待馬アメリカンエクスプレスが待っています。あなたは1頭を応援し、レース中に10回まで<b>気合い</b>を入れられます。</p>
       <div class="rules">
         <div><b>予選</b><span>4頭×12組。各組1着の12頭だけが勝ち上がり</span></div>
         <div><b>準決勝</b><span>4頭×3組。各組1着の3頭が決勝へ</span></div>
@@ -783,7 +783,7 @@ function viewTitle(m) {
     <div class="sheet"><h3 class="sub">勝ち負けを決めるもの</h3>
       <p class="small">能力の合計だけでは決まりません。<b>距離</b>（短距離〜長距離の向き不向き）、<b>脚質</b>（逃げ・先行・差し・追込）、<b>馬場</b>（良・稍重・重・不良）、<b>競馬場</b>（直線の長さと坂）、その日の<b>調子</b>が重なって、どの馬にも勝つ目があります。直線の短い札幌・函館・小倉は前にいる馬が、直線の長い新潟・東京は後ろから来る馬が有利です。</p></div>
     <div class="sheet"><h3 class="sub">気合いの使いどころ</h3>
-      <p class="small">気合いを入れると3秒だけ伸びますが、スタミナを余計に使います。最後の直線で使うのが一番効き、序盤に使うとほとんど得になりません。スタミナが切れかけた馬には持ち直す力になり、掛かっている馬は落ち着きます。1レースにつき3回までです。</p></div>
+      <p class="small">気合いを入れると3秒だけ伸びますが、スタミナを余計に使います。最後の直線で使うのが一番効き、序盤に使うとほとんど得になりません。スタミナが切れかけた馬には持ち直す力になり、掛かっている馬は落ち着きます。1レースにつき10回までです。</p></div>
   </section>`;
   $('#bNew').onclick = () => { SND.init(); show('pick'); };
   if ($('#bCont')) $('#bCont').onclick = () => { SND.init(); S = sv; show('hub'); };
@@ -872,7 +872,7 @@ function raceCard(rec, i) {
   return `<article class="rc${mine ? ' mine' : ''}">
     <header><b>${esc(rec.label.replace(/^(予選|準決勝) /, ''))}</b><span>${esc(courseLine(rec))}<br>${rec.baba}・${courseNote(c)}</span></header>
     <ol>${rows}</ol>
-    <footer>${rec.res ? `<button class="btn ghost" data-res="${i}">着順を見る</button>` : `<button class="btn${mine ? ' red' : ''}" data-pad="${i}">${mine ? 'パドックへ（気合い3回）' : 'パドックへ'}</button><button class="btn ghost" data-quick="${i}">結果だけ</button>`}</footer>
+    <footer>${rec.res ? `<button class="btn ghost" data-res="${i}">着順を見る</button>` : `<button class="btn${mine ? ' red' : ''}" data-pad="${i}">${mine ? 'パドックへ（気合い10回）' : 'パドックへ'}</button><button class="btn ghost" data-quick="${i}">結果だけ</button>`}</footer>
   </article>`;
 }
 function viewHub(m, arg) {
@@ -932,7 +932,7 @@ function viewPaddock(m, ri) {
   </table></div>
   <p class="small muted">単勝オッズは、この条件で400回走らせた試算から出しています。予想の印は ◎本命 ○対抗 ▲単穴 △連下。</p>
   <div class="btns">
-    <button class="btn red" id="bGo">${mine ? '発走（気合いは3回）' : '発走'}</button>
+    <button class="btn red" id="bGo">${mine ? '発走（気合いは10回）' : '発走'}</button>
     <button class="btn ghost" id="bQ">結果だけ見る</button>
     <button class="btn ghost" id="bBack">組み合わせに戻る</button>
   </div>`;
@@ -970,7 +970,7 @@ function viewRace(m, ri) {
       <div id="bnBox"></div>
     </div>
     <div class="ctl">
-      ${favO ? `<button class="kiai" id="bKiai"><span><b>気合い</b><small>${esc(favO.h.name)}に（Space）</small></span><span class="pips" id="pips"><i></i><i></i><i></i></span></button>` : `<p class="small muted">このレースに推し馬は出ていません。気合いは使えません。</p>`}
+      ${favO ? `<button class="kiai" id="bKiai"><span><b>気合い</b><small>${esc(favO.h.name)}に（Space）</small></span><span class="pips" id="pips"></span></button>` : `<p class="small muted">このレースに推し馬は出ていません。気合いは使えません。</p>`}
       <div class="btns"><span class="seg" id="spdSeg">${[1, 2, 4].map(v => `<button data-s="${v}" aria-pressed="${v === spd}">×${v}</button>`).join('')}</span>
       <button class="btn ghost" id="bSkip">結果まで飛ばす</button></div>
     </div>
@@ -996,7 +996,7 @@ function viewRace(m, ri) {
   say(`${rec.label}、${c.name}芝${rec.dist}メートル、馬場は${rec.baba}。${rec.ids.map(id => H(id).name).join('、')}。各馬ゲートに収まりました。`, true, true);
   RV.raf = requestAnimationFrame(loop);
 }
-function updPips() { if (!RV || !RV.favO) return; const left = RV.R.kiaiLeft; $('#pips').innerHTML = [0, 1, 2].map(i => `<i class="${i < left ? '' : 'used'}"></i>`).join(''); $('#bKiai').disabled = left <= 0 || RV.phase !== 'run'; }
+function updPips() { if (!RV || !RV.favO) return; const left = RV.R.kiaiLeft; $('#pips').innerHTML = Array.from({ length: 10 }, (_, i) => i).map(i => `<i class="${i < left ? '' : 'used'}"></i>`).join(''); $('#bKiai').disabled = left <= 0 || RV.phase !== 'run'; }
 function say(text, log, force) {
   if (!RV) return;
   $('#subT').innerHTML = `<span>${esc(text)}</span>`;
