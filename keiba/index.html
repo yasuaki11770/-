@@ -1,0 +1,1339 @@
+<title>四十八駿</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="47都道府県の代表馬とアメリカからの招待馬が日本一を争う競馬ゲーム。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@700;800&family=BIZ+UDPGothic:wght@400;700&family=Oswald:wght@500;600&display=swap">
+<style>
+/* Layout: 競馬新聞の紙面。上に題字と節の帯、中身は「出馬表」の罫線で組む。レースだけは芝の中継画面。 */
+:root{
+  --paper:#eceee8; --sheet:#f7f8f4; --sunk:#e1e4dc; --ink:#15181b; --ink2:#4d5450; --rule:#c3c8bf;
+  --red:#c8102e; --red-ink:#ffffff; --turf:#2a6a3c; --gold:#a8800f; --good:#1f7a43; --bad:#b3261e;
+  --map:#d2d7cd; --map-line:#f7f8f4;
+  --w1:#ffffff; --w2:#151515; --w3:#d7202f; --w4:#1f58d0;
+  --f-head:"Shippori Mincho B1","Hiragino Mincho ProN","Yu Mincho",serif;
+  --f-body:"BIZ UDPGothic","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+  --f-num:"Oswald","DIN Alternate","Arial Narrow",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#111412; --sheet:#191d1a; --sunk:#222723; --ink:#e6e9e3; --ink2:#a2aaa2; --rule:#343b36;
+  --red:#ff5c6c; --red-ink:#2a0207; --turf:#5cb877; --gold:#e0b64a; --good:#5fd08a; --bad:#ff7a6e;
+  --map:#2c332e; --map-line:#191d1a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#111412; --sheet:#191d1a; --sunk:#222723; --ink:#e6e9e3; --ink2:#a2aaa2; --rule:#343b36;
+  --red:#ff5c6c; --red-ink:#2a0207; --turf:#5cb877; --gold:#e0b64a; --good:#5fd08a; --bad:#ff7a6e;
+  --map:#2c332e; --map-line:#191d1a; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{background:var(--paper)}
+body{color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.6;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,[tabindex]:focus-visible,a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.num{font-family:var(--f-num);font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.wrap{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 48px;display:flex;flex-direction:column;gap:16px}
+/* 題字の帯 */
+.mast{display:flex;align-items:stretch;gap:14px;border-bottom:3px double var(--ink);padding-block:12px 10px;flex-wrap:wrap}
+.seal{writing-mode:vertical-rl;font-family:var(--f-head);font-weight:800;font-size:28px;line-height:1;letter-spacing:.08em;background:var(--red);color:var(--red-ink);padding:8px 6px;border-radius:2px;flex:none;cursor:pointer;border:0}
+.mast .t{min-width:14em!important;display:flex;flex-direction:column;justify-content:center;min-width:0;flex:1}
+.mast .t b{font-family:var(--f-head);font-size:20px;line-height:1.25}
+.mast .t small{color:var(--ink2);font-size:12.5px}
+.mast nav{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.nb{border:1px solid var(--rule);background:var(--sheet);border-radius:2px;padding:6px 12px;font-size:14px;min-height:38px}
+.nb[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.btn{border:1px solid var(--ink);background:var(--ink);color:var(--paper);border-radius:2px;padding:9px 18px;font-weight:700;font-size:15px;min-height:44px}
+.btn.red{background:var(--red);border-color:var(--red);color:var(--red-ink)}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--rule)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btns{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.sheet{background:var(--sheet);border:1px solid var(--rule);border-radius:2px;padding:14px 16px;min-width:0}
+h2.hd{margin:0;font-family:var(--f-head);font-weight:800;font-size:clamp(22px,4.6vw,30px);line-height:1.2;text-wrap:balance}
+h2.hd small{display:block;font-family:var(--f-body);font-weight:400;font-size:13px;color:var(--ink2);letter-spacing:.04em}
+h3.sub{margin:0 0 6px;font-family:var(--f-head);font-size:18px;line-height:1.3;border-left:5px solid var(--red);padding-left:8px}
+.kick{font-size:12px;letter-spacing:.14em;color:var(--red);font-weight:700;margin:0}
+.muted{color:var(--ink2)}.small{font-size:13px}
+p{margin:0}
+.waku{display:inline-grid;place-items:center;width:1.7em;height:1.7em;font-family:var(--f-num);font-weight:600;font-size:14px;border:1px solid #555;border-radius:2px;flex:none}
+.w1{background:var(--w1);color:#111}.w2{background:var(--w2);color:#fff;border-color:#000}.w3{background:var(--w3);color:#fff;border-color:#8a0f18}.w4{background:var(--w4);color:#fff;border-color:#0e2f7a}
+.chip{display:inline-block;font-size:12px;font-weight:700;padding:0 7px;border-radius:2px;border:1px solid var(--rule);background:var(--sunk);white-space:nowrap;line-height:1.7}
+.chip.st{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.chip.fav{background:var(--red);color:var(--red-ink);border-color:var(--red)}
+.g-S{color:#d4231f;font-weight:700}.g-A{color:#d4730f;font-weight:700}.g-B{color:var(--ink)}.g-C{color:#3f78c4}.g-D{color:#7a62c8}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .g-S{color:#ff7068}:root:not([data-theme="light"]) .g-A{color:#ffae4a}:root:not([data-theme="light"]) .g-C{color:#7fb0ff}:root:not([data-theme="light"]) .g-D{color:#b9a6ff}}
+:root[data-theme="dark"] .g-S{color:#ff7068}:root[data-theme="dark"] .g-A{color:#ffae4a}:root[data-theme="dark"] .g-C{color:#7fb0ff}:root[data-theme="dark"] .g-D{color:#b9a6ff}
+/* 題 */
+.hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,360px);gap:18px;align-items:center}
+@media (max-width:760px){.hero{grid-template-columns:minmax(0,1fr)}}
+.hero h1{margin:0;font-family:var(--f-head);font-weight:800;font-size:clamp(54px,14vw,112px);line-height:1;letter-spacing:.04em}
+.hero h1 span{color:var(--red)}
+.hero .lead{max-width:34em;margin-top:10px}
+.rules{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;border:1px solid var(--ink);margin-top:14px}
+.rules div{padding:8px 10px;border-right:1px solid var(--rule)}.rules div:last-child{border-right:0}
+.rules b{display:block;font-family:var(--f-head);font-size:17px}.rules span{font-size:12.5px;color:var(--ink2);line-height:1.5;display:block}
+@media (max-width:480px){.rules{grid-template-columns:1fr}.rules div{border-right:0;border-bottom:1px solid var(--rule)}.rules div:last-child{border-bottom:0}}
+/* 地図 */
+.jmap{width:100%;height:auto;display:block}
+.jmap path{fill:var(--map);stroke:var(--map-line);stroke-width:.8;cursor:pointer;transition:fill .15s}
+.jmap path:hover{fill:color-mix(in srgb,var(--red) 35%,var(--map))}
+.jmap path.on{fill:var(--red)}
+.jmap path.out{fill:color-mix(in srgb,var(--map) 50%,var(--paper));cursor:default}
+.jmap path.alive{fill:color-mix(in srgb,var(--turf) 55%,var(--map))}
+.jmap .frame{fill:none;stroke:var(--rule);stroke-dasharray:4 4}
+/* 選択 */
+.pick{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:16px;align-items:start}
+@media (max-width:820px){.pick{grid-template-columns:minmax(0,1fr)}}
+.regs{display:flex;flex-wrap:wrap;gap:4px}
+.hgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr));gap:8px}
+.hc{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:2px 10px;align-items:center;text-align:left;background:var(--sheet);border:1px solid var(--rule);border-radius:2px;padding:8px 10px;min-width:0}
+.hc:hover{border-color:var(--ink)}
+.hc[aria-pressed="true"]{border-color:var(--red);box-shadow:inset 0 0 0 1px var(--red)}
+.hc .pf{font-size:11.5px;color:var(--ink2);grid-column:1/-1;letter-spacing:.06em}
+.hc b{font-family:var(--f-head);font-size:17px;line-height:1.2;overflow-wrap:anywhere}
+.hc .tt{font-family:var(--f-num);font-size:18px;text-align:right}
+.hc .mt{grid-column:1/-1;display:flex;gap:4px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--ink2)}
+.silk{width:22px;height:22px;border-radius:2px;flex:none;border:1px solid rgba(0,0,0,.3)}
+.detail{display:flex;flex-direction:column;gap:12px}
+.detail .nm{font-family:var(--f-head);font-weight:800;font-size:clamp(26px,6vw,36px);line-height:1.15}
+.detail .nm small{display:block;font-family:var(--f-body);font-weight:400;font-size:13px;color:var(--ink2)}
+.portrait{width:100%;max-width:100%;height:auto;aspect-ratio:2.2/1;display:block;background:linear-gradient(#cfe0e8,#e8efe6 60%,#5d9a5f 60.5%,#4b8a50);border-radius:2px}
+.bars{display:grid;grid-template-columns:3.2em minmax(0,1fr) 2.4em;gap:5px 10px;align-items:center}
+.bars span{font-size:13px;color:var(--ink2)}
+.bar{height:10px;background:var(--sunk);position:relative;overflow:hidden}
+.bar i{position:absolute;left:0;top:0;bottom:0;background:var(--ink)}
+.bar i.hi{background:var(--red)}
+.bar s{position:absolute;top:0;bottom:0;width:2px;background:var(--gold);text-decoration:none}
+.apt{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border:1px solid var(--ink)}
+.apt div{text-align:center;padding:4px 2px;border-right:1px solid var(--rule)}.apt div:last-child{border-right:0}
+.apt small{display:block;font-size:11px;color:var(--ink2)}.apt b{font-family:var(--f-num);font-size:20px;font-weight:600}
+.memo{font-size:13px;padding:8px 10px;background:var(--sunk);border-left:3px solid var(--gold)}
+/* 大会 */
+.round{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:flex-end;justify-content:space-between}
+.steps{display:flex;gap:0;border:1px solid var(--ink)}
+.steps span{padding:4px 12px;font-size:13px;border-right:1px solid var(--rule)}.steps span:last-child{border-right:0}
+.steps span.on{background:var(--ink);color:var(--paper);font-weight:700}
+.steps span.done{color:var(--ink2);text-decoration:line-through}
+.favbox{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 12px;align-items:center}
+.favbox b{font-family:var(--f-head);font-size:20px}
+.races{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:10px}
+.rc{background:var(--sheet);border:1px solid var(--rule);border-radius:2px;display:flex;flex-direction:column;min-width:0}
+.rc.mine{border-color:var(--red);box-shadow:inset 0 0 0 1px var(--red)}
+.rc header{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:7px 10px;border-bottom:1px solid var(--rule)}
+.rc header b{font-family:var(--f-head);font-size:16px}
+.rc header span{font-size:12.5px;color:var(--ink2);text-align:right}
+.rc ol{list-style:none;margin:0;padding:4px 10px;display:flex;flex-direction:column}
+.rc li{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center;padding:3px 0;border-bottom:1px dashed var(--rule);font-size:14px}
+.rc li:last-child{border-bottom:0}
+.rc li .r{font-family:var(--f-num);font-size:13px;color:var(--ink2);text-align:right;white-space:nowrap}
+.rc li.win{font-weight:700}.rc li.win .r{color:var(--red)}
+.rc li.lose{color:var(--ink2)}
+.rc li .n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rc footer{display:flex;gap:6px;padding:8px 10px;border-top:1px solid var(--rule);margin-top:auto}
+.rc footer .btn{flex:1;min-height:38px;padding:5px 10px;font-size:14px}
+/* 出馬表 */
+.cond{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:baseline}
+.cond .big{font-family:var(--f-head);font-weight:800;font-size:clamp(24px,5vw,34px);line-height:1.15}
+.tw{overflow-x:auto;border:1px solid var(--ink);background:var(--sheet)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:6px 8px;border-bottom:1px solid var(--rule);border-right:1px solid var(--rule);text-align:center;white-space:nowrap;vertical-align:middle}
+th:last-child,td:last-child{border-right:0}
+thead th{font-size:12px;font-weight:400;color:var(--ink2);background:var(--sunk);letter-spacing:.06em}
+tbody tr:last-child td{border-bottom:0}
+td.l{text-align:left}
+td .hn{font-family:var(--f-head);font-weight:800;font-size:17px;display:block;line-height:1.2}
+td .hn+small{font-size:11.5px;color:var(--ink2)}
+.mark{font-size:22px;line-height:1;color:var(--red);font-weight:700}
+.odds{font-family:var(--f-num);font-size:18px}
+.pop{font-size:11px;color:var(--ink2);display:block}
+.cmt{font-size:12.5px;color:var(--ink2);white-space:normal;min-width:11em;text-align:left;line-height:1.45}
+tr.me td{background:color-mix(in srgb,var(--red) 9%,var(--sheet))}
+/* レース画面 */
+.stage{position:relative;width:100%;max-width:100%;aspect-ratio:16/9;background:#3c7a45;overflow:hidden;border:1px solid var(--ink);container-type:inline-size;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+@media (max-width:640px){.stage{aspect-ratio:4/3}}
+.stage canvas.main{position:absolute;inset:0;width:100%;height:100%;display:block}
+.hud{position:absolute;pointer-events:none;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.8)}
+.hud.tl{left:10px;top:8px;display:flex;align-items:stretch;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5));text-shadow:none}
+.hud.tl .rn{background:#0f1a14;padding:3px 9px;font-family:var(--f-head);font-size:clamp(12px,2.2cqw,18px);line-height:1.3;border-left:4px solid var(--w3)}
+.hud.tl .rn small{display:block;font-family:var(--f-body);font-size:clamp(10px,1.5cqw,12.5px);opacity:.85}
+.hud.tl .rem{background:#f4f2e8;color:#111;padding:3px 10px;display:flex;flex-direction:column;justify-content:center;align-items:flex-end}
+.hud.tl .rem small{font-size:clamp(9px,1.3cqw,11px);color:#555;line-height:1}
+.hud.tl .rem b{font-family:var(--f-num);font-weight:600;font-size:clamp(17px,3.2cqw,28px);line-height:1.1}
+.hud.mm{right:8px;top:8px;width:clamp(96px,22cqw,190px);height:auto;aspect-ratio:2/1;background:rgba(10,20,14,.55);border-radius:3px}
+.hud.ord{left:0;right:0;bottom:0;display:flex;gap:2px;padding:4px 6px;background:linear-gradient(transparent,rgba(0,0,0,.7) 30%);font-size:clamp(10px,1.8cqw,14px);text-shadow:none;overflow:hidden}
+.hud.ord div{display:flex;align-items:center;gap:4px;background:rgba(0,0,0,.55);padding:2px 6px 2px 2px;border-radius:2px;min-width:0;flex:1 1 0}
+.hud.ord div.fv{background:rgba(200,16,46,.85)}
+.hud.ord .waku{width:1.5em;height:1.5em;font-size:.95em}
+.hud.ord b{font-family:var(--f-num);font-weight:600}
+.hud.ord span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.hud.ord em{font-style:normal;font-family:var(--f-num);opacity:.85;margin-left:auto;white-space:nowrap}
+.hud.sub{left:6%;right:6%;bottom:calc(clamp(22px,4cqw,34px) + 8px);text-align:center;font-weight:700;font-size:clamp(13px,2.4cqw,20px)}
+.hud.sub span{background:rgba(0,0,0,.6);padding:2px 10px;border-radius:2px;box-decoration-break:clone;-webkit-box-decoration-break:clone;line-height:1.7}
+.hud.bn{left:0;right:0;top:30%;text-align:center;font-family:var(--f-head);font-weight:800;font-size:clamp(26px,7.5cqw,72px);letter-spacing:.1em;text-shadow:0 0 18px rgba(255,210,90,.85),0 3px 0 #000;animation:bn 1.8s ease forwards}
+.hud.bn small{display:block;font-family:var(--f-body);font-size:.32em;letter-spacing:.1em;text-shadow:0 2px 3px #000}
+@keyframes bn{0%{opacity:0;transform:scale(1.5)}12%{opacity:1;transform:none}78%{opacity:1}100%{opacity:0}}
+.ctl{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.kiai{display:flex;align-items:center;gap:12px;background:var(--red);color:var(--red-ink);border:0;border-radius:2px;padding:8px 22px 8px 16px;min-height:60px;box-shadow:0 4px 0 color-mix(in srgb,var(--red) 55%,#000)}
+.kiai:active{transform:translateY(3px);box-shadow:0 1px 0 color-mix(in srgb,var(--red) 55%,#000)}
+.kiai b{font-family:var(--f-head);font-weight:800;font-size:26px;letter-spacing:.12em;line-height:1}
+.kiai small{display:block;font-size:11.5px;opacity:.9}
+.kiai .pips{display:flex;gap:5px}
+.kiai .pips i{width:13px;height:13px;border-radius:50%;background:currentColor;opacity:1}
+.kiai .pips i.used{opacity:.25}
+.kiai:disabled{opacity:.45;box-shadow:none}
+.seg{display:inline-flex;border:1px solid var(--ink);border-radius:2px;overflow:hidden}
+.seg button{border:0;background:var(--sheet);padding:6px 12px;border-right:1px solid var(--rule);min-height:40px;font-family:var(--f-num);font-size:15px}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.log{list-style:none;margin:0;padding:0;max-height:180px;overflow-y:auto;font-size:13.5px;display:flex;flex-direction:column}
+.log li{padding:3px 0;border-bottom:1px dashed var(--rule);display:grid;grid-template-columns:3.6em minmax(0,1fr);gap:8px}
+.log li em{font-style:normal;font-family:var(--f-num);color:var(--ink2);text-align:right}
+/* 結果 */
+.win1{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:center}
+@media (max-width:640px){.win1{grid-template-columns:minmax(0,1fr)}}
+.win1 .big{font-family:var(--f-head);font-weight:800;font-size:clamp(30px,7vw,48px);line-height:1.1}
+.res td .hn{font-size:16px}
+.res tr.r1 td{background:color-mix(in srgb,var(--gold) 14%,var(--sheet))}
+.stamp{display:inline-block;border:3px solid var(--red);color:var(--red);font-family:var(--f-head);font-weight:800;font-size:20px;padding:0 10px;transform:rotate(-6deg);letter-spacing:.1em}
+.champ{text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px;padding-block:10px}
+.champ .big{font-family:var(--f-head);font-weight:800;font-size:clamp(36px,10vw,80px);line-height:1.05}
+.path{display:flex;flex-direction:column;gap:4px;font-size:14px;text-align:left;width:min(560px,100%)}
+.path div{display:grid;grid-template-columns:5.5em minmax(0,1fr) auto;gap:8px;padding:4px 0;border-bottom:1px dashed var(--rule)}
+/* 名鑑・検証 */
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:820px){.grid2{grid-template-columns:minmax(0,1fr)}}
+.hist{display:flex;align-items:flex-end;gap:3px;height:120px;border-bottom:1px solid var(--ink);padding-top:16px}
+.hist div{flex:1 1 0;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:2px;min-width:0;height:100%}
+.hist i{display:block;width:100%;background:var(--ink)}
+.hist i.old{background:var(--rule)}
+.hist em{font-style:normal;font-size:10.5px;font-family:var(--f-num);color:var(--ink2)}
+.hist b{font-size:10.5px;font-family:var(--f-num);font-weight:500}
+.histx{display:flex;gap:3px}.histx span{flex:1 1 0;text-align:center;font-family:var(--f-num);font-size:10.5px;color:var(--ink2);min-width:0}
+.legend{display:flex;gap:14px;font-size:12.5px;color:var(--ink2);align-items:center;flex-wrap:wrap}
+.legend i{display:inline-block;width:12px;height:10px;margin-right:4px;vertical-align:-1px}
+.chg td{font-size:13px}
+.chg .why{white-space:normal;min-width:16em;text-align:left;line-height:1.5}
+.up{color:var(--good);font-weight:700}.dn{color:var(--bad);font-weight:700}
+.wr{display:grid;grid-template-columns:minmax(0,9em) minmax(0,1fr) 3.4em;gap:3px 8px;align-items:center;font-size:13px}
+.wr .bar{height:9px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:9px 18px;border-radius:2px;font-size:14px;font-weight:700;z-index:30;max-width:calc(100% - 32px);text-align:center}
+.foot{font-size:12px;color:var(--ink2);border-top:1px solid var(--rule);padding-top:10px}
+@media (max-width:520px){.seal{writing-mode:horizontal-tb;font-size:22px;padding:6px 10px}.mast{align-items:center}.mast .t{min-width:0!important}.kiai{flex:1 1 100%;justify-content:center}}
+.tw+p{margin-top:6px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="mast">
+    <button class="seal" id="home" aria-label="題字に戻る">四十八駿</button>
+    <div class="t"><b id="mastT">全国代表馬 日本一決定戦</b><small id="mastS">47都道府県の48頭とアメリカからの招待馬1頭</small></div>
+    <nav>
+      <button class="nb" data-go="hub" id="navHub">大会</button>
+      <button class="nb" data-go="book" id="navBook">名鑑・検証</button>
+      <button class="nb" id="snd" aria-pressed="true">音 あり</button>
+    </nav>
+  </header>
+  <main id="view"></main>
+  <p class="foot">日本地図は「47 Prefectures」、効果音と読み上げの仕組みは「白球ナイン」から流用。競馬場の直線距離と坂はJRAの芝コースの数値をもとにした目安。</p>
+</div>
+<div class="toast" id="toast" hidden></div>
+<script>
+var JMAP = {"w":515,"h":557,"paths":[["HK","M343.6,80.1L346.4,76.2L346.4,73.5L344.8,70.6L345.3,68.6L344.1,64.1L345.1,62.1L348.8,60.4L349.8,59.0L350.6,56.3L350.5,50.0L350.2,46.9L350.9,45.8L352.1,43.3L352.9,37.0L352.1,32.2L351.4,30.1L349.7,25.6L347.8,21.4L347.5,19.7L349.2,15.7L348.9,13.3L350.2,14.8L352.8,14.1L354.0,11.3L355.0,10.9L357.4,14.4L359.9,16.1L363.8,20.9L367.2,24.3L372.5,32.5L375.0,34.8L378.5,38.5L380.8,40.1L384.7,42.8L386.8,44.7L390.9,46.9L395.7,48.7L403.2,50.2L405.9,50.2L406.1,52.3L408.6,54.7L412.8,55.4L417.9,54.8L422.1,49.6L425.7,46.4L428.5,41.9L429.3,43.9L427.4,48.0L426.8,51.0L425.5,52.7L424.5,56.4L424.1,59.7L426.0,62.7L428.2,63.4L428.2,63.5L427.3,63.7L429.3,69.5L432.0,72.7L434.4,73.4L437.5,69.4L441.1,69.3L439.4,71.1L436.8,71.9L435.0,75.6L431.0,76.4L426.6,78.2L426.1,80.5L424.3,82.2L421.7,82.6L421.1,80.8L419.5,80.7L418.5,82.4L419.6,84.3L416.5,84.0L413.3,84.5L410.6,83.8L410.5,83.0L407.6,83.2L402.9,85.7L400.1,88.2L396.5,92.3L393.1,96.6L390.4,101.4L389.1,104.8L389.4,109.1L389.3,112.4L388.2,113.8L387.9,116.1L385.4,113.2L383.9,112.3L381.5,110.7L379.3,110.3L374.5,108.3L367.4,104.6L364.8,102.4L363.2,101.2L360.5,100.7L359.1,99.5L357.1,97.8L355.3,97.4L352.5,96.7L347.0,98.5L342.1,102.3L339.3,105.3L338.0,106.9L337.8,105.3L336.0,104.6L335.2,102.2L333.0,100.5L331.9,99.0L327.7,98.6L326.4,98.6L323.7,102.1L322.6,105.0L322.5,108.7L326.3,110.8L329.0,112.8L331.8,111.8L333.2,113.0L335.4,115.6L337.5,118.2L340.9,119.5L342.6,121.1L340.2,123.4L337.9,124.4L333.6,122.6L332.0,123.6L332.1,121.6L330.3,121.7L328.8,124.2L326.1,126.2L326.3,129.3L325.6,130.4L322.3,131.5L321.2,133.8L318.3,133.3L316.3,129.6L316.3,127.2L318.1,121.9L319.1,121.4L319.3,117.6L317.8,114.4L316.8,112.9L314.5,112.3L313.6,110.2L311.7,109.5L311.0,107.1L312.8,102.6L312.1,98.1L314.3,95.9L316.6,95.9L319.0,93.9L319.7,92.3L322.6,93.1L323.7,90.1L324.1,89.3L327.1,86.7L327.3,85.6L325.4,82.9L322.7,80.0L322.9,78.1L323.2,76.7L324.8,76.7L325.7,75.4L329.3,77.6L330.8,78.9L334.0,80.3L337.7,79.1L337.6,80.5L340.9,81.8L343.6,80.1ZM489.5,10.1L488.7,10.2L484.2,14.2L483.5,15.4L480.8,18.8L478.3,19.5L475.9,18.1L474.9,19.1L475.6,20.4L474.7,22.6L472.6,25.0L469.6,27.3L467.3,31.9L465.2,32.0L462.4,36.5L460.5,36.1L460.9,34.0L462.1,32.8L461.8,30.5L462.9,32.0L463.3,29.4L464.5,30.1L466.5,28.4L466.5,26.1L465.1,26.1L465.0,24.3L466.6,25.1L467.7,22.9L470.3,21.1L472.6,18.6L472.4,15.6L474.8,16.0L475.8,15.4L476.3,13.0L478.9,11.6L479.4,10.1L478.3,7.1L479.6,4.8L480.5,5.2L481.8,8.9L485.3,9.5L488.8,8.2L490.7,6.1L491.3,4.1L494.3,0.2L497.0,-0.7L498.8,-0.2L499.4,1.3L498.4,3.1L499.5,4.0L498.9,5.7L494.8,6.2L492.0,8.9L489.5,10.1ZM440.8,48.3L438.9,53.2L436.0,54.3L434.8,56.1L434.7,61.4L434.0,59.5L432.0,60.1L431.2,56.5L437.9,49.4L437.7,48.2L440.3,43.8L442.4,41.3L442.6,39.6L444.8,35.6L446.0,35.6L447.5,37.2L449.4,37.9L454.0,37.2L452.9,39.5L450.6,39.8L449.0,42.1L445.2,42.8L443.9,45.4L442.7,45.8L440.8,48.3ZM458.0,58.5L456.4,55.7L459.3,54.5L461.7,52.6L463.5,54.0L460.9,56.5L459.0,57.1L458.0,58.5ZM340.9,23.9L338.3,21.4L338.7,20.3L339.7,19.2L342.3,21.0L342.6,22.4L340.9,23.9ZM304.1,114.9L303.1,111.2L303.7,110.1L306.2,109.3L305.3,113.5L304.1,114.9ZM336.2,18.9L335.1,15.7L336.2,13.9L336.7,17.6L336.2,18.9ZM447.3,66.7L446.3,64.5L449.1,64.3L447.3,66.7ZM442.7,68.3L441.9,67.3L443.7,67.0L442.7,68.3ZM452.1,61.5L452.1,61.5L452.1,61.5L452.1,61.5ZM453.2,63.0L453.2,63.0L453.2,63.0L453.2,63.0ZM445.9,68.4L445.9,68.4L445.9,68.4L445.9,68.4ZM448.4,67.9L448.4,67.9L448.4,67.9L448.4,67.9ZM448.2,68.1L448.2,68.1L448.2,68.1L448.2,68.1ZM442.7,69.3L442.7,69.3L442.7,69.3L442.7,69.3ZM445.0,69.7L445.0,69.7L445.0,69.7L445.0,69.7ZM438.1,72.2L438.1,72.2L438.1,72.2L438.1,72.2ZM437.0,74.4L437.0,74.4L437.0,74.4L437.0,74.4ZM436.8,75.0L436.8,75.0L436.8,75.0L436.8,75.0ZM301.9,131.4L301.9,131.4L301.9,131.4L301.9,131.4ZM312.1,135.5L312.1,135.5L312.1,135.5L312.1,135.5ZM303.0,111.2L303.0,111.2L303.0,111.2L303.0,111.2ZM328.7,77.3L328.7,77.3L328.7,77.3L328.7,77.3ZM345.3,43.6L345.3,43.6L345.3,43.6L345.3,43.6ZM342.6,44.2L342.6,44.2L342.6,44.2L342.6,44.2ZM334.6,12.8L334.6,12.8L334.6,12.8L334.6,12.8ZM421.5,83.8L421.5,83.8L421.5,83.8L421.5,83.8ZM426.9,79.8L426.9,79.8L426.9,79.8L426.9,79.8ZM426.3,80.5L426.3,80.5L426.3,80.5L426.3,80.5ZM428.2,64.8L428.2,64.8L428.2,64.8L428.2,64.8ZM430.0,64.7L430.0,64.7L430.0,64.7L430.0,64.7ZM430.1,64.8L430.1,64.8L430.1,64.8L430.1,64.8ZM462.2,55.5L462.2,55.5L462.2,55.5L462.2,55.5ZM461.0,56.9L461.0,56.9L461.0,56.9L461.0,56.9ZM459.4,57.4L459.4,57.4L459.4,57.4L459.4,57.4ZM459.0,57.8L459.0,57.8L459.0,57.8L459.0,57.8ZM462.3,29.9L462.3,29.9L462.3,29.9L462.3,29.9ZM468.6,30.6L468.6,30.6L468.6,30.6L468.6,30.6Z"],["AO","M341.2,148.7L343.0,148.6L344.2,146.1L345.2,140.8L344.0,137.8L342.5,138.1L340.3,140.0L339.2,139.5L333.8,141.2L334.1,139.3L335.3,133.1L336.2,131.6L337.4,129.8L341.4,131.8L344.4,134.5L345.5,134.8L349.3,132.7L348.1,137.7L348.0,141.2L348.1,148.5L349.4,154.9L350.0,156.8L351.7,159.1L352.6,158.6L354.2,160.5L355.1,161.2L352.9,163.6L352.3,164.0L348.6,164.1L347.7,165.0L346.9,163.8L343.4,165.9L340.4,168.5L338.8,167.7L339.4,163.3L339.3,162.9L339.3,162.4L338.0,162.6L336.5,162.1L336.9,160.0L332.4,163.0L330.4,162.3L328.9,163.1L326.9,161.2L324.9,161.5L324.6,162.4L320.4,162.5L319.5,162.6L318.6,161.6L315.6,162.9L315.9,160.9L315.1,158.2L313.9,157.3L315.4,156.5L318.1,152.7L320.2,153.2L322.5,151.7L323.9,145.8L323.6,142.6L322.3,142.1L324.0,141.1L324.3,138.4L326.7,140.1L330.0,139.2L331.0,140.3L331.3,144.7L331.6,147.1L332.5,149.8L334.7,150.4L336.1,148.3L336.5,145.2L338.0,145.7L341.2,148.7ZM336.4,145.1L336.4,145.1L336.4,145.1L336.4,145.1ZM336.0,147.5L336.0,147.5L336.0,147.5L336.0,147.5ZM336.8,129.1L336.8,129.1L336.8,129.1L336.8,129.1Z"],["IW","M338.8,167.7L340.4,168.5L343.4,165.9L346.9,163.8L347.7,165.0L348.6,164.1L352.3,164.0L352.9,163.6L355.1,161.2L357.8,165.7L359.0,170.6L359.4,172.8L361.6,174.7L362.0,177.7L362.5,179.4L362.8,183.8L362.3,186.6L363.5,184.6L364.8,188.1L363.6,189.1L364.1,191.6L362.4,192.2L361.6,193.8L362.9,194.7L361.0,195.2L362.3,196.9L361.9,198.7L360.0,199.8L361.8,200.9L359.5,200.7L360.5,203.2L357.7,203.6L357.3,204.6L355.4,205.1L353.9,204.5L352.0,205.0L352.2,207.1L350.5,211.3L348.1,209.8L346.0,212.0L344.6,211.0L343.1,208.0L340.7,208.4L336.9,205.9L335.6,206.1L335.9,204.2L336.2,202.5L335.0,200.7L336.3,199.5L335.3,198.6L335.8,197.8L333.6,196.0L332.6,193.4L333.5,191.0L334.2,188.1L335.7,186.9L336.2,184.4L335.1,183.0L336.7,181.3L335.2,179.0L337.3,178.8L336.6,176.3L336.7,170.0L338.8,167.7ZM362.9,184.2L362.9,184.2L362.9,184.2L362.9,184.2ZM357.3,206.1L357.3,206.1L357.3,206.1L357.3,206.1ZM363.2,195.0L363.2,195.0L363.2,195.0L363.2,195.0ZM363.4,192.1L363.4,192.1L363.4,192.1L363.4,192.1Z"],["MG","M342.2,224.3L342.2,225.2L342.4,226.1L342.1,226.0L342.1,226.0L342.1,226.0L342.1,226.0L340.6,229.2L340.2,230.5L339.8,233.0L339.6,234.6L340.1,237.5L338.4,237.7L338.3,239.1L338.3,240.5L334.6,240.4L334.5,237.9L332.8,237.2L332.3,237.3L329.7,237.6L329.6,237.6L329.4,236.2L324.8,235.4L324.7,233.1L326.9,233.0L328.6,230.8L328.6,230.4L329.1,227.2L330.2,224.2L331.7,221.5L332.4,221.1L332.4,221.1L330.9,218.9L331.4,217.7L330.6,215.3L331.9,215.6L332.4,214.1L332.8,211.8L331.9,211.4L330.5,208.2L332.6,208.4L334.1,207.2L335.2,206.1L335.6,206.1L336.9,205.9L340.7,208.4L343.1,208.0L344.6,211.0L346.0,212.0L348.1,209.8L350.5,211.3L352.2,207.1L352.0,205.0L353.9,204.5L355.4,205.1L356.5,208.5L354.6,207.6L354.9,209.3L353.1,210.6L353.3,211.8L354.1,212.0L351.4,215.0L353.4,215.3L351.8,216.9L353.7,219.4L352.8,219.8L353.1,222.2L353.9,224.6L353.2,225.2L351.0,223.6L350.8,222.1L347.1,222.2L344.3,223.0L342.7,223.9L342.2,224.3ZM353.1,217.7L353.1,217.7L353.1,217.7L353.1,217.7ZM351.2,222.9L351.2,222.9L351.2,222.9L351.2,222.9ZM354.8,226.0L354.8,226.0L354.8,226.0L354.8,226.0ZM350.9,225.6L350.9,225.6L350.9,225.6L350.9,225.6ZM353.1,226.7L353.1,226.7L353.1,226.7L353.1,226.7ZM344.2,223.9L344.2,223.9L344.2,223.9L344.2,223.9ZM344.0,224.0L344.0,224.0L344.0,224.0L344.0,224.0ZM344.2,224.0L344.2,224.0L344.2,224.0L344.2,224.0ZM344.1,224.3L344.1,224.3L344.1,224.3L344.1,224.3ZM344.1,224.3L344.1,224.3L344.1,224.3L344.1,224.3ZM344.0,224.2L344.0,224.2L344.0,224.2L344.0,224.2ZM342.6,224.4L342.6,224.4L342.6,224.4L342.6,224.4ZM343.8,224.6L343.8,224.6L343.8,224.6L343.8,224.6ZM355.4,209.3L355.4,209.3L355.4,209.3L355.4,209.3ZM355.8,209.0L355.8,209.0L355.8,209.0L355.8,209.0ZM345.1,223.8L345.1,223.8L345.1,223.8L345.1,223.8ZM345.1,224.8L345.1,224.8L345.1,224.8L345.1,224.8ZM343.0,223.5L343.0,223.5L343.0,223.5L343.0,223.5ZM343.3,223.5L343.3,223.5L343.3,223.5L343.3,223.5ZM343.1,223.5L343.1,223.5L343.1,223.5L343.1,223.5ZM343.0,224.7L343.0,224.7L343.0,224.7L343.0,224.7ZM353.5,221.0L353.5,221.0L353.5,221.0L353.5,221.0ZM355.1,221.4L355.1,221.4L355.1,221.4L355.1,221.4ZM355.1,222.2L355.1,222.2L355.1,222.2L355.1,222.2ZM355.3,222.5L355.3,222.5L355.3,222.5L355.3,222.5Z"],["AK","M334.2,188.1L333.5,191.0L332.6,193.4L333.6,196.0L335.8,197.8L335.3,198.6L336.3,199.5L335.0,200.7L336.2,202.5L335.9,204.2L335.6,206.1L335.2,206.1L334.1,207.2L332.6,208.4L330.5,208.2L329.2,208.0L329.2,207.9L328.2,206.6L327.7,205.2L325.3,204.0L321.2,203.7L319.2,202.4L319.1,201.2L317.6,202.0L314.7,201.7L316.0,196.7L317.2,195.9L318.2,192.7L318.8,187.4L318.2,181.3L316.6,179.1L314.1,178.7L314.2,179.5L311.8,179.9L310.6,177.8L311.0,176.2L313.7,176.5L316.0,173.4L316.6,171.8L317.5,167.7L317.3,164.4L315.6,162.9L318.6,161.6L319.5,162.6L320.4,162.5L324.6,162.4L324.9,161.5L326.9,161.2L328.9,163.1L330.4,162.3L332.4,163.0L336.9,160.0L336.5,162.1L338.0,162.6L339.3,162.4L339.3,162.9L339.4,163.3L338.8,167.7L336.7,170.0L336.6,176.3L337.3,178.8L335.2,179.0L336.7,181.3L335.1,183.0L336.2,184.4L335.7,186.9L334.2,188.1ZM318.3,182.7L318.3,182.7L318.3,182.7L318.3,182.7ZM310.4,175.2L310.4,175.2L310.4,175.2L310.4,175.2Z"],["YG","M324.7,233.1L324.8,235.4L324.5,237.2L324.5,239.6L325.3,240.4L323.9,242.3L322.4,242.0L320.7,242.5L319.5,241.4L318.2,242.0L316.9,240.0L313.9,240.7L312.0,240.0L310.8,239.5L309.6,238.1L309.5,237.4L310.8,230.2L311.5,228.8L313.2,229.2L315.8,226.7L315.2,225.5L311.2,223.2L311.6,220.2L307.5,218.6L309.3,214.6L312.4,211.2L314.1,205.7L314.7,201.7L317.6,202.0L319.1,201.2L319.2,202.4L321.2,203.7L325.3,204.0L327.7,205.2L328.2,206.6L329.2,207.9L329.2,208.0L330.5,208.2L331.9,211.4L332.8,211.8L332.4,214.1L331.9,215.6L330.6,215.3L331.4,217.7L330.9,218.9L332.4,221.1L332.4,221.1L331.7,221.5L330.2,224.2L329.1,227.2L328.6,230.4L328.6,230.8L326.9,233.0L324.7,233.1ZM306.7,199.8L306.7,199.8L306.7,199.8L306.7,199.8ZM307.2,199.9L307.2,199.9L307.2,199.9L307.2,199.9Z"],["FS","M329.7,237.6L332.3,237.3L332.8,237.2L334.5,237.9L334.6,240.4L338.3,240.5L338.3,239.1L338.4,237.7L340.1,237.5L340.8,239.1L342.1,242.6L342.8,248.8L342.9,250.2L342.9,251.3L342.9,251.3L342.9,251.3L343.0,252.9L342.8,254.6L342.5,256.9L342.3,258.6L342.0,264.1L340.6,266.0L338.2,266.8L337.6,268.3L333.4,267.1L332.6,265.9L332.2,266.1L332.8,268.0L332.2,268.3L331.3,268.9L329.8,270.5L327.7,269.2L327.4,267.8L325.5,266.3L325.0,266.4L324.5,266.1L324.7,264.1L322.2,261.7L317.9,260.1L317.7,260.0L315.5,260.2L314.5,262.0L311.0,262.9L309.7,264.1L305.9,265.6L304.4,267.3L300.5,266.5L301.1,263.4L300.6,259.1L298.9,257.7L300.0,256.2L300.4,253.2L299.6,252.5L300.9,251.3L304.3,251.0L304.7,249.6L308.7,249.4L307.8,245.4L312.0,240.5L310.9,239.5L310.8,239.5L312.0,240.0L313.9,240.7L316.9,240.0L318.2,242.0L319.5,241.4L320.7,242.5L322.4,242.0L323.9,242.3L325.3,240.4L324.5,239.6L324.5,237.2L324.8,235.4L329.4,236.2L329.6,237.6L329.7,237.6Z"],["IB","M333.2,283.9L332.4,286.4L333.8,291.5L335.9,295.8L339.8,301.4L336.6,299.4L334.8,298.2L333.6,296.8L331.5,295.2L329.7,296.6L328.3,296.9L328.3,296.9L326.2,297.9L324.4,298.2L323.3,298.7L322.8,298.7L322.3,298.0L320.0,297.1L319.1,296.9L318.1,296.1L317.6,295.1L317.4,295.1L314.8,292.5L314.0,291.2L313.8,291.6L312.6,291.1L312.2,290.2L312.0,290.0L311.6,288.4L311.6,288.3L313.9,287.5L314.8,287.1L315.4,285.0L316.7,285.4L316.9,284.3L318.4,283.0L320.0,283.0L320.6,282.2L322.4,281.8L323.4,282.3L323.8,281.3L325.0,278.6L324.5,275.6L324.1,274.1L325.8,272.9L324.8,270.8L325.0,266.4L325.5,266.3L327.4,267.8L327.7,269.2L329.8,270.5L331.3,268.9L332.2,268.3L332.8,268.0L332.2,266.1L332.6,265.9L333.4,267.1L337.6,268.3L336.3,271.6L335.9,273.3L333.6,279.6L333.5,281.3L333.2,283.9ZM336.3,295.6L336.3,295.6L336.3,295.6L336.3,295.6Z"],["TC","M316.9,284.3L316.7,285.4L315.4,285.0L314.8,287.1L313.9,287.5L311.6,288.3L311.6,288.4L311.1,288.1L309.9,286.2L309.2,286.3L308.0,286.0L307.1,286.1L305.7,285.8L304.0,283.5L304.8,281.1L305.8,278.0L306.6,277.2L306.2,276.3L302.9,275.6L303.8,272.8L303.4,271.4L304.7,269.7L303.3,269.1L304.4,267.3L305.9,265.6L309.7,264.1L311.0,262.9L314.5,262.0L315.5,260.2L317.7,260.0L317.9,260.1L322.2,261.7L324.7,264.1L324.5,266.1L325.0,266.4L324.8,270.8L325.8,272.9L324.1,274.1L324.5,275.6L325.0,278.6L323.8,281.3L323.4,282.3L322.4,281.8L320.6,282.2L320.0,283.0L318.4,283.0L316.9,284.3Z"],["GM","M299.2,286.3L299.2,286.2L298.2,286.0L297.7,286.7L297.4,287.3L296.0,290.7L294.6,290.9L294.2,290.7L293.5,291.8L291.1,293.2L291.0,293.3L289.3,293.4L288.3,294.9L287.7,294.7L286.3,293.6L286.3,291.8L286.6,290.9L285.0,289.5L286.4,288.4L285.6,286.2L286.8,285.5L286.7,282.4L286.6,282.2L284.9,282.0L283.6,282.4L283.3,282.2L282.2,282.2L280.8,281.6L281.1,278.4L281.8,276.3L283.4,275.3L283.8,275.1L284.0,274.7L283.6,274.0L286.5,273.0L287.8,272.5L290.0,272.3L290.8,270.2L293.3,269.7L293.4,267.9L294.5,268.0L294.3,265.3L296.1,265.1L297.3,263.0L299.3,265.8L300.5,266.5L304.4,267.3L303.3,269.1L304.7,269.7L303.4,271.4L303.8,272.8L302.9,275.6L306.2,276.3L306.6,277.2L305.8,278.0L304.8,281.1L304.0,283.5L305.7,285.8L307.1,286.1L308.0,286.0L309.2,286.3L309.9,286.2L311.1,288.1L309.7,288.5L309.2,288.1L307.0,288.6L307.0,288.6L305.8,288.5L305.1,287.9L304.3,287.3L303.0,287.3L301.7,287.0L301.0,287.1L299.2,286.3Z"],["ST","M315.2,295.2L315.6,296.1L316.2,296.8L316.8,298.2L316.6,299.3L316.7,300.7L315.9,300.3L315.6,300.3L315.0,299.7L313.7,299.7L313.0,300.8L312.0,300.3L312.0,300.2L310.8,300.3L310.2,300.8L309.6,300.9L309.5,300.9L308.8,301.4L308.3,301.6L307.6,301.3L308.2,300.0L307.2,300.9L305.8,301.3L304.6,301.4L304.3,301.2L304.4,301.1L303.2,300.5L302.8,299.7L299.1,298.8L297.6,298.4L295.8,297.5L293.8,298.7L291.9,298.6L290.7,298.5L288.7,297.1L288.3,294.9L289.3,293.4L291.0,293.3L291.1,293.2L293.5,291.8L294.2,290.7L294.6,290.9L296.0,290.7L297.4,287.3L297.7,286.7L298.2,286.0L299.2,286.2L299.2,286.3L301.0,287.1L301.7,287.0L303.0,287.3L304.3,287.3L305.1,287.9L305.8,288.5L307.0,288.6L307.0,288.6L309.2,288.1L309.7,288.5L311.1,288.1L311.6,288.4L312.0,290.0L312.2,290.2L312.6,291.1L313.8,291.6L314.1,292.4L314.5,293.0L315.2,295.2Z"],["CB","M329.5,309.7L329.0,311.3L328.9,312.3L329.1,313.9L328.9,318.0L328.0,318.5L327.5,319.6L324.7,320.4L322.3,320.6L320.5,322.3L319.2,323.5L317.7,326.6L315.4,326.6L313.7,325.0L316.1,324.2L315.6,323.0L315.6,321.0L315.1,319.3L316.3,317.4L315.1,314.5L315.9,313.5L316.7,313.2L316.9,311.4L318.2,310.8L320.0,310.0L321.1,307.5L322.2,307.5L319.8,304.5L319.4,304.1L318.4,303.6L317.4,304.4L316.3,305.0L316.6,304.0L316.7,301.6L316.6,301.6L316.7,300.7L316.6,299.3L316.8,298.2L316.2,296.8L315.6,296.1L315.2,295.2L314.5,293.0L314.1,292.4L313.8,291.6L314.0,291.2L314.8,292.5L317.4,295.1L317.6,295.1L318.1,296.1L319.1,296.9L320.0,297.1L322.3,298.0L322.8,298.7L323.3,298.7L324.4,298.2L326.2,297.9L328.3,296.9L328.3,296.9L329.7,296.6L331.5,295.2L333.6,296.8L334.8,298.2L336.6,299.4L339.8,301.4L340.2,302.9L337.6,302.8L334.4,303.6L332.8,305.0L332.0,305.7L330.7,307.4L329.8,308.9L329.5,309.7ZM318.4,303.9L318.4,303.7L318.4,303.9L318.4,303.9ZM313.9,314.6L313.9,314.6L313.9,314.6L313.9,314.6ZM313.3,314.7L313.3,314.7L313.3,314.7L313.3,314.7Z"],["TK","M313.6,304.5L313.3,305.4L313.2,306.4L314.3,308.3L312.2,308.0L311.0,306.5L309.5,305.6L308.8,305.2L307.9,304.9L306.4,305.5L306.1,305.9L307.5,306.9L306.9,307.1L306.6,307.1L306.5,309.1L306.2,308.6L304.8,306.7L301.7,306.0L299.1,304.3L298.4,304.1L295.5,302.2L295.5,302.2L294.8,301.3L293.8,298.7L295.8,297.5L297.6,298.4L299.1,298.8L302.8,299.7L303.2,300.5L304.4,301.1L304.3,301.2L304.6,301.4L305.8,301.3L307.2,300.9L308.2,300.0L307.6,301.3L308.3,301.6L308.8,301.4L309.5,300.9L309.6,300.9L310.2,300.8L310.8,300.3L312.0,300.2L312.0,300.3L313.0,300.8L313.7,299.7L315.0,299.7L315.6,300.3L315.9,300.3L316.7,300.7L316.6,301.6L316.7,301.6L316.6,304.0L316.3,305.0L315.6,304.8L314.3,304.4L313.6,304.5ZM306.1,333.6L304.1,332.9L304.1,330.0L306.3,331.6L306.1,333.6ZM316.3,381.9L314.0,379.4L314.8,378.6L316.6,379.8L316.3,381.9ZM307.8,352.3L307.5,350.2L308.7,350.0L309.3,351.6L307.8,352.3ZM381.0,571.1L379.7,568.8L380.5,568.3L381.0,571.1ZM358.6,626.9L358.6,625.6L360.2,625.8L358.6,626.9ZM302.1,343.9L301.4,343.4L302.3,341.2L302.1,343.9ZM313.9,305.5L313.8,305.3L314.1,305.2L313.9,305.5ZM313.4,305.4L313.5,305.3L313.4,305.4L313.4,305.4ZM315.0,305.1L315.0,305.1L315.0,305.1L315.0,305.1ZM314.4,305.7L314.4,305.7L314.4,305.7L314.4,305.7ZM313.3,306.5L313.9,306.3L313.3,306.5L313.3,306.5ZM313.7,307.2L313.7,307.2L313.7,307.2L313.7,307.2ZM315.9,305.0L315.9,305.0L315.9,305.0L315.9,305.0ZM316.1,305.1L316.1,305.1L316.1,305.1L316.1,305.1ZM302.1,338.6L302.1,338.6L302.1,338.6L302.1,338.6ZM302.6,339.8L302.6,339.8L302.6,339.8L302.6,339.8ZM301.0,342.8L301.0,342.8L301.0,342.8L301.0,342.8ZM300.7,344.4L300.7,344.4L300.7,344.4L300.7,344.4ZM302.2,344.1L302.2,344.1L302.2,344.1L302.2,344.1ZM298.6,348.3L298.6,348.3L298.6,348.3L298.6,348.3ZM300.2,347.6L300.2,347.6L300.2,347.6L300.2,347.6ZM297.2,348.3L297.2,348.3L297.2,348.3L297.2,348.3ZM310.8,358.0L310.8,358.0L310.8,358.0L310.8,358.0ZM313.0,379.9L313.0,379.9L313.0,379.9L313.0,379.9ZM315.0,399.8L315.0,399.8L315.0,399.8L315.0,399.8ZM378.0,538.4L378.0,538.4L378.0,538.4L378.0,538.4ZM378.2,538.4L378.2,538.4L378.2,538.4L378.2,538.4ZM379.2,539.7L379.2,539.7L379.2,539.7L379.2,539.7ZM378.7,539.5L378.7,539.5L378.7,539.5L378.7,539.5ZM379.5,540.2L379.5,540.2L379.5,540.2L379.5,540.2ZM380.3,541.2L380.3,541.2L380.3,541.2L380.3,541.2ZM381.1,545.0L381.1,545.0L381.1,545.0L381.1,545.0ZM381.0,545.1L381.0,545.1L381.0,545.1L381.0,545.1ZM346.0,553.3L346.0,553.3L346.0,553.3L346.0,553.3ZM380.9,553.8L380.9,553.8L380.9,553.8L380.9,553.8ZM380.8,555.2L380.8,555.2L380.8,555.2L380.8,555.2ZM381.7,556.3L381.7,556.3L381.7,556.3L381.7,556.3ZM380.6,555.8L380.6,555.8L380.6,555.8L380.6,555.8ZM380.2,556.2L380.2,556.2L380.2,556.2L380.2,556.2ZM381.7,558.4L381.7,558.4L381.7,558.4L381.7,558.4ZM382.4,556.8L382.4,556.8L382.4,556.8L382.4,556.8ZM380.6,558.6L380.6,558.6L380.6,558.6L380.6,558.6ZM379.7,571.6L379.7,571.6L379.7,571.6L379.7,571.6ZM380.2,571.9L380.2,571.9L380.2,571.9L380.2,571.9ZM382.4,572.4L382.4,572.4L382.4,572.4L382.4,572.4ZM380.5,573.1L380.5,573.1L380.5,573.1L380.5,573.1ZM381.7,572.7L381.7,572.7L381.7,572.7L381.7,572.7ZM357.9,607.0L357.9,607.0L357.9,607.0L357.9,607.0ZM701.8,610.7L701.8,610.7L701.8,610.7L701.8,610.7ZM363.6,642.1L363.6,642.1L363.6,642.1L363.6,642.1ZM381.3,544.8L381.3,544.8L381.3,544.8L381.3,544.8ZM358.5,625.1L358.5,625.1L358.5,625.1L358.5,625.1Z"],["KN","M307.9,304.9L308.8,305.2L309.5,305.6L311.0,306.5L312.2,308.0L314.3,308.3L312.4,309.4L310.8,309.9L312.0,310.9L310.3,312.2L310.6,314.3L310.7,314.3L310.7,314.3L310.6,315.2L313.4,316.4L311.4,318.2L311.8,319.8L310.1,319.8L310.2,318.3L309.3,316.5L309.1,315.5L308.6,315.1L307.1,314.9L305.9,314.6L304.3,314.7L303.3,314.8L301.8,315.2L300.9,315.6L298.8,317.2L298.6,318.8L298.6,319.7L298.0,319.9L296.0,319.6L295.9,318.9L295.6,318.7L295.3,318.5L294.7,317.1L295.1,315.6L295.4,315.5L295.7,314.3L295.3,312.3L293.2,312.2L293.7,310.8L296.8,309.0L297.9,307.8L298.4,304.1L299.1,304.3L301.7,306.0L304.8,306.7L306.2,308.6L306.5,309.1L306.6,307.1L306.9,307.1L307.5,306.9L306.1,305.9L306.4,305.5L307.9,304.9ZM312.8,310.0L312.5,309.5L312.8,310.0L312.8,310.0ZM311.0,310.2L311.0,310.2L311.0,310.2L311.0,310.2ZM312.1,310.6L312.1,310.6L312.1,310.6L312.1,310.6ZM310.8,310.6L310.8,310.6L310.8,310.6L310.8,310.6ZM311.6,312.1L311.6,312.1L311.6,312.1L311.6,312.1ZM310.8,314.0L310.8,314.0L310.8,314.0L310.8,314.0ZM313.3,309.6L313.3,309.6L313.3,309.6L313.3,309.6ZM311.0,315.2L311.0,315.2L311.0,315.2L311.0,315.2ZM310.6,320.2L310.6,320.2L310.6,320.2L310.6,320.2Z"],["NI","M309.5,237.4L309.6,238.1L310.8,239.5L310.9,239.5L312.0,240.5L307.8,245.4L308.7,249.4L304.7,249.6L304.3,251.0L300.9,251.3L299.6,252.5L300.4,253.2L300.0,256.2L298.9,257.7L300.6,259.1L301.1,263.4L300.5,266.5L299.3,265.8L297.3,263.0L296.1,265.1L294.3,265.3L294.5,268.0L293.4,267.9L293.3,269.7L290.8,270.2L290.0,272.3L287.8,272.5L287.7,269.4L285.2,266.8L284.7,264.2L284.1,264.2L283.7,263.9L280.3,265.4L278.2,267.8L277.8,269.5L277.3,268.6L273.4,269.6L271.4,269.9L271.6,267.6L268.1,267.3L268.4,268.7L265.7,271.6L265.6,271.7L264.9,269.8L264.5,266.4L262.7,265.3L269.2,263.0L272.9,260.4L277.4,259.3L281.2,255.7L284.4,253.6L286.9,249.2L288.5,247.6L289.9,243.8L291.7,240.0L296.6,236.5L300.1,235.3L301.6,234.1L302.2,233.6L304.4,230.5L305.3,227.9L305.4,223.5L307.5,218.6L311.6,220.2L311.2,223.2L315.2,225.5L315.8,226.7L313.2,229.2L311.5,228.8L310.8,230.2L309.5,237.4ZM277.2,241.0L278.1,237.5L279.5,236.2L277.9,235.0L277.0,235.9L276.9,233.3L279.1,229.4L281.5,227.6L282.3,225.5L283.5,225.3L283.0,229.1L281.7,231.7L282.8,233.3L284.9,233.2L283.2,237.5L279.5,240.3L277.2,241.0ZM282.8,225.3L282.8,225.3L282.8,225.3L282.8,225.3ZM277.1,232.6L277.1,232.6L277.1,232.6L277.1,232.6ZM300.0,222.1L300.0,222.1L300.0,222.1L300.0,222.1Z"],["TY","M256.6,270.6L257.3,268.8L257.7,266.9L260.5,265.8L262.7,265.3L264.5,266.4L264.9,269.8L265.6,271.7L265.6,274.7L265.2,275.9L263.8,277.7L264.2,278.7L261.4,282.8L260.2,282.7L259.6,281.8L257.0,281.7L256.7,280.7L252.3,281.4L251.2,280.7L248.7,283.2L246.7,286.0L246.3,284.1L243.4,283.8L242.3,285.2L242.2,283.9L243.1,277.7L242.4,276.1L242.4,275.4L243.3,274.2L242.5,272.8L243.5,272.1L243.8,271.7L244.0,270.8L244.5,268.4L244.9,267.0L247.3,265.5L248.8,265.7L247.2,268.3L247.9,269.6L249.1,270.6L249.8,271.2L249.7,271.3L249.7,271.3L250.0,271.4L251.8,271.8L255.0,271.8L256.6,270.6Z"],["IS","M232.3,282.5L233.7,281.2L234.6,279.9L236.9,277.1L238.4,275.1L239.6,273.2L241.0,270.6L241.8,268.4L242.1,265.5L241.1,262.8L241.1,260.2L239.9,260.0L240.5,257.9L242.0,253.6L244.9,252.4L246.0,252.8L249.9,250.7L254.0,248.9L255.6,248.9L256.3,251.2L253.9,251.8L253.4,253.5L253.3,255.7L251.6,255.5L249.7,257.2L247.9,259.1L246.6,258.0L245.1,259.5L244.9,262.4L247.0,263.1L249.0,261.3L248.8,265.7L247.3,265.5L244.9,267.0L244.5,268.4L244.0,270.8L243.8,271.7L243.5,272.1L242.5,272.8L243.3,274.2L242.4,275.4L242.4,276.1L243.1,277.7L242.2,283.9L242.3,285.2L243.7,286.8L241.6,290.9L241.3,291.5L239.0,292.0L236.5,289.4L235.1,289.3L233.8,289.9L231.2,287.9L229.2,285.1L232.3,282.5ZM246.4,261.8L245.5,260.5L248.9,260.9L246.4,261.8ZM245.1,261.4L245.1,261.4L245.1,261.4L245.1,261.4ZM246.0,239.4L246.0,239.4L246.0,239.4L246.0,239.4ZM245.6,246.4L245.6,246.4L245.6,246.4L245.6,246.4ZM245.0,247.1L245.0,247.1L245.0,247.1L245.0,247.1Z"],["FI","M235.1,289.3L236.5,289.4L239.0,292.0L241.3,291.5L241.5,292.1L240.6,294.2L242.1,295.7L243.1,298.3L242.0,300.1L239.0,300.4L238.5,299.8L235.3,301.0L233.0,300.4L231.6,300.2L229.7,304.0L226.6,302.7L227.1,305.8L225.6,306.1L225.3,307.7L223.4,307.7L222.3,308.9L221.5,307.9L220.1,311.3L219.2,311.1L217.6,311.8L217.1,312.6L215.4,313.0L211.4,311.8L210.3,309.7L210.0,309.5L209.5,307.5L210.4,306.5L211.5,308.5L213.2,307.9L213.3,308.6L213.2,308.8L214.2,308.9L216.4,308.6L218.4,306.3L218.4,304.2L219.6,305.2L222.6,304.3L222.1,301.7L223.4,300.7L223.5,303.2L225.0,303.1L225.3,300.7L223.3,297.5L222.3,293.7L225.7,288.6L226.3,286.3L227.7,286.1L229.2,285.1L231.2,287.9L233.8,289.9L235.1,289.3ZM226.2,286.3L226.2,286.3L226.2,286.3L226.2,286.3ZM218.1,304.5L218.1,304.5L218.1,304.5L218.1,304.5Z"],["YN","M288.7,297.1L290.7,298.5L291.9,298.6L293.8,298.7L294.8,301.3L295.5,302.2L295.5,302.2L298.4,304.1L297.9,307.8L296.8,309.0L293.7,310.8L293.2,312.2L291.9,312.5L288.7,313.3L286.5,312.3L285.2,310.9L283.8,312.9L283.7,318.2L283.0,319.1L280.7,318.2L280.1,315.2L279.2,314.4L277.3,314.7L276.7,313.0L277.6,308.8L276.6,305.0L276.4,305.0L275.6,302.8L276.7,301.8L276.0,300.9L276.9,297.9L278.0,298.6L279.8,295.7L280.1,295.3L280.1,295.3L283.1,297.1L285.9,297.1L286.1,298.3L287.0,298.2L288.7,297.1Z"],["NN","M277.8,269.5L278.2,267.8L280.3,265.4L283.7,263.9L284.1,264.2L284.7,264.2L285.2,266.8L287.7,269.4L287.8,272.5L286.5,273.0L283.6,274.0L284.0,274.7L283.8,275.1L283.4,275.3L281.8,276.3L281.1,278.4L280.8,281.6L282.2,282.2L283.3,282.2L283.6,282.4L284.9,282.0L286.6,282.2L286.7,282.4L286.8,285.5L285.6,286.2L286.4,288.4L285.0,289.5L286.6,290.9L286.3,291.8L286.3,293.6L287.7,294.7L288.3,294.9L288.7,297.1L287.0,298.2L286.1,298.3L285.9,297.1L283.1,297.1L280.1,295.3L280.1,295.3L279.8,295.7L278.0,298.6L276.9,297.9L276.0,300.9L276.7,301.8L275.6,302.8L276.4,305.0L274.8,307.2L274.0,310.6L274.8,312.3L273.2,314.1L271.5,315.2L268.5,316.4L267.1,317.8L264.3,317.2L264.0,317.2L262.9,317.3L262.6,317.6L260.8,318.1L260.4,315.4L260.8,314.6L260.8,312.2L262.2,312.2L261.3,310.8L262.2,308.9L259.4,306.0L259.3,303.8L258.8,302.7L257.9,301.3L255.7,300.4L254.9,299.9L256.3,297.5L258.6,297.5L258.7,296.9L261.6,293.6L261.9,292.1L260.4,291.1L261.2,287.8L262.8,285.8L262.7,284.2L261.4,282.8L264.2,278.7L263.8,277.7L265.2,275.9L265.6,274.7L265.6,271.7L265.7,271.6L268.4,268.7L268.1,267.3L271.6,267.6L271.4,269.9L273.4,269.6L277.3,268.6L277.8,269.5Z"],["GF","M242.0,300.1L243.1,298.3L242.1,295.7L240.6,294.2L241.5,292.1L241.3,291.5L241.6,290.9L243.7,286.8L242.3,285.2L243.4,283.8L246.3,284.1L246.7,286.0L248.7,283.2L251.2,280.7L252.3,281.4L256.7,280.7L257.0,281.7L259.6,281.8L260.2,282.7L261.4,282.8L262.7,284.2L262.8,285.8L261.2,287.8L260.4,291.1L261.9,292.1L261.6,293.6L258.7,296.9L258.6,297.5L256.3,297.5L254.9,299.9L255.7,300.4L257.9,301.3L258.8,302.7L259.3,303.8L259.4,306.0L262.2,308.9L261.3,310.8L262.2,312.2L260.8,312.2L260.8,314.6L260.4,315.4L257.2,317.4L254.3,315.3L253.5,315.3L251.4,316.4L251.1,315.9L249.2,315.3L248.0,313.8L248.0,313.0L246.7,311.3L246.0,311.5L245.0,312.6L244.3,312.6L242.9,313.2L241.9,312.9L241.5,312.8L241.4,312.8L240.9,313.5L239.7,315.6L239.0,316.6L239.1,317.0L238.8,319.7L236.9,318.3L235.6,316.2L235.4,316.0L232.6,317.1L232.1,315.1L232.4,314.7L233.4,312.1L231.8,307.0L231.2,307.7L229.7,304.0L231.6,300.2L233.0,300.4L235.3,301.0L238.5,299.8L239.0,300.4L242.0,300.1Z"],["SZ","M285.2,310.9L286.5,312.3L288.7,313.3L291.9,312.5L293.2,312.2L295.3,312.3L295.7,314.3L295.4,315.5L295.1,315.6L294.7,317.1L295.3,318.5L295.6,318.7L295.9,318.9L296.0,319.6L298.0,319.9L297.1,321.3L297.7,323.2L298.8,325.4L298.5,327.7L297.3,328.5L296.0,331.1L295.2,332.5L295.0,334.0L293.1,335.1L291.1,335.8L289.0,333.0L289.9,331.2L289.7,328.3L289.9,325.9L290.1,323.4L292.8,323.6L293.0,322.7L289.3,320.2L286.6,320.7L285.0,320.9L283.3,322.9L283.5,324.6L279.5,327.1L278.2,331.0L277.0,331.8L275.8,333.9L276.0,335.4L275.7,336.0L272.9,334.7L270.2,334.0L268.8,334.0L266.0,334.6L261.2,333.6L258.4,333.7L258.6,330.3L258.8,329.1L262.2,327.2L263.8,323.6L265.6,321.1L267.1,317.8L268.5,316.4L271.5,315.2L273.2,314.1L274.8,312.3L274.0,310.6L274.8,307.2L276.4,305.0L276.6,305.0L277.6,308.8L276.7,313.0L277.3,314.7L279.2,314.4L280.1,315.2L280.7,318.2L283.0,319.1L283.7,318.2L283.8,312.9L285.2,310.9ZM292.6,323.2L292.6,323.2L292.6,323.2L292.6,323.2ZM299.4,323.0L299.4,323.0L299.4,323.0L299.4,323.0ZM276.3,335.4L276.3,335.4L276.3,335.4L276.3,335.4Z"],["AI","M243.6,322.4L242.5,321.4L242.0,322.2L241.1,323.1L239.8,320.6L239.5,320.2L238.8,319.7L239.1,317.0L239.0,316.6L239.7,315.6L240.9,313.5L241.4,312.8L241.5,312.8L241.9,312.9L242.9,313.2L244.3,312.6L245.0,312.6L246.0,311.5L246.7,311.3L248.0,313.0L248.0,313.8L249.2,315.3L251.1,315.9L251.4,316.4L253.5,315.3L254.3,315.3L257.2,317.4L260.4,315.4L260.8,318.1L262.6,317.6L262.9,317.3L264.0,317.2L264.3,317.2L267.1,317.8L265.6,321.1L263.8,323.6L262.2,327.2L258.8,329.1L258.6,330.3L258.4,333.7L254.9,334.4L250.1,336.1L247.0,336.4L247.9,334.3L249.4,334.7L253.9,332.0L254.1,333.5L254.5,330.2L253.9,329.6L250.7,330.2L247.3,330.5L245.9,329.2L246.1,326.6L246.3,325.1L246.3,325.1L246.1,325.9L245.2,327.9L244.7,329.4L245.2,331.3L246.0,332.7L243.0,331.3L243.3,329.3L242.4,325.6L243.6,323.6L243.6,322.4ZM254.5,330.2L254.1,330.3L254.5,330.2L254.5,330.2ZM254.4,331.9L254.4,331.9L254.4,331.9L254.4,331.9ZM254.9,332.3L254.9,332.3L254.9,332.3L254.9,332.3ZM254.1,329.8L254.1,329.8L254.1,329.8L254.1,329.8ZM249.0,330.9L249.0,330.9L249.0,330.9L249.0,330.9ZM247.8,332.3L247.8,332.3L247.8,332.3L247.8,332.3ZM252.2,330.3L252.2,330.3L252.2,330.3L252.2,330.3ZM242.0,328.5L242.0,328.5L242.0,328.5L242.0,328.5ZM242.3,325.3L242.3,325.3L242.3,325.3L242.3,325.3ZM252.7,332.5L252.7,332.5L252.7,332.5L252.7,332.5ZM249.7,334.3L249.7,334.3L249.7,334.3L249.7,334.3ZM248.9,334.2L248.9,334.2L248.9,334.2L248.9,334.2ZM246.6,332.7L246.6,332.7L246.6,332.7L246.6,332.7ZM246.7,333.7L246.7,333.7L246.7,333.7L246.7,333.7Z"],["ME","M232.0,325.0L232.5,324.1L232.6,323.6L232.6,323.1L233.2,321.0L233.3,318.7L232.5,318.0L232.6,317.1L235.4,316.0L235.6,316.2L236.9,318.3L238.8,319.7L239.5,320.2L239.8,320.6L241.1,323.1L240.6,322.7L239.4,323.1L238.8,323.5L238.0,326.7L236.2,329.5L234.9,332.6L235.5,334.5L236.9,335.5L238.2,336.6L242.0,339.1L244.6,340.4L244.3,342.3L243.2,341.9L243.9,345.3L242.6,346.0L242.5,344.3L239.4,344.4L239.3,343.4L236.7,345.7L235.4,344.9L234.5,346.2L232.4,346.8L231.0,347.4L228.6,348.4L229.2,350.3L228.0,350.6L227.5,350.6L228.6,352.6L227.3,354.7L224.5,356.1L223.2,357.8L222.3,359.8L221.8,361.2L219.1,359.5L218.1,356.7L218.5,357.1L218.7,355.6L219.4,355.4L220.8,355.1L221.8,352.7L223.1,352.0L224.2,352.3L224.3,349.7L224.5,348.1L224.1,347.3L225.1,343.7L224.2,342.3L224.3,340.2L227.0,339.8L227.4,337.5L226.1,337.7L226.0,336.9L224.7,336.6L223.7,334.7L224.3,333.0L223.5,332.2L223.6,331.1L222.8,329.6L224.6,328.8L225.0,326.3L228.4,327.7L229.2,327.4L231.2,326.4L232.0,325.0ZM238.6,324.5L238.6,324.5L238.6,324.5L238.6,324.5ZM228.0,351.1L228.0,351.1L228.0,351.1L228.0,351.1ZM228.1,351.5L228.1,351.5L228.1,351.5L228.1,351.5ZM246.1,337.5L246.1,337.5L246.1,337.5L246.1,337.5ZM244.3,337.5L244.3,337.5L244.3,337.5L244.3,337.5ZM243.0,338.5L243.0,338.5L243.0,338.5L243.0,338.5ZM242.9,338.1L242.9,338.1L242.9,338.1L242.9,338.1ZM242.6,338.2L242.6,338.2L242.6,338.2L242.6,338.2ZM242.5,338.6L242.5,338.6L242.5,338.6L242.5,338.6ZM243.7,339.3L243.7,339.3L243.7,339.3L243.7,339.3ZM243.0,339.1L243.0,339.1L243.0,339.1L243.0,339.1ZM243.9,340.0L243.9,340.0L243.9,340.0L243.9,340.0ZM243.8,340.1L243.8,340.1L243.8,340.1L243.8,340.1ZM243.3,342.9L243.3,342.9L243.3,342.9L243.3,342.9ZM241.9,344.4L241.9,344.4L241.9,344.4L241.9,344.4ZM242.0,344.6L242.0,344.6L242.0,344.6L242.0,344.6ZM241.8,344.6L241.8,344.6L241.8,344.6L241.8,344.6ZM242.1,344.7L242.1,344.7L242.1,344.7L242.1,344.7ZM242.0,344.9L242.0,344.9L242.0,344.9L242.0,344.9ZM241.8,344.9L241.8,344.9L241.8,344.9L241.8,344.9ZM242.1,345.0L242.1,345.0L242.1,345.0L242.1,345.0ZM242.5,345.5L242.5,345.5L242.5,345.5L242.5,345.5ZM231.1,347.5L231.1,347.5L231.1,347.5L231.1,347.5ZM231.2,347.8L231.2,347.8L231.2,347.8L231.2,347.8ZM239.4,343.5L239.4,343.5L239.4,343.5L239.4,343.5ZM238.6,344.6L238.6,344.6L238.6,344.6L238.6,344.6ZM235.3,346.1L235.3,346.1L235.3,346.1L235.3,346.1ZM229.8,348.3L229.8,348.3L229.8,348.3L229.8,348.3ZM229.2,348.5L229.2,348.5L229.2,348.5L229.2,348.5ZM230.8,348.8L230.8,348.8L230.8,348.8L230.8,348.8Z"],["SG","M220.9,326.9L219.1,326.5L219.4,324.8L218.0,321.9L218.9,319.4L218.4,316.7L219.2,314.9L217.7,313.7L217.1,312.6L217.6,311.8L219.2,311.1L220.1,311.3L221.5,307.9L222.3,308.9L223.4,307.7L225.3,307.7L225.6,306.1L227.1,305.8L226.6,302.7L229.7,304.0L231.2,307.7L231.8,307.0L233.4,312.1L232.4,314.7L232.1,315.1L232.6,317.1L232.5,318.0L233.3,318.7L233.2,321.0L232.6,323.1L232.6,323.6L232.5,324.1L232.0,325.0L231.2,326.4L229.2,327.4L228.4,327.7L225.0,326.3L224.6,328.8L222.8,329.6L223.0,328.7L221.0,327.7L220.9,326.9Z"],["KY","M219.1,326.5L220.9,326.9L221.0,327.7L223.0,328.7L222.8,329.6L223.6,331.1L222.9,332.1L221.5,331.0L220.3,330.6L219.5,331.9L216.8,331.4L216.2,331.3L215.8,330.6L215.6,329.8L215.7,328.4L215.5,328.3L215.4,328.2L214.5,326.7L214.6,326.5L214.2,326.0L213.7,325.2L213.3,325.1L213.0,324.0L212.0,325.5L210.8,325.1L209.8,324.6L210.1,323.4L207.4,322.0L207.2,321.6L207.7,320.0L205.3,317.7L203.7,317.9L202.3,315.1L199.8,314.8L196.9,313.4L197.0,310.5L199.7,310.6L199.8,309.3L199.6,306.7L196.9,307.4L195.2,305.0L195.6,303.0L197.0,303.4L201.0,300.7L204.6,300.0L205.8,301.3L205.4,303.1L203.4,305.8L204.7,305.4L205.6,307.5L207.0,307.9L207.8,306.3L210.4,306.5L209.5,307.5L210.0,309.5L210.3,309.7L211.4,311.8L215.4,313.0L217.1,312.6L217.7,313.7L219.2,314.9L218.4,316.7L218.9,319.4L218.0,321.9L219.4,324.8L219.1,326.5ZM209.0,302.9L209.0,302.9L209.0,302.9L209.0,302.9ZM210.3,305.4L210.3,305.4L210.3,305.4L210.3,305.4ZM206.8,308.3L206.8,308.3L206.8,308.3L206.8,308.3Z"],["OS","M214.2,332.0L214.1,333.2L213.9,333.7L213.8,334.6L213.6,334.8L214.3,335.5L214.1,335.9L213.6,336.6L213.8,336.7L213.9,337.1L214.1,337.8L214.2,339.0L214.2,339.0L214.1,340.7L213.7,341.0L213.4,341.4L210.4,342.3L209.3,341.9L208.5,342.3L208.3,342.3L208.1,342.3L207.5,342.5L205.7,342.6L205.5,343.2L204.3,343.1L204.0,343.2L202.5,343.3L200.1,344.3L199.7,343.1L202.2,342.5L203.6,341.3L204.3,340.8L204.6,340.6L205.6,339.7L206.3,338.9L206.7,337.8L206.8,337.5L207.8,337.2L208.3,336.6L208.4,334.6L207.6,332.0L209.1,330.9L208.7,329.9L208.6,329.2L208.2,328.8L208.6,326.6L208.8,326.1L209.4,325.1L208.2,324.9L206.5,323.9L206.4,322.1L207.2,321.6L207.4,322.0L210.1,323.4L209.8,324.6L210.8,325.1L212.0,325.5L213.0,324.0L213.3,325.1L213.7,325.2L214.2,326.0L214.6,326.5L214.5,326.7L215.4,328.2L215.5,328.3L215.7,328.4L215.6,329.8L215.2,329.7L214.8,330.8L214.2,332.0L214.2,332.0ZM203.7,339.7L203.4,339.9L203.2,339.7L203.1,339.7L202.9,339.5L203.2,339.2L203.4,339.5L203.4,339.5L203.7,339.7ZM207.7,336.5L208.1,336.4L208.3,336.5L207.6,336.4L207.7,336.5ZM207.8,333.1L207.8,333.1L207.8,333.1L207.8,333.1ZM207.3,333.6L207.3,333.6L207.3,333.6L207.3,333.6ZM208.0,334.2L208.0,334.2L208.0,334.2L208.0,334.2ZM207.9,334.5L207.9,334.5L207.9,334.5L207.9,334.5ZM207.4,337.0L207.3,336.8L207.4,337.0L207.4,337.0ZM205.7,339.3L205.7,339.3L205.7,339.3L205.7,339.3Z"],["HG","M205.7,331.0L205.2,331.2L202.2,333.2L199.2,333.8L198.2,333.2L194.6,331.3L194.1,330.9L193.2,330.1L192.1,329.5L187.4,329.0L185.1,329.4L184.5,329.4L181.3,330.2L180.8,327.3L179.8,326.3L180.9,324.7L179.9,323.5L182.9,317.7L183.9,317.7L183.4,316.3L183.9,314.9L186.7,313.9L186.5,312.1L186.5,311.3L185.9,309.4L185.1,309.0L185.0,308.1L184.5,304.6L183.6,303.8L187.2,302.4L189.8,303.3L192.4,302.9L195.6,303.0L195.2,305.0L196.9,307.4L199.6,306.7L199.8,309.3L199.7,310.6L197.0,310.5L196.9,313.4L199.8,314.8L202.3,315.1L203.7,317.9L205.3,317.7L207.7,320.0L207.2,321.6L206.4,322.1L206.5,323.9L208.2,324.9L209.4,325.1L208.8,326.1L208.6,326.6L208.2,328.8L208.6,329.2L208.7,329.9L209.1,330.9L207.6,332.0L206.9,332.0L205.7,331.0ZM194.9,340.4L196.2,344.3L194.2,345.1L190.6,346.4L189.1,343.2L191.1,341.6L192.3,339.4L194.9,336.5L197.8,334.2L198.3,335.2L194.9,340.4ZM194.5,331.5L194.6,331.4L194.6,331.4L194.5,331.7L194.5,331.5ZM205.0,331.6L205.0,331.6L205.0,331.6L205.0,331.6ZM204.0,332.4L204.0,332.4L204.0,332.4L204.0,332.4ZM203.1,333.2L203.1,333.2L203.1,333.2L203.1,333.2ZM202.9,333.8L202.9,333.8L202.9,333.8L202.9,333.8ZM190.5,329.5L190.5,329.5L190.5,329.5L190.5,329.5ZM189.0,331.7L189.0,331.7L189.0,331.7L189.0,331.7ZM186.6,332.3L186.6,332.3L186.6,332.3L186.6,332.3ZM188.3,331.9L188.3,331.9L188.3,331.9L188.3,331.9ZM187.3,332.6L187.3,332.6L187.3,332.6L187.3,332.6ZM184.8,332.8L184.8,332.8L184.8,332.8L184.8,332.8ZM185.9,333.0L185.9,333.0L185.9,333.0L185.9,333.0ZM183.9,332.5L183.9,332.5L183.9,332.5L183.9,332.5ZM186.3,332.8L186.3,332.8L186.3,332.8L186.3,332.8ZM187.7,333.0L187.7,333.0L187.7,333.0L187.7,333.0ZM185.5,333.1L185.5,333.1L185.5,333.1L185.5,333.1ZM184.9,334.2L184.9,334.2L184.9,334.2L184.9,334.2ZM205.9,331.5L205.9,331.5L205.9,331.5L205.9,331.5ZM206.3,331.7L206.3,331.7L206.3,331.7L206.3,331.7ZM196.3,344.0L196.3,344.0L196.3,344.0L196.3,344.0ZM205.6,331.6L205.6,331.6L205.6,331.6L205.6,331.6ZM192.6,347.5L192.6,347.5L192.6,347.5L192.6,347.5ZM194.2,331.6L194.2,331.6L194.2,331.6L194.2,331.6ZM190.9,302.7L190.9,302.7L190.9,302.7L190.9,302.7Z"],["NR","M223.7,334.7L224.7,336.6L226.0,336.9L226.1,337.7L227.4,337.5L227.0,339.8L224.3,340.2L224.2,342.3L225.1,343.7L224.1,347.3L224.5,348.1L224.3,349.7L224.2,352.3L223.1,352.0L221.8,352.7L219.6,353.8L219.4,355.4L218.7,355.6L218.5,357.1L218.1,356.7L216.7,356.0L211.9,355.8L212.7,353.1L210.7,350.7L210.6,350.7L210.6,349.8L212.1,348.2L213.7,346.2L214.7,346.6L214.0,344.8L213.4,341.4L213.7,341.0L214.1,340.7L214.2,339.0L214.2,339.0L214.1,337.8L213.9,337.1L213.8,336.7L213.6,336.6L214.1,335.9L214.3,335.5L213.6,334.8L213.8,334.6L213.9,333.7L214.1,333.2L214.2,332.0L214.2,332.0L214.8,330.8L215.2,329.7L215.6,329.8L215.8,330.6L216.2,331.3L216.8,331.4L219.5,331.9L220.3,330.6L221.5,331.0L222.9,332.1L223.6,331.1L223.5,332.2L224.3,333.0L223.7,334.7Z"],["WK","M205.5,343.2L205.7,342.6L207.5,342.5L208.1,342.3L208.3,342.3L208.5,342.3L209.3,341.9L210.4,342.3L213.4,341.4L214.0,344.8L214.7,346.6L213.7,346.2L212.1,348.2L210.6,349.8L210.6,350.7L210.7,350.7L212.7,353.1L211.9,355.8L216.7,356.0L218.1,356.7L219.1,359.5L221.8,361.2L220.7,362.8L219.8,364.3L219.6,364.6L219.6,364.9L219.9,365.5L218.8,366.4L215.3,368.2L212.3,367.4L208.0,366.1L204.9,362.4L206.2,361.8L205.1,360.1L203.4,358.9L201.8,358.0L200.7,356.1L198.4,355.9L199.6,353.7L200.4,352.4L201.4,351.5L200.5,350.7L200.0,349.0L201.9,347.7L200.7,345.7L198.9,344.5L199.7,343.1L200.1,344.3L202.5,343.3L204.0,343.2L204.3,343.1L205.5,343.2ZM219.6,353.8L221.8,352.7L220.8,355.1L219.4,355.4L219.6,353.8ZM198.5,343.6L198.5,343.6L198.5,343.6L198.5,343.6ZM197.6,344.1L197.6,344.1L197.6,344.1L197.6,344.1ZM201.7,348.0L201.7,348.0L201.7,348.0L201.7,348.0ZM199.7,349.1L199.7,349.1L199.7,349.1L199.7,349.1ZM199.1,349.1L199.1,349.1L199.1,349.1L199.1,349.1ZM200.6,356.7L200.6,356.7L200.6,356.7L200.6,356.7ZM218.7,355.6L218.5,357.1L218.7,355.6L218.7,355.6ZM200.1,351.9L200.1,351.9L200.1,351.9L200.1,351.9ZM198.9,353.9L198.9,353.9L198.9,353.9L198.9,353.9ZM199.3,352.3L199.3,352.3L199.3,352.3L199.3,352.3ZM199.3,352.3L199.3,352.3L199.3,352.3L199.3,352.3ZM199.3,352.7L199.3,352.7L199.3,352.7L199.3,352.7ZM205.7,361.6L205.7,361.6L205.7,361.6L205.7,361.6ZM205.8,361.9L205.8,361.9L205.8,361.9L205.8,361.9ZM208.7,366.2L208.7,366.2L208.7,366.2L208.7,366.2ZM220.1,364.3L220.1,364.3L220.1,364.3L220.1,364.3ZM217.1,369.3L217.1,369.3L217.1,369.3L217.1,369.3ZM216.7,369.3L216.7,369.3L216.7,369.3L216.7,369.3Z"],["TT","M183.6,303.8L184.5,304.6L185.0,308.1L185.1,309.0L185.9,309.4L186.5,311.3L186.5,312.1L186.7,313.9L183.9,314.9L183.4,314.7L180.9,316.1L179.3,316.2L178.1,316.7L177.6,313.5L175.0,312.6L174.7,311.3L172.6,311.7L169.8,313.9L168.5,312.1L164.6,310.9L163.7,313.6L162.3,314.1L162.6,315.7L159.4,315.7L159.8,317.3L156.2,319.0L153.0,318.4L154.6,315.6L153.6,314.2L157.5,312.9L158.0,309.7L157.6,307.9L155.8,306.6L155.7,306.4L156.4,304.4L156.7,305.9L159.4,307.3L159.8,307.5L160.7,307.0L162.4,305.8L165.1,305.7L167.7,306.4L171.0,306.5L173.7,306.1L175.6,306.3L180.1,305.7L181.3,304.9L183.6,303.8Z"],["SM","M153.6,314.2L154.6,315.6L153.0,318.4L148.5,318.1L147.2,317.1L146.3,317.5L143.9,320.3L141.9,321.4L140.5,322.7L142.3,324.4L140.0,324.5L138.0,325.8L135.6,324.9L134.2,325.6L131.3,325.1L130.3,326.7L128.0,327.8L128.1,329.4L127.6,331.5L125.3,333.7L126.0,334.8L125.7,334.8L124.0,336.3L124.5,337.2L123.0,339.4L121.1,339.2L119.6,339.3L118.5,337.6L119.2,335.3L116.9,335.2L116.3,333.1L117.8,331.1L117.2,327.9L119.8,327.8L122.3,325.8L128.8,320.2L133.1,317.5L135.5,314.4L139.8,311.7L142.0,310.0L142.7,306.6L148.1,305.1L151.1,304.5L152.6,302.7L153.9,303.9L158.4,304.0L156.4,304.4L155.7,306.4L155.8,306.6L157.6,307.9L158.0,309.7L157.5,312.9L153.6,314.2ZM157.4,286.3L156.0,284.7L156.4,282.1L158.4,281.1L160.3,282.4L160.4,285.1L159.7,286.2L157.4,286.3ZM151.3,289.6L150.1,288.8L152.1,286.7L152.6,288.9L150.8,288.2L151.3,289.6ZM152.9,289.8L152.9,287.8L154.6,287.6L152.9,289.8ZM153.6,303.1L153.6,303.1L153.6,303.1L153.6,303.1ZM156.4,303.5L156.4,303.5L156.4,303.5L156.4,303.5ZM151.8,303.7L151.8,303.7L151.8,303.7L151.8,303.7ZM126.2,321.9L126.2,321.9L126.2,321.9L126.2,321.9ZM126.6,322.0L126.6,322.0L126.6,322.0L126.6,322.0ZM121.2,323.6L121.2,323.6L121.2,323.6L121.2,323.6ZM154.4,286.6L154.4,286.6L154.4,286.6L154.4,286.6ZM155.4,288.0L155.4,288.0L155.4,288.0L155.4,288.0ZM152.6,291.0L152.6,291.0L152.6,291.0L152.6,291.0ZM152.4,291.0L152.4,291.0L152.4,291.0L152.4,291.0ZM153.1,291.1L153.1,291.1L153.1,291.1L153.1,291.1ZM152.2,291.0L152.2,291.0L152.2,291.0L152.2,291.0ZM155.5,287.0L155.5,287.0L155.5,287.0L155.5,287.0ZM126.6,252.2L126.6,252.2L126.6,252.2L126.6,252.2ZM126.7,252.3L126.7,252.3L126.7,252.3L126.7,252.3Z"],["OY","M179.0,330.3L177.5,333.3L176.0,334.0L173.2,333.1L174.1,334.3L172.2,335.7L171.7,337.7L170.2,337.6L168.0,338.0L165.6,335.7L163.5,336.1L162.7,337.0L160.6,337.6L159.6,336.4L159.8,334.5L158.3,332.1L158.1,329.4L158.2,328.5L158.5,326.7L157.3,325.2L157.4,325.1L156.6,324.1L157.3,321.2L156.2,319.0L159.8,317.3L159.4,315.7L162.6,315.7L162.3,314.1L163.7,313.6L164.6,310.9L168.5,312.1L169.8,313.9L172.6,311.7L174.7,311.3L175.0,312.6L177.6,313.5L178.1,316.7L179.3,316.2L180.9,316.1L183.4,314.7L183.9,314.9L183.4,316.3L183.9,317.7L182.9,317.7L179.9,323.5L180.9,324.7L179.8,326.3L180.8,327.3L181.3,330.2L179.0,330.3ZM173.0,333.3L173.0,333.3L173.0,333.3L173.0,333.3ZM175.6,334.8L175.6,334.8L175.6,334.8L175.6,334.8ZM175.9,334.8L175.9,334.8L175.9,334.8L175.9,334.8ZM166.1,337.3L166.1,337.3L166.1,337.3L166.1,337.3ZM169.5,337.9L169.5,337.9L169.5,337.9L169.5,337.9ZM167.5,338.6L167.5,338.6L167.5,338.6L167.5,338.6ZM168.5,338.5L168.5,338.5L168.5,338.5L168.5,338.5ZM169.0,338.7L169.0,338.7L169.0,338.7L169.0,338.7ZM173.8,336.3L173.4,336.5L173.8,336.3L173.8,336.3ZM171.1,338.8L171.2,338.8L171.1,338.8L171.1,338.8ZM160.8,337.9L160.8,337.9L160.8,337.9L160.8,337.9ZM160.9,338.1L160.9,338.1L160.9,338.1L160.9,338.1ZM161.1,339.2L161.1,339.2L161.1,339.2L161.1,339.2ZM161.9,339.9L161.9,339.9L161.9,339.9L161.9,339.9ZM160.7,339.4L160.7,339.4L160.7,339.4L160.7,339.4ZM162.9,339.6L162.9,339.6L162.9,339.6L162.9,339.6ZM162.5,340.5L162.5,340.5L162.5,340.5L162.5,340.5ZM161.3,340.6L161.3,340.6L161.3,340.6L161.3,340.6ZM160.9,340.8L160.9,340.8L160.9,340.8L160.9,340.8ZM161.5,341.9L161.5,341.9L161.5,341.9L161.5,341.9ZM181.3,330.8L181.3,330.8L181.3,330.8L181.3,330.8ZM178.6,330.2L178.6,330.2L178.6,330.2L178.6,330.2ZM179.8,330.6L179.8,330.6L179.8,330.6L179.8,330.6ZM179.7,331.1L179.7,331.1L179.7,331.1L179.7,331.1ZM180.5,330.9L180.5,330.9L180.5,330.9L180.5,330.9ZM180.6,331.4L180.6,331.4L180.6,331.4L180.6,331.4ZM179.8,331.6L179.8,331.6L179.8,331.6L179.8,331.6ZM178.9,331.7L178.9,331.7L178.9,331.7L178.9,331.7ZM177.4,333.6L177.4,333.6L177.4,333.6L177.4,333.6ZM178.2,333.5L178.2,333.5L178.2,333.5L178.2,333.5ZM178.0,333.8L178.0,333.8L178.0,333.8L178.0,333.8ZM177.2,333.8L177.2,333.8L177.2,333.8L177.2,333.8Z"],["HS","M142.3,324.4L140.5,322.7L141.9,321.4L143.9,320.3L146.3,317.5L147.2,317.1L148.5,318.1L153.0,318.4L156.2,319.0L157.3,321.2L156.6,324.1L157.4,325.1L157.3,325.2L158.5,326.7L158.2,328.5L158.1,329.4L158.3,332.1L159.8,334.5L159.6,336.4L157.9,339.2L155.6,338.9L155.3,338.2L154.6,337.8L152.4,338.6L150.7,338.4L150.5,339.9L148.7,340.3L145.9,340.2L144.9,341.1L143.1,341.5L139.4,343.6L136.4,340.6L136.6,338.9L136.8,338.7L136.9,338.7L136.9,338.7L136.8,338.6L132.6,338.5L129.8,341.2L129.8,342.7L128.5,342.7L127.1,339.7L125.8,338.1L126.0,334.8L125.3,333.7L127.6,331.5L128.1,329.4L128.0,327.8L130.3,326.7L131.3,325.1L134.2,325.6L135.6,324.9L138.0,325.8L140.0,324.5L142.3,324.4ZM134.2,345.4L134.7,343.8L133.0,341.5L135.4,343.1L134.8,340.7L136.1,341.4L135.7,344.9L134.2,345.4ZM137.1,347.1L134.9,346.8L136.7,343.5L137.4,344.1L137.1,347.1ZM145.3,343.8L144.5,342.7L147.0,341.7L145.3,343.8ZM153.1,342.1L151.9,339.9L153.6,341.0L153.1,342.1ZM130.6,342.1L131.0,340.5L132.4,340.8L130.6,342.1ZM150.4,342.6L150.5,341.0L152.0,341.7L150.4,342.6ZM153.7,339.8L152.7,338.8L154.4,338.3L153.7,339.8ZM135.4,339.2L135.4,339.2L135.4,339.2L135.4,339.2ZM135.8,339.5L135.8,339.5L135.8,339.5L135.8,339.5ZM134.6,340.4L134.6,340.4L134.6,340.4L134.6,340.4ZM135.4,340.1L135.4,340.1L135.4,340.1L135.4,340.1ZM142.8,341.9L142.8,341.9L142.8,341.9L142.8,341.9ZM143.1,342.2L143.1,342.2L143.1,342.2L143.1,342.2ZM143.0,342.1L143.0,342.1L143.0,342.1L143.0,342.1ZM140.8,343.2L140.8,343.2L140.8,343.2L140.8,343.2ZM141.8,345.0L141.8,345.0L141.8,345.0L141.8,345.0ZM140.0,344.5L140.0,344.5L140.0,344.5L140.0,344.5ZM136.3,343.7L136.3,343.7L136.3,343.7L136.3,343.7ZM143.6,344.2L143.6,344.2L143.6,344.2L143.6,344.2ZM143.8,345.3L143.8,345.3L143.8,345.3L143.8,345.3ZM144.8,344.2L144.8,344.2L144.8,344.2L144.8,344.2ZM142.6,345.0L142.6,345.0L142.6,345.0L142.6,345.0ZM137.7,344.8L137.7,344.8L137.7,344.8L137.7,344.8ZM140.1,345.1L140.1,345.1L140.1,345.1L140.1,345.1ZM139.7,345.1L139.7,345.1L139.7,345.1L139.7,345.1ZM142.3,345.3L142.3,345.3L142.3,345.3L142.3,345.3ZM142.9,346.4L142.9,346.4L142.9,346.4L142.9,346.4ZM137.1,347.4L137.1,347.4L137.1,347.4L137.1,347.4ZM136.5,348.0L136.5,348.0L136.5,348.0L136.5,348.0ZM134.9,347.6L134.9,347.6L134.9,347.6L134.9,347.6ZM135.4,348.3L135.4,348.3L135.4,348.3L135.4,348.3ZM147.2,340.8L147.2,340.8L147.2,340.8L147.2,340.8ZM148.3,341.1L148.3,341.1L148.3,341.1L148.3,341.1ZM151.0,339.5L151.0,339.5L151.0,339.5L151.0,339.5ZM151.2,340.8L151.2,340.8L151.2,340.8L151.2,340.8ZM152.7,339.2L152.7,339.2L152.7,339.2L152.7,339.2ZM155.2,339.7L155.2,339.7L155.2,339.7L155.2,339.7ZM154.5,339.4L154.5,339.4L154.5,339.4L154.5,339.4ZM151.9,339.6L151.9,339.6L151.9,339.6L151.9,339.6ZM152.0,339.8L152.0,339.8L152.0,339.8L152.0,339.8ZM150.3,341.2L150.3,341.2L150.3,341.2L150.3,341.2ZM158.3,339.4L158.3,339.4L158.3,339.4L158.3,339.4ZM155.9,340.3L155.9,340.3L155.9,340.3L155.9,340.3ZM154.9,340.5L154.9,340.5L154.9,340.5L154.9,340.5ZM159.9,340.2L159.9,340.2L159.9,340.2L159.9,340.2ZM159.4,340.7L159.4,340.7L159.4,340.7L159.4,340.7ZM159.7,341.5L159.7,341.5L159.7,341.5L159.7,341.5ZM131.6,343.3L131.6,343.3L131.6,343.3L131.6,343.3ZM131.2,343.6L131.2,343.6L131.2,343.6L131.2,343.6ZM131.5,345.5L131.3,345.4L131.5,345.5L131.5,345.5ZM143.9,341.3L143.9,341.3L143.9,341.3L143.9,341.3ZM143.6,341.8L143.6,341.8L143.6,341.8L143.6,341.8ZM132.9,340.6L132.9,340.6L132.9,340.6L132.9,340.6ZM132.9,341.0L132.9,341.0L132.9,341.0L132.9,341.0ZM132.6,342.1L132.6,342.1L132.6,342.1L132.6,342.1ZM133.5,344.8L133.5,344.8L133.5,344.8L133.5,344.8ZM134.2,344.9L134.2,344.9L134.2,344.9L134.2,344.9ZM146.4,341.6L146.4,341.6L146.4,341.6L146.4,341.6ZM145.6,341.7L145.6,341.7L145.6,341.7L145.6,341.7ZM146.9,341.6L146.9,341.6L146.9,341.6L146.9,341.6ZM146.1,341.9L146.1,341.9L146.1,341.9L146.1,341.9ZM145.7,341.9L145.7,341.9L145.7,341.9L145.7,341.9ZM145.3,342.3L145.3,342.3L145.3,342.3L145.3,342.3ZM145.0,342.4L145.0,342.4L145.0,342.4L145.0,342.4Z"],["YC","M106.9,336.1L109.3,335.2L111.2,333.2L113.8,329.9L115.0,328.3L117.2,327.9L117.8,331.1L116.3,333.1L116.9,335.2L119.2,335.3L118.5,337.6L119.6,339.3L121.1,339.2L123.0,339.4L124.5,337.2L124.0,336.3L125.7,334.8L126.0,334.8L125.8,338.1L127.1,339.7L128.5,342.7L129.8,342.7L129.6,343.1L128.6,345.2L128.9,347.5L128.3,349.5L126.5,350.0L126.9,353.5L126.0,352.9L124.7,350.9L123.8,351.5L120.8,349.0L119.5,348.0L117.4,346.3L115.5,346.7L112.3,347.8L110.6,346.6L109.6,348.1L108.4,346.1L107.8,347.6L105.3,349.6L103.7,348.9L100.7,345.8L96.3,349.1L96.9,344.9L95.8,343.5L97.5,341.6L97.5,339.6L96.3,338.1L97.4,335.9L99.2,336.0L100.0,334.5L103.0,334.8L106.9,336.1ZM128.2,353.1L127.8,350.3L130.3,350.3L132.2,353.2L130.4,351.9L128.2,353.1ZM95.9,336.4L95.9,336.4L95.9,336.4L95.9,336.4ZM98.9,336.1L98.9,336.1L98.9,336.1L98.9,336.1ZM96.8,341.4L96.8,341.4L96.8,341.4L96.8,341.4ZM96.8,341.6L96.8,341.6L96.8,341.6L96.8,341.6ZM94.1,343.7L94.1,343.7L94.1,343.7L94.1,343.7ZM95.4,347.4L95.4,347.4L95.4,347.4L95.4,347.4ZM97.1,348.7L97.1,348.7L97.1,348.7L97.1,348.7ZM103.9,324.6L103.9,324.6L103.9,324.6L103.9,324.6ZM109.4,332.3L109.4,332.3L109.4,332.3L109.4,332.3ZM106.8,332.6L106.8,332.6L106.8,332.6L106.8,332.6ZM109.9,333.0L109.9,333.0L109.9,333.0L109.9,333.0ZM108.4,332.7L108.4,332.7L108.4,332.7L108.4,332.7ZM109.2,333.2L109.2,333.2L109.2,333.2L109.2,333.2ZM109.1,333.8L109.1,333.8L109.1,333.8L109.1,333.8ZM107.6,334.8L107.6,334.8L107.6,334.8L107.6,334.8ZM112.8,348.2L112.8,348.2L112.8,348.2L112.8,348.2ZM115.8,350.0L115.8,350.0L115.8,350.0L115.8,350.0ZM118.9,350.3L118.9,350.3L118.9,350.3L118.9,350.3ZM131.3,345.4L131.5,345.5L131.3,345.4L131.3,345.4ZM133.3,347.6L133.3,347.6L133.3,347.6L133.3,347.6ZM132.9,348.4L132.9,348.4L132.9,348.4L132.9,348.4ZM133.9,348.3L133.9,348.3L133.9,348.3L133.9,348.3ZM133.8,348.9L133.8,348.9L133.8,348.9L133.8,348.9ZM134.0,349.2L134.0,349.2L134.0,349.2L134.0,349.2ZM131.5,349.3L131.5,349.3L131.5,349.3L131.5,349.3ZM132.0,349.5L132.0,349.5L132.0,349.5L132.0,349.5ZM121.6,350.3L121.6,350.3L121.6,350.3L121.6,350.3ZM123.7,353.0L123.7,353.0L123.7,353.0L123.7,353.0ZM104.6,335.4L104.6,335.4L104.6,335.4L104.6,335.4ZM106.4,335.2L106.4,335.2L106.4,335.2L106.4,335.2ZM129.3,355.9L129.3,355.9L129.3,355.9L129.3,355.9ZM129.3,354.7L129.3,354.7L129.3,354.7L129.3,354.7ZM116.9,347.5L116.9,347.5L116.9,347.5L116.9,347.5ZM116.5,348.7L116.5,348.7L116.5,348.7L116.5,348.7ZM118.4,347.6L118.4,347.6L118.4,347.6L118.4,347.6ZM116.9,348.8L116.9,348.8L116.9,348.8L116.9,348.8ZM130.0,349.2L130.0,349.2L130.0,349.2L130.0,349.2ZM132.0,350.2L132.0,350.2L132.0,350.2L132.0,350.2ZM135.0,350.7L135.0,350.7L135.0,350.7L135.0,350.7ZM132.0,350.9L132.0,350.9L132.0,350.9L132.0,350.9ZM135.3,350.7L135.3,350.7L135.3,350.7L135.3,350.7ZM127.2,350.7L127.2,350.7L127.2,350.7L127.2,350.7ZM134.7,351.8L134.7,351.8L134.7,351.8L134.7,351.8ZM132.9,352.1L132.9,352.1L132.9,352.1L132.9,352.1ZM130.8,353.1L130.8,353.1L130.8,353.1L130.8,353.1ZM132.2,353.7L132.2,353.7L132.2,353.7L132.2,353.7ZM127.6,353.5L127.6,353.5L127.6,353.5L127.6,353.5ZM132.7,355.1L132.7,355.1L132.7,355.1L132.7,355.1ZM132.7,355.8L132.7,355.8L132.7,355.8L132.7,355.8ZM124.2,355.0L124.2,355.0L124.2,355.0L124.2,355.0ZM126.0,354.3L126.0,354.3L126.0,354.3L126.0,354.3ZM122.1,355.4L122.1,355.4L122.1,355.4L122.1,355.4ZM121.5,354.7L121.5,354.7L121.5,354.7L121.5,354.7ZM124.3,355.4L124.3,355.4L124.3,355.4L124.3,355.4ZM126.2,357.3L126.2,357.3L126.2,357.3L126.2,357.3ZM123.5,356.4L123.5,356.4L123.5,356.4L123.5,356.4ZM124.4,352.0L124.4,352.0L124.4,352.0L124.4,352.0ZM124.7,352.6L124.7,352.6L124.7,352.6L124.7,352.6ZM111.9,330.7L111.9,330.7L111.9,330.7L111.9,330.7ZM112.7,331.0L112.7,331.0L112.7,331.0L112.7,331.0Z"],["TS","M187.5,348.9L187.3,351.4L188.5,352.4L189.6,354.8L187.9,355.9L190.8,357.0L189.0,357.8L186.2,358.9L183.7,361.2L181.7,362.1L179.5,365.0L176.8,364.5L175.9,363.0L176.1,360.7L173.5,360.5L173.7,359.7L173.1,356.4L171.9,356.0L170.1,357.4L169.1,356.9L168.3,355.7L166.1,355.8L164.0,354.4L164.7,353.4L164.7,350.6L166.2,349.5L168.2,348.9L168.3,348.3L170.3,348.2L172.6,349.1L173.9,347.9L176.0,346.9L176.5,346.5L177.9,346.3L181.9,346.6L182.8,347.1L183.5,346.1L183.6,345.6L186.9,345.2L188.5,346.6L187.8,347.7L187.5,348.9ZM187.3,345.5L187.3,345.5L187.3,345.5L187.3,345.5ZM188.0,346.4L188.0,346.4L188.0,346.4L188.0,346.4ZM188.9,356.1L188.9,356.1L188.9,356.1L188.9,356.1ZM188.4,356.3L188.4,356.3L188.4,356.3L188.4,356.3ZM189.8,356.4L189.8,356.4L189.8,356.4L189.8,356.4ZM192.2,356.8L192.2,356.8L192.2,356.8L192.2,356.8ZM190.3,356.6L190.3,356.6L190.3,356.6L190.3,356.6ZM192.0,356.8L192.0,356.8L192.0,356.8L192.0,356.8ZM192.1,356.9L192.1,356.9L192.1,356.9L192.1,356.9ZM184.3,362.8L184.3,362.8L184.3,362.8L184.3,362.8ZM183.1,362.5L183.1,362.5L183.1,362.5L183.1,362.5ZM182.5,362.7L182.5,362.7L182.5,362.7L182.5,362.7ZM179.8,365.3L179.8,365.3L179.8,365.3L179.8,365.3Z"],["KG","M183.6,345.6L183.5,346.1L182.8,347.1L181.9,346.6L177.9,346.3L176.5,346.5L176.0,346.9L173.9,347.9L172.6,349.1L170.3,348.2L168.3,348.3L168.2,348.9L166.2,349.5L164.7,350.6L162.7,349.5L163.4,349.3L164.1,346.0L163.6,343.9L165.7,343.8L167.1,342.6L168.2,341.9L168.8,341.5L168.7,341.4L168.6,341.1L169.3,341.5L171.3,339.7L174.7,340.9L176.9,339.9L177.0,341.8L177.4,341.0L179.4,342.1L179.9,343.4L182.1,343.9L183.6,345.6ZM178.0,337.2L177.7,336.2L181.4,334.9L182.2,335.0L181.3,338.4L180.4,337.4L178.0,337.2ZM174.4,339.0L174.4,339.0L174.4,339.0L174.4,339.0ZM176.1,339.1L176.1,339.1L176.1,339.1L176.1,339.1ZM171.1,338.8L171.2,338.8L171.1,338.8L171.1,338.8ZM175.5,339.5L175.5,339.5L175.5,339.5L175.5,339.5ZM176.0,339.3L176.0,339.3L176.0,339.3L176.0,339.3ZM176.4,339.3L176.4,339.3L176.4,339.3L176.4,339.3ZM174.0,340.1L174.0,340.1L174.0,340.1L174.0,340.1ZM177.3,339.9L177.3,339.9L177.3,339.9L177.3,339.9ZM171.2,339.6L171.2,339.6L171.2,339.6L171.2,339.6ZM167.7,338.8L167.7,338.8L167.7,338.8L167.7,338.8ZM164.9,339.6L164.9,339.6L164.9,339.6L164.9,339.6ZM167.7,339.1L167.7,339.1L167.7,339.1L167.7,339.1ZM167.2,340.1L167.2,340.1L167.2,340.1L167.2,340.1ZM165.6,340.5L165.6,340.5L165.6,340.5L165.6,340.5ZM164.5,339.8L164.5,339.8L164.5,339.8L164.5,339.8ZM167.5,340.4L167.5,340.4L167.5,340.4L167.5,340.4ZM168.3,338.8L168.3,338.8L168.3,338.8L168.3,338.8ZM168.4,339.1L168.4,339.1L168.4,339.1L168.4,339.1ZM168.7,339.7L168.7,339.7L168.7,339.7L168.7,339.7ZM168.9,339.6L168.9,339.6L168.9,339.6L168.9,339.6ZM169.5,340.1L169.5,340.1L169.5,340.1L169.5,340.1ZM159.4,346.1L159.4,346.1L159.4,346.1L159.4,346.1ZM161.2,347.0L161.2,347.0L161.2,347.0L161.2,347.0ZM163.6,343.3L163.6,343.3L163.6,343.3L163.6,343.3ZM165.1,343.0L165.1,343.0L165.1,343.0L165.1,343.0ZM163.7,345.0L163.7,345.0L163.7,345.0L163.7,345.0ZM163.8,345.2L163.8,345.2L163.8,345.2L163.8,345.2ZM177.1,335.8L177.1,335.8L177.1,335.8L177.1,335.8ZM177.0,336.1L177.0,336.1L177.0,336.1L177.0,336.1ZM176.8,336.1L176.8,336.1L176.8,336.1L176.8,336.1ZM175.1,337.7L175.1,337.7L175.1,337.7L175.1,337.7ZM176.0,337.4L176.0,337.4L176.0,337.4L176.0,337.4ZM177.7,337.6L177.7,337.6L177.7,337.6L177.7,337.6ZM181.0,338.4L181.0,338.4L181.0,338.4L181.0,338.4ZM181.6,338.7L181.6,338.7L181.6,338.7L181.6,338.7ZM172.5,336.3L172.5,336.3L172.5,336.3L172.5,336.3ZM173.4,336.5L173.8,336.3L173.4,336.5L173.4,336.5ZM172.6,336.5L172.6,336.5L172.6,336.5L172.6,336.5ZM172.7,336.8L172.7,336.8L172.7,336.8L172.7,336.8ZM172.9,337.1L172.9,337.1L172.9,337.1L172.9,337.1ZM172.5,337.2L172.5,337.2L172.5,337.2L172.5,337.2ZM172.9,338.1L172.9,338.1L172.9,338.1L172.9,338.1ZM173.1,337.3L173.1,337.3L173.1,337.3L173.1,337.3ZM172.1,337.3L172.1,337.3L172.1,337.3L172.1,337.3ZM173.2,337.6L173.2,337.6L173.2,337.6L173.2,337.6ZM172.1,337.8L172.1,337.8L172.1,337.8L172.1,337.8ZM173.3,338.4L173.3,338.4L173.3,338.4L173.3,338.4ZM163.7,341.0L163.7,341.0L163.7,341.0L163.7,341.0ZM164.3,341.0L164.3,341.0L164.3,341.0L164.3,341.0ZM165.0,341.9L165.0,341.9L165.0,341.9L165.0,341.9Z"],["EH","M144.7,365.6L142.3,365.8L143.3,368.0L144.4,369.9L141.5,371.5L141.5,371.6L138.8,375.3L137.7,373.7L138.2,376.0L138.0,377.5L138.6,380.0L137.7,381.4L134.2,380.5L133.6,377.5L131.0,378.1L131.7,376.8L133.8,377.0L132.5,374.3L135.7,372.0L134.4,369.7L131.3,369.2L131.6,367.4L132.8,365.1L131.6,364.9L130.0,364.7L123.4,367.4L126.6,365.3L128.8,365.3L131.3,363.5L133.1,362.5L135.8,360.1L139.2,358.2L140.2,356.3L139.9,355.4L140.7,352.4L141.6,352.5L142.3,349.8L143.3,349.2L146.1,348.0L146.7,345.8L149.6,350.6L151.1,352.4L153.6,351.8L154.9,350.8L157.5,351.0L160.5,351.6L162.7,349.5L164.7,350.6L164.7,353.4L164.0,354.4L162.1,354.7L160.2,355.6L159.7,355.7L158.9,355.5L155.7,356.0L154.5,355.4L151.4,357.7L151.5,358.2L149.3,360.4L148.8,363.7L147.5,365.5L146.8,365.6L144.7,365.6ZM147.3,344.3L148.0,341.4L149.0,341.3L149.7,343.6L147.3,344.3ZM149.0,346.9L149.1,344.3L151.0,344.9L149.0,346.9ZM140.8,347.7L140.8,347.7L140.8,347.7L140.8,347.7ZM137.9,348.7L137.9,348.7L137.9,348.7L137.9,348.7ZM138.1,351.2L138.1,351.2L138.1,351.2L138.1,351.2ZM136.6,350.5L136.6,350.5L136.6,350.5L136.6,350.5ZM135.5,350.4L135.5,350.4L135.5,350.4L135.5,350.4ZM140.2,350.6L140.2,350.6L140.2,350.6L140.2,350.6ZM142.1,350.5L142.1,350.5L142.1,350.5L142.1,350.5ZM139.5,351.0L139.5,351.0L139.5,351.0L139.5,351.0ZM136.3,351.6L136.3,351.6L136.3,351.6L136.3,351.6ZM137.0,351.6L137.0,351.6L137.0,351.6L137.0,351.6ZM139.6,353.4L139.6,353.4L139.6,353.4L139.6,353.4ZM139.0,352.9L139.0,352.9L139.0,352.9L139.0,352.9ZM136.2,354.0L136.2,354.0L136.2,354.0L136.2,354.0ZM147.1,342.8L147.1,342.8L147.1,342.8L147.1,342.8ZM151.0,344.5L151.0,344.5L151.0,344.5L151.0,344.5ZM146.7,344.1L146.7,344.1L146.7,344.1L146.7,344.1ZM146.6,344.5L146.6,344.5L146.6,344.5L146.6,344.5ZM145.3,344.7L145.3,344.7L145.3,344.7L145.3,344.7ZM150.2,344.4L150.2,344.4L150.2,344.4L150.2,344.4ZM150.3,344.8L150.3,344.8L150.3,344.8L150.3,344.8ZM145.8,344.4L145.8,344.4L145.8,344.4L145.8,344.4ZM146.7,344.4L146.7,344.4L146.7,344.4L146.7,344.4ZM148.4,345.7L148.4,345.7L148.4,345.7L148.4,345.7ZM147.5,346.4L147.5,346.4L147.5,346.4L147.5,346.4ZM152.0,346.8L152.0,346.8L152.0,346.8L152.0,346.8ZM152.6,346.9L152.6,346.9L152.6,346.9L152.6,346.9ZM147.9,346.7L147.9,346.7L147.9,346.7L147.9,346.7ZM152.7,347.2L152.7,347.2L152.7,347.2L152.7,347.2ZM150.8,348.4L150.8,348.4L150.8,348.4L150.8,348.4ZM150.6,348.5L150.6,348.5L150.6,348.5L150.6,348.5ZM150.3,349.6L150.3,349.6L150.3,349.6L150.3,349.6ZM134.8,372.5L134.8,372.5L134.8,372.5L134.8,372.5ZM131.0,372.1L131.0,372.1L131.0,372.1L131.0,372.1ZM130.9,373.2L130.9,373.2L130.9,373.2L130.9,373.2ZM133.8,372.6L133.8,372.6L133.8,372.6L133.8,372.6ZM131.8,373.4L131.8,373.4L131.8,373.4L131.8,373.4ZM128.6,373.0L128.6,373.0L128.6,373.0L128.6,373.0ZM128.6,373.1L128.6,373.1L128.6,373.1L128.6,373.1ZM131.0,373.4L131.0,373.4L131.0,373.4L131.0,373.4ZM129.0,373.8L129.0,373.8L129.0,373.8L129.0,373.8ZM131.7,373.5L131.7,373.5L131.7,373.5L131.7,373.5ZM131.6,374.0L131.6,374.0L131.6,374.0L131.6,374.0ZM129.5,374.3L129.5,374.3L129.5,374.3L129.5,374.3ZM129.8,374.2L129.8,374.2L129.8,374.2L129.8,374.2ZM132.3,375.5L132.3,375.5L132.3,375.5L132.3,375.5ZM132.0,375.8L132.0,375.8L132.0,375.8L132.0,375.8ZM129.6,375.7L129.6,375.7L129.6,375.7L129.6,375.7ZM131.4,365.8L131.4,365.8L131.4,365.8L131.4,365.8ZM130.7,367.4L130.7,367.4L130.7,367.4L130.7,367.4ZM131.1,367.8L131.1,367.8L131.1,367.8L131.1,367.8ZM156.8,350.8L156.8,350.8L156.8,350.8L156.8,350.8ZM134.6,357.2L134.6,357.2L134.6,357.2L134.6,357.2ZM153.4,343.2L153.4,343.2L153.4,343.2L153.4,343.2ZM152.7,341.8L152.7,341.8L152.7,341.8L152.7,341.8ZM152.4,341.8L152.4,341.8L152.4,341.8L152.4,341.8ZM152.7,342.7L152.7,342.7L152.7,342.7L152.7,342.7ZM151.6,343.1L151.6,343.1L151.6,343.1L151.6,343.1ZM152.8,343.6L152.8,343.6L152.8,343.6L152.8,343.6ZM152.1,343.3L152.1,343.3L152.1,343.3L152.1,343.3ZM154.5,343.6L154.5,343.6L154.5,343.6L154.5,343.6ZM152.0,343.8L152.0,343.8L152.0,343.8L152.0,343.8ZM154.8,345.0L154.8,345.0L154.8,345.0L154.8,345.0ZM156.0,345.4L156.0,345.4L156.0,345.4L156.0,345.4ZM157.1,345.7L157.1,345.7L157.1,345.7L157.1,345.7ZM131.0,365.3L131.0,365.3L131.0,365.3L131.0,365.3ZM132.3,380.7L132.3,380.7L132.3,380.7L132.3,380.7ZM131.4,380.8L131.4,380.8L131.4,380.8L131.4,380.8ZM132.1,381.0L132.1,381.0L132.1,381.0L132.1,381.0ZM135.4,381.7L135.4,381.7L135.4,381.7L135.4,381.7Z"],["KC","M162.0,365.1L158.9,366.7L157.7,367.3L157.8,367.6L158.0,367.8L154.1,368.8L153.4,370.0L153.1,373.0L150.6,375.9L148.7,379.1L147.4,378.6L146.3,380.3L146.4,382.3L144.9,385.2L146.5,387.8L143.3,385.8L140.7,386.6L139.0,385.3L137.0,386.0L136.8,385.1L138.8,382.6L137.7,381.4L138.6,380.0L138.0,377.5L138.2,376.0L137.7,373.7L138.8,375.3L141.5,371.6L141.5,371.5L144.4,369.9L143.3,368.0L142.3,365.8L144.7,365.6L146.8,365.6L147.5,365.5L148.8,363.7L149.3,360.4L151.5,358.2L151.4,357.7L154.5,355.4L155.7,356.0L158.9,355.5L159.7,355.7L160.2,355.6L162.1,354.7L164.0,354.4L166.1,355.8L168.3,355.7L169.1,356.9L170.1,357.4L171.9,356.0L173.1,356.4L173.7,359.7L173.5,360.5L176.1,360.7L175.9,363.0L176.8,364.5L179.5,365.0L177.6,368.1L175.8,373.9L172.5,369.8L172.0,368.4L171.6,368.3L170.7,367.7L170.2,366.4L167.4,365.5L166.2,365.4L164.0,364.7L162.0,365.1ZM154.4,369.5L154.4,369.5L154.4,369.5L154.4,369.5ZM154.6,369.6L154.6,369.6L154.6,369.6L154.6,369.6ZM154.9,369.8L154.9,369.8L154.9,369.8L154.9,369.8ZM138.9,381.7L138.9,381.7L138.9,381.7L138.9,381.7ZM137.9,381.7L137.9,381.7L137.9,381.7L137.9,381.7ZM137.7,381.7L137.7,381.7L137.7,381.7L137.7,381.7ZM138.7,381.9L138.7,381.9L138.7,381.9L138.7,381.9ZM133.2,385.0L133.2,385.0L133.2,385.0L133.2,385.0ZM134.5,387.9L134.5,387.9L134.5,387.9L134.5,387.9ZM133.1,386.8L133.1,386.8L133.1,386.8L133.1,386.8ZM179.2,365.3L179.2,365.3L179.2,365.3L179.2,365.3ZM179.6,365.3L179.6,365.3L179.6,365.3L179.6,365.3ZM136.5,386.1L136.5,386.1L136.5,386.1L136.5,386.1ZM136.1,386.7L136.1,386.7L136.1,386.7L136.1,386.7Z"],["FO","M98.5,354.2L99.3,356.1L100.2,357.8L102.2,358.5L102.6,358.5L102.3,359.3L102.2,361.7L99.5,361.5L97.6,361.4L97.4,361.4L96.6,361.9L95.9,362.8L95.2,363.0L94.1,365.1L93.4,366.0L94.0,368.4L92.9,368.6L94.3,370.7L93.0,373.1L89.2,370.8L88.4,372.6L86.1,372.5L86.2,373.0L85.6,373.1L84.8,375.2L82.2,375.2L82.5,373.2L82.3,372.8L81.1,371.0L81.1,370.1L81.8,368.0L82.1,368.1L82.9,367.4L84.6,365.6L86.0,365.4L86.3,363.9L86.3,362.6L84.4,362.7L84.4,362.7L83.7,363.5L83.1,363.6L82.8,362.6L82.3,362.6L81.4,362.0L79.8,360.8L77.3,361.0L74.1,360.6L77.0,358.9L75.6,357.4L78.4,355.9L80.0,357.6L82.9,357.7L84.3,355.6L84.0,354.2L84.7,353.9L85.3,353.1L84.9,351.2L85.8,350.2L87.4,349.2L89.7,349.5L90.7,348.6L92.7,348.0L95.2,348.6L96.0,349.9L97.9,347.9L99.4,348.1L98.0,352.4L98.5,354.2ZM92.3,346.1L92.3,346.1L92.3,346.1L92.3,346.1ZM92.0,346.3L92.0,346.3L92.0,346.3L92.0,346.3ZM94.5,346.9L94.5,346.9L94.5,346.9L94.5,346.9ZM95.3,347.6L95.3,347.6L95.3,347.6L95.3,347.6ZM94.4,348.5L94.4,348.5L94.4,348.5L94.4,348.5ZM99.3,352.2L99.3,352.2L99.3,352.2L99.3,352.2ZM98.0,351.9L98.0,351.9L98.0,351.9L98.0,351.9ZM75.0,349.0L75.0,349.0L75.0,349.0L75.0,349.0ZM79.4,354.7L79.4,354.7L79.4,354.7L79.4,354.7ZM83.5,355.8L83.5,355.8L83.5,355.8L83.5,355.8ZM80.9,357.1L80.9,357.1L80.9,357.1L80.9,357.1ZM77.6,338.0L77.6,338.0L77.6,338.0L77.6,338.0ZM84.6,349.1L84.6,349.1L84.6,349.1L84.6,349.1ZM86.5,349.0L86.5,349.0L86.5,349.0L86.5,349.0ZM85.6,350.0L85.6,350.0L85.6,350.0L85.6,350.0ZM74.6,357.8L74.6,357.8L74.6,357.8L74.6,357.8ZM82.8,352.8L82.8,352.8L82.8,352.8L82.8,352.8ZM98.7,353.1L98.7,353.1L98.7,353.1L98.7,353.1Z"],["SA","M83.1,363.6L83.7,363.5L84.4,362.7L84.4,362.7L86.3,362.6L86.3,363.9L86.0,365.4L84.6,365.6L82.9,367.4L82.1,368.1L81.8,368.0L81.1,370.1L81.1,371.0L79.4,370.7L78.2,369.1L77.8,369.1L77.9,370.0L75.3,371.1L76.3,373.3L76.9,376.2L74.0,375.4L73.8,375.0L73.1,374.4L73.0,374.4L70.3,371.6L70.4,371.2L71.0,371.1L70.8,369.4L69.2,369.3L67.9,368.6L67.9,367.1L67.1,366.0L67.6,363.9L68.6,365.1L69.6,362.5L67.7,360.5L69.4,360.9L69.7,359.0L70.8,358.0L72.4,359.2L71.6,360.3L74.1,360.6L77.3,361.0L79.8,360.8L81.4,362.0L82.3,362.6L82.8,362.6L83.1,363.6ZM70.0,356.8L70.0,356.8L70.0,356.8L70.0,356.8ZM70.8,356.7L70.8,356.7L70.8,356.7L70.8,356.7ZM69.4,356.8L69.4,356.8L69.4,356.8L69.4,356.8ZM67.4,357.2L67.4,357.2L67.4,357.2L67.4,357.2ZM70.2,358.1L70.2,358.1L70.2,358.1L70.2,358.1ZM72.5,358.8L72.5,358.8L72.5,358.8L72.5,358.8ZM72.9,360.5L72.9,360.5L72.9,360.5L72.9,360.5ZM69.4,362.2L69.4,362.2L69.4,362.2L69.4,362.2ZM69.5,362.3L69.5,362.3L69.5,362.3L69.5,362.3ZM68.7,364.7L68.7,364.7L68.7,364.7L68.7,364.7ZM77.2,376.4L77.2,376.4L77.2,376.4L77.2,376.4Z"],["NS","M67.1,375.2L66.6,377.8L68.0,378.3L68.9,378.0L71.8,379.0L70.1,376.7L70.7,374.6L69.1,372.3L67.3,372.1L65.7,372.1L66.6,369.6L64.1,370.2L63.8,367.5L63.5,367.0L61.6,367.0L63.1,364.3L62.5,362.3L63.8,362.9L67.6,363.9L67.1,366.0L67.9,367.1L67.9,368.6L69.2,369.3L70.8,369.4L71.0,371.1L70.4,371.2L70.3,371.6L73.0,374.4L73.1,374.4L73.8,375.0L74.0,375.4L76.9,376.2L74.4,378.1L75.3,379.3L75.4,379.4L75.5,379.5L77.7,378.7L79.6,379.1L80.8,381.8L80.6,383.0L79.7,384.9L75.2,386.9L74.3,384.9L76.4,382.9L75.0,380.8L71.1,381.6L68.5,384.2L65.6,386.4L67.0,381.6L65.7,379.4L64.2,378.8L63.5,376.8L62.7,374.3L64.3,370.8L67.1,375.2L67.1,375.2L67.1,375.2ZM60.5,330.9L59.8,333.2L57.8,332.0L57.9,329.5L58.9,327.8L59.6,324.1L61.4,324.2L62.8,322.7L63.7,324.0L62.9,327.4L60.4,330.1L60.5,330.9ZM40.4,384.3L39.6,383.3L37.2,382.9L38.3,377.8L38.9,379.2L41.4,378.0L43.7,382.2L40.5,382.2L40.4,384.3ZM55.4,340.6L54.5,338.7L55.9,333.3L58.8,335.2L57.2,339.4L55.4,340.6ZM66.7,353.0L65.4,349.8L66.4,348.4L68.3,348.9L68.5,351.9L66.7,353.0ZM56.9,368.1L58.4,365.9L59.1,362.8L62.1,362.9L59.2,366.9L56.9,368.1ZM48.2,377.8L47.9,373.8L49.0,371.1L50.5,369.3L49.4,373.0L51.6,373.5L49.8,374.3L48.2,377.8ZM43.3,378.9L42.7,376.6L44.3,377.2L43.3,378.9ZM47.5,376.9L46.0,375.0L47.7,375.4L47.5,376.9ZM50.8,365.2L49.7,364.4L51.5,363.8L50.8,365.2ZM67.0,376.6L67.0,376.6L67.0,376.6L67.0,376.6ZM61.7,377.1L61.7,377.1L61.7,377.1L61.7,377.1ZM66.7,377.7L66.7,377.7L66.7,377.7L66.7,377.7ZM60.5,377.2L60.5,377.2L60.5,377.2L60.5,377.2ZM60.7,377.5L60.7,377.5L60.7,377.5L60.7,377.5ZM65.4,380.2L65.4,380.2L65.4,380.2L65.4,380.2ZM70.9,381.9L70.9,381.9L70.9,381.9L70.9,381.9ZM65.7,383.2L65.7,383.2L65.7,383.2L65.7,383.2ZM65.0,384.3L65.0,384.3L65.0,384.3L65.0,384.3ZM64.5,385.0L64.5,385.0L64.5,385.0L64.5,385.0ZM65.3,387.3L65.3,387.3L65.3,387.3L65.3,387.3ZM62.1,365.0L62.1,365.0L62.1,365.0L62.1,365.0ZM61.9,365.0L61.9,365.0L61.9,365.0L61.9,365.0ZM62.1,365.3L62.1,365.3L62.1,365.3L62.1,365.3ZM61.9,365.5L61.9,365.5L61.9,365.5L61.9,365.5ZM61.9,365.8L61.9,365.8L61.9,365.8L61.9,365.8ZM61.5,365.7L61.5,365.7L61.5,365.7L61.5,365.7ZM61.7,365.8L61.7,365.8L61.7,365.8L61.7,365.8ZM49.6,365.1L49.6,365.1L49.6,365.1L49.6,365.1ZM61.8,366.1L61.8,366.1L61.8,366.1L61.8,366.1ZM61.5,366.8L61.5,366.8L61.5,366.8L61.5,366.8ZM61.8,367.2L61.8,367.2L61.8,367.2L61.8,367.2ZM62.0,367.4L62.0,367.4L62.0,367.4L62.0,367.4ZM62.4,367.6L62.4,367.6L62.4,367.6L62.4,367.6ZM62.5,367.6L62.5,367.6L62.5,367.6L62.5,367.6ZM62.5,367.9L62.5,367.9L62.5,367.9L62.5,367.9ZM62.8,368.0L62.8,368.0L62.8,368.0L62.8,368.0ZM62.0,368.8L62.0,368.8L62.0,368.8L62.0,368.8ZM62.9,368.2L62.9,368.2L62.9,368.2L62.9,368.2ZM60.6,368.5L60.6,368.5L60.6,368.5L60.6,368.5ZM64.3,369.1L64.3,369.1L64.3,369.1L64.3,369.1ZM63.4,369.0L63.4,369.0L63.4,369.0L63.4,369.0ZM64.2,369.3L64.2,369.3L64.2,369.3L64.2,369.3ZM64.0,369.3L64.0,369.3L64.0,369.3L64.0,369.3ZM60.8,369.5L60.8,369.5L60.8,369.5L60.8,369.5ZM64.4,369.7L64.4,369.7L64.4,369.7L64.4,369.7ZM63.8,369.6L63.8,369.6L63.8,369.6L63.8,369.6ZM64.0,369.8L64.0,369.8L64.0,369.8L64.0,369.8ZM66.2,370.0L66.2,370.0L66.2,370.0L66.2,370.0ZM66.8,372.0L66.8,372.0L66.8,372.0L66.8,372.0ZM69.9,378.2L69.9,378.2L69.9,378.2L69.9,378.2ZM71.5,381.8L71.5,381.8L71.5,381.8L71.5,381.8ZM71.3,381.8L71.3,381.8L71.3,381.8L71.3,381.8ZM69.7,377.1L69.7,377.1L69.7,377.1L69.7,377.1ZM70.3,377.3L70.3,377.3L70.3,377.3L70.3,377.3ZM62.5,355.6L62.5,355.6L62.5,355.6L62.5,355.6ZM62.1,359.6L62.1,359.6L62.1,359.6L62.1,359.6ZM60.9,360.8L60.9,360.8L60.9,360.8L60.9,360.8ZM58.4,362.8L58.4,362.8L58.4,362.8L58.4,362.8ZM61.5,361.0L61.5,361.0L61.5,361.0L61.5,361.0ZM63.1,362.3L63.1,362.3L63.1,362.3L63.1,362.3ZM62.3,364.6L62.3,364.6L62.3,364.6L62.3,364.6ZM56.2,365.6L56.2,365.6L56.2,365.6L56.2,365.6ZM56.5,366.9L56.5,366.9L56.5,366.9L56.5,366.9ZM56.2,367.3L56.2,367.3L56.2,367.3L56.2,367.3ZM56.0,367.6L56.0,367.6L56.0,367.6L56.0,367.6ZM56.3,367.8L56.3,367.8L56.3,367.8L56.3,367.8ZM66.4,361.9L66.4,361.9L66.4,361.9L66.4,361.9ZM66.4,360.5L66.4,360.5L66.4,360.5L66.4,360.5ZM65.9,361.4L65.9,361.4L65.9,361.4L65.9,361.4ZM65.2,361.8L65.2,361.8L65.2,361.8L65.2,361.8ZM68.2,363.7L68.2,363.7L68.2,363.7L68.2,363.7ZM67.5,362.3L67.5,362.3L67.5,362.3L67.5,362.3ZM67.5,362.4L67.5,362.4L67.5,362.4L67.5,362.4ZM62.5,322.8L62.5,322.8L62.5,322.8L62.5,322.8ZM63.5,323.6L63.5,323.6L63.5,323.6L63.5,323.6ZM57.6,330.6L57.6,330.6L57.6,330.6L57.6,330.6ZM57.7,330.9L57.7,330.9L57.7,330.9L57.7,330.9ZM60.9,333.2L60.9,333.2L60.9,333.2L60.9,333.2ZM60.6,333.6L60.6,333.6L60.6,333.6L60.6,333.6ZM59.2,333.0L59.2,333.0L59.2,333.0L59.2,333.0ZM59.3,333.2L59.3,333.2L59.3,333.2L59.3,333.2ZM59.0,333.3L59.0,333.3L59.0,333.3L59.0,333.3ZM58.9,334.4L58.9,334.4L58.9,334.4L58.9,334.4ZM60.5,334.3L60.5,334.3L60.5,334.3L60.5,334.3ZM58.6,334.5L58.6,334.5L58.6,334.5L58.6,334.5ZM59.5,335.4L59.5,335.4L59.5,335.4L59.5,335.4ZM56.2,340.3L56.2,340.3L56.2,340.3L56.2,340.3ZM66.5,348.3L66.5,348.3L66.5,348.3L66.5,348.3ZM66.2,348.2L66.2,348.2L66.2,348.2L66.2,348.2ZM66.7,348.2L66.7,348.2L66.7,348.2L66.7,348.2ZM65.7,349.2L65.7,349.2L65.7,349.2L65.7,349.2ZM64.7,352.0L64.7,352.0L64.7,352.0L64.7,352.0ZM67.8,352.3L67.8,352.3L67.8,352.3L67.8,352.3ZM64.6,352.2L64.6,352.2L64.6,352.2L64.6,352.2ZM65.1,352.4L65.1,352.4L65.1,352.4L65.1,352.4ZM64.5,353.0L64.5,353.0L64.5,353.0L64.5,353.0ZM44.7,375.4L44.7,375.4L44.7,375.4L44.7,375.4ZM45.2,378.0L45.2,378.0L45.2,378.0L45.2,378.0ZM44.6,375.7L44.6,375.7L44.6,375.7L44.6,375.7ZM38.7,377.3L38.7,377.3L38.7,377.3L38.7,377.3ZM45.0,378.0L45.0,378.0L45.0,378.0L45.0,378.0ZM46.2,379.8L46.2,379.8L46.2,379.8L46.2,379.8ZM45.7,379.2L45.7,379.2L45.7,379.2L45.7,379.2ZM43.4,379.6L43.4,379.6L43.4,379.6L43.4,379.6ZM40.9,379.5L40.9,379.5L40.9,379.5L40.9,379.5ZM36.5,379.8L36.5,379.8L36.5,379.8L36.5,379.8ZM43.1,380.2L43.1,380.2L43.1,380.2L43.1,380.2ZM42.9,380.2L42.9,380.2L42.9,380.2L42.9,380.2ZM43.8,381.0L43.8,381.0L43.8,381.0L43.8,381.0ZM36.9,382.0L36.9,382.0L36.9,382.0L36.9,382.0ZM40.7,382.9L40.7,382.9L40.7,382.9L40.7,382.9ZM40.7,383.1L40.7,383.1L40.7,383.1L40.7,383.1ZM42.2,383.8L42.2,383.8L42.2,383.8L42.2,383.8ZM44.1,384.1L44.1,384.1L44.1,384.1L44.1,384.1ZM43.7,384.2L43.7,384.2L43.7,384.2L43.7,384.2ZM38.8,384.0L38.8,384.0L38.8,384.0L38.8,384.0ZM43.6,385.0L43.6,385.0L43.6,385.0L43.6,385.0ZM29.8,399.2L29.8,399.2L29.8,399.2L29.8,399.2ZM29.1,399.4L29.1,399.4L29.1,399.4L29.1,399.4ZM28.8,399.6L28.8,399.6L28.8,399.6L28.8,399.6ZM28.6,400.0L28.6,400.0L28.6,400.0L28.6,400.0ZM28.2,400.5L28.2,400.5L28.2,400.5L28.2,400.5ZM28.2,400.5L28.2,400.5L28.2,400.5L28.2,400.5ZM62.4,372.9L62.4,372.9L62.4,372.9L62.4,372.9ZM61.5,371.6L61.5,371.6L61.5,371.6L61.5,371.6ZM63.0,372.9L63.0,372.9L63.0,372.9L63.0,372.9ZM61.1,373.5L61.1,373.5L61.1,373.5L61.1,373.5ZM53.0,373.1L53.0,373.1L53.0,373.1L53.0,373.1ZM58.1,372.7L58.1,372.7L58.1,372.7L58.1,372.7ZM55.8,373.1L55.8,373.1L55.8,373.1L55.8,373.1ZM60.5,373.2L60.5,373.2L60.5,373.2L60.5,373.2ZM63.2,374.0L63.2,374.0L63.2,374.0L63.2,374.0ZM60.9,373.4L60.9,373.4L60.9,373.4L60.9,373.4ZM65.7,374.0L65.7,374.0L65.7,374.0L65.7,374.0ZM65.6,374.1L65.6,374.1L65.6,374.1L65.6,374.1ZM67.3,375.3L67.3,375.3L67.3,375.3L67.3,375.3ZM62.7,375.2L62.7,375.2L62.7,375.2L62.7,375.2ZM62.1,376.1L62.1,376.1L62.1,376.1L62.1,376.1ZM67.7,377.4L67.7,377.4L67.7,377.4L67.7,377.4ZM66.9,378.0L66.9,378.0L66.9,378.0L66.9,378.0ZM67.2,378.1L67.2,378.1L67.2,378.1L67.2,378.1ZM67.6,372.6L67.6,372.6L67.6,372.6L67.6,372.6ZM51.1,366.0L51.1,366.0L51.1,366.0L51.1,366.0ZM49.5,365.9L49.5,365.9L49.5,365.9L49.5,365.9ZM49.0,366.9L49.0,366.9L49.0,366.9L49.0,366.9ZM50.9,367.8L50.9,367.8L50.9,367.8L50.9,367.8ZM48.3,366.3L48.3,366.3L48.3,366.3L48.3,366.3ZM46.0,366.4L46.0,366.4L46.0,366.4L46.0,366.4ZM47.2,366.7L47.2,366.7L47.2,366.7L47.2,366.7ZM48.3,366.9L48.3,366.9L48.3,366.9L48.3,366.9ZM49.0,367.1L49.0,367.1L49.0,367.1L49.0,367.1ZM48.2,367.4L48.2,367.4L48.2,367.4L48.2,367.4ZM45.3,367.1L45.3,367.1L45.3,367.1L45.3,367.1ZM48.5,367.2L48.5,367.2L48.5,367.2L48.5,367.2ZM45.1,367.5L45.1,367.5L45.1,367.5L45.1,367.5ZM50.9,368.6L50.9,368.6L50.9,368.6L50.9,368.6ZM51.7,372.0L51.7,372.0L51.7,372.0L51.7,372.0ZM52.0,372.5L52.0,372.5L52.0,372.5L52.0,372.5ZM47.5,372.2L47.5,372.2L47.5,372.2L47.5,372.2ZM47.8,373.0L47.8,373.0L47.8,373.0L47.8,373.0ZM46.7,373.8L46.7,373.8L46.7,373.8L46.7,373.8ZM46.0,374.9L46.0,374.9L46.0,374.9L46.0,374.9ZM51.6,375.1L51.6,375.1L51.6,375.1L51.6,375.1ZM48.2,374.8L48.2,374.8L48.2,374.8L48.2,374.8ZM45.6,375.2L45.6,375.2L45.6,375.2L45.6,375.2ZM47.9,375.6L47.9,375.6L47.9,375.6L47.9,375.6ZM47.7,376.2L47.7,376.2L47.7,376.2L47.7,376.2ZM48.0,376.4L48.0,376.4L48.0,376.4L48.0,376.4ZM47.7,376.4L47.7,376.4L47.7,376.4L47.7,376.4ZM47.9,376.4L47.9,376.4L47.9,376.4L47.9,376.4ZM46.9,376.5L46.9,376.5L46.9,376.5L46.9,376.5ZM47.7,376.9L47.7,376.9L47.7,376.9L47.7,376.9Z"],["KM","M93.1,373.4L96.0,375.7L96.7,375.6L97.4,373.7L96.9,371.0L99.2,371.0L99.9,371.2L101.2,373.7L101.7,374.5L101.8,374.7L102.8,378.1L102.8,379.6L104.6,382.0L103.0,382.1L102.0,384.2L102.0,384.5L98.8,387.4L98.4,389.1L96.2,389.8L95.9,392.4L97.1,394.1L97.8,397.0L96.5,397.7L96.3,398.9L97.7,401.5L94.7,401.4L94.2,402.4L92.7,402.0L91.8,402.3L91.2,402.8L87.8,402.6L86.2,400.9L84.8,399.8L84.5,400.7L81.7,401.4L79.9,401.4L79.0,399.9L80.9,398.2L81.8,396.8L82.6,394.2L83.9,393.0L84.9,392.4L84.2,390.5L86.7,387.5L86.7,386.9L82.6,387.1L83.5,385.7L86.4,384.1L86.7,381.9L85.8,380.1L83.5,378.3L82.7,377.1L82.2,375.2L84.8,375.2L85.6,373.1L86.2,373.0L86.1,372.5L88.4,372.6L89.2,370.8L93.0,373.1L93.1,373.4ZM73.8,388.2L75.5,388.2L75.6,391.2L79.8,389.2L80.5,390.0L82.1,389.6L80.5,393.1L79.2,393.0L79.3,392.9L79.3,392.8L76.0,392.0L75.3,394.9L73.9,395.0L72.5,397.5L70.3,398.5L69.3,396.8L70.6,395.2L69.8,393.4L71.0,391.1L72.4,388.9L73.8,388.2ZM81.4,388.8L80.8,387.4L82.0,386.5L81.4,388.8ZM82.9,390.8L82.9,390.8L82.9,390.8L82.9,390.8ZM79.1,399.1L79.1,399.1L79.1,399.1L79.1,399.1ZM79.5,387.0L79.5,387.0L79.5,387.0L79.5,387.0ZM82.2,387.4L82.2,387.4L82.2,387.4L82.2,387.4ZM82.4,389.0L82.4,389.0L82.4,389.0L82.4,389.0ZM80.5,387.7L80.5,387.7L80.5,387.7L80.5,387.7ZM82.2,388.2L82.2,388.2L82.2,388.2L82.2,388.2ZM80.6,388.8L80.6,388.8L80.6,388.8L80.6,388.8ZM81.3,389.0L81.3,389.0L81.3,389.0L81.3,389.0ZM80.8,389.0L80.8,389.0L80.8,389.0L80.8,389.0ZM81.7,389.2L81.7,389.2L81.7,389.2L81.7,389.2ZM81.6,389.3L81.6,389.3L81.6,389.3L81.6,389.3ZM81.4,389.5L81.4,389.5L81.4,389.5L81.4,389.5ZM80.9,394.1L80.9,394.1L80.9,394.1L80.9,394.1ZM80.6,393.4L80.6,393.4L80.6,393.4L80.6,393.4ZM78.9,393.4L78.9,393.4L78.9,393.4L78.9,393.4ZM78.4,393.8L78.4,393.8L78.4,393.8L78.4,393.8ZM78.0,393.8L78.0,393.8L78.0,393.8L78.0,393.8ZM83.1,388.0L83.1,388.0L83.1,388.0L83.1,388.0ZM82.7,387.5L82.7,387.5L82.7,387.5L82.7,387.5ZM73.5,388.0L73.5,388.0L73.5,388.0L73.5,388.0ZM75.7,388.5L75.7,388.5L75.7,388.5L75.7,388.5ZM80.1,389.2L80.1,389.2L80.1,389.2L80.1,389.2ZM76.2,392.6L76.2,392.6L76.2,392.6L76.2,392.6ZM76.3,392.7L76.3,392.7L76.3,392.7L76.3,392.7ZM78.6,393.3L78.6,393.3L78.6,393.3L78.6,393.3ZM76.2,393.7L76.2,393.7L76.2,393.7L76.2,393.7ZM79.1,394.1L79.1,394.1L79.1,394.1L79.1,394.1ZM78.1,394.7L78.1,394.7L78.1,394.7L78.1,394.7ZM79.3,394.4L79.3,394.4L79.3,394.4L79.3,394.4ZM77.8,395.7L77.8,395.7L77.8,395.7L77.8,395.7ZM77.5,394.7L77.5,394.7L77.5,394.7L77.5,394.7ZM77.8,395.1L77.8,395.1L77.8,395.1L77.8,395.1ZM73.6,396.6L73.6,396.6L73.6,396.6L73.6,396.6ZM69.3,398.1L69.3,398.1L69.3,398.1L69.3,398.1ZM71.8,398.5L71.8,398.5L71.8,398.5L71.8,398.5ZM71.1,399.5L71.1,399.5L71.1,399.5L71.1,399.5ZM69.3,398.8L69.3,398.8L69.3,398.8L69.3,398.8ZM70.3,398.7L70.3,398.7L70.3,398.7L70.3,398.7ZM71.2,399.0L71.2,399.0L71.2,399.0L71.2,399.0ZM71.3,399.4L71.3,399.4L71.3,399.4L71.3,399.4ZM71.0,399.6L71.0,399.6L71.0,399.6L71.0,399.6ZM69.2,399.7L69.2,399.7L69.2,399.7L69.2,399.7Z"],["OT","M119.6,374.3L118.1,375.3L121.7,376.1L120.2,376.5L118.9,378.6L121.6,379.5L120.5,384.0L118.2,384.2L118.2,385.5L117.3,385.8L117.7,383.3L114.7,382.7L114.0,384.4L108.9,384.1L108.2,382.1L106.8,382.8L105.0,382.2L104.6,382.0L102.8,379.6L102.8,378.1L101.8,374.7L101.7,374.5L101.2,373.7L99.9,371.2L99.2,371.0L96.9,371.0L97.4,373.7L96.7,375.6L96.0,375.7L93.1,373.4L93.0,373.1L94.3,370.7L92.9,368.6L94.0,368.4L93.4,366.0L94.1,365.1L95.2,363.0L95.9,362.8L96.6,361.9L97.4,361.4L97.6,361.4L99.5,361.5L102.2,361.7L102.3,359.3L102.6,358.5L104.9,359.8L108.5,360.2L110.4,357.7L111.6,357.4L114.4,357.8L116.2,361.7L115.4,364.5L115.0,365.6L113.3,365.0L112.8,366.5L109.7,367.1L110.1,369.5L111.8,370.2L114.4,369.4L115.9,370.6L119.6,370.2L118.1,372.4L116.8,374.2L119.6,374.3ZM120.7,370.1L120.7,370.1L120.7,370.1L120.7,370.1ZM119.4,371.1L119.4,371.1L119.4,371.1L119.4,371.1ZM119.6,378.7L119.6,378.7L119.6,378.7L119.6,378.7ZM119.4,377.8L119.4,377.8L119.4,377.8L119.4,377.8ZM123.3,379.7L123.3,379.7L123.3,379.7L123.3,379.7ZM120.3,379.2L120.3,379.2L120.3,379.2L120.3,379.2ZM122.6,380.8L122.6,380.8L122.6,380.8L122.6,380.8ZM121.9,381.6L121.9,381.6L121.9,381.6L121.9,381.6ZM122.1,381.8L122.1,381.8L122.1,381.8L122.1,381.8ZM118.9,384.9L118.9,384.9L118.9,384.9L118.9,384.9ZM119.1,386.5L119.1,386.5L119.1,386.5L119.1,386.5ZM117.9,372.7L117.9,372.7L117.9,372.7L117.9,372.7ZM118.3,373.8L118.3,373.8L118.3,373.8L118.3,373.8ZM121.4,373.3L121.4,373.3L121.4,373.3L121.4,373.3ZM121.2,373.5L121.2,373.5L121.2,373.5L121.2,373.5ZM121.8,375.3L121.8,375.3L121.8,375.3L121.8,375.3ZM119.1,375.0L119.1,375.0L119.1,375.0L119.1,375.0ZM113.9,356.4L113.9,356.4L113.9,356.4L113.9,356.4Z"],["MZ","M103.2,421.8L101.8,425.6L99.7,424.9L98.6,422.6L97.5,422.3L98.6,420.8L98.6,417.6L98.1,417.3L94.5,416.0L93.9,412.7L91.3,411.6L92.2,409.3L91.0,407.8L89.9,407.5L89.1,405.2L87.3,403.8L87.8,402.6L91.2,402.8L91.8,402.3L92.7,402.0L94.2,402.4L94.7,401.4L97.7,401.5L96.3,398.9L96.5,397.7L97.8,397.0L97.1,394.1L95.9,392.4L96.2,389.8L98.4,389.1L98.8,387.4L102.0,384.5L102.0,384.2L103.0,382.1L104.6,382.0L105.0,382.2L106.8,382.8L108.2,382.1L108.9,384.1L114.0,384.4L114.7,382.7L117.7,383.3L117.3,385.8L118.2,385.5L117.0,387.1L115.0,387.9L112.8,392.2L113.8,392.7L111.8,393.7L110.1,398.1L109.4,400.1L108.5,402.4L107.8,404.4L107.2,406.0L105.7,410.8L106.4,413.3L105.8,415.2L105.7,417.4L103.3,419.9L103.2,421.8ZM105.9,414.7L105.9,414.7L105.9,414.7L105.9,414.7ZM117.1,387.4L117.1,387.4L117.1,387.4L117.1,387.4ZM116.5,388.1L116.5,388.1L116.5,388.1L116.5,388.1ZM104.1,421.3L104.1,421.3L104.1,421.3L104.1,421.3ZM103.3,422.4L103.3,422.4L103.3,422.4L103.3,422.4ZM103.0,423.1L103.0,423.1L103.0,423.1L103.0,423.1ZM113.1,393.3L113.1,393.3L113.1,393.3L113.1,393.3ZM112.2,393.5L112.2,393.5L112.2,393.5L112.2,393.5ZM113.8,393.7L113.8,393.7L113.8,393.7L113.8,393.7Z"],["KS","M84.1,415.0L82.7,417.2L81.4,422.5L82.6,425.9L84.7,427.1L84.3,428.6L82.4,430.2L80.7,429.9L80.5,428.4L79.5,427.2L77.1,427.0L74.4,426.6L71.6,421.6L73.8,422.2L76.2,419.8L76.8,417.9L76.7,414.8L73.5,411.0L74.9,406.6L74.0,404.3L74.7,403.3L74.2,401.3L75.7,400.8L77.5,401.5L79.0,399.9L79.9,401.4L81.7,401.4L84.5,400.7L84.8,399.8L86.2,400.9L87.8,402.6L87.3,403.8L89.1,405.2L89.9,407.5L91.0,407.8L92.2,409.3L91.3,411.6L93.9,412.7L94.5,416.0L98.1,417.3L98.6,417.6L98.6,420.8L97.5,422.3L95.0,422.6L93.8,424.0L93.6,425.1L95.9,426.1L96.4,427.6L93.4,429.0L91.8,431.5L90.2,432.2L85.4,433.8L83.8,434.9L83.9,433.0L86.0,431.7L87.1,428.6L87.9,426.5L87.3,423.0L85.9,421.4L86.1,418.7L84.5,418.8L83.5,417.4L85.7,416.4L86.3,418.6L87.8,418.6L88.8,416.6L88.8,414.5L85.8,413.5L84.1,415.0ZM38.4,513.0L41.3,513.0L41.7,511.2L45.4,509.7L48.1,509.4L49.4,507.8L51.6,507.5L52.1,508.8L52.2,506.9L53.4,506.1L54.0,508.8L51.7,509.6L49.9,511.3L49.1,512.3L46.8,512.6L45.9,515.5L45.1,516.4L43.4,516.0L44.4,517.8L41.5,515.4L42.0,513.9L39.4,514.0L38.4,513.0ZM78.7,457.7L76.5,457.1L75.4,452.4L77.9,450.6L82.8,453.5L82.0,455.9L78.7,457.7ZM88.4,450.8L90.4,447.8L90.5,446.4L90.3,445.4L93.7,440.7L93.9,444.8L92.5,448.0L90.4,451.8L90.7,453.3L87.9,454.9L87.6,451.2L88.4,450.8ZM31.1,527.2L30.6,525.0L31.6,523.1L33.2,523.3L33.0,525.5L34.6,527.0L33.4,529.1L31.5,529.9L30.5,528.1L31.1,527.2ZM21.7,536.8L24.7,535.9L22.8,538.1L21.0,538.9L20.1,537.5L21.7,536.8ZM73.7,401.7L72.6,400.6L72.8,397.9L74.8,398.6L73.7,401.7ZM42.7,519.1L41.8,519.0L39.3,515.0L40.2,514.7L40.9,517.1L43.7,517.9L42.7,519.1ZM61.4,414.6L60.7,414.5L61.3,411.8L63.3,411.3L61.4,414.6ZM65.8,409.7L64.6,407.8L65.8,407.4L67.1,409.3L65.8,409.7ZM59.5,514.2L59.0,512.8L61.9,511.5L59.5,514.2ZM71.2,451.2L69.7,449.1L72.6,450.7L71.2,451.2ZM56.4,474.4L56.2,472.7L57.5,472.5L56.4,474.4ZM86.8,417.0L86.8,417.0L86.8,417.0L86.8,417.0ZM73.7,403.5L73.7,403.5L73.7,403.5L73.7,403.5ZM73.7,403.8L73.7,403.8L73.7,403.8L73.7,403.8ZM84.9,427.0L84.9,427.0L84.9,427.0L84.9,427.0ZM88.2,443.5L88.2,443.5L88.2,443.5L88.2,443.5ZM67.5,407.9L67.5,407.9L67.5,407.9L67.5,407.9ZM68.2,408.0L68.2,408.0L68.2,408.0L68.2,408.0ZM68.6,408.1L68.6,408.1L68.6,408.1L68.6,408.1ZM65.1,409.0L65.1,409.0L65.1,409.0L65.1,409.0ZM64.7,410.4L64.7,410.4L64.7,410.4L64.7,410.4ZM86.8,414.4L86.8,414.4L86.8,414.4L86.8,414.4ZM72.1,423.6L72.1,423.6L72.1,423.6L72.1,423.6ZM54.4,426.7L54.4,426.7L54.4,426.7L54.4,426.7ZM53.3,427.2L53.3,427.2L53.3,427.2L53.3,427.2ZM53.4,436.7L53.4,436.7L53.4,436.7L53.4,436.7ZM52.3,437.1L52.3,437.1L52.3,437.1L52.3,437.1ZM52.9,427.3L52.9,427.3L52.9,427.3L52.9,427.3ZM52.9,428.4L52.9,428.4L52.9,428.4L52.9,428.4ZM52.2,437.4L52.2,437.4L52.2,437.4L52.2,437.4ZM52.3,437.2L52.3,437.2L52.3,437.2L52.3,437.2ZM96.4,423.3L96.4,423.3L96.4,423.3L96.4,423.3ZM65.0,439.1L65.0,439.1L65.0,439.1L65.0,439.1ZM77.9,440.5L77.9,440.5L77.9,440.5L77.9,440.5ZM73.7,441.0L73.7,441.0L73.7,441.0L73.7,441.0ZM75.3,440.2L75.3,440.2L75.3,440.2L75.3,440.2ZM63.0,464.6L63.0,464.6L63.0,464.6L63.0,464.6ZM52.9,465.4L52.9,465.4L52.9,465.4L52.9,465.4ZM54.8,466.1L54.8,466.1L54.8,466.1L54.8,466.1ZM61.2,468.4L61.2,468.4L61.2,468.4L61.2,468.4ZM52.2,471.8L52.2,471.8L52.2,471.8L52.2,471.8ZM53.4,478.8L53.4,478.8L53.4,478.8L53.4,478.8ZM46.1,484.8L46.1,484.8L46.1,484.8L46.1,484.8ZM45.7,484.9L45.7,484.9L45.7,484.9L45.7,484.9ZM42.7,487.3L42.7,487.3L42.7,487.3L42.7,487.3ZM36.3,495.7L36.3,495.7L36.3,495.7L36.3,495.7ZM36.1,496.7L36.1,496.7L36.1,496.7L36.1,496.7ZM75.5,397.1L75.5,397.1L75.5,397.1L75.5,397.1ZM74.3,397.7L74.3,397.7L74.3,397.7L74.3,397.7ZM74.7,396.7L74.7,396.7L74.7,396.7L74.7,396.7ZM75.8,397.2L75.8,397.2L75.8,397.2L75.8,397.2ZM74.7,397.3L74.7,397.3L74.7,397.3L74.7,397.3ZM75.1,398.4L75.1,398.4L75.1,398.4L75.1,398.4ZM74.6,397.8L74.6,397.8L74.6,397.8L74.6,397.8ZM75.5,397.9L75.5,397.9L75.5,397.9L75.5,397.9ZM93.9,425.0L94.2,424.9L93.9,425.0L93.9,425.0ZM84.2,435.2L84.2,435.2L84.2,435.2L84.2,435.2ZM40.3,512.3L40.3,512.3L40.3,512.3L40.3,512.3ZM39.1,514.9L39.1,514.9L39.1,514.9L39.1,514.9ZM38.5,516.7L38.5,516.7L38.5,516.7L38.5,516.7ZM39.0,517.3L39.0,517.3L39.0,517.3L39.0,517.3ZM38.1,520.1L38.1,520.1L38.1,520.1L38.1,520.1ZM41.0,520.6L41.0,520.6L41.0,520.6L41.0,520.6ZM41.5,520.2L41.5,520.2L41.5,520.2L41.5,520.2ZM40.9,520.7L40.9,520.7L40.9,520.7L40.9,520.7ZM17.2,547.8L17.2,547.8L17.2,547.8L17.2,547.8Z"],["OK","M148.3,48.0L149.2,47.3L149.0,45.9L148.9,45.3L149.1,43.5L154.3,40.8L155.8,39.3L153.8,38.5L153.5,35.4L154.5,35.7L156.8,36.5L156.2,37.6L158.6,37.8L160.8,35.9L163.0,33.8L163.9,31.5L165.1,32.5L165.2,35.8L163.6,37.7L162.7,38.7L160.4,38.5L159.8,39.5L159.9,40.7L157.2,40.4L156.1,41.6L154.6,42.8L151.8,43.5L153.3,46.9L151.6,46.4L151.1,47.3L150.7,47.6L149.8,49.3L149.2,49.9L149.4,50.5L150.8,51.2L148.8,52.3L148.0,53.1L146.0,53.3L146.4,51.3L146.1,50.6L146.7,48.5L146.9,48.5L147.1,48.7L148.3,48.0ZM39.4,94.8L34.3,93.3L37.6,89.1L41.5,91.8L39.4,94.8ZM47.7,93.8L46.1,92.5L47.0,91.8L45.6,89.8L49.3,90.3L50.9,89.0L52.3,86.1L52.7,87.3L50.2,90.0L49.4,93.6L47.7,93.8ZM79.3,86.5L78.2,84.1L79.6,81.6L80.3,84.0L83.3,86.5L79.3,86.5ZM122.0,42.8L123.6,41.7L124.6,43.2L123.9,44.6L122.0,42.8ZM63.4,48.2L63.4,48.2L63.4,48.2L63.4,48.2L63.4,48.2L63.4,48.2ZM40.3,45.0L40.3,45.0L40.3,45.0L40.3,45.0ZM33.7,49.6L33.7,49.6L33.7,49.6L33.7,49.6ZM35.9,50.2L35.9,50.2L35.9,50.2L35.9,50.2ZM36.2,50.4L36.2,50.4L36.2,50.4L36.2,50.4ZM47.4,90.1L47.4,90.1L47.4,90.1L47.4,90.1ZM46.9,93.7L46.9,93.7L46.9,93.7L46.9,93.7ZM36.1,48.5L36.1,48.5L36.1,48.5L36.1,48.5ZM157.4,37.7L157.4,37.7L157.4,37.7L157.4,37.7ZM157.3,38.0L157.3,38.0L157.3,38.0L157.3,38.0ZM151.9,46.7L151.6,46.4L151.9,46.7L151.9,46.7ZM155.8,45.4L155.8,45.4L155.8,45.4L155.8,45.4ZM153.9,46.7L153.9,46.7L153.9,46.7L153.9,46.7ZM154.6,47.5L154.6,47.5L154.6,47.5L154.6,47.5ZM153.8,47.3L153.8,47.3L153.8,47.3L153.8,47.3ZM155.4,47.9L155.4,47.9L155.4,47.9L155.4,47.9ZM153.9,49.4L153.9,49.4L153.9,49.4L153.9,49.4ZM78.4,80.1L78.4,80.1L78.4,80.1L78.4,80.1ZM79.9,80.6L79.9,80.6L79.9,80.6L79.9,80.6ZM76.3,83.1L76.3,83.1L76.3,83.1L76.3,83.1ZM76.3,83.1L76.3,83.1L76.3,83.1L76.3,83.1ZM77.7,86.3L77.7,86.3L77.7,86.3L77.7,86.3ZM152.2,51.9L152.2,51.9L152.2,51.9L152.2,51.9ZM149.2,52.3L149.2,52.3L149.2,52.3L149.2,52.3ZM165.6,35.6L165.6,35.6L165.6,35.6L165.6,35.6ZM159.3,37.3L159.3,37.3L159.3,37.3L159.3,37.3ZM157.2,36.2L157.2,36.2L157.2,36.2L157.2,36.2ZM152.8,37.7L152.8,37.7L152.8,37.7L152.8,37.7ZM151.7,37.2L151.7,37.2L151.7,37.2L151.7,37.2ZM151.6,35.3L151.6,35.3L151.6,35.3L151.6,35.3ZM143.4,47.6L143.4,47.6L143.4,47.6L143.4,47.6ZM144.3,47.9L144.3,47.9L144.3,47.9L144.3,47.9ZM144.4,47.8L144.4,47.8L144.4,47.8L144.4,47.8ZM139.8,47.7L139.8,47.7L139.8,47.7L139.8,47.7ZM141.0,48.2L141.0,48.2L141.0,48.2L141.0,48.2ZM138.6,48.3L138.6,48.3L138.6,48.3L138.6,48.3ZM140.9,48.5L140.9,48.5L140.9,48.5L140.9,48.5ZM137.9,50.6L137.9,50.6L137.9,50.6L137.9,50.6ZM140.5,49.2L140.5,49.2L140.5,49.2L140.5,49.2ZM138.8,49.2L138.8,49.2L138.8,49.2L138.8,49.2ZM137.7,50.2L137.7,50.2L137.7,50.2L137.7,50.2ZM137.7,50.8L137.7,50.8L137.7,50.8L137.7,50.8ZM137.0,48.3L137.0,48.3L137.0,48.3L137.0,48.3ZM135.3,48.4L135.3,48.4L135.3,48.4L135.3,48.4ZM136.5,48.3L136.5,48.3L136.5,48.3L136.5,48.3ZM137.1,48.9L137.1,48.9L137.1,48.9L137.1,48.9ZM136.1,49.2L136.1,49.2L136.1,49.2L136.1,49.2ZM136.4,49.5L136.4,49.5L136.4,49.5L136.4,49.5ZM135.1,49.8L135.1,49.8L135.1,49.8L135.1,49.8ZM136.5,50.0L136.5,50.0L136.5,50.0L136.5,50.0ZM136.0,50.1L136.0,50.1L136.0,50.1L136.0,50.1ZM135.4,37.5L135.4,37.5L135.4,37.5L135.4,37.5ZM132.0,42.9L132.0,42.9L132.0,42.9L132.0,42.9ZM133.1,44.0L133.1,44.0L133.1,44.0L133.1,44.0ZM240.5,69.6L240.5,69.6L240.5,69.6L240.5,69.6ZM242.7,66.3L242.7,66.3L242.7,66.3L242.7,66.3ZM236.9,109.4L236.9,109.4L236.9,109.4L236.9,109.4ZM155.7,27.1L155.7,27.1L155.7,27.1L155.7,27.1ZM155.4,27.3L155.4,27.3L155.4,27.3L155.4,27.3ZM156.1,27.8L156.1,27.8L156.1,27.8L156.1,27.8ZM155.6,29.6L155.6,29.6L155.6,29.6L155.6,29.6ZM155.3,30.2L155.3,30.2L155.3,30.2L155.3,30.2ZM165.9,2.4L165.9,2.4L165.9,2.4L165.9,2.4ZM126.3,43.4L126.3,43.4L126.3,43.4L126.3,43.4ZM125.1,43.5L125.1,43.5L125.1,43.5L125.1,43.5ZM124.6,43.4L124.6,43.4L124.6,43.4L124.6,43.4ZM125.6,43.4L125.6,43.4L125.6,43.4L125.6,43.4ZM125.4,43.5L125.4,43.5L125.4,43.5L125.4,43.5ZM125.6,35.8L125.6,35.8L125.6,35.8L125.6,35.8ZM63.2,83.3L63.2,83.3L63.2,83.3L63.2,83.3ZM62.6,86.5L62.6,86.5L62.6,86.5L62.6,86.5ZM38.8,88.4L38.8,88.4L38.8,88.4L38.8,88.4ZM35.6,91.0L35.6,91.0L35.6,91.0L35.6,91.0ZM43.2,92.2L43.2,92.2L43.2,92.2L43.2,92.2ZM36.1,91.7L36.1,91.7L36.1,91.7L36.1,91.7ZM42.7,93.2L42.7,93.2L42.7,93.2L42.7,93.2ZM41.2,92.5L41.2,92.5L41.2,92.5L41.2,92.5ZM45.2,94.0L45.2,94.0L45.2,94.0L45.2,94.0ZM43.0,96.4L43.0,96.4L43.0,96.4L43.0,96.4ZM41.0,96.0L41.0,96.0L41.0,96.0L41.0,96.0ZM40.7,96.4L40.7,96.4L40.7,96.4L40.7,96.4ZM30.6,95.5L30.6,95.5L30.6,95.5L30.6,95.5ZM36.5,100.7L36.5,100.7L36.5,100.7L36.5,100.7ZM17.0,86.1L17.0,86.1L17.0,86.1L17.0,86.1Z"]],"pts":{"HK":[370.9,73.8],"AO":[335.6,151.9],"IW":[348.5,186.9],"MG":[339.5,221.1],"AK":[326.6,182.7],"YG":[320.3,221.5],"FS":[323.8,253.1],"IB":[326.6,284.9],"TC":[314.5,273.7],"GM":[294.7,279.4],"ST":[303.4,294.4],"CB":[324.3,308.3],"TK":[305.6,302.8],"KN":[303.3,311.6],"NI":[293.8,250.5],"TY":[253.8,275.3],"IS":[241.9,271.5],"FI":[228.4,298.3],"YN":[285.8,305.9],"NN":[272.2,290.4],"GF":[248.4,300.6],"SZ":[279,323.5],"AI":[251.9,322.8],"ME":[231.3,337.9],"SG":[225.9,317],"KY":[209.1,315.4],"OS":[210.2,334],"HG":[194,319.7],"NR":[218.7,343.5],"WK":[209.4,355.2],"TT":[170.8,310.7],"SM":[138.1,319.3],"OY":[169.2,324.3],"HS":[143.7,331.1],"YC":[112.7,341.5],"TS":[178.3,353.9],"KG":[172.3,344.9],"EH":[143.8,361.5],"KC":[156.1,367.6],"FO":[89.7,360.2],"SA":[75.5,366.2],"NS":[70.2,376.2],"KM":[91.8,386.6],"OT":[107.7,371.3],"MZ":[102.5,400.9],"KS":[84.6,416.2],"OK":[155.1,41.9]},"bb":{"HK":[311,10.9,441.1,133.8],"AO":[313.9,129.1,355.1,168.5],"IW":[332.6,161.2,364.8,212],"MG":[324.7,204.5,356.5,240.5],"AK":[310.4,160,339.4,208.4],"YG":[306.7,199.8,332.8,242.5],"FS":[298.9,235.4,343,270.5],"IB":[311.6,265.9,339.8,301.4],"TC":[302.9,260,325.8,288.4],"GM":[280.8,263,311.1,294.9],"ST":[288.3,286,316.8,301.6],"CB":[313.3,291.2,340.2,326.6],"TK":[293.8,297.5,316.7,358],"KN":[293.2,304.1,314.3,320.2],"NI":[262.7,218.6,315.8,272.5],"TY":[242.2,265.3,265.6,286],"IS":[229.2,239.4,256.3,292],"FI":[209.5,285.1,243.1,313],"YN":[275.6,295.3,298.4,319.1],"NN":[254.9,263.9,288.7,318.1],"GF":[229.7,280.7,262.8,319.7],"SZ":[258.4,305,299.4,336],"AI":[238.8,311.3,267.1,336.4],"ME":[218.1,316,246.1,361.2],"SG":[217.1,302.7,233.4,329.6],"KY":[195.2,300,223.6,332.1],"OS":[199.7,321.6,215.7,344.3],"HG":[179.8,302.4,209.4,347.5],"NR":[210.6,329.7,227.4,357.1],"WK":[197.6,341.4,221.8,369.3],"TT":[153,303.8,186.7,319],"SM":[116.3,252.2,160.4,339.4],"OY":[156.2,310.9,183.9,341.9],"HS":[125.3,317.1,159.9,348.3],"YC":[94.1,324.6,135.3,357.3],"TS":[164,345.2,192.2,365.3],"KG":[159.4,334.9,183.6,350.6],"EH":[123.4,341.3,164.7,381.7],"KC":[133.1,354.4,179.6,387.9],"FO":[74.1,338,102.6,375.2],"SA":[67.1,356.7,86.3,376.4],"NS":[28.2,322.7,80.8,400.5],"KM":[69.2,370.8,104.6,402.8],"OT":[92.9,356.4,123.3,386.5],"MZ":[87.3,382,118.2,425.6],"KS":[52.2,396.7,98.6,474.4],"OK":[122,27.1,165.6,53.3]},"frame":[32,24,150,90]};
+</script>
+<script>
+"use strict";
+/* ===== 馬のデータ =====
+   [名前, 都道府県コード, 代表地, 速, 持, 力, 根, 賢, 距離適性(短マ中長), 脚質, 重馬場適性, 毛色, 異名, 紹介, 弱点, 調整前の能力(変えた馬だけ), 調整理由] */
+const H_RAW = [
+ ['エゾノヴァ','HK','北海道',86,88,82,78,80,'CABA','先','B','鹿毛','大地の新星','日高の牧場で育った大型馬。広いコースで長くいい脚を使う王道の先行型。','根性78。並ばれると淡白になる。',[84,88,82,78,78],'東日本の平均が西日本より4点近く低かったため、馬産地の代表らしく速さと賢さを+2。'],
+ ['ツガルブリザード','AO','青森',88,84,83,82,75,'BAAB','逃','A','芦毛','地吹雪の逃亡者','地吹雪のように後続を煙に巻く逃げ馬。荒れた馬場もまったく苦にしない。','賢さ75。ペース配分が雑で掛かりやすい。'],
+ ['ハヤチネグリフォン','IW','岩手',78,88,90,84,74,'DBAA','先','A','黒鹿毛','早池峰の幻獣','霊峰・早池峰の名を背負うパワー型。坂のあるコースと消耗戦で真価を発揮する。','速さ78。高速決着では置いていかれる。'],
+ ['ダテマサムネ','MG','宮城',86,79,82,81,86,'BAAC','差','B','青鹿毛','独眼の策士','伊達男らしい派手な末脚と冷静な判断力。直線で外へ持ち出す手綱さばきが光る。','持久79。長距離では最後に脚が上がる。'],
+ ['オガノライデン','AK','秋田',80,86,88,82,76,'CBAA','先','A','栗毛','男鹿の雷神','なまはげの里から来た雷のような馬力。重い馬場を一気に押し切る。','切れ味勝負に弱い。'],
+ ['デワノキセキ','YG','山形',83,86,78,84,80,'CBAA','差','B','鹿毛','出羽三山の奇跡','修験の山で鍛えた粘り強さ。最後の最後で奇跡のように伸びてくる。','力78。急坂のコースで苦しむ。'],
+ ['アイヅクロニクル','FS','福島',78,90,84,88,76,'DCAS','先','B','黒鹿毛','会津の年代記','不屈の会津魂。持久力と根性で長丁場の我慢比べを制する。','速さ78。短い距離では追走に苦労する。'],
+ ['カシマインパクト','IB','茨城',87,78,90,82,75,'AABC','先','A','鹿毛','鹿島の衝撃','武の神・鹿島の名を持つパワー型。スタートから力ずくで好位を奪う。','持久78。2400mを超えると厳しい。'],
+ ['ニッコウゴールド','TC','栃木',80,88,82,78,84,'CBAA','追','B','栗毛','日光の金色','東照宮のきらびやかさとは裏腹に、最後方でじっと脚をためる頭脳派ステイヤー。','根性78。叩き合いで一歩引いてしまう。'],
+ ['アカギテンペスト','GM','群馬',84,80,91,83,75,'ABBC','逃','A','黒鹿毛','赤城おろし','上州の空っ風のように吹き荒れる逃げ。坂も重馬場も力でねじ伏せる。','賢さ75。ペースを落とせない。'],
+ ['ムサシクロニクル','ST','埼玉',86,82,80,78,87,'BAAB','差','B','鹿毛','武蔵野の記録者','武蔵野の広い空の下で育った戦術家。展開を読み、ロスなく内を突く。','根性78。競り合いでは分が悪い。'],
+ ['ボウソウキング','CB','千葉',90,78,83,82,78,'SABD','逃','B','栗毛','房総の王','黒潮のような勢いで飛ばす快速の逃げ馬。短距離ならほぼ敵なし。','持久78。2000mを超えると苦しい。'],
+ ['エドノファントム','TKE','東東京',92,75,78,76,88,'BSAC','差','C','青鹿毛','江戸の幻影','最高速と賢さを武器にする東京型の切れ者。気づけば幻のように差し切っている。','持久75・根性76。消耗戦と重馬場が苦手。'],
+ ['タマノグランデ','TKW','西東京',88,82,76,80,84,'BAAB','先','C','鹿毛','多摩の大器','府中の森を庭に育った素直な優等生。どんな展開にも合わせられる。','力76。重馬場と急坂は苦手。'],
+ ['ショウナンブレイヴ','KN','神奈川',89,80,82,86,76,'AABC','先','B','栗毛','湘南の勇者','湘南の海風を切り裂く勇敢な先行馬。並ばれてからが強い。','長距離は持たない。'],
+ ['エチゴユキカゼ','NI','新潟',82,93,78,82,78,'DCAS','逃','A','芦毛','越後の雪風','雪国育ちの無尽蔵のスタミナで、後続を最後まで引きずり回す大逃げ型。','力78。瞬発力勝負は不利。'],
+ ['タテヤマグレイス','TY','富山',78,92,90,82,74,'DCAA','先','A','芦毛','立山の気品','3000m級の山々を思わせる力と持久力。重い馬場の長丁場で浮上する。','速さ78・賢さ74。'],
+ ['カガミリオン','IS','石川',88,80,78,80,87,'AABC','差','B','鹿毛','加賀百万石','百万石の名にふさわしい華やかな末脚。賢く立ち回り、直線で一気に伸びる。','力78。重い馬場では伸びが鈍る。'],
+ ['フクイザウルス','FI','福井',76,80,96,88,72,'CABB','先','S','栗毛','恐竜王国の怪力','力96。重馬場や急坂になるほど強くなる、恐竜級の馬力。','速さ76。良馬場の高速決着では分が悪い。'],
+ ['カイノフジ','YN','山梨',86,86,82,79,82,'BAAB','先','B','芦毛','甲斐の富士','富士を望む甲斐の名馬。癖のない走りで、どの条件でも大きく崩れない。','これといった武器がない。',[86,84,82,78,82],'東西の平均差の解消。富士の名にふさわしく持久+2・根性+1。'],
+ ['シナノエンペラー','NN','長野',80,96,82,84,74,'DCBS','先','A','黒鹿毛','信濃の皇帝','持久96。長距離の王者候補。3000mを超えるとさらに強くなる。','速さ80。短距離・マイルは苦しい。'],
+ ['ヒダノタカヤマ','GF','岐阜',79,88,88,84,78,'DBAA','差','A','鹿毛','飛騨の匠','飛騨の匠のように仕事が丁寧。坂で止まらず、じわじわ伸び続ける。','速さ79。'],
+ ['スルガサンライズ','SZ','静岡',91,80,78,78,84,'SABD','逃','C','栗毛','駿河の日の出','朝日のように誰よりも早く飛び出す、スタートの名手。','力・根性78。重馬場に弱い。'],
+ ['オワリノカブト','AI','愛知',84,82,86,86,76,'BAAB','先','A','黒鹿毛','尾張の兜','天下統一の地の兜。真っ向勝負の叩き合いで負けない。','賢さ76。'],
+ ['イセアマテラス','ME','三重',88,84,80,82,82,'BAAB','先','B','栗毛','伊勢の太陽神','天照の名を継ぐ均整型。どの条件でも上位に来る。','欠点がない分、条件がはまった一芸の馬に負ける。'],
+ ['ビワコレジェンド','SG','滋賀',78,94,80,84,78,'DCAS','追','B','鹿毛','湖国の伝説','琵琶湖を一周しても息が切れないと言われるステイヤー。','速さ78。',[78,94,82,84,78],'能力合計が416点に25頭集中していたため分散。平坦な湖国の馬として力を−2。'],
+ ['キョウトミヤビ','KY','京都',90,76,74,78,96,'ASAC','追','C','青鹿毛','千年の都','賢さ96。展開を読み切り、最後方から差し切る天才型。','力74・持久76。重馬場の長距離は鬼門。',[92,76,74,78,96],'速さ92と賢さ96の両立は強すぎたため速さ−2。天才型の個性は賢さで残す。'],
+ ['ナニワテンカ','OS','大阪',90,78,84,86,75,'SABD','逃','B','栗毛','浪速の天下取り','とにかく前へ。ど派手な逃げで天下を取りにいく。','賢さ75。自分のペースを守れない。',[90,78,84,86,78],'416点の集中を分散。天下取りの押せ押せ気質を表すため賢さ−3。'],
+ ['ロッコウノーブル','HG','兵庫',82,84,92,82,76,'CAAB','先','A','黒鹿毛','六甲の貴公子','六甲おろしを受けて育ったパワー型。急坂のコースで特に強い。','切れ味が足りない。'],
+ ['ヤマトオリオン','NR','奈良',84,88,82,86,78,'CBAA','差','B','鹿毛','大和の星座','古都の夜空に輝く三つ星。長くいい脚を使い、最後までしぶとい。','瞬発力勝負では後手に回る。',[84,88,82,86,76],'416点の集中を分散。星を読む馬として賢さ+2。'],
+ ['キシュウカグラ','WK','和歌山',80,86,82,92,74,'CBAA','先','B','栗毛','紀州の神楽','根性92。熊野古道で鍛えた不屈の闘志で、競り合えば絶対に退かない。','賢さ74。展開に左右される。',[80,86,84,92,74],'416点の集中を分散。根性特化の個性を際立たせるため力を−2。'],
+ ['イナバホワイト','TT','鳥取',94,78,76,80,82,'SADD','逃','C','白毛','因幡の白兎','速さ94。白兎のように跳ねる快速で、短距離の最有力。','力76・持久78。'],
+ ['イズモヤマタ','SM','島根',76,90,94,88,72,'DCAS','先','S','黒鹿毛','八岐の大蛇','神話の大蛇のような底なしの馬力と持久力。重馬場の長距離なら最強候補。','速さ76・賢さ72。高速決着は苦手。',[76,86,94,88,72],'持久を+4して合計420点の最上位に。ただし速さ76なので、合計点だけでは勝てない例として置く。'],
+ ['ビゼンモモタロウ','OY','岡山',88,82,78,84,80,'BAAB','差','B','栗毛','備前の桃太郎','仲間を引き連れるように馬群をさばいて伸びる人気者。','力78。',[90,82,78,84,82],'416点の集中を分散。速さ90・賢さ82は西日本の上位と重なるため、それぞれ−2。'],
+ ['アキミヤジマ','HS','広島',88,80,79,82,82,'ASBC','差','B','鹿毛','安芸の厳島','海に浮かぶ鳥居のように優美なフォーム。マイルで鋭く伸びる。','力79。',[88,80,82,84,82],'416点の集中を分散。優美で軽い走りを表すため力−3・根性−2。'],
+ ['チョウシュウリュウオウ','YC','山口',82,84,86,88,76,'CBAA','先','A','青鹿毛','長州の竜王','維新の志士の気概。苦しい展開でこそ根性を見せる。','賢さ76。'],
+ ['アワノアラシ','TS','徳島',92,78,80,84,78,'SABC','逃','B','鹿毛','阿波の嵐','鳴門の渦潮のように激しいダッシュ力。','賢さ・持久78。',[92,78,80,84,82],'416点の集中を分散。嵐の荒々しさを表すため賢さ−4。'],
+ ['サヌキコンピラ','KG','香川',78,88,86,80,80,'DBAA','先','A','鹿毛','金毘羅の石段','785段の石段で鍛えた脚。坂のあるコースで真価を発揮する。','速さ78。',[80,88,86,82,80],'416点の集中を分散。石段で鍛えた力は残し、速さ・根性を−2。'],
+ ['イヨノサファイア','EH','愛媛',88,82,78,82,84,'ASAC','差','C','芦毛','伊予の蒼玉','瀬戸内の海のような青い輝き。賢く立ち回るマイラー。','力78。重馬場が苦手。',[88,84,78,82,84],'416点の集中を分散。マイラーらしく持久−2。'],
+ ['トサネイチャー','KC','高知',80,90,84,88,76,'DBAS','先','A','栗毛','土佐の大自然','四万十と太平洋の大自然が育てたタフネス。持久・根性型で消耗戦に強い。','速さ80。瞬発力勝負では分が悪い。',[84,90,86,88,76],'合計424点は方針の上限420点を超えていたため、消耗戦型の個性（持久90・根性88）は残して速さ−4・力−2。'],
+ ['ハカタノオウジャ','FO','福岡',92,78,82,82,82,'SABC','先','B','鹿毛','博多の王者','九州最強の呼び声高い快速馬。好位から抜け出す王道の競馬。','持久78。'],
+ ['アリタセラミック','SA','佐賀',78,84,90,86,76,'CBAB','先','A','芦毛','有田の白磁','焼き物のように硬く締まった体。力のいる馬場で崩れない。','速さ78。',[78,84,92,86,76],'416点の集中を分散。力92はロッコウ・ヒゴと並ぶため−2。'],
+ ['デジマノファントム','NS','長崎',90,80,76,79,88,'ASBC','追','C','青鹿毛','出島の幻影','異国の風を感じさせる変幻自在の末脚。後方から一気に飛んでくる。','力76・根性79。',[90,80,76,82,88],'416点の集中を分散。幻影らしく競り合いには弱く、根性−3。'],
+ ['ヒゴノカイザー','KM','熊本',82,84,94,86,70,'CAAB','先','S','黒鹿毛','肥後の皇帝','熊本城の石垣のような鋼の馬体。力94で坂も重馬場も苦にしない。','賢さ70。出遅れ癖がある。'],
+ ['ユフインフェルノ','OT','大分',78,92,83,84,76,'DCAS','追','A','栗毛','湯布院の業火','地熱のように静かに燃え続けるスタミナ。長距離で炎のように追い込む。','速さ78。',[78,92,86,84,76],'416点の集中を分散。長距離の追込型として力−3。'],
+ ['タカチホノカミ','MZ','宮崎',86,88,80,84,81,'CAAA','差','B','鹿毛','高千穂の神','天孫降臨の地から来た神秘的な馬。どの距離でも崩れない。','突出した武器がない。',[86,88,80,84,78],'416点の集中を分散。神話の地の落ち着きとして賢さ+3。'],
+ ['サツマバハムート','KS','鹿児島',84,82,94,88,68,'BAAC','先','S','黒鹿毛','薩摩の巨竜','力94・根性88。桜島の噴火のような荒々しい先行型。','賢さ68。掛かりやすく、出遅れも多い。'],
+ ['リュウキュウティーダ','OK','沖縄',94,80,76,82,80,'SABD','逃','D','栗毛','琉球の太陽','速さ94。南国の太陽のような高速決着が得意。','力76。重馬場は大の苦手。',[94,80,76,82,84],'416点の集中を分散。陽気で前へ前へ行く気性として賢さ−4。'],
+ ['アメリカンエクスプレス','US','アメリカ',86,85,83,81,85,'BAAB','先','C','鹿毛','海を渡った刺客','決勝にだけ姿を現すアメリカからの招待馬。すべてが高水準の均整型。','日本の重い馬場は未経験。',[86,86,84,82,86],'合計424点は全馬の上限420点を超えていたため、各能力を少しずつ下げて420点に。シードの立場だけで十分な特典とした。'],
+];
+const STYLE_NAME = { 逃: '逃げ', 先: '先行', 差: '差し', 追: '追込' };
+const DIST_CAT = ['短距離', 'マイル', '中距離', '長距離'];
+const COATS = { 鹿毛: ['#7a4a26', '#2a1a10'], 黒鹿毛: ['#4a2e1c', '#160d08'], 青鹿毛: ['#2a2220', '#0c0a0a'], 栗毛: ['#a85a24', '#c8874a'], 芦毛: ['#b8b8b2', '#6a6a66'], 白毛: ['#f2f0ea', '#d8d4cc'] };
+const SILK_COLORS = ['#c8102e', '#0b3d91', '#f2c200', '#1d7a3a', '#6b2fa0', '#e0661a', '#111111', '#f5f5f0', '#0f8fb0', '#d43f8d', '#8a5a2b', '#9fc23a'];
+const SILK_PATTERNS = ['無地', '縦縞', '襷', '山形', '輪', '袖'];
+function hashStr(s) { let x = 2166136261; for (const ch of s) x = Math.imul(x ^ ch.charCodeAt(0), 16777619) >>> 0; return x; }
+const HORSES = H_RAW.map((r, i) => {
+  const h = { id: i, name: r[0], pref: r[1], area: r[2], s: { spd: r[3], sta: r[4], pow: r[5], gut: r[6], wit: r[7] },
+    dist: r[8].split(''), style: r[9], heavy: r[10], coat: r[11], title: r[12], intro: r[13], weak: r[14], old: r[15] || null, why: r[16] || '' };
+  h.total = r[3] + r[4] + r[5] + r[6] + r[7];
+  const x = hashStr(h.name);
+  const c1 = SILK_COLORS[x % 12]; let c2 = SILK_COLORS[(x >>> 4) % 12]; if (c2 === c1) c2 = SILK_COLORS[(x % 12 + 5) % 12];
+  h.silk = { c1, c2, pat: SILK_PATTERNS[(x >>> 9) % 6] };
+  if (h.name === 'アメリカンエクスプレス') h.silk = { c1: '#0b3d91', c2: '#f5f5f0', pat: '輪' };
+  h.seed = h.pref === 'US';
+  return h;
+});
+const ENTRANTS = HORSES.filter(h => !h.seed).map(h => h.id);
+const AMEX = HORSES.find(h => h.seed).id;
+const REGION_OF = {};
+[['北海道・東北', ['HK', 'AO', 'IW', 'MG', 'AK', 'YG', 'FS']], ['関東', ['IB', 'TC', 'GM', 'ST', 'CB', 'TKE', 'TKW', 'KN']], ['中部', ['NI', 'TY', 'IS', 'FI', 'YN', 'NN', 'GF', 'SZ', 'AI']],
+ ['近畿', ['ME', 'SG', 'KY', 'OS', 'HG', 'NR', 'WK']], ['中国', ['TT', 'SM', 'OY', 'HS', 'YC']], ['四国', ['TS', 'KG', 'EH', 'KC']], ['九州・沖縄', ['FO', 'SA', 'NS', 'KM', 'OT', 'MZ', 'KS', 'OK']]]
+  .forEach(([r, cs]) => cs.forEach(c => REGION_OF[c] = r));
+REGION_OF.US = '招待';
+const REGIONS = ['北海道・東北', '関東', '中部', '近畿', '中国', '四国', '九州・沖縄'];
+
+/* ===== 競馬場（芝・JRAの実際の直線距離と坂） ===== */
+const COURSES = [
+  { name: '札幌', straight: 266, slope: 0, turn: '右', yoshiba: true, lap: 1640, dists: [1200, 1500, 1800, 2000, 2600] },
+  { name: '函館', straight: 262, slope: 0, turn: '右', yoshiba: true, lap: 1627, dists: [1200, 1800, 2000, 2600] },
+  { name: '福島', straight: 292, slope: 1, turn: '右', lap: 1600, dists: [1200, 1800, 2000, 2600] },
+  { name: '新潟', straight: 659, slope: 0, turn: '左', lap: 2223, dists: [1400, 1600, 1800, 2000, 2400] },
+  { name: '東京', straight: 526, slope: 1, turn: '左', lap: 2083, dists: [1400, 1600, 1800, 2000, 2400, 3400] },
+  { name: '中山', straight: 310, slope: 2, turn: '右', lap: 1840, dists: [1200, 1600, 1800, 2000, 2500, 3600] },
+  { name: '中京', straight: 413, slope: 2, turn: '左', lap: 1705, dists: [1200, 1400, 1600, 2000, 2200] },
+  { name: '京都', straight: 404, slope: 0, turn: '右', lap: 1894, dists: [1200, 1400, 1600, 1800, 2000, 2200, 2400, 3000, 3200] },
+  { name: '阪神', straight: 474, slope: 2, turn: '右', lap: 2089, dists: [1200, 1400, 1600, 1800, 2000, 2200, 2400, 3000, 3200] },
+  { name: '小倉', straight: 293, slope: 0, turn: '右', lap: 1615, dists: [1200, 1800, 2000, 2600] },
+];
+const BABA = ['良', '稍重', '重', '不良'];
+const distCat = d => d <= 1400 ? 0 : d <= 1800 ? 1 : d <= 2400 ? 2 : 3;
+const APT_F = { S: 1.009, A: 1.0, B: 0.991, C: 0.979, D: 0.962 };
+const HEAVY_F = { S: 0.0035, A: 0.002, B: 0, C: -0.002, D: -0.0045 };
+const COND = [['絶好調', 1.003, .14], ['好調', 1.0015, .26], ['普通', 1, .40], ['不調', 0.997, .20]];
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+function gauss(rng) { let u = 0, v = 0; while (!u) u = rng(); while (!v) v = rng(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+function mulberry(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function rollCond(rng) { let r = rng(); for (const c of COND) { r -= c[2]; if (r <= 0) return c[0]; } return '普通'; }
+function babaLevel(cfg) { return BABA.indexOf(cfg.baba) + (cfg.course.yoshiba ? 0.5 : 0); }
+
+/* 一頭ぶんの今日の条件による補正（パドックの表示にも使う） */
+function todayFactor(h, cfg, cond) {
+  const L = babaLevel(cfg), apt = APT_F[h.dist[distCat(cfg.dist)]];
+  const baba = 1 - 0.010 * L + HEAVY_F[h.heavy] * L + (h.s.pow - 84) * 0.0002 * L;
+  const c = COND.find(x => x[0] === cond)[1];
+  return { apt, baba, cond: c, all: apt * baba * c };
+}
+
+/* ===== レース =====
+   cfg: { course, dist, baba, ids:[馬id×4], conds:[調子×4], fav: 応援馬id or null }  */
+function makeRace(cfg, rng) {
+  rng = rng || Math.random;
+  const D = cfg.dist, L = babaLevel(cfg), straight = cfg.course.straight;
+  const R = { cfg, D, L, t: 0, rng, horses: [], done: 0, ev: [], leader: null, flags: {}, kiaiLeft: 3 };
+  cfg.ids.forEach((id, i) => {
+    const h = HORSES[id], s = h.s, tf = todayFactor(h, cfg, cfg.conds[i]);
+    const hp0 = s.sta * 2.08, day = 1 + gauss(rng) * 0.011;   // その日の出来（見えない上下）
+    const late = clamp(0.12 - (s.wit - 70) * 0.004, 0.015, 0.12);
+    const slow = rng() < late;
+    const kakari = rng() < clamp(0.34 - (s.wit - 68) * 0.012, 0.03, 0.34);
+    R.horses.push({
+      id, h, waku: i + 1, x: 0, v: 0, hp: hp0, hp0, tf,
+      Vtop: 17.7 * (1 + (s.spd - 85) * 0.0008) * tf.all * day,
+      Vcru: 16.5 * (1 + (s.spd - 85) * 0.0004 + (s.sta - 85) * 0.0003) * tf.all * day,
+      styleK: { 逃: 1.007, 先: 1.002, 差: 0.997, 追: 0.993 }[h.style],
+      spurtK: { 逃: 0.997, 先: 1.006, 差: 1.012, 追: 1.018 }[h.style],
+      spurtAt: D - straight - ({ 逃: 60, 先: 110, 差: 190, 追: 240 }[h.style]) - (s.wit - 80) * 2,
+      delay: 0.05 + rng() * 0.22 + (slow ? 0.5 + rng() * 0.7 : 0), slow,
+      kakariAt: kakari ? D * (0.18 + rng() * 0.3) : -1, kakariT: 0,
+      kiaiT: 0, nz: 0, nzT: 0, lane: i * 1.0, laneT: i * 1.0, blocked: 0,
+      eco: 1 - (s.wit - 80) * 0.005, fin: false, ft: 0, t600: null, out: false, gait: rng(),
+    });
+  });
+  return R;
+}
+const SLOPE_FROM = 320, SLOPE_TO = 120;
+function stepRace(R, dt) {
+  R.t += dt;
+  const hs = R.horses, D = R.D, rng = R.rng;
+  const order = hs.slice().sort((a, b) => b.x - a.x);
+  for (const o of hs) {
+    const s = o.h.s;
+    if (R.t < o.delay) continue;
+    const rem = D - o.x;
+    // 目標の速さ
+    let tgt, cost = 1;
+    const spurting = o.x >= o.spurtAt;
+    if (o.fin) tgt = Math.max(6, o.v - 3);
+    else if (spurting) tgt = o.Vtop * o.spurtK * (0.968 + 0.032 * clamp(o.hp / (0.4 * o.hp0), 0, 1));
+    else tgt = o.Vcru * o.styleK;
+    if (!o.fin) {
+      // 掛かり
+      if (o.kakariAt > 0 && o.x >= o.kakariAt && !o.kakariT && !spurting) { o.kakariT = R.t + 6 + rng() * 6; R.ev.push({ t: R.t, k: 'kakari', o }); }
+      if (o.kakariT && R.t < o.kakariT) { tgt *= 1.03; cost *= 1.22; }
+      // 坂
+      const sl = R.cfg.course.slope;
+      if (sl && rem < SLOPE_FROM && rem > SLOPE_TO) tgt *= 1 - 0.014 * sl + (s.pow - 84) * 0.0011 * sl;
+      // 根性：終盤に並んだら
+      if (spurting && rem < 400) {
+        const near = hs.some(p => p !== o && !p.fin && Math.abs(p.x - o.x) < 2.2);
+        if (near) { tgt *= 1 + (s.gut - 78) * 0.0016; o.duel = true; } else o.duel = false;
+      }
+      // スタミナ切れ
+      const r = o.hp / o.hp0;
+      if (r <= 0) tgt *= 0.915 + (s.gut - 80) * 0.0025;
+      else if (r < 0.12) tgt *= 1 - (0.12 - r) * 0.4;
+      // 気合い
+      if (o.kiaiT && R.t < o.kiaiT) { tgt *= spurting ? 1.04 : 1.016; cost *= spurting ? 1.3 : 1.9; }
+      // ゆらぎ
+      if (R.t >= o.nzT) { o.nz = gauss(rng) * 0.009; o.nzT = R.t + 0.8 + rng() * 0.6; }
+      tgt *= 1 + o.nz;
+      // 前が壁
+      if (spurting && o.blocked > 0) {
+        const ahead = o.blockBy;
+        if (ahead && ahead.x > o.x) tgt = Math.min(tgt, ahead.v + 0.15);
+        o.blocked -= dt;
+      }
+    }
+    // 加速・減速
+    const acc = o.v < 13 ? 3.4 + (s.pow - 80) * 0.03 + (s.spd - 85) * 0.03 : 1.1 + (s.pow - 80) * 0.01 + (s.spd - 85) * 0.006;
+    if (o.v < tgt) o.v = Math.min(tgt, o.v + acc * dt); else o.v = Math.max(tgt, o.v - 1.4 * dt);
+    // スタミナ
+    if (!o.fin) {
+      const q = o.v / 16.35;
+      o.hp -= q * q * q * q * cost * o.eco * (1 + 0.05 * R.L) * dt;
+    }
+    const px = o.x; o.x += o.v * dt;
+    if (!o.fin && px < D - 600 && o.x >= D - 600) o.t600 = R.t - (o.x - (D - 600)) / o.v;
+    if (!o.fin && o.x >= D) { o.fin = true; o.ft = R.t - (o.x - D) / o.v; R.done++; o.rank = R.done; }
+  }
+  // 進路（見た目と「前が壁」）
+  for (const o of hs) {
+    if (R.t < o.delay) continue;
+    const spurting = o.x >= o.spurtAt && !o.fin;
+    let ahead = null;
+    for (const p of hs) if (p !== o && p.x > o.x && p.x - o.x < 4.2 && Math.abs(p.lane - o.lane) < 0.75) { if (!ahead || p.x < ahead.x) ahead = p; }
+    const free = L => !hs.some(p => p !== o && Math.abs(p.x - o.x) < 3.2 && Math.abs(p.laneT - L) < 0.7);
+    if (ahead && (spurting || o.v > ahead.v + 0.3)) {
+      if (spurting && !o.blocked && ahead.v < o.v && o.x > R.D - R.cfg.course.straight - 100) {
+        // 賢い馬ほどすぐ外へ出せる
+        if (rng() > 0.35 + (o.h.s.wit - 70) * 0.02) { o.blocked = 0.7 + rng() * 0.8; o.blockBy = ahead; R.ev.push({ t: R.t, k: 'block', o }); }
+      }
+      for (let L = Math.round(o.lane) + 1; L <= 4; L++) if (free(L)) { o.laneT = L; break; }
+    } else if (!spurting) {
+      for (let L = 0; L < Math.round(o.laneT); L++) if (free(L)) { o.laneT = L; break; }
+    }
+    o.lane += clamp(o.laneT - o.lane, -1.1 * dt, 1.1 * dt);
+  }
+  return R.done === hs.length;
+}
+/* 気合い：3秒間だけ少し速くなる。スタミナは余計に使う。スタミナが切れていたら少しだけ持ち直す */
+function useKiai(R, o) {
+  if (R.kiaiLeft <= 0 || o.fin || R.t < o.delay || (o.kiaiT && R.t < o.kiaiT)) return false;
+  R.kiaiLeft--; o.kiaiT = R.t + 3; o.kiaiN = (o.kiaiN || 0) + 1;
+  if (o.hp <= 0) o.hp = 0.05 * o.hp0;
+  if (o.kakariT && R.t < o.kakariT) o.kakariT = R.t + 1.5;   // 掛かっていたら、気合いで我に返る
+  R.ev.push({ t: R.t, k: 'kiai', o });
+  return true;
+}
+function finishOrder(R) { return R.horses.slice().sort((a, b) => a.ft - b.ft); }
+function runHeadless(cfg, rng) {
+  const R = makeRace(cfg, rng);
+  let n = 0; while (!stepRace(R, 0.1) && n++ < 6000);
+  return R;
+}
+/* 着差：時間差 → 馬身（1馬身 ≒ 2.4m） */
+function margin(dtSec, v) {
+  const m = dtSec * v, L = m / 2.4;
+  if (m < 0.08) return 'ハナ'; if (m < 0.25) return 'アタマ'; if (m < 0.55) return 'クビ';
+  if (L < 0.62) return '1/2'; if (L < 0.87) return '3/4';
+  if (L < 1.12) return '1'; if (L < 1.37) return '1 1/4'; if (L < 1.62) return '1 1/2'; if (L < 1.87) return '1 3/4';
+  if (L < 2.5) return '2'; if (L < 3.5) return '3'; if (L < 4.5) return '4'; if (L < 5.5) return '5';
+  if (L < 10) return Math.round(L) + ''; return '大差';
+}
+function fmtTime(t) { const m = Math.floor(t / 60), s = t - m * 60; return (m ? m + ':' : '') + (m && s < 10 ? '0' : '') + s.toFixed(1); }
+function winProbs(cfg, n) {
+  const w = [0, 0, 0, 0];
+  for (let i = 0; i < n; i++) { const R = runHeadless(cfg); w[finishOrder(R)[0].waku - 1]++; }
+  return w.map(x => (x + 0.5) / (n + 2));
+}
+if (typeof module !== 'undefined') module.exports = { useKiai, HORSES, ENTRANTS, AMEX, COURSES, BABA, makeRace, stepRace, runHeadless, finishOrder, margin, fmtTime, winProbs, rollCond, distCat, REGION_OF, REGIONS, mulberry };
+</script>
+<script>
+"use strict";
+/* ===================== 共通 ===================== */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const H = id => HORSES[id];
+const SAVE = 'yonjuhasshun-v1';
+let S = null;
+function save() { try { localStorage.setItem(SAVE, JSON.stringify(S)); } catch (e) { } }
+function load() { try { const t = localStorage.getItem(SAVE); return t ? JSON.parse(t) : null; } catch (e) { return null; } }
+function toast(t) { const e = $('#toast'); e.textContent = t; e.hidden = false; clearTimeout(toast.k); toast.k = setTimeout(() => e.hidden = true, 2600); }
+const STAT_KEYS = [['spd', '速'], ['sta', '持'], ['pow', '力'], ['gut', '根'], ['wit', '賢']];
+const STAT_LONG = { spd: 'スピード', sta: 'スタミナ', pow: 'パワー', gut: '根性', wit: '賢さ' };
+const prefName = h => h.area;
+const regionOf = h => REGION_OF[h.pref];
+function silkCss(h) {
+  const { c1, c2, pat } = h.silk;
+  if (pat === '縦縞') return `background:repeating-linear-gradient(90deg,${c1} 0 4px,${c2} 4px 7px)`;
+  if (pat === '襷') return `background:linear-gradient(45deg,${c1} 40%,${c2} 40% 60%,${c1} 60%)`;
+  if (pat === '山形') return `background:linear-gradient(135deg,${c1} 35%,transparent 35%),linear-gradient(225deg,${c1} 35%,${c2} 35%)`;
+  if (pat === '輪') return `background:linear-gradient(${c1} 38%,${c2} 38% 62%,${c1} 62%)`;
+  if (pat === '袖') return `background:linear-gradient(90deg,${c2} 25%,${c1} 25% 75%,${c2} 75%)`;
+  return `background:${c1}`;
+}
+const wakuHtml = n => `<span class="waku w${n}">${n}</span>`;
+function bestDist(h) { const order = ['S', 'A', 'B', 'C', 'D']; let b = 9, out = []; h.dist.forEach((g, i) => { const k = order.indexOf(g); if (k < b) { b = k; out = [i]; } else if (k === b) out.push(i); }); return out.map(i => DIST_CAT[i]).join('・'); }
+
+/* ===================== 音（白球ナインの合成音を競馬場向けに作り直し） ===================== */
+const SND = (function () {
+  let ctx = null, master = null, crowdG = null, roarG = null, on = true, voice = null;
+  try { const v = localStorage.getItem('yonjuhasshun-snd'); if (v === '0') on = false; } catch (e) { }
+  function noiseBuf(sec, kind) {
+    const n = Math.floor(ctx.sampleRate * sec), b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0); let last = 0;
+    for (let i = 0; i < n; i++) { const w = Math.random() * 2 - 1; if (kind === 'brown') { last = (last + 0.02 * w) / 1.02; d[i] = last * 3.5; } else d[i] = w; }
+    return b;
+  }
+  function init() {
+    if (ctx) { if (ctx.state === 'suspended') ctx.resume(); return; }
+    const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+    ctx = new AC(); master = ctx.createGain(); master.gain.value = on ? 0.85 : 0;
+    const comp = ctx.createDynamicsCompressor(); master.connect(comp); comp.connect(ctx.destination);
+    const base = ctx.createBufferSource(); base.buffer = noiseBuf(5, 'brown'); base.loop = true;
+    const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 480; bp.Q.value = 0.6;
+    crowdG = ctx.createGain(); crowdG.gain.value = 0; base.connect(bp); bp.connect(crowdG); crowdG.connect(master); base.start();
+    const wn = ctx.createBufferSource(); wn.buffer = noiseBuf(4, 'white'); wn.loop = true;
+    const bp2 = ctx.createBiquadFilter(); bp2.type = 'bandpass'; bp2.frequency.value = 1300; bp2.Q.value = 0.8;
+    roarG = ctx.createGain(); roarG.gain.value = 0; wn.connect(bp2); bp2.connect(roarG); roarG.connect(master); wn.start();
+    pickVoice(); if (window.speechSynthesis) speechSynthesis.onvoiceschanged = pickVoice;
+  }
+  function pickVoice() { try { const vs = speechSynthesis.getVoices().filter(v => /^ja/i.test(v.lang)); voice = vs.find(v => /male|男|Otoya|Ichiro|Keita/i.test(v.name)) || vs[0] || null; } catch (e) { voice = null; } }
+  const now = () => ctx.currentTime;
+  function env(g, t, a, peak, d) { g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + a + d); }
+  function burst(dur, type, freq, q, peak, t) {
+    const s = ctx.createBufferSource(); s.buffer = noiseBuf(Math.max(0.05, dur), 'white'); const f = ctx.createBiquadFilter(); f.type = type; f.frequency.value = freq; f.Q.value = q;
+    const g = ctx.createGain(); s.connect(f); f.connect(g); g.connect(master); env(g, t, 0.003, peak, dur); s.start(t); s.stop(t + dur + 0.05);
+  }
+  function tone(type, f0, f1, dur, peak, t) {
+    const o = ctx.createOscillator(), g = ctx.createGain(); o.type = type; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+    o.connect(g); g.connect(master); env(g, t, 0.004, peak, dur); o.start(t); o.stop(t + dur + 0.05);
+  }
+  function setLevel(g, v, k) { if (!ctx) return; const t = now(); g.gain.cancelScheduledValues(t); g.gain.setValueAtTime(g.gain.value, t); g.gain.linearRampToValueAtTime(v, t + (k || 0.3)); }
+  return {
+    init,
+    get on() { return on; },
+    toggle() { on = !on; try { localStorage.setItem('yonjuhasshun-snd', on ? '1' : '0'); } catch (e) { } if (master) master.gain.value = on ? 0.85 : 0; if (!on && window.speechSynthesis) speechSynthesis.cancel(); return on; },
+    hoof(p) { if (!ctx || !on) return; const t = now(); burst(0.045, 'lowpass', 260, 0.9, 0.22 * p, t); tone('sine', 90, 50, 0.07, 0.18 * p, t); },
+    gate() { if (!ctx) return; const t = now(); burst(0.25, 'bandpass', 2400, 3, 0.6, t); tone('square', 620, 300, 0.25, 0.08, t); tone('triangle', 1250, 900, 0.3, 0.12, t + 0.01); },
+    whip() { if (!ctx) return; const t = now(); burst(0.03, 'highpass', 3000, 0.7, 0.9, t); tone('triangle', 1800, 500, 0.06, 0.25, t); },
+    crowd(level) { if (!ctx) return; setLevel(crowdG, 0.08 + 0.22 * level, 0.4); setLevel(roarG, 0.42 * level * level, 0.4); },
+    quiet() { if (!ctx) return; setLevel(crowdG, 0, 1.2); setLevel(roarG, 0, 1.2); },
+    // オリジナルの発走ファンファーレ（金管の和音）
+    fanfare(big) {
+      if (!ctx) return; let t = now() + 0.08;
+      const seq = big ? [[60, 64, 67], [60, 64, 67], [65, 69, 72], [67, 71, 74], [64, 67, 72], [65, 69, 74], [67, 72, 76], [67, 72, 79]] : [[60, 64, 67], [65, 69, 72], [67, 71, 74], [67, 72, 76]];
+      const dur = big ? [0.18, 0.12, 0.3, 0.3, 0.18, 0.18, 0.3, 1.2] : [0.2, 0.2, 0.25, 1.0];
+      seq.forEach((ch, i) => {
+        ch.forEach(n => {
+          const f = 440 * Math.pow(2, (n - 69) / 12), o = ctx.createOscillator(), lp = ctx.createBiquadFilter(), g = ctx.createGain(); o.type = 'sawtooth'; o.frequency.value = f; lp.type = 'lowpass';
+          lp.frequency.setValueAtTime(800, t); lp.frequency.linearRampToValueAtTime(2800, t + 0.07); o.connect(lp); lp.connect(g); g.connect(master); env(g, t, 0.02, 0.065, dur[i]); o.start(t); o.stop(t + dur[i] + 0.1);
+        }); t += dur[i] + 0.035;
+      });
+      return t - now();
+    },
+    say(text, rate, force) {
+      if (!on || !window.speechSynthesis) return;
+      try {
+        if (force) speechSynthesis.cancel(); else if (speechSynthesis.speaking || speechSynthesis.pending) return;
+        const u = new SpeechSynthesisUtterance(text.replace(/稍重/g, 'ややおも').replace(/1\/2/g, '半').replace(/3\/4/g, '4分の3'));
+        u.lang = 'ja-JP'; if (voice) u.voice = voice; u.rate = rate || 1.25; u.pitch = 1.05; speechSynthesis.speak(u);
+      } catch (e) { }
+    },
+    stopVoice() { try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch (e) { } },
+  };
+})();
+
+/* ===================== 大会の組み立て ===================== */
+const ROUND_NAME = ['予選', '準決勝', '決勝'];
+// 能力の順に4つの「つぼ」に分け、各組に1頭ずつ。同じ地域ができるだけ重ならない組み合わせを選ぶ
+function drawGroups(ids, nG) {
+  const sorted = ids.slice().sort((a, b) => (H(b).total + Math.random()) - (H(a).total + Math.random()));
+  const per = ids.length / nG, pots = [];
+  for (let p = 0; p < per; p++) pots.push(sorted.slice(p * nG, (p + 1) * nG));
+  let best = null, bestScore = 1e9;
+  for (let tr = 0; tr < 400; tr++) {
+    const gs = Array.from({ length: nG }, () => []);
+    pots.forEach(pot => shuffle(pot.slice()).forEach((id, i) => gs[i].push(id)));
+    let sc = 0; for (const g of gs) { const seen = {}; for (const id of g) { const r = regionOf(H(id)); sc += seen[r] ? 1 : 0; seen[r] = 1; } }
+    if (sc < bestScore) { bestScore = sc; best = gs; if (!sc) break; }
+  }
+  return best.map(g => shuffle(g));
+}
+function rollBaba() { const r = Math.random(); return r < 0.58 ? '良' : r < 0.8 ? '稍重' : r < 0.93 ? '重' : '不良'; }
+function makeRaceRec(label, ids, cat, fixed) {
+  let ci, dist;
+  if (fixed) { ci = COURSES.findIndex(c => c.name === fixed[0]); dist = fixed[1]; }
+  else { const opts = []; COURSES.forEach((c, i) => c.dists.forEach(d => { if (distCat(d) === cat) opts.push([i, d]); })); [ci, dist] = pick(opts); }
+  return { label, ids, ci, dist, baba: rollBaba(), conds: ids.map(() => rollCond(Math.random)), res: null };
+}
+function buildRound(r, ids) {
+  if (r === 0) {
+    const gs = drawGroups(ids, 12), cats = shuffle([0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3]);
+    return { races: gs.map((g, i) => makeRaceRec('予選 第' + (i + 1) + '組', g, cats[i])) };
+  }
+  if (r === 1) {
+    const gs = drawGroups(ids, 3), cats = shuffle([0, 1, 2, 3]).slice(0, 3);
+    return { races: gs.map((g, i) => makeRaceRec('準決勝 第' + (i + 1) + '組', g, cats[i])) };
+  }
+  return { races: [makeRaceRec('決勝 四十八駿杯', shuffle(ids.concat([AMEX])), 2, ['東京', 2400])] };
+}
+function newTournament(fav) {
+  S = { fav, round: 0, rounds: [buildRound(0, ENTRANTS.slice())], champ: null, favLog: [fav], started: Date.now() };
+  save();
+}
+const curRound = () => S.rounds[S.round];
+const cfgOf = rec => ({ course: COURSES[rec.ci], dist: rec.dist, baba: rec.baba, ids: rec.ids, conds: rec.conds });
+const courseLine = rec => { const c = COURSES[rec.ci]; return `${c.name} 芝${rec.dist}m（${c.turn}）`; };
+function courseNote(c) { return `直線${c.straight}m・${['平坦', '坂あり', '急坂'][c.slope]}${c.yoshiba ? '・洋芝' : ''}`; }
+function favIn(rec) { return rec.ids.includes(S.fav); }
+function storeResult(rec, R, kiaiUsed) {
+  const o = finishOrder(R);
+  rec.res = {
+    order: o.map(x => x.id), ft: o.map(x => +x.ft.toFixed(2)),
+    mg: o.map((x, i) => i ? margin(x.ft - o[i - 1].ft, R.D / x.ft) : ''),
+    l3: o.map(x => x.t600 != null ? +(x.ft - x.t600).toFixed(1) : null),
+    kiai: kiaiUsed || 0, f1000: R.flags.f1000 || null,
+  };
+  save();
+}
+function roundDone() { return curRound().races.every(r => r.res); }
+function winners() { return curRound().races.map(r => r.res.order[0]); }
+function advance() {
+  const w = winners();
+  if (S.round === 2) { S.champ = w[0]; save(); return; }
+  S.round++; S.rounds[S.round] = buildRound(S.round, w); save();
+}
+function aliveIds() {
+  if (S.champ != null) return [S.champ];
+  const r = curRound(); const set = [];
+  r.races.forEach(x => { if (x.res) set.push(x.res.order[0]); else set.push(...x.ids); });
+  return set;
+}
+
+/* ===================== 画面の切り替え ===================== */
+let VIEW = 'title';
+function show(v, arg) {
+  if (RV && v !== 'race') stopRace();
+  VIEW = v; const m = $('#view'); m.innerHTML = '';
+  $('#navHub').setAttribute('aria-pressed', v === 'hub' || v === 'paddock' || v === 'result' || v === 'race' ? 'true' : 'false');
+  $('#navBook').setAttribute('aria-pressed', v === 'book' ? 'true' : 'false');
+  ({ title: viewTitle, pick: viewPick, hub: viewHub, paddock: viewPaddock, race: viewRace, result: viewResult, book: viewBook, champ: viewChamp })[v](m, arg);
+  window.scrollTo(0, 0);
+}
+$('#home').onclick = () => show('title');
+$('#navHub').onclick = () => S ? show(S.champ != null ? 'champ' : 'hub') : show('pick');
+$('#navBook').onclick = () => show('book');
+$('#snd').onclick = () => { SND.init(); const on = SND.toggle(); $('#snd').textContent = on ? '音 あり' : '音 なし'; $('#snd').setAttribute('aria-pressed', on); };
+$('#snd').textContent = SND.on ? '音 あり' : '音 なし'; $('#snd').setAttribute('aria-pressed', SND.on);
+
+/* ===================== 日本地図（47 Prefectures の地図データ） ===================== */
+function mapSvg(opts) {
+  const { on, alive, out } = opts || {};
+  let s = `<svg class="jmap" viewBox="0 0 ${JMAP.w} ${JMAP.h}" role="img" aria-label="日本地図。都道府県を押すと代表馬が出ます">`;
+  const f = JMAP.frame; s += `<rect class="frame" x="${f[0]}" y="${f[1]}" width="${f[2]}" height="${f[3]}"/>`;
+  for (const [code, d] of JMAP.paths) {
+    const cls = (on && on.includes(code)) ? 'on' : (alive && alive.includes(code)) ? 'alive' : (out && out.includes(code)) ? 'out' : '';
+    s += `<path d="${d}" data-p="${code}" class="${cls}"><title>${code === 'TK' ? '東京都' : ''}</title></path>`;
+  }
+  return s + '</svg>';
+}
+const mapCode = h => h.pref === 'TKE' || h.pref === 'TKW' ? 'TK' : h.pref;
+const horsesOfMap = code => HORSES.filter(h => !h.seed && mapCode(h) === code);
+
+/* ===================== 馬の絵（中継画面と名鑑で共通） ===================== */
+const WAKU_COL = ['#ffffff', '#151515', '#d7202f', '#1f58d0'], WAKU_INK = ['#111', '#fff', '#fff', '#fff'];
+function shade(hex, k) { const n = parseInt(hex.slice(1), 16); let r = n >> 16, g = (n >> 8) & 255, b = n & 255; r = Math.round(r * k); g = Math.round(g * k); b = Math.round(b * k); return `rgb(${Math.min(255, r)},${Math.min(255, g)},${Math.min(255, b)})`; }
+// 地面の点(x,y)に、長さ100単位＝2.4mの馬を描く。ph：歩様の位相、run：0（立ち）〜1（全力）
+function drawHorse(g, x, y, sc, ph, run, h, waku, opt) {
+  opt = opt || {};
+  const coat = COATS[h.coat], body = coat[0], mane = coat[1], far = shade(body, 0.72), near = body;
+  const TAU = Math.PI * 2, bob = -Math.abs(Math.sin(ph * TAU)) * 3.2 * run;
+  g.save(); g.translate(x, y); g.scale(sc, sc);
+  // 影
+  g.fillStyle = 'rgba(0,0,0,.25)'; g.beginPath(); g.ellipse(0, 0, 48, 6, 0, 0, TAU); g.fill();
+  g.lineCap = 'round'; g.lineJoin = 'round';
+  function leg(hx, hy, off, front, col, w) {
+    const s = Math.sin(TAU * (ph + off)), A = front ? 0.62 : 0.55;
+    const a1 = run * A * s + (front ? 0.08 : -0.05) * run;
+    const bend = run * (front ? Math.max(0, Math.sin(TAU * (ph + off) + 1.3)) * 1.5 : -Math.max(0, Math.sin(TAU * (ph + off) - 0.6)) * 1.1);
+    const kx = hx + Math.sin(a1) * 25, ky = hy + Math.cos(a1) * 25;
+    const a2 = a1 + (front ? -bend : -bend);
+    const fx = kx + Math.sin(a2) * 27, fy = Math.min(-1, ky + Math.cos(a2) * 27);
+    g.strokeStyle = col; g.lineWidth = w; g.beginPath(); g.moveTo(hx, hy); g.lineTo(kx, ky); g.stroke();
+    g.lineWidth = w * 0.62; g.beginPath(); g.moveTo(kx, ky); g.lineTo(fx, fy); g.stroke();
+    g.fillStyle = '#1a1410'; g.beginPath(); g.ellipse(fx + 1.5, fy + 1, 3.6, 2.4, 0, 0, TAU); g.fill();
+  }
+  const by = -62 + bob;
+  leg(-24, by + 8, 0.08, false, far, 9); leg(24, by + 8, 0.62, true, far, 8);
+  // 尾
+  g.strokeStyle = mane; g.lineWidth = 6; g.beginPath(); g.moveTo(-36, by - 4);
+  g.quadraticCurveTo(-56, by - 6 + Math.sin(ph * TAU) * 3, -66, by + 8 + run * -10 + Math.sin(ph * TAU + 1) * 4); g.stroke();
+  // 胴
+  g.fillStyle = near; g.beginPath(); g.ellipse(0, by, 35, 15.5, 0, 0, TAU); g.fill();
+  g.beginPath(); g.arc(-24, by - 1, 15, 0, TAU); g.fill(); g.beginPath(); g.arc(24, by + 1, 14.5, 0, TAU); g.fill();
+  // 首と頭
+  const hb = Math.sin(ph * TAU) * 0.07 * run, na = -0.62 + hb - (1 - run) * 0.35;
+  g.save(); g.translate(30, by - 6); g.rotate(na);
+  g.fillStyle = near; g.beginPath(); g.moveTo(-8, -9); g.lineTo(36, -7); g.lineTo(38, 5); g.lineTo(-6, 14); g.closePath(); g.fill();
+  g.strokeStyle = mane; g.lineWidth = 3.5; g.beginPath(); g.moveTo(-6, -9); g.lineTo(34, -8); g.stroke();
+  g.translate(38, 0); g.rotate(1.05 - (1 - run) * 0.25);
+  g.fillStyle = near; g.beginPath(); g.ellipse(9, 0, 13, 6.5, 0, 0, TAU); g.fill();
+  g.beginPath(); g.moveTo(-3, -5); g.lineTo(-7, -13); g.lineTo(1, -6); g.fill();
+  g.fillStyle = '#111'; g.beginPath(); g.arc(3, -2.5, 1.5, 0, TAU); g.fill();
+  if (h.coat !== '白毛' && h.coat !== '芦毛') { g.fillStyle = 'rgba(255,255,255,.75)'; g.beginPath(); g.ellipse(12, -3.5, 7, 1.6, 0.1, 0, TAU); g.fill(); }
+  g.restore();
+  // 手前の脚
+  leg(-22, by + 9, 0.0, false, near, 10); leg(26, by + 9, 0.52, true, near, 9);
+  // ゼッケン
+  g.fillStyle = WAKU_COL[waku - 1]; g.fillRect(-12, by - 13, 24, 17); g.strokeStyle = 'rgba(0,0,0,.35)'; g.lineWidth = 1; g.strokeRect(-12, by - 13, 24, 17);
+  g.fillStyle = WAKU_INK[waku - 1]; g.font = '700 13px Oswald, Arial Narrow, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(waku, 0, by - 4.5);
+  // 騎手
+  const jb = bob * 0.4 + (opt.push ? Math.sin(ph * TAU * 2) * 2.5 : 0), { c1, c2, pat } = h.silk;
+  g.strokeStyle = '#f2f2ee'; g.lineWidth = 8; g.beginPath(); g.moveTo(8, by - 20 + jb); g.lineTo(-3, by - 31 + jb); g.stroke();       // もも
+  g.strokeStyle = '#111'; g.lineWidth = 6; g.beginPath(); g.moveTo(8, by - 20 + jb); g.lineTo(3, by - 9); g.stroke();                   // 長靴
+  const sx = -2, sy = by - 32 + jb, ex = 22, ey = by - 41 + jb;
+  g.strokeStyle = c1; g.lineWidth = 12; g.beginPath(); g.moveTo(sx, sy); g.lineTo(ex, ey); g.stroke();                                // 胴（勝負服）
+  g.save(); g.beginPath(); g.moveTo(sx - 4, sy + 6); g.lineTo(ex + 3, ey + 6); g.lineTo(ex + 1, ey - 7); g.lineTo(sx - 6, sy - 6); g.closePath(); g.clip();
+  g.strokeStyle = c2; g.lineWidth = 3;
+  if (pat === '縦縞') for (let k = -1; k <= 4; k++) { g.beginPath(); g.moveTo(sx + k * 6, sy + 8); g.lineTo(sx + k * 6 + 4, sy - 10); g.stroke(); }
+  if (pat === '襷') { g.lineWidth = 4; g.beginPath(); g.moveTo(sx + 2, sy - 8); g.lineTo(ex - 2, ey + 8); g.stroke(); }
+  if (pat === '山形') { g.beginPath(); g.moveTo(sx + 4, sy + 4); g.lineTo(sx + 12, sy - 6); g.lineTo(sx + 20, ey + 4); g.stroke(); }
+  if (pat === '輪') { g.lineWidth = 4; g.beginPath(); g.moveTo(sx + 9, sy + 8); g.lineTo(sx + 13, sy - 10); g.stroke(); }
+  g.restore();
+  g.strokeStyle = pat === '袖' ? c2 : c1; g.lineWidth = 5.5; g.beginPath(); g.moveTo(ex - 2, ey + 1); g.lineTo(38 + (opt.whip ? -6 : 0), by - 26 + jb); g.stroke(); // 腕
+  g.fillStyle = '#f0d0b0'; g.beginPath(); g.arc(38 + (opt.whip ? -6 : 0), by - 26 + jb, 2.6, 0, TAU); g.fill();
+  if (opt.whip) { g.strokeStyle = '#222'; g.lineWidth = 1.6; g.beginPath(); g.moveTo(32, by - 26 + jb); g.lineTo(18 + Math.sin(ph * TAU * 2) * 8, by - 4); g.stroke(); }
+  g.fillStyle = WAKU_COL[waku - 1]; g.beginPath(); g.arc(ex + 6, ey - 4, 7, 0, TAU); g.fill();                                          // 帽子＝枠の色
+  g.strokeStyle = waku === 1 ? '#888' : 'rgba(0,0,0,.4)'; g.lineWidth = 1; g.stroke();
+  g.fillStyle = '#222'; g.fillRect(ex + 9, ey - 4, 5, 2.5);
+  g.restore();
+}
+function portrait(h, canvas, waku) {
+  const dpr = Math.min(2, window.devicePixelRatio || 1), W = canvas.clientWidth || 300, Hh = W / 2.2;
+  canvas.width = W * dpr; canvas.height = Hh * dpr; const g = canvas.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  let ph = 0; const draw = () => { g.clearRect(0, 0, W, Hh); drawHorse(g, W * 0.47, Hh * 0.92, Hh / 150, ph, 0.9, h, waku || 1); };
+  draw();
+  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const id = Symbol(); portrait.cur = id; let last = performance.now();
+    const loop = t => { if (portrait.cur !== id || !canvas.isConnected) return; ph = (ph + (t - last) / 1000 * 2.1) % 1; last = t; draw(); requestAnimationFrame(loop); };
+    requestAnimationFrame(loop);
+  }
+}
+
+/* ===================== 題 ===================== */
+function viewTitle(m) {
+  const sv = load();
+  m.innerHTML = `
+  <section class="hero" style="padding-top:18px">
+    <div>
+      <p class="kick">全国代表馬 日本一決定戦</p>
+      <h1>四十八<span>駿</span></h1>
+      <p class="lead">47都道府県から選ばれた48頭（東京都は東東京・西東京の2頭）が、4頭立てのレースを勝ち抜いて日本一を争います。決勝ではアメリカからの招待馬アメリカンエクスプレスが待っています。あなたは1頭を応援し、レース中に3回だけ<b>気合い</b>を入れられます。</p>
+      <div class="rules">
+        <div><b>予選</b><span>4頭×12組。各組1着の12頭だけが勝ち上がり</span></div>
+        <div><b>準決勝</b><span>4頭×3組。各組1着の3頭が決勝へ</span></div>
+        <div><b>決勝</b><span>東京 芝2400m。3頭＋招待馬アメリカンエクスプレス</span></div>
+      </div>
+      <div class="btns" style="margin-top:16px">
+        <button class="btn red" id="bNew">応援する馬を選ぶ</button>
+        ${sv && sv.champ == null ? `<button class="btn" id="bCont">続きから（${ROUND_NAME[sv.round]}・${esc(H(sv.fav).name)}）</button>` : ''}
+        <button class="btn ghost" id="bBook">名鑑・能力の検証</button>
+      </div>
+    </div>
+    <div class="sheet">${mapSvg({ alive: JMAP.paths.map(p => p[0]) })}<p class="small muted" style="margin-top:6px">各都道府県に1頭ずつ。左上の枠は沖縄県。</p></div>
+  </section>
+  <section class="grid2">
+    <div class="sheet"><h3 class="sub">勝ち負けを決めるもの</h3>
+      <p class="small">能力の合計だけでは決まりません。<b>距離</b>（短距離〜長距離の向き不向き）、<b>脚質</b>（逃げ・先行・差し・追込）、<b>馬場</b>（良・稍重・重・不良）、<b>競馬場</b>（直線の長さと坂）、その日の<b>調子</b>が重なって、どの馬にも勝つ目があります。直線の短い札幌・函館・小倉は前にいる馬が、直線の長い新潟・東京は後ろから来る馬が有利です。</p></div>
+    <div class="sheet"><h3 class="sub">気合いの使いどころ</h3>
+      <p class="small">気合いを入れると3秒だけ伸びますが、スタミナを余計に使います。最後の直線で使うのが一番効き、序盤に使うとほとんど得になりません。スタミナが切れかけた馬には持ち直す力になり、掛かっている馬は落ち着きます。1レースにつき3回までです。</p></div>
+  </section>`;
+  $('#bNew').onclick = () => { SND.init(); show('pick'); };
+  if ($('#bCont')) $('#bCont').onclick = () => { SND.init(); S = sv; show('hub'); };
+  $('#bBook').onclick = () => show('book');
+  m.querySelectorAll('.jmap path').forEach(p => p.onclick = () => { SND.init(); show('pick', { code: p.dataset.p }); });
+}
+
+/* ===================== 応援する馬を選ぶ ===================== */
+function horseCard(h, sel) {
+  return `<button class="hc" data-h="${h.id}" aria-pressed="${sel ? 'true' : 'false'}">
+    <span class="pf">${esc(prefName(h))}</span>
+    <span class="silk" style="${silkCss(h)}"></span><b>${esc(h.name)}</b><span class="tt">${h.total}</span>
+    <span class="mt"><span class="chip st">${STYLE_NAME[h.style]}</span><span>${bestDist(h)}</span><span>重${h.heavy}</span></span></button>`;
+}
+function statBars(h, cmp) {
+  return `<div class="bars">${STAT_KEYS.map(([k, l]) => { const v = h.s[k], o = cmp && h.old ? h.old[STAT_KEYS.findIndex(x => x[0] === k)] : null;
+    return `<span>${STAT_LONG[k]}</span><span class="bar"><i class="${v >= 90 ? 'hi' : ''}" style="width:${(v - 60) / 40 * 100}%"></i>${o != null && o !== v ? `<s style="left:${(o - 60) / 40 * 100}%"></s>` : ''}</span><b class="num">${v}${o != null && o !== v ? `<small class="${v > o ? 'up' : 'dn'}"> ${v > o ? '+' : ''}${v - o}</small>` : ''}</b>`; }).join('')}</div>`;
+}
+function aptGrid(h) {
+  return `<div class="apt">${DIST_CAT.map((d, i) => `<div><small>${d}</small><b class="g-${h.dist[i]}">${h.dist[i]}</b></div>`).join('')}<div><small>重馬場</small><b class="g-${h.heavy}">${h.heavy}</b></div></div>`;
+}
+function detailHtml(h, withBtn) {
+  return `<div class="detail">
+    <canvas class="portrait" id="por"></canvas>
+    <div class="nm">${esc(h.name)}<small>${esc(prefName(h))}代表・${esc(h.title)}・${h.coat}・勝負服 ${h.silk.pat}</small></div>
+    <p>${esc(h.intro)}</p>
+    ${statBars(h, true)}
+    <p class="small muted">合計 <b class="num">${h.total}</b>　脚質 <b>${STYLE_NAME[h.style]}</b>　得意距離 <b>${bestDist(h)}</b></p>
+    ${aptGrid(h)}
+    <p class="small"><b>弱点</b>　${esc(h.weak)}</p>
+    ${h.old ? `<p class="memo"><b>能力を調整しました</b>　${esc(h.why)}</p>` : ''}
+    ${withBtn ? `<div class="btns"><button class="btn red" id="bFav">${esc(h.name)}を応援する</button></div>` : ''}
+  </div>`;
+}
+function viewPick(m, arg) {
+  let reg = null, sel = null, code = arg && arg.code;
+  const list = (arg && arg.ids) || ENTRANTS;
+  if (code) { const hs = horsesOfMap(code).filter(h => list.includes(h.id)); if (hs.length) { sel = hs[0].id; reg = regionOf(hs[0]); } }
+  const repick = arg && arg.ids;
+  m.innerHTML = `
+  <div style="display:flex;flex-direction:column;gap:6px;padding-top:14px">
+    <h2 class="hd">${repick ? '応援する馬を選び直す' : '応援する馬を選ぶ'}<small>${repick ? '推し馬は敗退しました。勝ち残っている馬から次に応援する馬を選べます。' : '地図の都道府県か、下の一覧から1頭を選んでください。'}</small></h2>
+  </div>
+  <section class="pick" style="margin-top:12px">
+    <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
+      <div class="sheet" id="mapBox"></div>
+      <div class="regs" id="regs"></div>
+      <div class="hgrid" id="grid"></div>
+    </div>
+    <div class="sheet" id="det"></div>
+  </section>`;
+  const regs = ['すべて', ...REGIONS];
+  function draw() {
+    const shown = list.map(H).filter(h => !reg || regionOf(h) === reg);
+    const selH = sel != null ? H(sel) : null;
+    $('#mapBox').innerHTML = mapSvg({ on: selH ? [mapCode(selH)] : [], alive: list.map(id => mapCode(H(id))), out: JMAP.paths.map(p => p[0]) });
+    $('#regs').innerHTML = regs.map(r => `<button class="nb" data-r="${r}" aria-pressed="${(r === 'すべて' && !reg) || r === reg}">${r}</button>`).join('');
+    $('#grid').innerHTML = shown.map(h => horseCard(h, h.id === sel)).join('');
+    $('#det').innerHTML = selH ? detailHtml(selH, true) : `<p class="muted">馬を選ぶと、ここに能力と得意な条件が出ます。</p>`;
+    if (selH) {
+      portrait(selH, $('#por'));
+      $('#bFav').onclick = () => {
+        if (repick) { S.fav = sel; S.favLog.push(sel); save(); toast(selH.name + 'を応援します'); show('hub'); }
+        else { newTournament(sel); show('hub', { drew: true }); }
+      };
+    }
+    $('#mapBox').querySelectorAll('path').forEach(p => p.onclick = () => {
+      const hs = horsesOfMap(p.dataset.p).filter(h => list.includes(h.id)); if (!hs.length) return;
+      sel = hs.length > 1 && hs[0].id === sel ? hs[1].id : hs[0].id; draw(); if (window.innerWidth < 820) $('#det').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    $('#regs').querySelectorAll('button').forEach(b => b.onclick = () => { reg = b.dataset.r === 'すべて' ? null : b.dataset.r; draw(); });
+    $('#grid').querySelectorAll('.hc').forEach(b => b.onclick = () => { sel = +b.dataset.h; draw(); if (window.innerWidth < 820) $('#det').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+  }
+  draw();
+}
+
+/* ===================== 大会の進行 ===================== */
+function raceCard(rec, i) {
+  const c = COURSES[rec.ci], mine = favIn(rec);
+  let rows;
+  if (rec.res) {
+    rows = rec.res.order.map((id, k) => `<li class="${k ? 'lose' : 'win'}">${wakuHtml(rec.ids.indexOf(id) + 1)}<span class="n">${esc(H(id).name)}${id === S.fav ? ' <span class="chip fav">推し</span>' : ''}</span><span class="r">${k ? rec.res.mg[k] : fmtTime(rec.res.ft[0])}　${k + 1}着</span></li>`).join('');
+  } else {
+    rows = rec.ids.map((id, k) => `<li>${wakuHtml(k + 1)}<span class="n">${esc(H(id).name)}${id === S.fav ? ' <span class="chip fav">推し</span>' : ''}</span><span class="r">${esc(prefName(H(id)))}・${STYLE_NAME[H(id).style]}</span></li>`).join('');
+  }
+  return `<article class="rc${mine ? ' mine' : ''}">
+    <header><b>${esc(rec.label.replace(/^(予選|準決勝) /, ''))}</b><span>${esc(courseLine(rec))}<br>${rec.baba}・${courseNote(c)}</span></header>
+    <ol>${rows}</ol>
+    <footer>${rec.res ? `<button class="btn ghost" data-res="${i}">着順を見る</button>` : `<button class="btn${mine ? ' red' : ''}" data-pad="${i}">${mine ? 'パドックへ（気合い3回）' : 'パドックへ'}</button><button class="btn ghost" data-quick="${i}">結果だけ</button>`}</footer>
+  </article>`;
+}
+function viewHub(m, arg) {
+  if (!S) return show('pick');
+  if (S.champ != null) return show('champ');
+  const r = curRound(), done = roundDone(), fav = H(S.fav), alive = aliveIds(), favAlive = alive.includes(S.fav);
+  const left = r.races.filter(x => !x.res).length;
+  m.innerHTML = `
+  <section class="round" style="padding-top:14px">
+    <h2 class="hd">${ROUND_NAME[S.round]}<small>${S.round === 0 ? '48頭を4頭ずつ12組に。能力の順に4つに分けて各組へ1頭ずつ入れ、同じ地域どうしができるだけ当たらないように組んでいます。' : S.round === 1 ? '予選を勝った12頭を4頭ずつ3組に。' : '準決勝を勝った3頭と、シードのアメリカンエクスプレス。'}</small></h2>
+    <div class="steps">${ROUND_NAME.map((n, i) => `<span class="${i === S.round ? 'on' : i < S.round ? 'done' : ''}">${n}</span>`).join('')}</div>
+  </section>
+  <section class="sheet favbox">
+    <span class="silk" style="${silkCss(fav)};width:34px;height:34px"></span>
+    <div><p class="kick">あなたの推し馬</p><b>${esc(fav.name)}</b> <span class="small muted">${esc(prefName(fav))}・${STYLE_NAME[fav.style]}・${bestDist(fav)}</span></div>
+    <div class="btns">${favAlive ? `<span class="chip fav">勝ち残り</span>` : `<span class="chip">敗退</span><button class="btn red" id="bRe">応援する馬を選び直す</button>`}</div>
+  </section>
+  ${done ? `<section class="sheet" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between"><p><b>${ROUND_NAME[S.round]}の全レースが終わりました。</b> 勝ち上がり：${winners().map(id => esc(H(id).name)).join('、')}</p><button class="btn red" id="bNext">${S.round === 2 ? '表彰式へ' : ROUND_NAME[S.round + 1] + 'の組み合わせへ'}</button></section>`
+    : left > 1 ? `<div class="btns"><button class="btn ghost" id="bAll">推し馬のレース以外を結果だけで進める</button><span class="small muted">残り${left}レース</span></div>` : ''}
+  <section class="races">${r.races.map(raceCard).join('')}</section>`;
+  if (arg && arg.drew) toast('組み合わせが決まりました');
+  m.querySelectorAll('[data-pad]').forEach(b => b.onclick = () => show('paddock', +b.dataset.pad));
+  m.querySelectorAll('[data-res]').forEach(b => b.onclick = () => show('result', { ri: +b.dataset.res }));
+  m.querySelectorAll('[data-quick]').forEach(b => b.onclick = () => { const rec = r.races[+b.dataset.quick]; storeResult(rec, runHeadless(cfgOf(rec))); show('result', { ri: +b.dataset.quick, quick: true }); });
+  if ($('#bAll')) $('#bAll').onclick = () => { r.races.forEach(rec => { if (!rec.res && !favIn(rec)) storeResult(rec, runHeadless(cfgOf(rec))); }); save(); show('hub'); };
+  if ($('#bNext')) $('#bNext').onclick = () => { advance(); show(S.champ != null ? 'champ' : 'hub', { drew: true }); };
+  if ($('#bRe')) $('#bRe').onclick = () => show('pick', { ids: alive.filter(id => !H(id).seed || S.round === 2) });
+}
+
+/* ===================== パドック（出馬表） ===================== */
+function reporterNote(h, rec, cond) {
+  const c = COURSES[rec.ci], L = BABA.indexOf(rec.baba), dg = h.dist[distCat(rec.dist)], out = [];
+  if (dg === 'S') out.push('距離はベスト'); else if (dg === 'A') out.push('距離は合う'); else if (dg === 'C') out.push('距離は少し不安'); else if (dg === 'D') out.push('距離が合わない');
+  if (L >= 2 || (L >= 1 && c.yoshiba)) { if ('SA'.includes(h.heavy)) out.push('道悪は歓迎'); else if ('CD'.includes(h.heavy)) out.push('道悪は割引'); }
+  if (c.slope === 2 && h.s.pow >= 88) out.push('急坂は得意'); else if (c.slope === 2 && h.s.pow <= 77) out.push('急坂が課題');
+  if (c.straight >= 500 && '差追'.includes(h.style)) out.push('長い直線は追込向き'); if (c.straight < 300 && '逃先'.includes(h.style)) out.push('小回りで前が有利');
+  if (c.straight < 300 && h.style === '追') out.push('直線が短く届くか');
+  if (cond === '絶好調') out.push('気配は抜群'); if (cond === '不調') out.push('毛づやが今ひとつ');
+  if (h.s.wit <= 72) out.push('出遅れ・掛かりに注意');
+  return out.slice(0, 3).join('。') + (out.length ? '。' : '能力どおりなら。');
+}
+function viewPaddock(m, ri) {
+  const rec = curRound().races[ri], c = COURSES[rec.ci], mine = favIn(rec);
+  m.innerHTML = `
+  <section style="display:flex;flex-direction:column;gap:6px;padding-top:14px">
+    <p class="kick">${esc(rec.label)}・パドック</p>
+    <div class="cond"><span class="big">${esc(c.name)} 芝${rec.dist}m</span><span>${c.turn}回り・${DIST_CAT[distCat(rec.dist)]}・馬場 <b>${rec.baba}</b>・${courseNote(c)}</span></div>
+  </section>
+  <div class="tw" style="margin-top:10px"><table>
+    <thead><tr><th>枠</th><th>予想</th><th>馬名</th><th>脚質</th><th>距離</th><th>重</th><th>調子</th><th>速</th><th>持</th><th>力</th><th>根</th><th>賢</th><th>単勝</th><th>記者の短評</th></tr></thead>
+    <tbody>${rec.ids.map((id, i) => { const h = H(id), dg = h.dist[distCat(rec.dist)];
+      return `<tr class="${id === S.fav ? 'me' : ''}"><td>${wakuHtml(i + 1)}</td><td class="mark" id="mk${i}">…</td>
+      <td class="l"><span class="hn">${esc(h.name)}${id === S.fav ? ' <span class="chip fav">推し</span>' : ''}</span><small>${esc(prefName(h))}・${esc(h.title)}</small></td>
+      <td>${STYLE_NAME[h.style]}</td><td class="g-${dg}">${dg}</td><td class="g-${h.heavy}">${h.heavy}</td><td>${rec.conds[i]}</td>
+      ${STAT_KEYS.map(([k]) => `<td class="num" style="${h.s[k] >= 90 ? 'color:var(--red);font-weight:600' : ''}">${h.s[k]}</td>`).join('')}
+      <td><span class="odds" id="od${i}">—</span><span class="pop" id="pp${i}"></span></td><td class="cmt">${esc(reporterNote(h, rec, rec.conds[i]))}</td></tr>`; }).join('')}</tbody>
+  </table></div>
+  <p class="small muted">単勝オッズは、この条件で400回走らせた試算から出しています。予想の印は ◎本命 ○対抗 ▲単穴 △連下。</p>
+  <div class="btns">
+    <button class="btn red" id="bGo">${mine ? '発走（気合いは3回）' : '発走'}</button>
+    <button class="btn ghost" id="bQ">結果だけ見る</button>
+    <button class="btn ghost" id="bBack">組み合わせに戻る</button>
+  </div>`;
+  $('#bGo').onclick = () => { SND.init(); show('race', ri); };
+  $('#bQ').onclick = () => { storeResult(rec, runHeadless(cfgOf(rec))); show('result', { ri, quick: true }); };
+  $('#bBack').onclick = () => show('hub');
+  // オッズの試算（画面が固まらないよう少しずつ）
+  const cfg = cfgOf(rec), w = [0, 0, 0, 0]; let n = 0; const N = 400;
+  const chunk = () => {
+    if (VIEW !== 'paddock') return;
+    for (let k = 0; k < 40 && n < N; k++, n++) w[finishOrder(runHeadless(cfg))[0].waku - 1]++;
+    if (n < N) return setTimeout(chunk, 0);
+    const p = w.map(x => (x + 1) / (N + 4)), rank = p.map((x, i) => i).sort((a, b) => p[b] - p[a]), marks = ['◎', '○', '▲', '△'];
+    rank.forEach((i, k) => { const od = Math.max(1.1, 0.8 / p[i]); $('#od' + i).textContent = od < 100 ? od.toFixed(1) : Math.round(od); $('#pp' + i).textContent = (k + 1) + '番人気'; $('#mk' + i).textContent = marks[k]; });
+    rec.pop = rank.map(i => rec.ids[i]);
+  };
+  setTimeout(chunk, 30);
+}
+
+/* ===================== レース中継 ===================== */
+let RV = null;
+function stopRace() { if (!RV) return; cancelAnimationFrame(RV.raf); window.removeEventListener('resize', RV.onResize); document.removeEventListener('keydown', RV.onKey); SND.quiet(); SND.stopVoice(); RV = null; }
+function viewRace(m, ri) {
+  const rec = curRound().races[ri], cfg = cfgOf(rec), c = COURSES[rec.ci];
+  const R = makeRace(cfg), favO = R.horses.find(o => o.id === S.fav) || null;
+  let spd = 2; try { spd = +localStorage.getItem('yonjuhasshun-spd') || 2; } catch (e) { }
+  m.innerHTML = `
+  <section style="display:flex;flex-direction:column;gap:10px;padding-top:12px">
+    <div class="stage" id="stage">
+      <canvas class="main" id="cv"></canvas>
+      <div class="hud tl"><div class="rn">${esc(rec.label)}<small>${esc(c.name)} 芝${rec.dist}m ${rec.baba}</small></div><div class="rem"><small>残り</small><b id="remT">${rec.dist}</b></div></div>
+      <canvas class="hud mm" id="mm"></canvas>
+      <div class="hud sub" id="subT"></div>
+      <div class="hud ord" id="ord"></div>
+      <div id="bnBox"></div>
+    </div>
+    <div class="ctl">
+      ${favO ? `<button class="kiai" id="bKiai"><span><b>気合い</b><small>${esc(favO.h.name)}に（Space）</small></span><span class="pips" id="pips"><i></i><i></i><i></i></span></button>` : `<p class="small muted">このレースに推し馬は出ていません。気合いは使えません。</p>`}
+      <div class="btns"><span class="seg" id="spdSeg">${[1, 2, 4].map(v => `<button data-s="${v}" aria-pressed="${v === spd}">×${v}</button>`).join('')}</span>
+      <button class="btn ghost" id="bSkip">結果まで飛ばす</button></div>
+    </div>
+    <div class="sheet"><h3 class="sub">実況</h3><ul class="log" id="log"></ul></div>
+  </section>`;
+  const cv = $('#cv'), mm = $('#mm');
+  RV = { ri, rec, R, cfg, c, favO, spd, acc: 0, last: performance.now(), phase: 'gate', gateT: 0, cam: { x: 8, w: 30 }, flags: {}, lines: [], parts: [], hoofT: 0, endT: null, kiaiUsed: 0, lastLead: null, leadT: 0 };
+  const resize = () => { const dpr = Math.min(2, window.devicePixelRatio || 1); cv.width = cv.clientWidth * dpr; cv.height = cv.clientHeight * dpr; mm.width = mm.clientWidth * dpr; mm.height = mm.clientHeight * dpr; RV.dpr = dpr; };
+  resize(); RV.onResize = resize; window.addEventListener('resize', resize);
+  $('#spdSeg').querySelectorAll('button').forEach(b => b.onclick = () => { RV.spd = +b.dataset.s; try { localStorage.setItem('yonjuhasshun-spd', RV.spd); } catch (e) { } $('#spdSeg').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b)); });
+  $('#bSkip').onclick = () => { if (!RV) return; while (!stepRace(RV.R, 0.05)); finishRace(); };
+  const doKiai = () => {
+    if (!RV || !RV.favO || RV.phase !== 'run') return;
+    if (useKiai(RV.R, RV.favO)) { RV.kiaiUsed++; SND.whip(); updPips(); }
+  };
+  if (favO) { $('#bKiai').onclick = doKiai; }
+  RV.onKey = e => { if (e.code === 'Space') { e.preventDefault(); doKiai(); } };
+  document.addEventListener('keydown', RV.onKey);
+  updPips();
+  // 発走前：ゲートイン → ファンファーレ
+  const fan = SND.fanfare(S.round === 2) || 2.2;
+  RV.gateT = performance.now() + Math.max(2.6, fan + 0.6) * 1000;
+  say(`${rec.label}、${c.name}芝${rec.dist}メートル、馬場は${rec.baba}。${rec.ids.map(id => H(id).name).join('、')}。各馬ゲートに収まりました。`, true, true);
+  RV.raf = requestAnimationFrame(loop);
+}
+function updPips() { if (!RV || !RV.favO) return; const left = RV.R.kiaiLeft; $('#pips').innerHTML = [0, 1, 2].map(i => `<i class="${i < left ? '' : 'used'}"></i>`).join(''); $('#bKiai').disabled = left <= 0 || RV.phase !== 'run'; }
+function say(text, log, force) {
+  if (!RV) return;
+  $('#subT').innerHTML = `<span>${esc(text)}</span>`;
+  if (log !== false) { const li = document.createElement('li'); li.innerHTML = `<em>${RV.phase === 'gate' ? '発走前' : fmtTime(RV.R.t)}</em><span>${esc(text)}</span>`; $('#log').prepend(li); }
+  if (RV.spd <= 2 || force) SND.say(text, RV.spd >= 2 ? 1.4 : 1.2, force);
+}
+function banner(t, sub) { const b = $('#bnBox'); if (!b) return; b.innerHTML = `<div class="hud bn">${esc(t)}${sub ? `<small>${esc(sub)}</small>` : ''}</div>`; }
+const SIM_DT = 0.05;
+function loop(now) {
+  if (!RV) return;
+  const dtReal = Math.min(0.1, (now - RV.last) / 1000); RV.last = now;
+  if (RV.phase === 'gate' && now >= RV.gateT) { RV.phase = 'run'; SND.gate(); banner('スタート'); updPips(); }
+  if (RV.phase === 'run' || RV.phase === 'after') {
+    RV.acc += dtReal * RV.spd;
+    while (RV.acc >= SIM_DT) { RV.acc -= SIM_DT; const all = stepRace(RV.R, SIM_DT); commentate(); if (all && RV.endT == null) RV.endT = RV.R.t; }
+    if (RV.endT != null && RV.R.t > RV.endT + 2.2) { finishRace(); return; }
+    // 蹄の音
+    if (now > RV.hoofT) { const lead = Math.max(...RV.R.horses.map(o => o.v)); if (lead > 3) SND.hoof(Math.min(1, lead / 17)); RV.hoofT = now + (90 + Math.random() * 50) / Math.max(1, RV.spd * 0.8); }
+  }
+  drawRace(dtReal); drawMini(); updHud();
+  RV.raf = requestAnimationFrame(loop);
+}
+function finishRace() {
+  if (!RV) return;
+  const { rec, R, ri, kiaiUsed } = RV;
+  storeResult(rec, R, kiaiUsed);
+  const o = finishOrder(R);
+  const txt = `1着 ${o[0].h.name}、2着 ${o[1].h.name}、着差は${margin(o[1].ft - o[0].ft, R.D / o[1].ft)}。`;
+  SND.say(txt, 1.2, true);
+  stopRaceKeepVoice(); show('result', { ri, live: true });
+}
+function stopRaceKeepVoice() { if (!RV) return; cancelAnimationFrame(RV.raf); window.removeEventListener('resize', RV.onResize); document.removeEventListener('keydown', RV.onKey); SND.quiet(); RV = null; }
+// 実況
+function commentate() {
+  const { R, flags, c } = RV, D = R.D, hs = R.horses, ord = hs.slice().sort((a, b) => b.x - a.x), L = ord[0], rem = D - L.x;
+  const nm = o => o.h.name;
+  if (!flags.start && R.t > 0.6) {
+    flags.start = 1; const late = hs.filter(o => o.slow);
+    say(late.length ? `スタートしました。${late.map(nm).join('と')}は出遅れた！` : 'スタートしました。4頭きれいなスタート。');
+  }
+  for (const e of R.ev.splice(0)) {
+    if (e.k === 'kiai') say(`${nm(e.o)}に気合いが入った！`, true, false);
+    if (e.k === 'kakari' && D - e.o.x > 400) say(`${nm(e.o)}、少し掛かっているか。行きたがっています。`);
+    if (e.k === 'block' && !flags['b' + e.o.waku]) { flags['b' + e.o.waku] = 1; say(`${nm(e.o)}、前が壁！外へ持ち出せるか。`); }
+  }
+  if (!flags.hana && L.x > 220) { flags.hana = 1; say(`ハナを切ったのは${nm(L)}。2番手に${nm(ord[1])}、そのあと${nm(ord[2])}、最後方に${nm(ord[3])}。`); }
+  if (D >= 1600 && !flags.f1000 && L.x >= 1000) { flags.f1000 = 1; const t = R.t - (L.x - 1000) / L.v; R.flags.f1000 = t; say(`先頭は1000メートルを${fmtTime(t)}で通過。${t < 61.5 ? '速い流れです。' : t > 64 ? 'ゆったりした流れ。' : '平均的な流れ。'}`); }
+  if (!flags.c3 && rem < c.straight + 450 && rem > c.straight + 150 && D >= 1400) { flags.c3 = 1; say(`3コーナー。先頭${nm(L)}、${ord.slice(1).map(nm).join('、')}の順。`); }
+  if (!flags.c4 && rem < c.straight) {
+    flags.c4 = 1; banner('最後の直線', `${c.name}の直線は${c.straight}m`);
+    const gap = (L.x - ord[1].x) / 2.4;
+    say(`さあ最後の直線！${c.name}の直線は${c.straight}メートル。先頭は${nm(L)}、${gap < 0.5 ? '後続が並びかける！' : 'リードは' + (gap < 1.5 ? '1馬身' : Math.round(gap) + '馬身') + '。'}`);
+  }
+  if (!flags.slope && c.slope && rem < 300 && rem > 150) { flags.slope = 1; say(c.slope === 2 ? '急坂を駆け上がる！' : '坂を上る！'); }
+  if (!flags.r200 && rem < 200) { flags.r200 = 1; say(`残り200！${nm(L)}、${nm(ord[1])}が追う！`); }
+  // 終盤の先頭交代
+  if (rem < 420 && !L.fin) {
+    if (RV.lastLead && RV.lastLead !== L && R.t - RV.leadT > 1.4) { say(`${nm(L)}が先頭に替わった！`); RV.leadT = R.t; }
+    if (RV.lastLead !== L) RV.lastLead = L;
+  } else if (!L.fin) RV.lastLead = L;
+  for (const o of hs) if (!o['_ex'] && o.hp <= 0 && !o.fin && D - o.x < 800) { o._ex = 1; say(`${nm(o)}は苦しくなった。`); }
+  const fins = hs.filter(o => o.fin).sort((a, b) => a.ft - b.ft);
+  if (fins.length && !flags.goal) {
+    flags.goal = 1; const w = fins[0];
+    banner(w.h.name, '1着でゴールイン');
+    say(`${nm(w)}、ゴールイン！${w.id === S.fav ? 'あなたの推し馬が勝った！' : ''}`, true, true);
+    SND.crowd(1);
+  }
+  if (!flags.goal) SND.crowd(rem < c.straight ? 0.4 + 0.6 * (1 - rem / c.straight) : rem < c.straight + 400 ? 0.3 : 0.15);
+}
+function updHud() {
+  const { R, cfg } = RV, ord = R.horses.slice().sort((a, b) => (a.fin && b.fin) ? a.ft - b.ft : b.x - a.x), L = ord[0];
+  if (RV._hudT && performance.now() - RV._hudT < 120) return; RV._hudT = performance.now();
+  $('#remT').textContent = Math.max(0, Math.ceil((R.D - L.x) / 10) * 10).toLocaleString();
+  $('#ord').innerHTML = ord.map((o, i) => { const gap = i ? (L.x - o.x) / 2.4 : 0;
+    return `<div class="${o.id === S.fav ? 'fv' : ''}"><b>${i + 1}</b>${wakuHtml(o.waku)}<span>${esc(o.h.name)}</span><em>${i ? (o.fin && L.fin ? '' : gap < 0.3 ? '並び' : gap.toFixed(1)) : ''}</em></div>`; }).join('');
+}
+// ---- 描画 ----
+const TURF = { 良: ['#3f8a4a', '#468f50'], 稍重: ['#3a7d44', '#40834a'], 重: ['#35703c', '#3a7641'], 不良: ['#2f6235', '#346839'] };
+function drawRace(dtReal) {
+  const cv = $('#cv'); if (!cv) return;
+  const g = cv.getContext('2d'), dpr = RV.dpr, W = cv.width / dpr, Hh = cv.height / dpr, { R, cam, cfg } = RV, D = R.D;
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const xs = R.horses.map(o => o.x), maxX = Math.max(...xs), minX = Math.min(...xs);
+  const narrow = W < 520, tw = Math.max(narrow ? 14 : 20, Math.min(narrow ? 24 : 46, maxX - minX + (narrow ? 11 : 15)));
+  cam.w += (tw - cam.w) * Math.min(1, dtReal * 2.5);
+  cam.x = (maxX + minX) / 2 + cam.w * 0.06;
+  if (maxX - minX + 8 > cam.w) {   // 全頭が入らないときは先頭と推し馬（いなければ先頭）を追う
+    const f = RV.favO, lo = f && maxX - f.x < cam.w - 8 ? f.x : maxX - cam.w * 0.7; cam.x = Math.max(lo, maxX - cam.w + 6) + cam.w / 2 - 3;
+    if (f && maxX - f.x >= cam.w - 8) cam.x = f.x + cam.w * 0.2;
+  }
+  const ppm = W / cam.w, X = m => W / 2 + (m - cam.x) * ppm;
+  const top = Hh * 0.40, bot = Hh * 0.97, laneY = l => top + (bot - top) * (0.33 + l * 0.14);
+  // 空
+  const bL = BABA.indexOf(cfg.baba);
+  const sky = g.createLinearGradient(0, 0, 0, top);
+  const skies = [['#6fa8d8', '#cfe3ef'], ['#8fb1c8', '#dbe5ea'], ['#8e9aa3', '#c9cfd2'], ['#6c757c', '#a9b0b4']][bL];
+  sky.addColorStop(0, skies[0]); sky.addColorStop(1, skies[1]); g.fillStyle = sky; g.fillRect(0, 0, W, top);
+  // 遠くの山（ゆっくり流れる）
+  const par = (k, w) => (((-cam.x * ppm * k) % w) + w) % w - w;
+  g.fillStyle = bL >= 2 ? '#7e8a86' : '#7c9a8a';
+  for (let ox = par(0.04, 520); ox < W; ox += 520) { g.beginPath(); g.moveTo(ox, top * 0.78); for (let i = 0; i <= 520; i += 26) g.lineTo(ox + i, top * (0.5 + 0.17 * Math.sin(i * Math.PI * 2 / 520 * 2) + 0.07 * Math.sin(i * Math.PI * 2 / 520 * 7 + 1))); g.lineTo(ox + 520, top * 0.78); g.fill(); }
+  // 内馬場（植え込みと池）とターフビジョン
+  g.fillStyle = '#5c9a5a'; g.fillRect(0, top * 0.74, W, top * 0.26);
+  g.fillStyle = '#4a8a4c';
+  for (let ox = par(0.35, 90); ox < W; ox += 90) { g.beginPath(); g.ellipse(ox + 30, top * 0.8, 26, 9, 0, 0, Math.PI * 2); g.fill(); }
+  const visX = W / 2 + (D - 150 - cam.x) * ppm * 0.35;
+  if (visX > -200 && visX < W + 200) { g.fillStyle = '#222'; g.fillRect(visX - 60, top * 0.28, 120, top * 0.42); g.fillStyle = '#0d2a4a'; g.fillRect(visX - 55, top * 0.31, 110, top * 0.34); g.fillStyle = '#fff'; g.font = `700 ${Math.max(10, top * 0.08)}px Oswald, sans-serif`; g.textAlign = 'center'; g.fillText(fmtTime(Math.max(0, R.t)), visX, top * 0.52); g.fillStyle = '#555'; g.fillRect(visX - 4, top * 0.7, 8, top * 0.06); }
+  // 芝：刈り目
+  const tc = TURF[cfg.baba];
+  g.fillStyle = tc[0]; g.fillRect(0, top, W, bot - top + Hh);
+  const sw = 8; const s0 = Math.floor((cam.x - cam.w) / sw) * sw;
+  g.fillStyle = tc[1];
+  for (let m = s0; m < cam.x + cam.w; m += sw * 2) { const a = X(m), b = X(m + sw); g.beginPath(); g.moveTo(a, top); g.lineTo(b, top); g.lineTo(b + (b - W / 2) * 0.25, Hh); g.lineTo(a + (a - W / 2) * 0.25, Hh); g.fill(); }
+  if (bL >= 2) { g.fillStyle = 'rgba(70,50,30,.10)'; g.fillRect(0, top, W, Hh - top); }
+  // 内ラチ
+  g.fillStyle = '#f4f4ef'; g.fillRect(0, top - Hh * 0.035, W, Math.max(2, Hh * 0.008));
+  const p0 = Math.floor((cam.x - cam.w) / 3) * 3;
+  for (let m = p0; m < cam.x + cam.w; m += 3) { const a = X(m); g.fillRect(a - 1, top - Hh * 0.035, 2, Hh * 0.035); }
+  // ハロン棒と決勝線
+  for (let r = 200; r < D; r += 200) {
+    const a = X(D - r); if (a < -40 || a > W + 40) continue;
+    g.fillStyle = '#fff'; g.fillRect(a - 2, top - Hh * 0.14, 4, Hh * 0.14);
+    g.fillStyle = '#c8102e'; g.fillRect(a - 13, top - Hh * 0.17, 26, Hh * 0.05);
+    g.fillStyle = '#fff'; g.font = `600 ${Math.max(10, Hh * 0.032)}px Oswald, sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(r, a, top - Hh * 0.145);
+  }
+  const gx = X(D);
+  if (gx > -60 && gx < W + 60) {
+    g.fillStyle = 'rgba(255,255,255,.75)'; g.fillRect(gx - 1.5, top, 3, bot - top + 10);
+    for (let k = 0; k < 6; k++) { g.fillStyle = k % 2 ? '#fff' : '#c8102e'; g.fillRect(gx - 4, top - Hh * 0.22 + k * Hh * 0.03, 8, Hh * 0.03); }
+    g.fillStyle = '#c8102e'; g.beginPath(); g.arc(gx, top - Hh * 0.25, Hh * 0.04, 0, Math.PI * 2); g.fill(); g.fillStyle = '#fff'; g.font = `700 ${Math.max(9, Hh * 0.028)}px BIZ UDPGothic, sans-serif`; g.textAlign = 'center'; g.fillText('決勝', gx, top - Hh * 0.25);
+  }
+  // ゲート
+  const gtx = X(0.6);
+  if (gtx > -100 && gtx < W + 100) {
+    for (let l = 0; l < 4; l++) { const y = laneY(l), hgt = Hh * 0.2 * (0.9 + l * 0.05); g.fillStyle = '#2f6f4a'; g.fillRect(gtx - 3, y - hgt, 6, hgt); g.fillRect(gtx - 3 - ppm * 2.2, y - hgt, 6, hgt); g.fillRect(gtx - ppm * 2.2, y - hgt, ppm * 2.2, 5); }
+  }
+  // 馬（奥の進路から）
+  const hs = R.horses.slice().sort((a, b) => a.lane - b.lane);
+  for (const o of hs) {
+    const moving = RV.phase === 'run' && R.t >= o.delay;
+    o.gait = (o.gait + (moving ? o.v / 7.2 : 0.4) * dtReal * RV.spd * (moving ? 1 : 0.15)) % 1;
+    const run = moving ? Math.min(1, o.v / 12) : 0.08;
+    const y = laneY(o.lane), persp = 0.9 + o.lane * 0.05, sc = ppm * 2.4 / 100 * persp;
+    const x = X(o.x) - 72 * sc;   // 鼻先がo.xの位置
+    // 芝・泥が舞う
+    if (moving && o.v > 10 && Math.random() < 0.5 * RV.spd && RV.parts.length < 160) RV.parts.push({ x: o.x - 1.4, y: o.lane, vx: -1 - Math.random() * 2, vy: 1.5 + Math.random() * 2, z: 0, life: 0.5 + Math.random() * 0.3, mud: bL >= 2 });
+    const kiai = o.kiaiT && R.t < o.kiaiT;
+    if (kiai) { g.save(); g.globalAlpha = 0.55; g.strokeStyle = '#ffd25a'; g.lineWidth = 2; for (let k = 0; k < 7; k++) { const yy = y - (20 + k * 12) * sc; const len = (40 + Math.random() * 60) * sc; g.beginPath(); g.moveTo(x - 40 * sc - len, yy); g.lineTo(x - 40 * sc, yy); g.stroke(); } g.restore(); }
+    drawHorse(g, x, y, sc, o.gait, run, o.h, o.waku, { push: moving && o.x > o.spurtAt && !o.fin, whip: moving && o.x > o.spurtAt + 80 && !o.fin && o.x < D });
+    // 名札
+    const lx = x + 6 * sc, ly = y - 118 * sc;
+    g.font = `700 ${Math.max(10, Math.min(14, 11 * sc * 1.2 + 4))}px BIZ UDPGothic, sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle';
+    const label = (o.id === S.fav ? '▼ ' : '') + o.h.name, tw2 = g.measureText(label).width + 10;
+    g.fillStyle = o.id === S.fav ? 'rgba(200,16,46,.92)' : 'rgba(0,0,0,.55)'; g.fillRect(lx - tw2 / 2, ly - 9, tw2, 18);
+    g.fillStyle = '#fff'; g.fillText(label, lx, ly + 0.5);
+    if (kiai) { g.fillStyle = '#ffd25a'; g.font = `800 ${Math.max(14, 20 * sc + 6)}px "Shippori Mincho B1", serif`; g.fillText('気合い！', lx, ly - 22); }
+  }
+  // 舞う芝
+  for (let i = RV.parts.length - 1; i >= 0; i--) {
+    const p = RV.parts[i]; if (false) { RV.parts.splice(i, 1); continue; }
+    const dt = dtReal * RV.spd; p.life -= dt; p.x += p.vx * dt; p.z += p.vy * dt; p.vy -= 9 * dt; if (p.life <= 0 || p.z < 0) { RV.parts.splice(i, 1); continue; }
+    g.fillStyle = p.mud ? 'rgba(80,58,36,.8)' : 'rgba(40,90,40,.8)'; g.fillRect(X(p.x), laneY(p.y) - p.z * ppm, 2.5, 2.5);
+  }
+  // 外ラチ（手前）
+  g.fillStyle = '#f4f4ef'; g.fillRect(0, bot - Hh * 0.01, W, Hh * 0.012);
+  for (let m = Math.floor((cam.x - cam.w) / 2) * 2; m < cam.x + cam.w; m += 2) { const a = X(m) + (X(m) - W / 2) * 0.25; g.fillRect(a - 1.5, bot - Hh * 0.05, 3, Hh * 0.05); }
+  // 雨
+  if (bL >= 2) { g.strokeStyle = 'rgba(220,230,240,.35)'; g.lineWidth = 1; g.beginPath(); for (let k = 0; k < (bL === 3 ? 90 : 45); k++) { const rx = (k * 97.3 + performance.now() * 0.9) % W, ry = (k * 53.7 + performance.now() * 1.3) % Hh; g.moveTo(rx, ry); g.lineTo(rx - 3, ry + 12); } g.stroke(); }
+}
+function drawMini() {
+  const mm = $('#mm'); if (!mm) return;
+  const g = mm.getContext('2d'), dpr = RV.dpr, W = mm.width / dpr, Hh = mm.height / dpr, { R, c } = RV;
+  g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, Hh);
+  // 楕円コース：直線2本＋半円2つ
+  const lap = c.lap, r = Hh * 0.36, cx = W / 2, cy = Hh / 2;
+  const straightPx = W - 2 * r - 16, sLen = c.straight, curveLen = (lap - 2 * sLen) / 2;
+  const left = c.turn === '右';   // 時計回り（右回り）は決勝線が手前の直線の左端
+  // s：決勝線から逆向きに測った距離 → 座標
+  function pos(s) {
+    s = ((s % lap) + lap) % lap; // 0 = 決勝線, 走る向きに増える
+    // 決勝線は手前の直線の端（左回りなら左端、右回りなら右端）。走る向き：手前直線を決勝線へ
+    let d = s, x, y;
+    const segs = [sLen, curveLen, sLen, curveLen];
+    const xL = cx - straightPx / 2, xR = cx + straightPx / 2;
+    if (d < segs[0] * 0) { }
+    // 決勝線から：1コーナー→向こう正面→3・4コーナー→最後の直線
+    if (d < curveLen) { const a = d / curveLen * Math.PI; x = left ? xL - Math.sin(a) * r : xR + Math.sin(a) * r; y = cy + Math.cos(a) * r; return [left ? x : x, y]; }
+    d -= curveLen;
+    if (d < sLen) { const k = d / sLen; x = left ? xL + k * straightPx : xR - k * straightPx; return [x, cy - r]; }
+    d -= sLen;
+    if (d < curveLen) { const a = d / curveLen * Math.PI; x = left ? xR + Math.sin(a) * r : xL - Math.sin(a) * r; y = cy - Math.cos(a) * r; return [x, y]; }
+    d -= curveLen;
+    const k = d / sLen; x = left ? xR - k * straightPx : xL + k * straightPx; return [x, cy + r];
+  }
+  g.strokeStyle = 'rgba(255,255,255,.55)'; g.lineWidth = Math.max(3, Hh * 0.07); g.beginPath();
+  for (let s = 0; s <= lap; s += lap / 80) { const [x, y] = pos(s); s ? g.lineTo(x, y) : g.moveTo(x, y); } g.closePath(); g.stroke();
+  const [fx, fy] = pos(0); g.fillStyle = '#c8102e'; g.fillRect(fx - 1.5, fy - 6, 3, 12);
+  const startS = lap - (R.D % lap);
+  for (const o of R.horses.slice().sort((a, b) => a.x - b.x)) {
+    const [x, y] = pos(startS + Math.min(o.x, R.D));
+    g.fillStyle = WAKU_COL[o.waku - 1]; g.strokeStyle = o.id === S.fav ? '#ffd25a' : '#000'; g.lineWidth = o.id === S.fav ? 2 : 1;
+    g.beginPath(); g.arc(x, y, Math.max(3.5, Hh * 0.07), 0, Math.PI * 2); g.fill(); g.stroke();
+  }
+}
+
+/* ===================== 結果 ===================== */
+function viewResult(m, arg) {
+  const rec = curRound().races[arg.ri], res = rec.res, c = COURSES[rec.ci];
+  const w = H(res.order[0]), favWon = res.order[0] === S.fav, favRan = favIn(rec);
+  const lastRace = roundDone();
+  m.innerHTML = `
+  <section class="win1" style="padding-top:14px">
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <p class="kick">${esc(rec.label)}・${esc(courseLine(rec))}・${rec.baba}</p>
+      <div class="big">${esc(w.name)}</div>
+      <p>${esc(prefName(w))}代表が1着。${S.round === 2 ? '<b>日本一に輝きました。</b>' : '次のラウンドへ進みます。'}</p>
+      ${favRan ? `<p>${favWon ? '<span class="stamp">推し馬 勝利</span>' : `<span class="small">推し馬 ${esc(H(S.fav).name)} は ${res.order.indexOf(S.fav) + 1}着。</span>`}${res.kiai ? ` <span class="small muted">気合い ${res.kiai}回</span>` : ''}</p>` : ''}
+    </div>
+    <canvas class="portrait" id="por"></canvas>
+  </section>
+  <div class="tw res" style="margin-top:12px"><table>
+    <thead><tr><th>着</th><th>枠</th><th>馬名</th><th>タイム</th><th>着差</th><th>上がり3F</th><th>脚質</th><th>人気</th></tr></thead>
+    <tbody>${res.order.map((id, k) => { const h = H(id), l3s = res.l3.filter(x => x != null), best = Math.min(...l3s);
+      return `<tr class="${k ? '' : 'r1'}${id === S.fav ? ' me' : ''}"><td class="num" style="font-size:18px">${k + 1}</td><td>${wakuHtml(rec.ids.indexOf(id) + 1)}</td>
+      <td class="l"><span class="hn">${esc(h.name)}</span><small>${esc(prefName(h))}</small></td><td class="num">${fmtTime(res.ft[k])}</td><td>${k ? res.mg[k] : ''}</td>
+      <td class="num" style="${res.l3[k] === best ? 'color:var(--red);font-weight:600' : ''}">${res.l3[k] != null ? res.l3[k].toFixed(1) : '—'}</td><td>${STYLE_NAME[h.style]}</td><td>${rec.pop ? rec.pop.indexOf(id) + 1 : '—'}</td></tr>`; }).join('')}</tbody>
+  </table></div>
+  <p class="small muted">${res.f1000 ? `前半1000m通過 ${fmtTime(res.f1000)}。` : ''}上がり3Fは最後の600mのタイム（赤字がメンバー最速）。1馬身は約2.4m。</p>
+  <div class="btns"><button class="btn red" id="bBack">${lastRace ? (S.round === 2 ? '表彰式へ' : '組み合わせに戻る（全レース終了）') : '組み合わせに戻る'}</button></div>`;
+  portrait(w, $('#por'), rec.ids.indexOf(w.id) + 1);
+  $('#bBack').onclick = () => { if (lastRace && S.round === 2) { advance(); show('champ'); } else show('hub'); };
+}
+
+/* ===================== 表彰 ===================== */
+function viewChamp(m) {
+  const w = H(S.champ), path = S.rounds.map((r, i) => { const rec = r.races.find(x => x.res && x.res.order[0] === S.champ); return rec ? { i, rec } : null; }).filter(Boolean);
+  m.innerHTML = `
+  <section class="champ">
+    <p class="kick">四十八駿杯 優勝</p>
+    <div class="big">${esc(w.name)}</div>
+    <p>${esc(prefName(w))}代表・${esc(w.title)}</p>
+    <canvas class="portrait" id="por" style="max-width:520px"></canvas>
+    <p>${S.champ === S.fav ? '<span class="stamp">推し馬が日本一</span>' : `あなたの推し馬：${S.favLog.map(id => esc(H(id).name)).join(' → ')}`}</p>
+    <div class="path">${path.map(p => `<div><b>${ROUND_NAME[p.i]}</b><span>${esc(courseLine(p.rec))}・${p.rec.baba}</span><span class="num">${fmtTime(p.rec.res.ft[0])}</span></div>`).join('')}</div>
+    <div class="btns" style="justify-content:center"><button class="btn red" id="bAgain">新しい大会を始める</button><button class="btn ghost" id="bBook2">名鑑を見る</button></div>
+  </section>`;
+  portrait(w, $('#por'), 1);
+  SND.fanfare(true);
+  $('#bAgain').onclick = () => { S = null; try { localStorage.removeItem(SAVE); } catch (e) { } show('pick'); };
+  $('#bBook2').onclick = () => show('book');
+}
+
+/* ===================== 名鑑・能力の検証 ===================== */
+function viewBook(m) {
+  let reg = REGIONS[0], sel = null, simRes = null;
+  const all = HORSES.filter(h => !h.seed), east = ['北海道・東北', '関東', '中部'];
+  const oldT = h => h.old ? h.old.reduce((a, b) => a + b, 0) : h.total;
+  const avg = (a, f) => (a.reduce((s, h) => s + f(h), 0) / a.length).toFixed(1);
+  const E = all.filter(h => east.includes(regionOf(h))), Wt = all.filter(h => !east.includes(regionOf(h)));
+  const amex = H(AMEX), tosa = HORSES.find(h => h.name === 'トサネイチャー');
+  const cnt = f => { const c = {}; all.forEach(h => c[f(h)] = (c[f(h)] || 0) + 1); return c; };
+  const cO = cnt(oldT), cN = cnt(h => h.total), keys = []; for (let t = 408; t <= 424; t++) keys.push(t);
+  const mx = Math.max(...keys.map(k => Math.max(cO[k] || 0, cN[k] || 0)));
+  const changed = HORSES.filter(h => h.old);
+  m.innerHTML = `
+  <section style="padding-top:14px;display:flex;flex-direction:column;gap:6px">
+    <h2 class="hd">名鑑と能力の検証<small>48頭＋招待馬の能力・距離適性・脚質・重馬場適性。能力表を見直した結果と、その理由。</small></h2>
+  </section>
+  <section class="grid2" style="margin-top:12px">
+    <div class="sheet" style="display:flex;flex-direction:column;gap:10px">
+      <h3 class="sub">能力表の見直し</h3>
+      <ul class="small" style="margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:4px">
+        <li><b>合計の計算</b>：49頭すべてを計算し直しました。表に書かれた合計と5能力の和は全頭一致しており、計算の誤りは見つかりませんでした。</li>
+        <li><b>416点への集中</b>：25頭が416点ちょうどで、近畿より西の24頭はアキミヤジマ以外ほぼ全頭が416点でした。</li>
+        <li><b>東西の差</b>：東日本（北海道〜中部）24頭の平均 ${avg(E, oldT)}点に対し、西日本24頭は ${avg(Wt, oldT)}点。調整後は ${avg(E, h => h.total)}点 と ${avg(Wt, h => h.total)}点です。</li>
+        <li><b>上限超え</b>：トサネイチャーとアメリカンエクスプレスが424点で、方針の410〜420点を超えていました。</li>
+      </ul>
+      <div class="legend"><span><i style="background:var(--rule)"></i>調整前</span><span><i style="background:var(--ink)"></i>調整後</span><span>（48頭の合計点の分布）</span></div>
+      <div class="hist">${keys.map(k => `<div><b>${cO[k] || cN[k] ? '' : ''}</b><i class="old" style="height:${(cO[k] || 0) / mx * 100}%" title="調整前 ${k}点 ${cO[k] || 0}頭"></i></div><div><i style="height:${(cN[k] || 0) / mx * 100}%" title="調整後 ${k}点 ${cN[k] || 0}頭"></i></div>`).join('')}</div>
+      <div class="histx">${keys.map(k => `<span>${k % 2 ? '' : k}</span><span></span>`).join('')}</div>
+      <p class="small muted">416点の山（25頭）を、408〜420点に散らしました。変えたのは${changed.length}頭で、1頭あたりの変更はほぼ2〜6点。各馬の一番の武器（○○96 など）は残しています。</p>
+    </div>
+    <div class="sheet" style="display:flex;flex-direction:column;gap:10px">
+      <h3 class="sub">勝率の検証</h3>
+      <p class="small">ランダムな4頭・ランダムな競馬場、距離、馬場でレースを繰り返し、各馬の1着率を出します。平均は25%です。合計点だけで勝敗が決まっていないか、特定の脚質ばかり勝っていないかを確かめられます。</p>
+      <div class="btns"><button class="btn" id="bSim">2000レースで試す</button><span class="small muted" id="simP"></span></div>
+      <div id="simOut"></div>
+    </div>
+  </section>
+  <section class="sheet" style="margin-top:12px"><h3 class="sub">調整した馬</h3>
+    <div class="tw"><table class="chg"><thead><tr><th>馬名</th><th>速</th><th>持</th><th>力</th><th>根</th><th>賢</th><th>合計</th><th>理由</th></tr></thead><tbody>
+    ${changed.map(h => `<tr><td class="l"><b>${esc(h.name)}</b><br><small class="muted">${esc(prefName(h))}</small></td>${STAT_KEYS.map(([k], i) => { const o = h.old[i], v = h.s[k]; return `<td class="num">${o === v ? v : `${o}→<span class="${v > o ? 'up' : 'dn'}">${v}</span>`}</td>`; }).join('')}<td class="num">${oldT(h)}→${h.total}</td><td class="why">${esc(h.why)}</td></tr>`).join('')}
+    </tbody></table></div>
+    <p class="small muted" style="margin-top:8px">名前の重なり（アイヅ／ムサシの「クロニクル」、エド／デジマの「ファントム」）は、命名方針の確認が必要なため変えていません。</p>
+  </section>
+  <section style="margin-top:12px;display:flex;flex-direction:column;gap:10px">
+    <div class="regs" id="bregs"></div>
+    <div class="pick"><div class="hgrid" id="bgrid"></div><div class="sheet" id="bdet"></div></div>
+  </section>`;
+  function draw() {
+    $('#bregs').innerHTML = [...REGIONS, '招待'].map(r => `<button class="nb" data-r="${r}" aria-pressed="${r === reg}">${r}</button>`).join('');
+    const list = HORSES.filter(h => regionOf(h) === reg);
+    if (sel == null || !list.some(h => h.id === sel)) sel = list[0].id;
+    $('#bgrid').innerHTML = list.map(h => horseCard(h, h.id === sel)).join('');
+    $('#bdet').innerHTML = detailHtml(H(sel), false); portrait(H(sel), $('#por'));
+    $('#bregs').querySelectorAll('button').forEach(b => b.onclick = () => { reg = b.dataset.r; sel = null; draw(); });
+    $('#bgrid').querySelectorAll('.hc').forEach(b => b.onclick = () => { sel = +b.dataset.h; draw(); if (window.innerWidth < 820) $('#bdet').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+  }
+  draw();
+  $('#bSim').onclick = () => {
+    const b = $('#bSim'); b.disabled = true; const N = 2000; let n = 0; const wins = {}, runs = {}, sw = {}, sr = {};
+    const step = () => {
+      if (VIEW !== 'book') return;
+      for (let k = 0; k < 50 && n < N; k++, n++) {
+        const pool = ENTRANTS.slice(), ids = []; for (let j = 0; j < 4; j++) ids.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+        const c = pick(COURSES), R = runHeadless({ course: c, dist: pick(c.dists), baba: rollBaba(), ids, conds: ids.map(() => rollCond(Math.random)) }), w = finishOrder(R)[0];
+        ids.forEach(id => { runs[id] = (runs[id] || 0) + 1; const st = H(id).style; sr[st] = (sr[st] || 0) + 1; });
+        wins[w.id] = (wins[w.id] || 0) + 1; sw[w.h.style] = (sw[w.h.style] || 0) + 1;
+      }
+      $('#simP').textContent = `${n} / ${N}`;
+      if (n < N) return setTimeout(step, 0);
+      b.disabled = false;
+      const rows = ENTRANTS.map(id => [id, (wins[id] || 0) / (runs[id] || 1)]).sort((a, b) => b[1] - a[1]);
+      const xs = rows.map(r => H(r[0]).total), ys = rows.map(r => r[1]), mx2 = xs.reduce((a, b) => a + b) / xs.length, my = ys.reduce((a, b) => a + b) / ys.length;
+      let sxy = 0, sxx = 0, syy = 0; xs.forEach((x, i) => { sxy += (x - mx2) * (ys[i] - my); sxx += (x - mx2) ** 2; syy += (ys[i] - my) ** 2; });
+      $('#simOut').innerHTML = `<p class="small">脚質別の1着率：${['逃', '先', '差', '追'].map(s => `${STYLE_NAME[s]} <b class="num">${(100 * (sw[s] || 0) / (sr[s] || 1)).toFixed(0)}%</b>`).join('　')}<br>合計点と勝率の相関：<b class="num">${(sxy / Math.sqrt(sxx * syy)).toFixed(2)}</b>（1に近いほど合計点で決まる）</p>
+      <div class="wr" style="margin-top:8px;max-height:320px;overflow-y:auto">${rows.map(([id, r]) => `<span>${esc(H(id).name)}</span><span class="bar"><i style="width:${Math.min(100, r * 200)}%"></i><s style="left:50%"></s></span><b class="num">${(r * 100).toFixed(0)}%</b>`).join('')}</div>
+      <p class="small muted" style="margin-top:6px">金の線が平均の25%。1頭あたり約170戦なので、数%の差は運の範囲です。</p>`;
+    };
+    step();
+  };
+}
+
+/* ===================== 起動 ===================== */
+(function boot() {
+  const sv = load(); if (sv && sv.rounds) S = sv;
+  show('title');
+})();
+</script>
