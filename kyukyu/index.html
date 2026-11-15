@@ -1,0 +1,1769 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>その瞬間、あなたは ― 救急対応ストーリーゲーム（試作版）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fdf6ec;--card:#ffffff;--ink:#3a3330;--mute:#8a807a;--line:#eadfd2;--acc:#ff6b5b;--acc2:#ffa94d;--teal:#25b0a0;--blue:#4c8fe0;--good:#3fb57a;--ok:#f0a92e;--bad:#ff6b5b}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'M PLUS Rounded 1c',system-ui,sans-serif;font-size:16px;overscroll-behavior:none}
+button{font:inherit;color:inherit;cursor:pointer}
+.screen{display:none;min-height:100dvh;flex-direction:column;max-width:760px;margin:0 auto;padding:calc(14px + env(safe-area-inset-top)) 16px calc(20px + env(safe-area-inset-bottom))}
+.screen.on{display:flex}
+h1,h2,h3{margin:0;font-weight:800}
+.btn{background:var(--card);border:2px solid var(--line);border-radius:16px;padding:13px 16px;font-size:15.5px;text-align:left;width:100%;line-height:1.6;box-shadow:0 3px 0 var(--line)}
+.btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--line)}
+.btn.primary{background:var(--acc);border-color:#e85445;color:#fff;text-align:center;font-weight:800;box-shadow:0 4px 0 #d94436}
+.btn.ghost{background:transparent;border-color:transparent;box-shadow:none;text-align:center;color:var(--mute)}
+.mute{color:var(--mute)} .small{font-size:13px}
+/* ---- title ---- */
+#title{justify-content:center;gap:16px}
+#title .logo{background:linear-gradient(135deg,#ff8a6b,#ffb35c);color:#fff;border-radius:28px;padding:26px 22px;box-shadow:0 8px 0 #f08a5a}
+#title .kicker{font-size:12px;letter-spacing:.25em;font-weight:800;opacity:.9}
+#title h1{font-size:40px;line-height:1.25;margin-top:6px}
+#title .lead{font-size:16px;line-height:1.9;margin-top:10px}
+.ecg{width:100%;height:40px;margin-top:8px}
+.ecg path{stroke:#fff;stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:520;stroke-dashoffset:520;animation:ecg 2.4s linear infinite}
+@keyframes ecg{to{stroke-dashoffset:-520}}
+.me-card{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:14px;display:flex;gap:12px;align-items:center}
+.me-card svg{flex:none}
+/* ---- menu ---- */
+#menu{gap:12px}
+.cases{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.case{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:0;text-align:left;overflow:hidden;box-shadow:0 4px 0 var(--line);display:flex;flex-direction:column}
+.case:active{transform:translateY(2px)}
+.case .thumb{height:96px;display:block;width:100%}
+.case .body{padding:10px 12px 12px}
+.case .no{font-size:11px;color:var(--acc);font-weight:800;letter-spacing:.1em}
+.case h3{font-size:18px;margin:2px 0 4px}
+.case p{margin:0;font-size:13px;line-height:1.65;color:#5f5650}
+.tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+.tag{font-size:11px;border-radius:99px;padding:2px 8px;background:#f4ece2;color:#7a6c60;font-weight:700}
+.tag.st{background:#ffe7dc;color:#d4563f}
+.badge{float:right;font-weight:800;font-size:20px;line-height:1}
+.badge.S{color:#e7b416}.badge.A{color:var(--good)}.badge.B{color:var(--blue)}.badge.C{color:var(--mute)}
+/* ---- play ---- */
+#play{padding:0;max-width:760px;height:100dvh;min-height:0;overflow:hidden;position:relative;user-select:none;-webkit-user-select:none}
+.stage{position:relative;flex:none;height:calc(min(62.5vw,475px,52vh) + env(safe-area-inset-top));padding-top:env(safe-area-inset-top);overflow:hidden;background:#cfe6f5}
+.stage svg.sc{top:env(safe-area-inset-top)!important;height:calc(100% - env(safe-area-inset-top))!important}
+.stage svg.sc{position:absolute;inset:0;width:100%;height:100%;display:block}
+.hud{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:flex-start;padding:calc(10px + env(safe-area-inset-top)) 12px 0;z-index:6;pointer-events:none}
+.pill{background:#ffffffe6;border-radius:99px;padding:5px 12px;font-size:12px;font-weight:700;box-shadow:0 2px 6px #0001}
+.pill b{color:var(--acc)}
+.clock{background:#ffffffe6;border-radius:14px;padding:4px 10px;text-align:right;box-shadow:0 2px 6px #0001;font-weight:800;font-size:20px;font-variant-numeric:tabular-nums;line-height:1.1}
+.clock small{display:block;font-size:10px;color:var(--mute);font-weight:700}
+.clock.tick{animation:tick .6s}
+@keyframes tick{0%{transform:scale(1.15);color:var(--acc)}100%{transform:none}}
+.topbtns{position:absolute;top:calc(52px + env(safe-area-inset-top));right:12px;z-index:7;display:flex;gap:6px}
+.topbtns button{background:#ffffffd0;border:none;border-radius:99px;width:34px;height:34px;font-size:15px;box-shadow:0 2px 6px #0001}
+/* FX overlays */
+.fxl{position:absolute;inset:0;pointer-events:none;z-index:4;opacity:0;transition:opacity .8s}
+#fxRed{background:radial-gradient(ellipse at center,transparent 45%,#ff3b2f66 100%);animation:pulse 1.6s infinite}
+@keyframes pulse{50%{filter:brightness(1.4)}}
+#fxSmoke{background:linear-gradient(0deg,#7d7d7d00,#6d6a6acc 70%)}
+#fxSmoke:before,#fxSmoke:after{content:'';position:absolute;left:-20%;right:-20%;height:60%;top:10%;background:radial-gradient(circle at 30% 50%,#8888 0,transparent 40%),radial-gradient(circle at 70% 40%,#7779 0,transparent 45%);animation:drift 6s linear infinite}
+#fxSmoke:after{top:30%;animation-duration:9s;animation-direction:reverse}
+@keyframes drift{from{transform:translateX(-8%)}to{transform:translateX(8%)}}
+#fxHaze{background:#f3f0b866;backdrop-filter:blur(1.2px)}
+#fxDim{background:#1b1e2ab0}
+#fxNight{background:#1c2a5a55}
+#fxSiren{background:linear-gradient(90deg,#ff3b3b55,transparent 40%,transparent 60%,#3b6bff55);animation:siren .7s steps(2) infinite}
+@keyframes siren{50%{background:linear-gradient(90deg,#3b6bff55,transparent 40%,transparent 60%,#ff3b3b55)}}
+#fxFlash{background:#fff}
+.fxl.on{opacity:1}
+.stage.shake{animation:shake .45s}
+.stage.quake{animation:shake .3s 6}
+@keyframes shake{0%,100%{transform:none}20%{transform:translate(-6px,2px)}40%{transform:translate(5px,-3px)}60%{transform:translate(-4px,3px)}80%{transform:translate(3px,-2px)}}
+/* actors */
+.actor{transition:opacity .5s}
+.actor .bd{transform-box:fill-box;transform-origin:50% 100%;transition:transform .7s cubic-bezier(.5,1.6,.6,1)}
+.actor.idle .bob{animation:bob 2.6s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 100%}
+@keyframes bob{50%{transform:translateY(-1.5px) scaleY(1.01)}}
+.actor[data-p="sit"] .bd{transform:translateY(14%) scaleY(.82)}
+.actor[data-p="slump"] .bd{transform:translateY(14%) scaleY(.8) rotate(-9deg)}
+.actor[data-p="crouch"] .bd{transform:scaleY(.68) rotate(6deg)}
+.actor[data-p="down"] .bd{transform:rotate(-88deg) translateX(-8%)}
+.actor[data-p="downr"] .bd{transform:rotate(88deg) translateX(8%)}
+.actor[data-p="lean"] .bd{transform:rotate(-8deg)}
+.actor[data-p="float"] .bd{animation:floaty 1.4s ease-in-out infinite}
+@keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(10%)}}
+.actor .arm{transform-box:fill-box;transform-origin:50% 8%;transition:transform .5s}
+.actor[data-arm="neck"] .arm.l{transform:rotate(150deg) translate(0,-2px)}
+.actor[data-arm="neck"] .arm.r{transform:rotate(-150deg) translate(0,-2px)}
+.actor[data-arm="chest"] .arm.r{transform:rotate(-125deg)}
+.actor[data-arm="up"] .arm.l{transform:rotate(165deg)} .actor[data-arm="up"] .arm.r{transform:rotate(-165deg)}
+.actor[data-arm="wave"] .arm.r{animation:wave .6s infinite alternate}
+@keyframes wave{from{transform:rotate(-150deg)}to{transform:rotate(-175deg)}}
+.actor .fc{display:none}
+.actor[data-f="normal"] .fc.normal,.actor[data-f="smile"] .fc.smile,.actor[data-f="pain"] .fc.pain,.actor[data-f="weak"] .fc.weak,.actor[data-f="closed"] .fc.closed,.actor[data-f="shock"] .fc.shock,.actor[data-f="droop"] .fc.droop,.actor[data-f="cry"] .fc.cry{display:inline}
+.actor .tint{opacity:0;transition:opacity .8s}
+.actor[data-t="pale"] .tint{opacity:.55;fill:#e6eef2}
+.actor[data-t="red"] .tint{opacity:.45;fill:#ff5a4a}
+.actor[data-t="blue"] .tint{opacity:.5;fill:#8a7fd6}
+.emote{animation:pop .35s cubic-bezier(.4,2,.6,1)}
+@keyframes pop{from{transform:scale(0)}to{transform:scale(1)}}
+.emote{transform-box:fill-box;transform-origin:50% 100%}
+.snowfx circle{animation:fall linear infinite}
+@keyframes fall{from{transform:translateY(-20px)}to{transform:translateY(270px)}}
+.wave{animation:wv 3s ease-in-out infinite}
+@keyframes wv{50%{transform:translateX(-12px)}}
+/* dialog box */
+.box{position:relative;flex:1 1 auto;overflow:visible;background:var(--card);border-top:3px solid #ffd7c4;padding:14px 18px calc(16px + env(safe-area-inset-bottom));min-height:150px;cursor:pointer;z-index:5}
+.name{position:absolute;top:-17px;left:16px;background:var(--acc);color:#fff;border-radius:99px;padding:3px 14px;font-weight:800;font-size:14px;box-shadow:0 3px 0 #d94436}
+.name.voice{background:var(--blue);box-shadow:0 3px 0 #3a73b8}
+.name.sys{background:var(--acc2);box-shadow:0 3px 0 #e0892a}
+.txt{font-size:17.5px;line-height:1.85;min-height:3.6em;white-space:pre-wrap;max-height:calc(100dvh - min(62.5vw,475px,52vh) - 90px);overflow:auto}
+.name{z-index:6}
+.spoil{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mute);background:var(--card);border:2px solid var(--line);border-radius:12px;padding:8px 12px}
+.spoil input{width:18px;height:18px;accent-color:var(--acc)}
+.txt.narr{color:#4e4540}
+.txt.sys{font-size:14.5px;color:#a2622a}
+.next{position:absolute;right:16px;bottom:calc(10px + env(safe-area-inset-bottom));color:var(--acc);font-size:14px;animation:nb 1s infinite}
+@keyframes nb{50%{transform:translateY(3px)}}
+/* choice sheet */
+.sheet{position:absolute;left:0;right:0;bottom:0;top:calc(min(62.5vw,475px,52vh) + env(safe-area-inset-top));overflow:auto;background:var(--card);border-radius:22px 22px 0 0;box-shadow:0 -6px 20px #0002;padding:14px 14px calc(16px + env(safe-area-inset-bottom));z-index:8;transform:translateY(105%);transition:transform .35s cubic-bezier(.3,1.3,.5,1)}
+.sheet.on{transform:none}
+.sheet .q{font-weight:800;font-size:17px;margin:2px 4px 10px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 2px 10px}
+.chip{background:#eef6ff;color:#2d5f9a;border-radius:10px;padding:4px 9px;font-size:12.5px;line-height:1.5}
+.chip b{color:#6a8bb3;font-weight:700;margin-right:4px}
+.choices{display:flex;flex-direction:column;gap:9px}
+.timer{height:8px;background:#f2e8de;border-radius:99px;overflow:hidden;margin:0 2px 10px;display:none}
+.timer.on{display:block}
+.timer i{display:block;height:100%;background:linear-gradient(90deg,var(--acc),var(--acc2));width:100%}
+.sheet .peek{font-size:12px;color:var(--mute);text-align:center;margin-top:10px}
+/* cpr */
+.cpr{display:flex;flex-direction:column;align-items:center;gap:10px}
+.pad{width:170px;height:170px;border-radius:50%;background:radial-gradient(circle,#ffe1d9,#ffb4a3);border:5px solid var(--acc);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:22px;color:#c23f30;touch-action:manipulation;position:relative}
+.pad.hit{transform:scale(.92)}
+.pad .guide{position:absolute;inset:-14px;border-radius:50%;border:3px solid #ff6b5b88;opacity:0}
+.pad .guide.go{animation:beat .545s infinite}
+@keyframes beat{0%{opacity:1;transform:scale(1)}70%{opacity:0;transform:scale(1.15)}100%{opacity:0}}
+.bpm{font-size:36px;font-weight:800;font-variant-numeric:tabular-nums}
+.bpm.in{color:var(--good)}.bpm.out{color:var(--ok)}
+.meter{width:100%;max-width:320px;height:12px;background:#f2e8de;border-radius:99px;position:relative;overflow:hidden}
+.meter .band{position:absolute;top:0;bottom:0;background:#bfe9cf}
+.meter .needle{position:absolute;top:-2px;bottom:-2px;width:5px;background:var(--ink);border-radius:3px;transition:left .15s}
+/* result / debrief */
+#out,#deb{gap:14px}
+.res-card{background:var(--card);border:2px solid var(--line);border-radius:22px;padding:18px;box-shadow:0 5px 0 var(--line)}
+.grade{font-size:72px;font-weight:800;line-height:1}
+.grade.S{color:#e7b416}.grade.A{color:var(--good)}.grade.B{color:var(--blue)}.grade.C{color:var(--mute)}.grade.X{color:var(--acc);font-size:46px}
+.rv{background:var(--card);border:2px solid var(--line);border-radius:16px;padding:12px 14px;font-size:14px;line-height:1.75}
+.rv .h{display:flex;gap:10px;align-items:flex-start;font-weight:800;margin-bottom:4px}
+.mk{flex:none;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;font-weight:800}
+.mk.best{background:var(--good)}.mk.ok{background:var(--ok)}.mk.bad{background:var(--bad)}.mk.fatal{background:#3a3330}
+.rv .you{color:var(--blue);font-weight:700}
+.rv .bt{margin-top:8px;padding-top:8px;border-top:2px dashed var(--line);color:#2f7a52}
+.sec{background:var(--card);border:2px solid var(--line);border-radius:16px;padding:14px 16px;line-height:1.85;font-size:15px}
+.sec h3{font-size:16px;margin-bottom:6px;color:#d4563f}
+.sec ul{margin:0;padding-left:1.2em}
+.sec p{margin:0}
+details.deep{background:#eef5ff;border:2px solid #d3e3f7;border-radius:16px;padding:2px 16px;font-size:14px;line-height:1.85}
+details.deep summary{padding:10px 0;font-weight:800;color:#2d5f9a;cursor:pointer}
+.disc{font-size:12px;color:var(--mute);line-height:1.7;border-top:2px solid var(--line);padding-top:12px}
+.row{display:flex;gap:10px}
+</style>
+</head>
+<body>
+
+<section id="title" class="screen on">
+  <div class="logo">
+    <div class="kicker">EMERGENCY STORY GAME ・ 試作版</div>
+    <h1>その瞬間、<br>あなたは。</h1>
+    <svg class="ecg" viewBox="0 0 400 40" preserveAspectRatio="none"><path d="M0 20 H120 L132 20 L142 4 L152 36 L160 14 L168 20 H260 L272 20 L280 8 L288 30 L295 20 H400"/></svg>
+    <div class="lead">もし目の前で、大切な人が倒れたら。<br>あなたは、正しい行動ができるだろうか。</div>
+  </div>
+  <div class="me-card"><svg id="meSvg" width="64" height="80" viewBox="-32 -96 64 100"></svg><div><b>あなたは 春日康太（17歳）</b><div class="small mute" style="line-height:1.7;margin-top:2px">高校2年、バスケ部。祖父母・両親・妹の美咲（15）・弟の陽（3）と暮らしている。医師ではない、ふつうの高校生だ。</div></div></div>
+  <button class="btn primary" id="toMenu">はじめる</button>
+  <div class="small mute" style="text-align:center">音が出ます（右上のボタンで切り替え）</div>
+</section>
+
+<section id="menu" class="screen">
+  <div class="row" style="justify-content:space-between;align-items:center"><h2 style="font-size:24px">症例</h2><button class="btn ghost small" id="snd2" style="width:auto;padding:4px 8px">🔊</button></div>
+  <div class="small mute">どの症例からでも始められます。判断次第で、結末が変わります。</div>
+  <label class="spoil"><input type="checkbox" id="spoilOn"> ネタバレ表示（テーマ・ゲームの仕組みを一覧に出す。クリアした症例は常に表示）</label>
+  <div class="cases" id="cases"></div>
+  <div class="disc">このゲームは教育を目的としたフィクションです。登場人物は架空です。「見えない霧」「煙の向こう」「瓦礫の下」は、過去の事件・災害の教訓を参考にした架空の出来事です。実際に緊急事態が起きたら迷わず119番へ（海の事故は118番も）。救急車を呼ぶか迷う時は地域の救急相談（#7119。実施地域は限られます）、子どもは#8000も利用できます。</div>
+</section>
+
+<section id="play" class="screen">
+  <div class="stage" id="stage">
+    <svg class="sc" id="sc" viewBox="0 0 400 250" preserveAspectRatio="xMidYMax slice"></svg>
+    <div class="fxl" id="fxNight"></div><div class="fxl" id="fxHaze"></div><div class="fxl" id="fxSmoke"></div><div class="fxl" id="fxRed"></div><div class="fxl" id="fxSiren"></div><div class="fxl" id="fxDim"></div><div class="fxl" id="fxFlash"></div>
+    <div class="hud"><div class="pill">CASE <b id="hudNo"></b>　<span id="hudTitle"></span></div><div class="clock" id="clock"><small id="day"></small><span id="hm">--:--</span></div></div>
+    <div class="topbtns"><button id="snd" title="音">🔊</button><button id="quit" title="一覧へ">✕</button></div>
+  </div>
+  <div class="box" id="box"><div class="name" id="name" style="display:none"></div><div class="txt" id="txt"></div><div class="next" id="nextI">▼</div></div>
+  <div class="sheet" id="sheet">
+    <div class="timer" id="timer"><i id="timerBar"></i></div>
+    <div class="chips" id="chips"></div>
+    <div class="q" id="q"></div>
+    <div class="choices" id="choices"></div>
+    <div id="cpr" class="cpr" style="display:none">
+      <div class="small" id="cprMsg" style="text-align:center;line-height:1.7">胸の真ん中を押すつもりで、円をテンポよくタップ。<br>最初のタップから10秒間。</div>
+      <div class="bpm" id="bpm">--</div>
+      <div class="meter"><div class="band" id="band"></div><div class="needle" id="needle"></div></div>
+      <div class="pad" id="pad"><div class="guide" id="guide"></div>押す</div>
+      <label class="small"><input type="checkbox" id="guideOn"> テンポの目安を表示（110回/分）</label>
+      <div id="cprLeft" class="small mute">あと 10.0 秒</div>
+      <button class="btn primary" id="cprDone" style="display:none">続ける</button>
+    </div>
+  </div>
+</section>
+
+<section id="out" class="screen">
+  <div class="res-card">
+    <div class="mute small" id="outCase"></div>
+    <div class="row" style="align-items:flex-end;gap:14px;margin-top:6px"><div class="grade" id="outGrade"></div><div><div class="mute small" id="outGradeLbl"></div><h2 id="outTitle" style="font-size:21px;line-height:1.5"></h2></div></div>
+    <div id="outText" style="margin-top:10px;line-height:1.85;font-size:15.5px"></div>
+  </div>
+  <button class="btn primary" id="toDeb">振り返りを見る</button>
+  <button class="btn" id="retryNode" style="display:none;text-align:center">この判断の直前からやり直す</button>
+  <button class="btn ghost" id="outMenu">症例一覧へ</button>
+</section>
+
+<section id="deb" class="screen">
+  <h2 style="font-size:24px">振り返り</h2>
+  <div class="mute small" id="debCase"></div>
+  <h3 style="font-size:16px;margin-top:4px">あなたの判断</h3>
+  <div id="debLog" style="display:flex;flex-direction:column;gap:10px"></div>
+  <h3 style="font-size:16px;margin-top:8px">解説</h3>
+  <div id="debSecs" style="display:flex;flex-direction:column;gap:10px"></div>
+  <details class="deep" id="debDeep"><summary>もっと深く ― 医学生・医療者向け</summary><div id="debDeepBody"></div></details>
+  <button class="btn primary" id="debRetry">もう一度プレイする</button>
+  <button class="btn ghost" id="debMenu">症例一覧へ</button>
+  <div class="disc">解説は一般市民向けに簡略化しています。救命処置の手順はJRC蘇生ガイドラインに基づく市民向けの一般的な内容ですが、実際の対応は119番の指令員や救急隊の指示に従ってください。消防署などの救命講習への参加をおすすめします。</div>
+</section>
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+/* =========================================================
+   サウンド（The Magic City のBGM・効果音シンセを移植）
+   ========================================================= */
+let SOUND = true;
+try{ SOUND = localStorage.getItem('kyk_snd')!=='0'; }catch(e){}
+const AU = { ctx:null, master:null, bgm:null, sfx:null, song:null, timer:null, step:0, next:0, want:null };
+function audioInit(){
+  if(AU.ctx){ if(AU.ctx.state==='suspended') AU.ctx.resume(); return; }
+  try{
+    const C = new (window.AudioContext||window.webkitAudioContext)();
+    AU.ctx=C; AU.master=C.createGain(); AU.master.connect(C.destination);
+    AU.bgm=C.createGain(); AU.bgm.connect(AU.master); AU.sfx=C.createGain(); AU.sfx.connect(AU.master);
+    AU.lp=C.createBiquadFilter(); AU.lp.type='lowpass'; AU.lp.frequency.value=2400; AU.lp.connect(AU.bgm);
+    const n=C.createBuffer(1,C.sampleRate*.5,C.sampleRate); const d=n.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1; AU.noise=n;
+    vol();
+    if(AU.want!==null){ const w=AU.want; AU.want=null; music(w); }
+  }catch(e){ AU.ctx=null; }
+}
+function vol(){ if(!AU.ctx) return; AU.master.gain.value = SOUND?1:0; AU.bgm.gain.value=.16; AU.sfx.gain.value=.3; }
+const mtof = m => 440*Math.pow(2,(m-69)/12);
+function tone(t,f,dur,type='square',v=.2,dest,a=.005,r=.06){
+  const C=AU.ctx; const o=C.createOscillator(), g=C.createGain();
+  o.type=type; o.frequency.setValueAtTime(f,t);
+  g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(v,t+a); g.gain.setValueAtTime(v,t+Math.max(a,dur-r)); g.gain.linearRampToValueAtTime(0,t+dur);
+  o.connect(g); g.connect(dest||AU.sfx); o.start(t); o.stop(t+dur+.02); return o;
+}
+function noise(t,dur,v,freq=6000,dest){ const C=AU.ctx; const s=C.createBufferSource(); s.buffer=AU.noise; const f=C.createBiquadFilter(); f.type='bandpass'; f.frequency.value=freq; const g=C.createGain(); g.gain.setValueAtTime(v,t); g.gain.exponentialRampToValueAtTime(.001,t+dur); s.connect(f); f.connect(g); g.connect(dest||AU.sfx); s.start(t); s.stop(t+dur); }
+function sfx(k){
+  if(!AU.ctx||!SOUND) return; const t=AU.ctx.currentTime;
+  switch(k){
+    case 'cur': tone(t,1320,.04,'square',.06); break;
+    case 'ok': tone(t,784,.06,'square',.1); tone(t+.06,1175,.09,'square',.1); break;
+    case 'back': tone(t,523,.06,'square',.09); tone(t+.06,392,.08,'square',.08); break;
+    case 'blip': tone(t,880+Math.random()*120,.025,'square',.03); break;
+    case 'lvl': [0,4,7,12,16].forEach((s,i)=>tone(t+i*.08,mtof(72+s),.14,'square',.1)); break;
+    case 'start': [0,7,12,19].forEach((s,i)=>tone(t+i*.11,mtof(60+s),.5,'triangle',.14,null,.01,.3)); break;
+    case 'jingle': [[67,0],[72,.14],[76,.28],[79,.42],[84,.62]].forEach(([n,d])=>tone(t+d,mtof(n),.22,'square',.07)); break;
+    case 'msg': tone(t,1568,.07,'sine',.1); tone(t+.09,2093,.1,'sine',.09); break;
+    case 'ring': for(let k2=0;k2<2;k2++){ tone(t+k2*.5,440,.38,'sine',.12); tone(t+k2*.5,480,.38,'sine',.12);} break;
+    case 'thud': noise(t,.25,.5,300); tone(t,110,.18,'sine',.3); break;
+    case 'hit': noise(t,.06,.3,1200); tone(t,180,.07,'sine',.2); break;
+    case 'quake': for(let i=0;i<10;i++) noise(t+i*.12,.3,.5,120+Math.random()*80); break;
+    case 'beep': tone(t,1000,.12,'sine',.12); tone(t+.35,1000,.12,'sine',.12); break;
+    case 'shock': noise(t,.35,.5,2500); tone(t,90,.3,'sawtooth',.2); break;
+    case 'alarm': for(let i=0;i<8;i++) tone(t+i*.25,i%2?880:1100,.2,'square',.06); break;
+    case 'wave': noise(t,1.6,.25,500); break;
+    case 'drop': [76,72,67,60].forEach((n,i)=>tone(t+i*.16,mtof(n),.3,'triangle',.12)); break;
+    case 'siren': { const o=AU.ctx.createOscillator(), g=AU.ctx.createGain(); o.type='sawtooth'; o.frequency.setValueAtTime(500,t); for(let i=0;i<4;i++){ o.frequency.linearRampToValueAtTime(900,t+i*1.6+.8); o.frequency.linearRampToValueAtTime(500,t+i*1.6+1.6);} g.gain.setValueAtTime(.0001,t); g.gain.linearRampToValueAtTime(.05,t+.8); g.gain.linearRampToValueAtTime(0,t+6.4); o.connect(g); g.connect(AU.sfx); o.start(t); o.stop(t+6.5); break; }
+  }
+}
+const SONGS = {
+  title:{bpm:76,ch:[[53,57,60,64],[52,55,59,62],[50,53,57,60],[48,52,55,59]],bass:[41,40,38,36],arp:1,hat:0},
+  town:{bpm:100,ch:[[53,57,60,64],[57,60,64,67],[58,62,65,69],[55,60,64,70]],bass:[41,45,46,48],arp:1,hat:1},
+  talk:{bpm:88,ch:[[48,52,55,59],[45,48,52,55],[50,53,57,60],[43,47,50,53]],bass:[36,33,38,31],arp:0,hat:0},
+  night:{bpm:72,ch:[[57,60,64,67],[53,57,60,64],[50,53,57,60],[52,56,59,62]],bass:[45,41,38,40],arp:1,hat:0},
+  tense:{bpm:118,ch:[[50,53,57,62],[46,50,53,58],[43,46,50,55],[45,49,52,57]],bass:[38,34,31,33],arp:1,hat:1,pulse:1},
+  hope:{bpm:84,ch:[[48,52,55,60],[53,57,60,65],[55,59,62,67],[52,55,60,64]],bass:[36,41,43,40],arp:1,hat:0}
+};
+function music(name){
+  if(!AU.ctx){ AU.want=name; return; }
+  if(AU.song===name) return;
+  AU.song=name; AU.step=0; AU.next=AU.ctx.currentTime+.1;
+  clearInterval(AU.timer); if(!name) return;
+  AU.timer=setInterval(schedule,60);
+}
+function schedule(){
+  const C=AU.ctx, sg=SONGS[AU.song]; if(!sg||!C) return;
+  const st=60/sg.bpm/2;
+  while(AU.next<C.currentTime+.25){
+    const t=AU.next, s=AU.step, bar=(s>>3)%4, ch=sg.ch[bar], b=s%8;
+    if(b===0) ch.forEach(n=>tone(t,mtof(n),st*7.6,'sawtooth',.022,AU.lp,.25,.6));
+    if(b===0||b===4||(sg.pulse&&b%2===0)) tone(t,mtof(sg.bass[bar]-(b===4&&!sg.pulse?-12:0)),st*(sg.pulse?1.6:3.4),'triangle',.16,AU.lp,.01,.1);
+    if(sg.arp&&(b%2===1||sg.bpm>95)) tone(t,mtof(ch[(s*3)%4]+12),st*.9,'square',.022,AU.lp,.005,.05);
+    if(sg.hat&&b%2===1) noise(t,.04,.05,8000,AU.lp);
+    AU.next+=st*(b%2===0?1.08:.92); AU.step++;
+  }
+}
+function setSound(on){ SOUND=on; try{localStorage.setItem('kyk_snd',on?'1':'0')}catch(e){} vol(); ['snd','snd2'].forEach(i=>$(i).textContent=on?'🔊':'🔇'); }
+document.addEventListener('pointerdown',audioInit,{passive:true});
+
+/* =========================================================
+   2Dキャラクター
+   look: {k:'old'|'adult'|'teen'|'child', skin, hair, hs:髪型, top, bot, x:小物}
+   ========================================================= */
+const LOOK = {
+  me:{k:'teen',skin:'#f5cfae',hair:'#2b2320',hs:'short',top:'#3d7be0',bot:'#2f3b55'},
+  gpa:{k:'old',skin:'#efc8a5',hair:'#d9d6d0',hs:'old',top:'#8d6e63',bot:'#5d5a57',x:'glasses'},
+  gma:{k:'old',skin:'#f3d0b1',hair:'#d8d3cf',hs:'bun',top:'#b39ddb',bot:'#6d6a8a'},
+  mom:{k:'adult',skin:'#f6d3b5',hair:'#5a3a2a',hs:'bob',top:'#ff9db0',bot:'#58607a',x:'apron'},
+  dad:{k:'adult',skin:'#efc6a2',hair:'#2b2320',hs:'short',top:'#6fb3a8',bot:'#3d4660'},
+  sis:{k:'teen',skin:'#f8d6b8',hair:'#3a2a22',hs:'pony',top:'#3f51b5',bot:'#2c3570',x:'ribbon'},
+  kid:{k:'child',skin:'#fbd9bd',hair:'#3a2a22',hs:'kid',top:'#ffca28',bot:'#4c8fe0'},
+  taku:{k:'teen',skin:'#e8b892',hair:'#1b1714',hs:'spiky',top:'#1e88e5',bot:'#1e88e5',x:'num'},
+  sakura:{k:'teen',skin:'#f8d6b8',hair:'#4a2c22',hs:'long',top:'#33496e',bot:'#33496e',x:'ribbon'},
+  kento:{k:'teen',skin:'#f2cba9',hair:'#2a2420',hs:'short',top:'#9ccc65',bot:'#3d4660',x:'glasses'},
+  boy:{k:'child',skin:'#f2c49c',hair:'#2a2420',hs:'kid',top:'#ff7043',bot:'#ff7043'},
+  rider:{k:'adult',skin:'#efc6a2',hair:'#222',hs:'short',top:'#37474f',bot:'#263238',x:'helmet'},
+  driver:{k:'adult',skin:'#f6d3b5',hair:'#6b4a3a',hs:'bob',top:'#ffb74d',bot:'#5d6475'},
+  salary:{k:'adult',skin:'#efc6a2',hair:'#2b2320',hs:'short',top:'#455a64',bot:'#37474f',x:'tie'},
+  officew:{k:'adult',skin:'#f6d3b5',hair:'#3a2a22',hs:'long',top:'#90a4ae',bot:'#455a64'},
+  oldman:{k:'old',skin:'#efc8a5',hair:'#cfcac4',hs:'bald',top:'#a1887f',bot:'#6d5d55'},
+  teacher:{k:'adult',skin:'#efc6a2',hair:'#4a3a30',hs:'short',top:'#f5f5f5',bot:'#5d6475',x:'tie'},
+  medic:{k:'adult',skin:'#efc6a2',hair:'#2b2320',hs:'short',top:'#c7d0d8',bot:'#c7d0d8',x:'medic'},
+  doctor:{k:'adult',skin:'#f6d3b5',hair:'#3a2a22',hs:'bob',top:'#ffffff',bot:'#7fb7e6',x:'vest'},
+  surfer:{k:'adult',skin:'#d9a27a',hair:'#3a2a22',hs:'spiky',top:'#26a69a',bot:'#26a69a'},
+  neighbor:{k:'old',skin:'#efc8a5',hair:'#9e9a95',hs:'short',top:'#795548',bot:'#4e4a47',x:'cap'},
+  fire:{k:'adult',skin:'#efc6a2',hair:'#2b2320',hs:'short',top:'#2b3a4a',bot:'#2b3a4a',x:'fire'}
+};
+const DIM = { old:{leg:30,body:38,head:14,arm:30}, adult:{leg:36,body:40,head:14,arm:34}, teen:{leg:36,body:38,head:14.5,arm:33}, child:{leg:18,body:24,head:13,arm:20} };
+function fig(L){
+  const d=DIM[L.k]; const top=-(d.leg+d.body); const hy=top-d.head+3; const w=L.k==='child'?20:26;
+  let s='<g class="bd"><g class="bob">';
+  // 影
+  s+=`<ellipse cx="0" cy="1" rx="${w*.7}" ry="3" fill="#0002"/>`;
+  // 脚
+  s+=`<rect x="${-w/2+3}" y="${-d.leg}" width="${w/2-4}" height="${d.leg}" rx="3" fill="${L.bot}"/><rect x="1" y="${-d.leg}" width="${w/2-4}" height="${d.leg}" rx="3" fill="${L.bot}"/>`;
+  s+=`<rect x="${-w/2+2}" y="-4" width="${w/2-2}" height="5" rx="2" fill="#4a3f3a"/><rect x="0" y="-4" width="${w/2-2}" height="5" rx="2" fill="#4a3f3a"/>`;
+  // 腕（後ろ）
+  const armC = (L.x==='medic'||L.x==='fire')?L.top:L.top;
+  s+=`<g class="arm l"><rect x="${-w/2-6}" y="${top+3}" width="7" height="${d.arm}" rx="3.5" fill="${armC}"/><circle cx="${-w/2-2.5}" cy="${top+3+d.arm}" r="3.6" fill="${L.skin}"/></g>`;
+  s+=`<g class="arm r"><rect x="${w/2-1}" y="${top+3}" width="7" height="${d.arm}" rx="3.5" fill="${armC}"/><circle cx="${w/2+2.5}" cy="${top+3+d.arm}" r="3.6" fill="${L.skin}"/></g>`;
+  // 胴体
+  s+=`<rect x="${-w/2}" y="${top}" width="${w}" height="${d.body+4}" rx="${w*.35}" fill="${L.top}"/>`;
+  if(L.x==='apron') s+=`<rect x="${-w/2+4}" y="${top+10}" width="${w-8}" height="${d.body-4}" rx="4" fill="#fff6e8"/>`;
+  if(L.x==='tie') s+=`<path d="M0 ${top+2} l-3 4 l3 16 l3 -16 z" fill="#d84343"/>`;
+  if(L.x==='uni') s+=`<text x="0" y="${top+24}" font-size="13" font-weight="800" fill="#1f3a6b" text-anchor="middle">1</text><rect x="${-w/2}" y="${top+d.body-4}" width="${w}" height="4" fill="#1f3a6b"/>`;
+  if(L.x==='num') s+=`<text x="0" y="${top+24}" font-size="13" font-weight="800" fill="#fff" text-anchor="middle">7</text>`;
+  if(L.x==='medic') s+=`<rect x="${-w/2}" y="${top+16}" width="${w}" height="4" fill="#ff8f00"/><rect x="${-w/2}" y="${top+26}" width="${w}" height="3" fill="#ff8f00"/>`;
+  if(L.x==='vest') s+=`<rect x="${-w/2+2}" y="${top+4}" width="${w-4}" height="${d.body-6}" rx="5" fill="#ff7a59" opacity=".85"/><text x="0" y="${top+22}" font-size="7" font-weight="800" fill="#fff" text-anchor="middle">医療</text>`;
+  if(L.x==='fire') s+=`<rect x="${-w/2}" y="${top+20}" width="${w}" height="4" fill="#ffd54f"/>`;
+  // 頭
+  s+=`<rect x="-4" y="${top-5}" width="8" height="7" fill="${L.skin}"/>`;
+  s+=hairBack(L,hy,d.head);
+  s+=`<circle cx="0" cy="${hy}" r="${d.head}" fill="${L.skin}"/>`;
+  s+=`<circle class="tint" cx="0" cy="${hy}" r="${d.head}"/>`;
+  s+=`<ellipse cx="-8" cy="${hy+5}" rx="3" ry="2" fill="#ff9a8a" opacity=".45"/><ellipse cx="8" cy="${hy+5}" rx="3" ry="2" fill="#ff9a8a" opacity=".45"/>`;
+  s+=faces(hy);
+  s+=hairFront(L,hy,d.head);
+  if(L.x==='glasses') s+=`<g fill="none" stroke="#5a4a40" stroke-width="1.3"><circle cx="-5.5" cy="${hy+1}" r="4"/><circle cx="5.5" cy="${hy+1}" r="4"/><path d="M-1.5 ${hy+1} h3"/></g>`;
+  if(L.x==='helmet') s+=`<path d="M${-d.head-2} ${hy+2} a${d.head+2} ${d.head+3} 0 0 1 ${2*d.head+4} 0 z" fill="#263238"/><rect x="${-d.head+1}" y="${hy-3}" width="${2*d.head-2}" height="5" rx="2" fill="#90a4ae" opacity=".7"/>`;
+  if(L.x==='medic') s+=`<path d="M${-d.head-1} ${hy-2} a${d.head+1} ${d.head+1} 0 0 1 ${2*d.head+2} 0 z" fill="#eceff1"/><rect x="-3" y="${hy-12}" width="6" height="3" fill="#ff8f00"/>`;
+  if(L.x==='fire') s+=`<path d="M${-d.head-2} ${hy-1} a${d.head+2} ${d.head+2} 0 0 1 ${2*d.head+4} 0 l3 3 h${-2*d.head-10} z" fill="#c0c7cf"/>`;
+  if(L.x==='uni') s+=`<path d="M${-d.head} ${hy-3} a${d.head} ${d.head-1} 0 0 1 ${2*d.head} 0 h7 v2 h${-2*d.head-7} z" fill="#1f3a6b"/><text x="0" y="${hy-6}" font-size="6" font-weight="800" fill="#fff" text-anchor="middle">K</text>`;
+  if(L.x==='cap') s+=`<path d="M${-d.head} ${hy-3} a${d.head} ${d.head-1} 0 0 1 ${2*d.head} 0 h6 v2 h${-2*d.head-6} z" fill="#3e6b4f"/>`;
+  if(L.x==='ribbon') s+=`<path d="M-4 ${top+1} l4 4 l4 -4 l-1 6 h-6 z" fill="#e53935"/>`;
+  s+='</g></g>';
+  return s;
+}
+function hairBack(L,hy,r){
+  if(L.hs==='long') return `<path d="M${-r-2} ${hy} q0 ${r*2.2} ${r*.6} ${r*2} h${r*2.8} q${r*.6} 0 ${r*.6} ${-r*2} z" fill="${L.hair}"/>`;
+  if(L.hs==='pony') return `<path d="M${r-2} ${hy-4} q${r} 4 ${r*.5} ${r*1.8} q-4 -6 -6 -12z" fill="${L.hair}"/>`;
+  if(L.hs==='bun') return `<circle cx="0" cy="${hy-r-2}" r="${r*.45}" fill="${L.hair}"/>`;
+  return '';
+}
+function hairFront(L,hy,r){
+  const c=L.hair;
+  switch(L.hs){
+    case 'short': return `<path d="M${-r} ${hy-1} a${r} ${r} 0 0 1 ${2*r} 0 q-4 -5 -9 -4 q-5 -3 -10 2 q-3 -2 ${-r+19} 2 z" fill="${c}"/>`;
+    case 'spiky': return `<path d="M${-r} ${hy} l2 -9 l4 3 l3 -8 l4 6 l4 -7 l3 7 l4 -3 l1 11 q-6 -6 -12 -5 q-7 -1 -13 5z" fill="${c}"/>`;
+    case 'old': return `<path d="M${-r} ${hy+2} q-1 -10 6 -13 q0 4 -3 9 z M${r} ${hy+2} q1 -10 -6 -13 q0 4 3 9 z" fill="${c}"/>`;
+    case 'bald': return `<path d="M${-r} ${hy+3} q-1 -7 4 -9 q0 4 -2 9z M${r} ${hy+3} q1 -7 -4 -9 q0 4 2 9z" fill="${c}"/>`;
+    case 'bun': case 'bob': return `<path d="M${-r-1} ${hy+5} a${r+1} ${r+2} 0 0 1 ${2*r+2} 0 q-3 -10 -12 -9 q-6 -1 -10 4 q-3 2 -2 5z" fill="${c}"/>`;
+    case 'long': return `<path d="M${-r-1} ${hy+4} a${r+1} ${r+2} 0 0 1 ${2*r+2} 0 q-4 -9 -13 -8 q-5 0 -8 3z" fill="${c}"/>`;
+    case 'pony': return `<path d="M${-r} ${hy+2} a${r} ${r+1} 0 0 1 ${2*r} 0 q-4 -8 -12 -7 q-5 0 -8 4z" fill="${c}"/>`;
+    case 'kid': return `<path d="M${-r} ${hy} a${r} ${r} 0 0 1 ${2*r} 0 q-6 -3 -12 -1 q-4 -2 -8 2z" fill="${c}"/>`;
+  }
+  return '';
+}
+function faces(y){
+  const k='#3a2a22';
+  return `<g class="fc normal"><circle cx="-5" cy="${y+1}" r="1.9" fill="${k}"/><circle cx="5" cy="${y+1}" r="1.9" fill="${k}"/><path d="M-3 ${y+7} q3 2 6 0" stroke="${k}" stroke-width="1.4" fill="none" stroke-linecap="round"/></g>
+  <g class="fc smile"><path d="M-7 ${y+2} q2 -3 4 0 M3 ${y+2} q2 -3 4 0" stroke="${k}" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M-4 ${y+6} q4 5 8 0 z" fill="#c9504a"/></g>
+  <g class="fc pain"><path d="M-7 ${y-1} l4 2 l-4 2 M7 ${y-1} l-4 2 l4 2" stroke="${k}" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M-4 ${y+8} q1 -2 2 0 q1 2 2 0 q1 -2 2 0 q1 2 2 0" stroke="${k}" stroke-width="1.3" fill="none"/><path d="M10 ${y-8} q3 4 0 6 q-3 -2 0 -6z" fill="#7fc4ff"/></g>
+  <g class="fc weak"><path d="M-7 ${y+1} h4 M3 ${y+1} h4" stroke="${k}" stroke-width="1.6" stroke-linecap="round"/><path d="M-3 ${y+8} h6" stroke="${k}" stroke-width="1.3" stroke-linecap="round"/></g>
+  <g class="fc closed"><path d="M-7 ${y} q2 2 4 0 M3 ${y} q2 2 4 0" stroke="${k}" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M-2 ${y+8} h4" stroke="${k}" stroke-width="1.2" stroke-linecap="round"/></g>
+  <g class="fc shock"><circle cx="-5" cy="${y}" r="3" fill="#fff" stroke="${k}" stroke-width="1"/><circle cx="5" cy="${y}" r="3" fill="#fff" stroke="${k}" stroke-width="1"/><circle cx="-5" cy="${y}" r="1.3" fill="${k}"/><circle cx="5" cy="${y}" r="1.3" fill="${k}"/><ellipse cx="0" cy="${y+8}" rx="2.6" ry="3.2" fill="#7a2f2a"/></g>
+  <g class="fc droop"><circle cx="-5" cy="${y+1}" r="1.9" fill="${k}"/><path d="M3 ${y+1} h4" stroke="${k}" stroke-width="1.6" stroke-linecap="round"/><path d="M-5 ${y+9} q4 -1 9 -3" stroke="${k}" stroke-width="1.4" fill="none" stroke-linecap="round"/></g>
+  <g class="fc cry"><path d="M-7 ${y} q2 2 4 0 M3 ${y} q2 2 4 0" stroke="${k}" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M-5 ${y+2} v6 M5 ${y+2} v6" stroke="#7fc4ff" stroke-width="2" stroke-linecap="round"/><path d="M-3 ${y+9} q3 -3 6 0" stroke="${k}" stroke-width="1.3" fill="none"/></g>`;
+}
+function emoteSvg(e,y){
+  const bub=(c,inner)=>`<g class="emote"><path d="M-11 ${y-24} h22 a5 5 0 0 1 5 5 v10 a5 5 0 0 1 -5 5 h-7 l-4 5 l-4 -5 h-7 a5 5 0 0 1 -5 -5 v-10 a5 5 0 0 1 5 -5z" fill="#fff" stroke="${c}" stroke-width="2"/>${inner}</g>`;
+  switch(e){
+    case '!': return bub('#ff6b5b',`<text x="0" y="${y-9}" font-size="15" font-weight="800" fill="#ff6b5b" text-anchor="middle">！</text>`);
+    case '?': return bub('#4c8fe0',`<text x="0" y="${y-9}" font-size="14" font-weight="800" fill="#4c8fe0" text-anchor="middle">？</text>`);
+    case '…': return bub('#8a807a',`<text x="0" y="${y-11}" font-size="12" font-weight="800" fill="#8a807a" text-anchor="middle">…</text>`);
+    case 'heart': return bub('#ff7aa0',`<path d="M0 ${y-9} l-5 -5 a3 3 0 0 1 5 -4 a3 3 0 0 1 5 4z" fill="#ff7aa0"/>`);
+    case 'note': return bub('#25b0a0',`<text x="0" y="${y-9}" font-size="13" fill="#25b0a0" text-anchor="middle">♪</text>`);
+    case 'zz': return bub('#8a807a',`<text x="0" y="${y-9}" font-size="11" font-weight="800" fill="#8a807a" text-anchor="middle">zz</text>`);
+    case 'cough': return bub('#ffa94d',`<text x="0" y="${y-10}" font-size="9" font-weight="800" fill="#e0892a" text-anchor="middle">ゴホッ</text>`);
+  }
+  return '';
+}
+
+/* =========================================================
+   背景シーン（viewBox 400×250、地面 y≈215）
+   ========================================================= */
+const sky=(id,a,b)=>`<defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs>`;
+const SCENES = {
+  home:{bg:`${sky('gh','#ffd9a8','#ffb98a')}<rect width="400" height="250" fill="#f9e6cc"/><rect x="0" y="178" width="400" height="72" fill="#d9a877"/><path d="M0 178 H400" stroke="#c48d5c" stroke-width="3"/>
+    <rect x="30" y="40" width="96" height="74" rx="6" fill="url(#gh)" stroke="#fff" stroke-width="6"/><circle cx="96" cy="92" r="14" fill="#ff8a5c" opacity=".8"/><path d="M78 40 v74" stroke="#fff" stroke-width="4"/>
+    <rect x="290" y="96" width="82" height="56" rx="6" fill="#4a4a5a"/><rect x="295" y="101" width="72" height="44" rx="3" fill="#8fd0ff"/><path d="M305 138 q10 -14 20 0 M330 138 q10 -14 20 0" stroke="#fff" stroke-width="3" fill="none"/><rect x="300" y="152" width="62" height="26" fill="#a87a52"/>
+    <rect x="160" y="54" width="90" height="12" rx="3" fill="#c48d5c"/><circle cx="180" cy="48" r="7" fill="#7ac27a"/><rect x="214" y="40" width="14" height="14" rx="2" fill="#ffcf66"/>`,
+    fg:`<rect x="110" y="200" width="190" height="16" rx="5" fill="#a0683e"/><rect x="122" y="216" width="10" height="20" fill="#7d5030"/><rect x="278" y="216" width="10" height="20" fill="#7d5030"/><ellipse cx="170" cy="199" rx="18" ry="5" fill="#fff"/><circle cx="168" cy="196" r="5" fill="#d9822b"/><circle cx="175" cy="197" r="4" fill="#d9822b"/><ellipse cx="236" cy="199" rx="12" ry="4" fill="#fff"/><rect x="258" y="190" width="8" height="10" rx="2" fill="#7ac27a"/>`},
+  newyear:{bg:`<rect width="400" height="250" fill="#fbf0dc"/><g stroke="#e3cfa8" stroke-width="2"><rect x="24" y="30" width="120" height="110" fill="#fffaf0"/><path d="M64 30 v110 M104 30 v110 M24 66 h120 M24 104 h120"/></g>
+    <rect x="0" y="180" width="400" height="70" fill="#cddc95"/><g stroke="#b5c47a" stroke-width="2"><path d="M0 200 H400 M0 225 H400 M130 180 v70 M270 180 v70"/></g>
+    <rect x="280" y="80" width="90" height="10" rx="3" fill="#c48d5c"/><ellipse cx="325" cy="74" rx="22" ry="8" fill="#fff" stroke="#e8e0d0"/><ellipse cx="325" cy="64" rx="15" ry="6" fill="#fff" stroke="#e8e0d0"/><circle cx="325" cy="55" r="5" fill="#ffa726"/><rect x="300" y="78" width="50" height="4" fill="#e53935"/>`,
+    fg:`<rect x="100" y="196" width="210" height="22" rx="6" fill="#e2574c"/><rect x="108" y="190" width="194" height="10" rx="3" fill="#8d5a3a"/><ellipse cx="160" cy="189" rx="13" ry="4" fill="#fff"/><ellipse cx="160" cy="187" rx="9" ry="3" fill="#f6f1e6"/><ellipse cx="250" cy="189" rx="13" ry="4" fill="#fff"/><circle cx="205" cy="186" r="6" fill="#ff9800"/>`},
+  gym:{bg:`${sky('gg','#ffd59e','#ffb38a')}<rect width="400" height="250" fill="url(#gg)"/><rect x="40" y="60" width="330" height="140" fill="#e4e9f0"/><path d="M30 64 L205 26 L380 64z" fill="#8aa6c8"/><rect x="160" y="120" width="80" height="80" fill="#9fb3cc"/><path d="M200 120 v80" stroke="#7d93ad" stroke-width="3"/>
+    <rect x="150" y="82" width="100" height="20" rx="4" fill="#fff"/><text x="200" y="97" font-size="12" font-weight="800" fill="#4c6a90" text-anchor="middle">市民体育館</text><rect x="60" y="90" width="60" height="30" fill="#bcd3ea"/><rect x="280" y="90" width="60" height="30" fill="#bcd3ea"/>
+    <rect x="252" y="140" width="22" height="30" rx="3" fill="#ff7043"/><text x="263" y="160" font-size="8" font-weight="800" fill="#fff" text-anchor="middle">AED</text>
+    <rect x="0" y="200" width="400" height="50" fill="#cfc6b6"/><rect x="40" y="188" width="90" height="8" rx="3" fill="#8d6e63"/><rect x="46" y="196" width="6" height="16" fill="#6d4c41"/><rect x="118" y="196" width="6" height="16" fill="#6d4c41"/>`},
+  carpark:{bg:`${sky('gc','#2d4a8a','#6b86c0')}<rect width="400" height="250" fill="url(#gc)"/><g fill="#fff"><circle cx="40" cy="30" r="1.5"/><circle cx="120" cy="20" r="1.2"/><circle cx="210" cy="36" r="1.5"/><circle cx="300" cy="18" r="1.2"/><circle cx="360" cy="40" r="1.4"/></g><circle cx="340" cy="44" r="14" fill="#fff6c8"/>
+    <rect x="20" y="70" width="230" height="110" fill="#5b6f9e"/><g fill="#ffe08a"><rect x="40" y="90" width="22" height="16"/><rect x="80" y="90" width="22" height="16" opacity=".4"/><rect x="120" y="90" width="22" height="16"/><rect x="160" y="90" width="22" height="16" opacity=".4"/><rect x="200" y="90" width="22" height="16"/><rect x="40" y="130" width="22" height="16" opacity=".4"/><rect x="200" y="130" width="22" height="16"/></g>
+    <rect x="0" y="180" width="400" height="70" fill="#7d8aa0"/><g stroke="#fff8" stroke-width="2"><path d="M60 200 v40 M160 200 v40 M260 200 v40 M360 200 v40"/></g>
+    <rect x="270" y="150" width="96" height="44" rx="14" fill="#e0e6ef"/><rect x="282" y="156" width="70" height="18" rx="6" fill="#8fb4e0"/><circle cx="290" cy="196" r="9" fill="#333"/><circle cx="348" cy="196" r="9" fill="#333"/>
+    <rect x="8" y="160" width="40" height="40" rx="3" fill="#9fb7d6"/><text x="28" y="184" font-size="8" fill="#2d4a8a" text-anchor="middle" font-weight="800">仮設</text>`},
+  snowhouse:{bg:`${sky('gs','#dbe7f3','#f2f6fb')}<rect width="400" height="250" fill="url(#gs)"/><path d="M40 120 L150 60 L260 120z" fill="#7d8fa8"/><path d="M40 120 L150 60 L260 120 L250 112 L150 70 L50 112z" fill="#fff"/><rect x="58" y="120" width="184" height="80" fill="#f3d9b1"/><rect x="80" y="140" width="34" height="30" fill="#bfe0ff" stroke="#fff" stroke-width="4"/><rect x="150" y="150" width="30" height="50" fill="#a1785a"/>
+    <rect x="250" y="130" width="110" height="70" fill="#d7d9dc"/><g stroke="#b6b9bd" stroke-width="2"><path d="M258 146 h94 M258 158 h94 M258 170 h94 M258 182 h94"/></g><path d="M244 130 h122 l-6 -10 h-110z" fill="#fff"/><text x="305" y="125" font-size="8" fill="#8a9099" text-anchor="middle">ガレージ</text>
+    <path d="M0 200 Q100 190 200 200 T400 198 V250 H0z" fill="#fff"/><rect x="300" y="196" width="70" height="20" rx="8" fill="#fff" stroke="#e3e8ee"/>`,
+    fx:`<g class="snowfx" fill="#fff">${Array.from({length:26},(_,i)=>`<circle cx="${(i*53)%400}" cy="0" r="${1.5+(i%3)}" style="animation-duration:${4+(i%5)}s;animation-delay:-${(i*.7)%5}s"/>`).join('')}</g>`},
+  beach:{bg:`${sky('gb','#7cc8ff','#cdeeff')}<rect width="400" height="250" fill="url(#gb)"/><circle cx="60" cy="40" r="18" fill="#fff3a0"/><path d="M0 120 H400 V180 H0z" fill="#2fa6d9"/><g class="wave"><path d="M-20 130 q20 -6 40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0" stroke="#fff" stroke-width="3" fill="none" opacity=".7"/><path d="M-20 150 q20 -6 40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0" stroke="#fff" stroke-width="2" fill="none" opacity=".5"/></g>
+    <path d="M300 120 q20 -26 50 -20 q30 4 50 20z" fill="#8d8a86"/><path d="M0 178 Q200 168 400 180 V250 H0z" fill="#f7e1a8"/><path d="M0 178 Q200 168 400 180" stroke="#fff" stroke-width="5" fill="none" opacity=".7"/>
+    <path d="M60 140 q30 -26 60 0z" fill="#ff7a59"/><path d="M90 114 v90" stroke="#8d6e63" stroke-width="3"/><rect x="70" y="200" width="40" height="18" rx="4" fill="#4fc3f7"/><rect x="74" y="196" width="32" height="6" rx="2" fill="#fff"/>`},
+  crossing:{bg:`${sky('gx','#ffcf99','#ffe7c4')}<rect width="400" height="250" fill="url(#gx)"/><g fill="#c9b8d9"><rect x="0" y="70" width="60" height="110"/><rect x="70" y="50" width="50" height="130"/><rect x="300" y="60" width="44" height="120"/><rect x="350" y="84" width="50" height="96"/></g><g fill="#fff3c4" opacity=".7"><rect x="10" y="90" width="10" height="10"/><rect x="80" y="70" width="10" height="10"/><rect x="310" y="80" width="10" height="10"/></g>
+    <rect x="0" y="170" width="400" height="80" fill="#8e98a6"/><rect x="0" y="166" width="400" height="6" fill="#d7dbe0"/><g fill="#fff"><rect x="140" y="178" width="16" height="70"/><rect x="170" y="178" width="16" height="70"/><rect x="200" y="178" width="16" height="70"/><rect x="230" y="178" width="16" height="70"/></g>
+    <rect x="276" y="80" width="5" height="90" fill="#607080"/><rect x="266" y="70" width="26" height="14" rx="4" fill="#3a4450"/><circle cx="272" cy="77" r="4" fill="#ff5252"/><circle cx="286" cy="77" r="4" fill="#555"/>
+    <!--crash-->`,crash:`<rect x="300" y="170" width="94" height="38" rx="12" fill="#f5f5f5" transform="rotate(-6 340 190)"/><rect x="312" y="174" width="56" height="14" rx="5" fill="#8fb4e0" transform="rotate(-6 340 190)"/><circle cx="314" cy="210" r="8" fill="#333"/><circle cx="372" cy="204" r="8" fill="#333"/>
+    <g transform="rotate(70 110 206)"><circle cx="96" cy="214" r="10" fill="none" stroke="#333" stroke-width="4"/><circle cx="130" cy="214" r="10" fill="none" stroke="#333" stroke-width="4"/><path d="M96 214 l14 -12 h12 l8 12" stroke="#d84343" stroke-width="5" fill="none"/></g>`},
+  station:{bg:`<rect width="400" height="250" fill="#e8eef5"/><g stroke="#d3dce6" stroke-width="1.5"><path d="M0 30 H400 M0 60 H400 M0 90 H400 M0 120 H400"/><path d="M40 0 V140 M120 0 V140 M200 0 V140 M280 0 V140 M360 0 V140"/></g>
+    <rect x="130" y="14" width="140" height="26" rx="5" fill="#2e7d6b"/><text x="200" y="32" font-size="12" font-weight="800" fill="#fff" text-anchor="middle">みなと線　中央駅</text>
+    <rect x="0" y="60" width="400" height="110" fill="#cfe3f5"/><rect x="0" y="60" width="400" height="12" fill="#2e7d6b"/><g fill="#5a6b80"><rect x="20" y="84" width="60" height="40" rx="6"/><rect x="160" y="84" width="60" height="40" rx="6"/><rect x="300" y="84" width="60" height="40" rx="6"/></g><rect x="100" y="80" width="44" height="90" fill="#b9d2ea" stroke="#8aa7c4"/><rect x="240" y="80" width="44" height="90" fill="#b9d2ea" stroke="#8aa7c4"/>
+    <rect x="0" y="170" width="400" height="80" fill="#b9c3cf"/><rect x="0" y="170" width="400" height="7" fill="#ffd54f"/>`},
+  building:{bg:`${sky('gu','#a9dcff','#e2f4ff')}<rect width="400" height="250" fill="url(#gu)"/><rect x="110" y="20" width="180" height="190" fill="#d8c8b8"/><g fill="#9cc4e4">${[40,80,120,160].map(y=>[125,170,215,255].map(x=>`<rect x="${x}" y="${y}" width="26" height="22"/>`).join('')).join('')}</g><g id="fireWin" opacity="0"><rect x="125" y="40" width="26" height="22" fill="#ff8a3d"/><rect x="170" y="40" width="26" height="22" fill="#ffb03d"/><rect x="215" y="40" width="26" height="22" fill="#ff8a3d"/></g>
+    <rect x="300" y="30" width="20" height="10" fill="#fff"/><text x="200" y="205" font-size="9" fill="#6d5d50" text-anchor="middle">　</text><rect x="180" y="180" width="40" height="30" fill="#7a6a5a"/>
+    <rect x="0" y="210" width="400" height="40" fill="#b8bec6"/><rect x="0" y="206" width="400" height="5" fill="#dde1e6"/>`},
+  rubble:{bg:`${sky('gr','#ffd8b5','#bcd0ec')}<rect width="400" height="250" fill="url(#gr)"/><rect x="10" y="100" width="90" height="100" fill="#efe2cf"/><path d="M0 104 L55 70 L110 104z" fill="#6d7f99"/><path d="M40 120 l10 20 l-6 14 l8 18" stroke="#8a6d55" stroke-width="2" fill="none"/>
+    <path d="M150 200 L170 140 L260 120 L330 170 L350 200z" fill="#c9a882"/><path d="M160 150 L300 110 L320 125 L175 168z" fill="#6d7f99"/><g stroke="#7a5a3f" stroke-width="7" stroke-linecap="round"><path d="M175 190 L300 150"/><path d="M200 200 L240 140"/><path d="M280 198 L330 165"/></g><g fill="#a68a6c"><rect x="190" y="185" width="16" height="10" transform="rotate(20 198 190)"/><rect x="290" y="180" width="18" height="9"/><rect x="230" y="194" width="14" height="8"/></g>
+    <rect x="0" y="200" width="400" height="50" fill="#bcae9c"/>`},
+  classroom:{bg:`<rect width="400" height="250" fill="#fff4dc"/><rect x="60" y="34" width="200" height="90" rx="4" fill="#2f6b4f" stroke="#a0683e" stroke-width="6"/><text x="160" y="72" font-size="12" fill="#fff" text-anchor="middle" opacity=".85">昼休み</text><text x="160" y="96" font-size="9" fill="#fff" text-anchor="middle" opacity=".6">日直：春日・森下</text>
+    <rect x="290" y="30" width="90" height="110" fill="#c9ecff" stroke="#fff" stroke-width="6"/><path d="M335 30 v110" stroke="#fff" stroke-width="4"/><rect x="0" y="180" width="400" height="70" fill="#e2c49a"/><g stroke="#cfae80" stroke-width="2"><path d="M0 200 H400 M0 225 H400"/></g>`,
+    fg:`<rect x="120" y="196" width="80" height="10" rx="2" fill="#d9a877"/><rect x="128" y="206" width="6" height="30" fill="#8a8f96"/><rect x="186" y="206" width="6" height="30" fill="#8a8f96"/><rect x="230" y="196" width="80" height="10" rx="2" fill="#d9a877"/><rect x="238" y="206" width="6" height="30" fill="#8a8f96"/><rect x="296" y="206" width="6" height="30" fill="#8a8f96"/><rect x="250" y="188" width="22" height="9" rx="2" fill="#ffcc80"/><circle cx="256" cy="190" r="2" fill="#8d5a3a"/><circle cx="264" cy="191" r="2" fill="#8d5a3a"/>`},
+  hospital:{bg:`<rect width="400" height="250" fill="#eef6f7"/><rect x="250" y="30" width="110" height="90" fill="#cbeaff" stroke="#fff" stroke-width="6"/><path d="M305 30 v90" stroke="#fff" stroke-width="4"/><path d="M20 20 q10 100 0 190" stroke="#bfe3d0" stroke-width="30" fill="none" opacity=".7"/>
+    <rect x="0" y="190" width="400" height="60" fill="#dbe7ea"/><rect x="200" y="96" width="10" height="70" fill="#c7d0d8"/><rect x="194" y="86" width="22" height="16" rx="3" fill="#e9f5ff" stroke="#9fb7cc"/>`,
+    fg:`<rect x="90" y="176" width="200" height="22" rx="6" fill="#ffffff" stroke="#d7e1e6"/><rect x="90" y="196" width="200" height="8" fill="#b0bec5"/><rect x="96" y="204" width="6" height="26" fill="#90a4ae"/><rect x="278" y="204" width="6" height="26" fill="#90a4ae"/><rect x="100" y="166" width="40" height="14" rx="6" fill="#fff" stroke="#d7e1e6"/>`}
+};
+</script>
+<script>
+/* =========================================================
+   症例データ（主人公：春日康太・17歳）
+   行：'文字列'＝地の文、'id|「…」'＝セリフ、{sys}、{t,d}、{adv}、
+       {a:id,p,f,t,arm,x,y,show,e}、{fx}、{se}、{bgm}、{bg}、{wait}
+   選択肢 g：best/ok/bad/fatal、timer＝制限秒、tmo＝時間切れ時
+   ========================================================= */
+LOOK.mai={k:'teen',skin:'#f8d6b8',hair:'#6b4430',hs:'bob',top:'#33496e',bot:'#33496e',x:'ribbon'};
+SCENES.rubble.fg=`<rect x="205" y="186" width="120" height="13" rx="3" fill="#7a5a3f" transform="rotate(-6 265 192)"/><rect x="230" y="196" width="40" height="10" fill="#a68a6c"/>`;
+SCENES.beach.split=190;
+SCENES.beach.fg=`<rect x="0" y="146" width="400" height="30" fill="#2fa6d9" opacity=".92"/><path d="M0 146 q20 -5 40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0" stroke="#fff" stroke-width="2" fill="none" opacity=".7"/>`;
+const OP={name:'指令員'};
+
+const CASES=[];
+/* ---------------- 01 脳卒中 ---------------- */
+CASES.push({
+  id:'stroke',tease:'日曜の夕方。久しぶりに家族全員がそろう夕飯。',where:'自宅・日曜の夕方',no:'01',title:'いつもの日曜日',theme:'脳卒中',struct:'連続判断・時間との勝負',scene:'home',
+  blurb:'日曜の夕食。いつもの食卓で、じいちゃんの様子が変わる。',
+  cast:{gpa:{name:'じいちゃん',look:'gpa',x:205,p:'sit'},kid:{name:'陽',look:'kid',x:262,show:false},mom:{name:'母さん',look:'mom',x:345,show:false},op:OP,medic:{name:'救急隊員',look:'medic',x:345,show:false},doc:{name:'医師',look:'doctor',x:320,show:false}},
+  start:'intro',
+  nodes:{
+    intro:{lines:[
+      {d:'日曜日',t:'18:00'},'台所から、唐揚げの揚がる音がする。',
+      '居間ではじいちゃんが、いつもの座椅子でテレビの相撲中継を見ている。',
+      'gpa|「康太、今日の結びの一番は見ものだぞ」',
+      {a:'kid',show:true,e:'note'},'kid|「はっけよーい！」',
+      '陽がじいちゃんの膝によじ登り、小さな手を突き出した。',
+      {a:'gpa',f:'smile',e:'heart'},'じいちゃんは笑いながら、その頭をなでた。',
+      {t:'18:25'},{a:'mom',show:true},'食卓に大皿が並ぶ。家族全員がそろう夕飯は、久しぶりだ。',
+      'gpa|「明日は畑の草取りだな。康太も手伝えよ」',
+      'じいちゃんはそう言って、湯呑みのお茶をすすった。いつもの日曜日だった。',
+      {t:'18:31'},{a:'mom',show:false},{a:'kid',show:false},{a:'gpa',f:'normal'},'あなたは席を立ち、トイレに行った。',
+      {t:'18:38'},{bgm:'tense'},{a:'gpa',p:'slump',f:'droop',e:'!'},{se:'drop'},
+      '戻ってくると、じいちゃんの箸が床に落ちていた。',
+      '拾おうと伸ばした右手が、思うように動いていない。',
+      'gpa|「……あれ……な、んだ……はし、が……」',
+      '言葉がもつれている。顔を見ると、右の口元だけが、少し下がっていた。',
+      '母さんは台所で洗い物をしていて、まだ気づいていない。'],
+      obs:[['意識','ある。少しぼんやり'],['顔','右の口元が下がっている'],['右手','力が入らない'],['言葉','もつれて出ない']],
+      q:'どうする？',
+      choices:[
+        {t:'すぐに119番に電話する',g:'best',dt:1,sc:3,res:['あなたはスマートフォンを取り出し、119を押した。',{se:'ring'},'op|「119番、消防です。火事ですか、救急ですか」','「救急です！ じいちゃんの様子が、急におかしくて……」'],next:'call',
+          why:'顔のゆがみ・片腕の脱力・言葉の異常は、脳卒中の典型的なサインです。1つでもあれば、迷わず119番。治療は時間との勝負です。'},
+        {t:'母さんに「いつから？」と聞いて、症状が始まった時刻をはっきりさせる',g:'ok',dt:2,sc:1,flag:'askedTime',res:['「母さん！ じいちゃん、いつからこうなってた？」',{a:'mom',show:true,e:'!'},'mom|「えっ……さっきまで普通にしゃべってたよ。お茶を飲んでた時は、いつも通りだった」','時刻を確かめるのは大事だ。でも、じいちゃんの右手は相変わらず動かない。'],next:'late',
+          why:'発症時刻の確認はとても大切です。ただし、119番を後回しにする理由にはなりません。時刻は電話しながら、または指令員に聞かれてから確認すれば十分です。'},
+        {t:'お茶を飲ませて、まずは落ち着かせる',g:'bad',dt:3,sc:-3,flag:'aspir',res:['湯呑みを口元に運ぶ。',{a:'gpa',f:'pain',e:'cough'},{fx:'shake'},'一口ふくんだ瞬間、じいちゃんは激しくむせた。','飲み込む力も、うまく働いていないようだ。'],next:'late',
+          why:'脳卒中では、飲み込む力も落ちていることがあります。水や食べ物が気管に入ると、窒息や誤嚥性肺炎の原因になります。救急隊が来るまで、口からは何も入れないのが原則です。'},
+        {t:'いつも飲んでいる血圧の薬を探して、飲ませる',g:'bad',dt:8,sc:-3,res:['薬箱をひっくり返して、血圧の薬を探す。見つけるまでに、何分もかかった。','錠剤を手のひらにのせても、じいちゃんはうまく口に運べない。'],next:'late',
+          why:'自己判断で薬を飲ませるのは危険です。脳卒中には「血管が詰まる脳梗塞」と「血管が破れる脳出血」があり、見た目では区別できません。薬は「飲ませる」のではなく「まとめて救急隊に見せる」ものです。'},
+        {t:'横になって休めば治るかもしれない。少し様子を見る',g:'bad',dt:1,sc:-4,res:['gpa|「……だいじょうぶ……ちょっと、つかれた、だけ……」','あなたは座布団を枕にして、横にならせた。',{a:'gpa',p:'down',f:'weak'},{adv:15},'15分たっても、右手は動かない。言葉は、さっきより聞き取りにくい。'],next:'late',
+          why:'脳卒中の症状は、休んでも治りません。一時的に良くなっても、その後に本格的な脳梗塞が起こることがあります。「様子を見る」は、治療できる時間を確実に削っていきます。'}
+      ]},
+    late:{lines:['じいちゃんの症状は、良くなっていない。'],
+      obs:[['顔','右の口元が下がっている'],['右手','力が入らない'],['言葉','もつれて出ない']],q:'今度こそ、どうする？',
+      choices:[
+        {t:'119番に電話する',g:'ok',dt:1,sc:1,res:[{se:'ring'},'op|「119番、消防です。火事ですか、救急ですか」','「救急です！」'],next:'call',why:'遅れはしましたが、ここで119番を選べたのは大切な判断です。'},
+        {t:'救急車を待つより早い。父さんの車で、近くの病院へ連れていく',g:'bad',dt:1,sc:-5,flag:'car',res:['父さんが車を出し、二人がかりでじいちゃんを後部座席に乗せた。','近くの内科は、日曜の夜で閉まっていた。',{adv:25},'カーナビで探した救急病院の医師は、すぐに言った。','「脳梗塞の可能性が高いです。ただ、ここでは血管の詰まりを取る治療ができません。専門の病院へ転送します」',{adv:45},'転送先に着いたのは、家を出てから1時間以上たってからだった。'],next:'END',
+          why:'脳卒中の専門治療（血栓を溶かす薬や、カテーテルで血栓を取り出す治療）ができる病院は限られています。救急隊は症状から脳卒中を疑い、治療できる病院を選んで直接運びます。自家用車では、病院選びと移動で貴重な時間を失います。'},
+        {t:'もう少しだけ様子を見る',g:'bad',dt:1,sc:-3,res:[{adv:20},{a:'gpa',p:'down',f:'closed',e:'zz'},'20分後。じいちゃんは呼びかけに目を開けるものの、すぐに閉じてしまう。','いびきのような寝息を立て始めた。',{a:'mom',show:true,e:'!'},'母さんが青ざめて、119番に電話をかけた。'],next:'call',why:'意識が悪くなってきたのは、脳のダメージが広がっているサインです。'}
+      ]},
+    call:{lines:S=>['op|「どなたが、どうされましたか」','あなたは、じいちゃんの症状を伝えた。顔、右手、言葉。','op|「救急車はもう向かっています。大事なことを聞きます。症状が出始めたのは、何時ごろですか？」',
+        S.flags.askedTime?'さっき母さんが「お茶を飲んでいた時は普通だった」と言っていた。':'あなたは時計を見た。トイレに立ったのは、18時31分ごろだった。'],
+      q:'指令員に、どう答える？',
+      choices:[
+        {t:'「18時半ごろまでは普通に話していました。38分に気づいた時には、もうこの状態でした」',g:'best',dt:1,sc:3,res:['op|「最後に普通だったのが18時半ごろ。とても大事な情報です。救急隊にも伝えます」'],next:'family',
+          why:'正解は「最後に普通だったのを確認した時刻」です。症状が始まった瞬間は誰も見ていません。あなたが異変を見つけた18時38分より前に、症状は始まっていたかもしれないのです。医療現場ではこれを「最終健常確認時刻」と呼び、治療ができるかどうかの判断基準になります。'},
+        {t:'「18時38分からです」',g:'ok',dt:1,sc:0,res:['op|「18時38分ですね」','そう答えてから、ふと思う。トイレに行く前、じいちゃんは普通だった。でも、症状が出た瞬間は誰も見ていない。'],next:'family',
+          why:'「気づいた時刻」と「症状が始まった時刻」は違います。実際より遅い時刻を伝えると、治療できる時間が残っていると誤解され、本来避けるべき治療が行われる危険があります。誰も見ていなければ「最後に普通だった時刻」を伝えます。'},
+        {t:'「わかりません！ とにかく早く来てください！」',g:'bad',dt:1,sc:-1,res:['op|「落ち着いてください。救急車は向かっています。わかる範囲で大丈夫です」'],next:'family',why:'あわてて当然の場面ですが、時刻は治療方針を決める最重要情報です。「最後に普通だったのはいつか」を思い出すことが、救急隊と病院を大きく助けます。'},
+        {t:'「たぶん……1時間くらい前から、だったかも」',g:'bad',dt:1,sc:-2,res:['op|「1時間前、ですね」','言ってしまってから、自信がなくなった。'],next:'family',why:'あいまいな推測で時刻を早めに伝えると、実際には受けられたはずの治療が「時間切れ」と判断されてしまうことがあります。推測ではなく、確認できた事実を伝えましょう。'}
+      ]},
+    family:{lines:[{a:'mom',show:true,f:'cry',e:'!'},{a:'kid',show:true,f:'cry'},'台所から母さんが飛び込んできた。','mom|「お義父さん！ しっかりして！」','母さんは、じいちゃんの肩をつかんで揺さぶっている。陽が、つられて大声で泣き出した。'],
+      q:'家の中が混乱している。どうする？',
+      choices:[
+        {t:'「母さん、陽を隣の部屋へ。それから玄関の鍵を開けて、明かりをつけて」と、一つずつ具体的に頼む。自分はじいちゃんのそばにいる',g:'best',dt:1,sc:2,flag:'roles',res:['「母さん。陽を隣の部屋に連れていって。それから、玄関の鍵を開けて、明かりをつけて」','母さんは、はっとしてうなずいた。',{a:'kid',show:false},{a:'mom',show:false}],next:'wait',why:'あわてている人には、「何を」「どうするか」を一つずつ具体的に頼むと動けます。役割を分けることで、あなたは患者のそばを離れずにいられます。'},
+        {t:'みんなでじいちゃんを囲んで、名前を呼び続ける',g:'bad',dt:2,sc:-1,res:['家族全員で、じいちゃんを囲んで呼びかけ続けた。','じいちゃんは、つらそうに目を閉じている。','玄関の鍵も明かりも、そのままだ。',{a:'kid',show:false}],next:'wait',why:'呼びかけ続けても症状は良くなりません。救急車を迎える準備（玄関の鍵・明かり・誘導）と、患者を見守る役を分けましょう。'},
+        {t:'自分も一緒になって、家じゅうを走り回って薬や保険証を探す',g:'bad',dt:3,sc:-1,res:['あなたは家じゅうの引き出しを開けて回った。','その間、じいちゃんのそばには、取り乱した母さんしかいなかった。',{a:'kid',show:false}],next:'wait',why:'患者のそばには、落ち着いて様子を見られる人が必ず一人いるようにします。探し物は役割を決めてから。'}
+      ]},
+    wait:{lines:[{adv:2},'op|「到着まで、もう少しかかります。そばについていてください」','電話を切ると、じいちゃんが顔をしかめた。',{a:'gpa',f:'pain',t:'pale'},'gpa|「……きもち、わるい……」','今にも吐きそうだ。'],
+      obs:[['意識','ある。少しぼんやり'],['顔色','青白い'],['様子','吐き気を訴えている']],q:'救急車を待つ間、どうする？',
+      choices:[
+        {t:'体を横向きにして、吐いても喉に詰まらないようにする。口には何も入れない',g:'best',dt:2,sc:2,res:[{a:'gpa',p:'downr',f:'weak'},'あなたは、じいちゃんの体をそっと横向きにした。上になった膝を曲げ、体が倒れないように支える。','まもなく、じいちゃんは少し吐いた。横を向いていたおかげで、喉には詰まらなかった。'],next:'prep',why:'吐いたものが気管に入らないよう、横向き（回復体位）にします。脳卒中では飲み込む力が落ちていることがあるので、水も食べ物も与えません。'},
+        {t:'上半身を起こして背中をさすり、水を少しずつ飲ませる',g:'bad',dt:2,sc:-2,flag:'aspir',res:[{a:'gpa',e:'cough'},{fx:'shake'},'水を一口含ませた途端、じいちゃんは吐いた。','吐いたものと水にむせて、苦しそうに咳き込んでいる。'],next:'prep',why:'吐き気がある時に水分をとらせると、嘔吐と誤嚥を招きます。上体を起こしたまま吐くと、吐いたものが気管に入りやすくなります。'},
+        {t:'「しっかりして！」と肩を強く揺さぶり、意識を保たせる',g:'bad',dt:2,sc:-1,res:[{fx:'shake'},'強く揺さぶると、じいちゃんは顔をゆがめ、その場で吐いた。'],next:'prep',why:'強く揺さぶっても意識は良くなりません。声をかけ続け、様子の変化を見守るのが大切です。'},
+        {t:'頭痛薬を飲ませて、楽にしてあげる',g:'bad',dt:3,sc:-2,res:['薬を口に入れようとしたが、じいちゃんはうまく飲み込めず、吐き出してしまった。'],next:'prep',why:'脳出血の可能性もあり、自己判断の薬は危険です。飲み込む力が落ちていれば誤嚥にもつながります。'}
+      ]},
+    prep:{lines:[{adv:2},{se:'siren'},'遠くから、サイレンが聞こえてきた。','救急隊が来る前に、できることがもう一つある。'],q:'何を準備する？',
+      choices:[
+        {t:'お薬手帳と、いつも飲んでいる薬をまとめて手元に置く',g:'best',dt:1,sc:2,flag:'meds',res:['薬箱の横に、お薬手帳があった。','中を見ると「血液をサラサラにする薬」と書かれたページがある。','あなたは手帳と薬の袋を、まとめて握りしめた。'],next:'arrive',why:'特に「血液をサラサラにする薬（抗凝固薬・抗血小板薬）」を飲んでいるかどうかは、治療法の選択に直結します。お薬手帳ごと渡すのが一番確実です。'},
+        {t:'家の前に出て、救急車を誘導する',g:'ok',dt:1,sc:1,res:['あなたは玄関を出て、通りに立った。','その間、じいちゃんのそばには母さんがついている。'],next:'arrive',why:'誘導はとても良い行動です。それに加えてお薬手帳を用意できると、治療がさらにスムーズになります。'},
+        {t:'保険証と財布を持って、付き添いの準備をする',g:'ok',dt:1,sc:0,res:['あなたは財布と保険証をかばんに入れた。'],next:'arrive',why:'保険証は後からでも何とかなります。治療に直結するのは、飲んでいる薬の情報です。'},
+        {t:'じいちゃんを着替えさせ、身なりを整えておく',g:'bad',dt:3,sc:-1,res:['服に着替えさせようとしたが、右腕がうまく袖に通らない。','じいちゃんは苦しそうにうめいた。'],next:'arrive',why:'無理に体を動かす必要はありません。患者は動かさず、そばで見守りましょう。'}
+      ]},
+    arrive:{lines:S=>[{adv:2},{fx:'siren'},{a:'medic',show:true},'救急隊が到着した。','medic|「最後に普通だったのは何時ですか？ 飲んでいる薬はありますか？」',
+        S.flags.meds?'あなたはお薬手帳を差し出した。隊員がページをめくり、うなずく。':'「薬は……ちょっと、わかりません」',
+        S.flags.meds?'medic|「この情報は助かります」':'medic|「病院で確認しましょう」',
+        'medic|「脳卒中の可能性が高いです。治療ができる病院に向かいます」',{fx:'nosiren'}]}
+  },
+  outcome(S){
+    const mins=S.clock+(S.flags.car?0:15)-toMin('18:30');
+    const L=[{bg:'hospital'},{fx:'calm'},{a:'medic',show:false},{a:'mom',show:false},{a:'kid',show:false},{a:'gpa',x:190,y:178,p:'down',f:'closed',t:''},{a:'doc',show:true}];
+    let title,mood,sum;
+    if(S.score>=10&&mins<=90){
+      title='「草取り、来週な」'; mood='good';
+      sum=`病院到着は最後に普通だった時刻から約${Math.round(mins/5)*5}分後。血栓を取り除く治療が間に合い、右手も言葉もほぼ元どおりに回復した。`;
+      L.push(`病院に着いたのは、最後に普通だった時刻から約${Math.round(mins/5)*5}分後だった。`,'doc|「左の脳の血管が詰まっていました。カテーテルで血栓を取り除きました。早く来てくれたおかげです」',{t:'10:00',d:'1週間後'},{a:'gpa',p:'sit',f:'smile',y:186},'一週間後の病室。じいちゃんの右手は、ほとんど元どおりに動く。','gpa|「康太……草取り、来週な」');
+    }else if(S.score>=4&&!S.flags.car){
+      title='長いリハビリの始まり'; mood='mid';
+      sum='血管の詰まりを取る治療は行われたが、右手のしびれと言葉の出にくさが残り、リハビリ病院へ移ることになった。';
+      L.push('doc|「左の脳の血管が詰まっていました。治療はできましたが、右手と言葉に障害が残るかもしれません」',{t:'15:00',d:'2週間後'},{a:'gpa',f:'weak'},'じいちゃんはリハビリ病院に移った。','doc|「時間はかかりますが、少しずつ良くなる方も多いですよ」');
+    }else{
+      title='間に合わなかった時間'; mood='bad';
+      sum='病院に着いた時には、血栓を取り除く治療ができる時間が大きく削られていた。命は助かったが、右半身の麻痺と言葉の障害が残った。';
+      L.push('doc|「脳の血管が詰まってから、時間がたちすぎていました。できる治療は限られています」','命は助かった。しかし、右半身の麻痺と、言葉の障害が残った。','じいちゃんがまた畑に立てる日が来るのかは、まだ誰にも分からない。');
+    }
+    if(S.flags.aspir){ L.push('入院中、じいちゃんは誤嚥性肺炎を起こし、しばらく高い熱が続いた。'); sum+=' 入院中に誤嚥性肺炎も起こした。'; }
+    return {title,mood,sum,lines:L};
+  },
+  debrief:[
+    {h:'何が起きていたのか',p:'脳の左側の血管が詰まる「脳梗塞」です。左の脳は、右半身の動きと言葉をつかさどっています。だから右手の麻痺、右の口元の下がり、言葉の障害が同時に起きました。'},
+    {h:'危険なサイン ― FAST',ul:['<b>F</b>ace（顔）：顔の片側が下がる','<b>A</b>rm（腕）：片方の腕に力が入らない','<b>S</b>peech（言葉）：言葉が出ない、ろれつが回らない','<b>T</b>ime（時間）：1つでもあれば、時刻を確認してすぐ119番']},
+    {h:'一般の人にできること',ul:['すぐに119番。自家用車で運ばない（治療できる病院は限られる）','家族には役割を一つずつ具体的に頼む（子どもを別室へ・玄関の鍵と明かり・誘導）','「最後に普通だった時刻」を伝える','口から水・食べ物・薬を入れない','吐きそうなら横向きにする','お薬手帳と飲んでいる薬を救急隊に渡す']},
+    {h:'なぜ時間が大切なのか',p:'血栓を薬で溶かす治療は、原則として発症から4.5時間以内。カテーテルで血栓を取り出す治療も、早いほど効果が大きくなります。脳は、血流が途絶えた時間の分だけダメージが広がります。'}],
+  deep:`<p><b>左中大脳動脈領域の梗塞</b>：右片麻痺・右顔面麻痺・失語（優位半球）。中枢性顔面麻痺では額のしわ寄せが保たれる（末梢性との鑑別は国試頻出）。</p><p><b>最終健常確認時刻（last known well）</b>：rt-PA静注（4.5時間以内）や機械的血栓回収療法（原則6時間以内、画像条件で最大24時間）の適応判断の起点。発症を目撃していなければ、気づいた時刻ではなくこちらを用いる。</p><p><b>抗凝固薬の内服歴</b>はrt-PA適応と出血リスクに直結する。心原性脳塞栓症は突然発症・重症化しやすく、主幹動脈閉塞で血栓回収の良い適応になりやすい。</p><p><b>嚥下障害</b>：急性期は嚥下評価前の経口摂取を避ける。誤嚥性肺炎は主要な合併症。</p>`
+});
+
+/* ---------------- 02 心臓震盪 ---------------- */
+LOOK.pitcher={k:'teen',skin:'#e8b892',hair:'#1b1714',hs:'short',top:'#f7f7f7',bot:'#f7f7f7',x:'uni'};
+SCENES.ballpark={bg:`${sky('gbp','#a9dcff','#e8f6ff')}<rect width="400" height="250" fill="url(#gbp)"/><rect x="0" y="92" width="400" height="30" fill="#3f8f5a"/><rect x="140" y="56" width="110" height="40" rx="3" fill="#2f4f3f"/><g fill="#ffd54f" font-size="8" font-weight="800"><text x="152" y="72">SCORE</text><text x="152" y="88">0 0 1 0 0</text><text x="212" y="88">1</text></g>
+  <rect x="0" y="122" width="400" height="128" fill="#7cc576"/><g stroke="#8fd087" stroke-width="10" opacity=".5"><path d="M0 140 H400 M0 170 H400"/></g><ellipse cx="210" cy="222" rx="200" ry="42" fill="#d9b38c"/><ellipse cx="215" cy="208" rx="30" ry="8" fill="#c9a27a"/><rect x="209" y="205" width="12" height="3" fill="#fff"/>
+  <path d="M0 150 h70 v40 h-70z" fill="#9aa5b1"/><rect x="0" y="146" width="78" height="8" fill="#6b7682"/><rect x="6" y="176" width="58" height="7" rx="2" fill="#5d6b7a"/><rect x="72" y="160" width="20" height="26" rx="3" fill="#ff7043"/><text x="82" y="177" font-size="7" font-weight="800" fill="#fff" text-anchor="middle">AED</text>`};
+CASES.push({
+  id:'vf',no:'02',title:'大丈夫、だから',theme:'心臓震盪・CPR・AED',struct:'倒れた直後の数分・胸骨圧迫ミニゲーム',scene:'ballpark',
+  tease:'土曜の午後、市民球場。親友の拓海が、マウンドに立っている。',where:'市民球場',
+  blurb:'エースの拓海の胸に、ピッチャーライナーが直撃した。「大丈夫」と手を上げた、その数秒後。',
+  cast:{taku:{name:'拓海',look:'pitcher',x:215,y:206},coach:{name:'監督',look:'neighbor',x:40,y:200,show:false},woman:{name:'保護者の女性',look:'officew',x:110,y:205,show:false},op:OP,aed:{name:'AED'},medic:{name:'救急隊員',look:'medic',x:330,show:false},doc:{name:'医師',look:'doctor',x:320,show:false}},
+  start:'intro',
+  nodes:{
+    intro:{lines:[
+      {d:'土曜日',t:'14:20'},'市民球場。親友の拓海の、野球部の練習試合を見に来ていた。',
+      '拓海は小学校からの親友で、2年生ながらチームのエースだ。',
+      {a:'taku',f:'smile',e:'note'},'5回裏。拓海が、ベンチ横で見ているあなたに、ちらりと笑ってみせた。',
+      '振りかぶって、投げる。',{se:'hit'},'カキン、という鋭い音。',{fx:'shake'},
+      {a:'taku',f:'pain',arm:'chest',e:'!'},'打ち返されたライナーが、拓海の胸の真ん中を直撃した。',
+      'ボールがマウンドを転がる。拓海は胸を押さえて、一瞬かがみこんだが——','taku|「……大丈夫、大丈夫」',
+      '拓海は顔を上げ、ベンチに向かって手を上げてみせた。',
+      {bgm:'tense'},{a:'taku',p:'down',f:'closed',t:'blue',arm:''},{se:'thud'},{fx:'shake'},
+      'その数秒後。拓海の体が、マウンドに崩れ落ちた。',
+      '呼びかける声に、返事がない。口元から、しゃくりあげるような息が、ゆっくり漏れている。'],
+      obs:[['直前','胸の真ん中にライナーが直撃'],['反応','倒れたまま動かない'],['呼吸','しゃくりあげるような息が、ゆっくり'],['顔色','土気色']],
+      q:'どうする？（時間がない）',timer:24,
+      tmo:{t:'何が起きたか分からず、スタンドから見ている',g:'bad',sc:-3,dt:1,res:['審判がタイムをかけ、選手たちが拓海の周りに集まっていく。','誰も、何をすればいいか分からない様子だ。','あなたはグラウンドに駆け込んだ。'],next:'help',why:'胸にボールが当たった後に倒れたら、「息が詰まっただけ」ではなく、心臓が止まった可能性を考えます。数分の迷いが、救命の可能性を大きく下げます。'},
+      choices:[
+        {t:'マウンドに駆け寄り、肩をたたいて大声で呼びかける。反応がないのを確かめ、周りに大声で助けを求める',g:'best',dt:1,sc:2,res:['審判がタイムをかける。あなたはフェンスの扉からグラウンドに駆け込んだ。','「拓海！ わかるか！」','肩をたたいても、反応はない。','「誰か来てください！ 救急車とAEDを！」',{a:'coach',show:true,e:'!'},{a:'woman',show:true,e:'!'},'監督と、スタンドの保護者たちが駆け寄ってきた。'],next:'help',why:'反応を確かめ、なければすぐに大声で人を集めます。胸にボールが当たった直後に倒れた場合は、心臓が止まっていることを第一に考えます。'},
+        {t:'ボールが当たって息が詰まっただけだろう。息が戻るのを少し待つ',g:'bad',dt:2,sc:-4,res:['「胸に当たって、息ができなくなっただけだよな……」','あなたはスタンドで、拓海が起き上がるのを待った。',{adv:2},'拓海は、ぴくりとも動かない。','監督が叫んだ。「おい、息してないぞ！」',{a:'coach',show:true,e:'!'},'あなたはグラウンドに駆け込んだ。'],next:'help',why:'胸への打撃の後に倒れて、しゃくりあげるような呼吸をしている時は、心臓が止まっている可能性があります（心臓震盪）。「息が詰まっただけ」と様子を見ている間に、救命のチャンスが失われていきます。'},
+        {t:'打撲を冷やさなきゃ。ベンチまで走って、氷のうを取ってくる',g:'bad',dt:2,sc:-3,res:['あなたはベンチのクーラーボックスへ走り、氷のうをつかんだ。',{a:'coach',show:true},'戻ると、監督が拓海の肩を揺さぶっていた。','監督「返事がない！ 誰か！」'],next:'help',why:'目の前で倒れた人を前に、まずするべきことは「冷やす」ではなく、反応と呼吸を確かめることです。打撲の手当ては、命に関わる状態でないと分かってからです。'},
+        {t:'みんなで抱えて、日陰のベンチまで運ぶ',g:'bad',dt:2,sc:-2,res:['選手たちと一緒に、拓海を抱え上げた。','ぐったりした体は重く、ベンチまでの数十メートルがひどく長い。',{a:'coach',show:true},'監督「下ろせ！ 息をしてるか見ろ！」'],next:'help',why:'危険な場所でなければ、その場で救命処置を始めます。運んでいる間、脳への血流は止まったままです。'}
+      ]},
+    help:{lines:[{a:'taku',p:'down',f:'closed',t:'blue'},'集まった人たちは、どうしていいか分からない様子で立ちすくんでいる。'],q:'周りの人に、どう頼む？',
+      choices:[
+        {t:'監督を指さして「119番をお願いします！」、別の人に「ベンチ横のAEDを持ってきてください！」と名指しで頼む',g:'best',dt:0,sc:2,flag:'aedfast',res:['「監督、119番をお願いします！」','「そこの方、ベンチの横のAEDを！」',{a:'woman',x:82,e:'!'},'二人がうなずいて、走り出した。'],next:'cprq',why:'「誰か」と言うと、誰もが「誰かがやるだろう」と思って動けなくなります。相手を特定して、具体的に頼むのがコツです。'},
+        {t:'「誰か救急車を呼んで！」と叫ぶ',g:'ok',dt:1,sc:0,res:['「誰か、救急車！」','選手たちが顔を見合わせる。しばらくして、ようやく監督が電話をかけ始めた。','AEDのことは、誰も言い出さない。','「あ……誰か、AEDを！」'],next:'cprq',why:'「誰か」と言うと、誰もが「誰かがやるだろう」と思って動けなくなります。相手を特定して、119番とAEDを別々の人に頼みましょう。'},
+        {t:'自分でスマートフォンを出して、119番に電話する',g:'ok',dt:1,sc:0,res:['あなたは119番を押し、状況を伝えた。','指令員の指示を聞きながら、気づいた。AEDを頼み忘れている。','「あ……誰か、AEDを！」'],next:'cprq',why:'119番はとても大切です。ただ、人が集まっているなら、通報とAEDは他の人に任せ、あなたは胸骨圧迫に集中できます。'}
+      ]},
+    cprq:{lines:['普段どおりの呼吸は、ない。','あなたは拓海の横に膝をついた。ユニフォームの胸に、ボールの縫い目の跡が赤く残っている。'],q:'胸骨圧迫を始める。どうやる？',
+      choices:[
+        {t:'胸の真ん中に手のひらの付け根を重ね、肘を伸ばして、強く・速く・絶え間なく押す',g:'best',dt:0,sc:1,res:['あなたは拓海の胸の真ん中に、両手を重ねた。肘を伸ばし、真上から体重をかける。'],next:'cprgame',why:'胸の真ん中（胸骨の下半分）を、約5cm沈むまで、1分間に100〜120回のテンポで押します。押したら、胸が元の高さに戻るまで力を抜きます。'},
+        {t:'ボールが当たった胸を押すのは怖い。まず人工呼吸を2回してから考える',g:'ok',dt:1,sc:0,res:['あごを上げ、息を吹き込もうとした。うまく胸が上がらない。','迷っているうちに、時間が過ぎていく。','あなたは胸の真ん中に手を重ねた。'],next:'cprgame',why:'ボールが当たった場所でも、心臓が止まっていれば胸骨圧迫が最優先です。人工呼吸の訓練を受けていなければ、胸骨圧迫だけで構いません。'},
+        {t:'打撲したところなので、そっと優しく押す',g:'bad',dt:0,sc:-2,flag:'soft',res:['あなたは、おそるおそる胸を押した。','胸は、ほとんど沈まない。'],next:'cprgame',why:'打撲があっても、弱い圧迫では脳と心臓に血液が届きません。命を救うことが優先です。善意で行った救命処置は、重大な過失がなければ責任を問われることは基本的にないと考えられています。'}
+      ]},
+    cprgame:{mini:'cpr',next:'aed'},
+    aed:{lines:S=>[{adv:S.flags.aedfast?1:3},{a:'woman',x:150,show:true},S.flags.aedfast?'woman|「AED、持ってきました！」':'woman|「AED、ありました！」','オレンジ色のケースが差し出された。'],q:'AEDをどうする？',
+      choices:[
+        {t:'ふたを開けて電源を入れ、音声の指示どおりにパッドを貼る。その間、胸骨圧迫は監督に代わって続けてもらう',g:'best',dt:1,sc:2,res:['「監督、代わってください！ 胸の真ん中を、強く、速く！」',{a:'coach',x:180},'監督が圧迫を引き継ぐ。',{se:'beep'},'aed|「体から衣服を取り除き、パッドを貼ってください」','ユニフォームのボタンを外し、アンダーシャツをまくり上げる。汗を拭いて、右胸の上と左の脇腹にパッドを貼った。'],next:'shock',why:'AEDは誰でも使えます。ふたを開ける（または電源を入れる）と、音声が手順を教えてくれます。準備の間も、圧迫はできるだけ止めません。心臓震盪では、AEDの電気ショックが早いほど助かる可能性が高まります。'},
+        {t:'AEDは医療従事者が使うもの。胸骨圧迫を続けて、救急隊を待つ',g:'bad',dt:5,sc:-4,flag:'noaed',res:['あなたはAEDを横に置いたまま、圧迫を続けた。','腕がしびれてくる。救急車は、まだ来ない。','woman|「私、救命講習を受けたことがあります！」','女性が、AEDのふたを開けた。',{se:'beep'}],next:'shock',why:'AEDは一般市民が使うことを前提に作られた機械です。ショックが必要かどうかは機械が判断します。心臓震盪で起きる不整脈は、電気ショックでしか止められません。'},
+        {t:'胸骨圧迫をいったんやめて、AEDの説明書をよく読む',g:'bad',dt:2,sc:-2,res:['あなたは圧迫をやめ、説明書を広げた。その間、拓海の胸は動かない。','woman|「ふたを開ければしゃべりますよ！」',{se:'beep'}],next:'shock',why:'説明書を読む必要はありません。電源を入れると音声で指示が流れます。その間に圧迫を止めないことが大切です。'}
+      ]},
+    shock:{lines:['aed|「心電図を調べています。体に触らないでください」','数秒後——','aed|「電気ショックが必要です。充電しています。体から離れてください」',{se:'alarm'},'ボタンが点滅し始めた。'],q:'どうする？',
+      choices:[
+        {t:'「みんな離れて！」と大声で言い、誰も体に触れていないことを確かめてから、ショックボタンを押す',g:'best',dt:0,sc:2,res:['「離れてください！ 触らないで！」',{a:'coach',x:120},'全員が手を離したのを確かめ、あなたはボタンを押した。',{se:'shock'},{fx:'flash'},{fx:'shake'},'拓海の体が、びくんと跳ねた。'],next:'after',why:'心電図の解析中とショックの時は、誰も体に触れてはいけません。触れていると正しく解析できず、ショックの時は触れている人にも電気が流れる危険があります。'},
+        {t:'圧迫を止めないように、押してもらいながらボタンを押す',g:'bad',dt:0,sc:-2,res:['監督の手が拓海の胸に乗ったまま、ボタンを押した。',{se:'shock'},{fx:'flash'},{a:'coach',e:'!',x:120},'監督が腕を押さえてのけぞった。'],next:'after',why:'圧迫を止めないことは大切ですが、ショックの瞬間だけは例外です。誰も触れていないことを確認してからボタンを押します。'},
+        {t:'自分が押したせいで何かあったら怖い。ボタンを押せずに待つ',g:'bad',dt:1,sc:-3,res:['指が、ボタンの上で止まった。','aed|「ショックボタンを押してください」','「押して！」 誰かの声に背中を押され、ようやくボタンを押した。',{se:'shock'},{fx:'flash'}],next:'after',why:'AEDは「ショックが必要」と判断した時しか電気を流しません。ためらう1秒1秒が、救命の可能性を下げていきます。'}
+      ]},
+    after:{lines:['aed|「電気ショックが行われました。ただちに胸骨圧迫を再開してください」'],q:'ショックのあと、どうする？',
+      choices:[
+        {t:'すぐに胸骨圧迫を再開する。パッドは貼ったまま、AEDの指示に従い続ける',g:'best',dt:3,sc:2,res:['あなたは再び、胸の真ん中に手を重ねた。','いち、に、さん、し……',{fx:'siren'},'球場の外から、サイレンが近づいてくる。'],next:'END',why:'ショックの直後は、心臓のリズムが戻っていても十分に血液を送れていないことが多いため、すぐに圧迫を再開します。救急隊に引き継ぐまで、パッドははがさず、電源も切りません。'},
+        {t:'息を吹き返したか、しばらく顔を見て様子を見る',g:'bad',dt:1,sc:-2,res:['拓海の顔をのぞきこんだ。動かない。','aed|「胸骨圧迫を再開してください」','我に返り、圧迫を再開した。',{fx:'siren'}],next:'END',why:'ショックの後に様子を見る必要はありません。すぐに圧迫を再開し、2分ごとのAEDの解析を待ちます。'},
+        {t:'役目は終わった。パッドをはがし、横向きに寝かせる',g:'bad',dt:1,sc:-3,res:['パッドをはがそうとした手を、女性が止めた。','woman|「はがしちゃだめ！ 救急隊が来るまで、そのまま！」','あなたは慌てて、圧迫を再開した。',{fx:'siren'}],next:'END',why:'心臓は再び止まることがあります。救急隊に引き継ぐまで、パッドは貼ったまま、電源も入れたままにします。'}
+      ]}
+  },
+  outcome(S){
+    const hi=S.score>=11&&!S.flags.noaed;
+    const L=[{a:'medic',show:true},'救急隊が到着し、処置を引き継いだ。',{fx:'nosiren'}];
+    const hosp=[{bg:'hospital'},{a:'coach',show:false},{a:'woman',show:false},{a:'medic',show:false},{a:'taku',x:190,y:178,p:'down',f:'closed',t:''},{a:'doc',show:true}];
+    if(hi){
+      L.push('medic|「脈が戻っています。自分で呼吸もしている」',...hosp,'doc|「心臓そのものに病気は見つかりませんでした。胸の真ん中にボールが当たったタイミングで、心臓のリズムが乱れて止まったんです。心臓震盪といいます」','doc|「すぐに胸骨圧迫をして、数分でAEDを使えたことが、彼を救いました」',{d:'1か月後',t:'16:00'},{a:'taku',p:'sit',y:186,f:'smile'},'taku|「康太がずっと押しててくれたって、聞いた」','taku|「……大丈夫、って手を上げたの、覚えてないんだよな」','taku|「次は胸のプロテクター、つけて投げるわ」');
+      return {title:'胸のプロテクター',mood:'good',sum:'倒れた直後に駆け寄り、名指しで119番とAEDを頼み、数分で電気ショックができた。拓海は後遺症なく回復した。',lines:L};
+    }
+    if(S.score>=5){
+      L.push(...hosp,'救急車の中で、拓海の心臓は再び動き出した。','doc|「心臓震盪でした。集中治療室で数日様子を見ます。脳にどれだけ影響が残るかは、これからです」',{d:'1か月後'},{a:'taku',f:'weak'},'拓海の意識は戻った。倒れる前後のことは、ほとんど覚えていない。リハビリが続いている。');
+      return {title:'戻ってきた鼓動',mood:'mid',sum:'救急車の中で心拍が戻った。集中治療を経て意識は回復したが、リハビリが必要になった。',lines:L};
+    }
+    L.push(...hosp,'病院で懸命の治療が続けられ、心臓は再び動き出した。','doc|「心臓震盪でした。脳に血液が届かなかった時間が、長かった……」','拓海の意識が戻るまでには、長い時間がかかりそうだ。');
+    return {title:'長い時間',mood:'bad',sum:'心臓は病院で再び動き出したが、電気ショックまでの時間が長く、意識の回復には長い時間がかかる見込みになった。',lines:L};
+  },
+  debrief:[
+    {h:'何が起きていたのか',p:'胸の真ん中にボールが当たった衝撃で、心臓のリズムが突然乱れて震える「心室細動」が起き、心臓が止まりました。これを「心臓震盪（しんぞうしんとう）」と言います。心臓に病気がない若い人にも起こり、それほど強くない打撃でも、当たるタイミングによって起こります。'},
+    {h:'見逃してはいけないこと',ul:['胸にボールや体が当たった後に<b>倒れたら</b>、「息が詰まっただけ」と思わない','当たった直後に「大丈夫」と動けても、数秒後に倒れることがある','しゃくりあげるような呼吸（死戦期呼吸）は、呼吸がないのと同じ','野球・ソフトボール・サッカー・空手など、子どもや若者のスポーツで起きやすい']},
+    {h:'救命の流れ',ul:['駆け寄って、肩をたたいて呼びかける','大声で人を集め、<b>名指しで</b>「あなたは119番」「あなたはAED」','普段どおりの呼吸がなければ、すぐ胸骨圧迫：胸の真ん中を約5cm、1分間に100〜120回、絶え間なく','AEDは音声に従う。解析中とショックの時は誰も触れない','ショック後はすぐ圧迫再開。救急隊に引き継ぐまで続ける']},
+    {h:'なぜ、AEDが決め手なのか',p:'心臓震盪で起きる心室細動は、電気ショックでしか止められません。倒れてからAEDを使うまでの時間が短いほど、助かる可能性は大きく上がります。グラウンドや体育館のどこにAEDがあるか、ふだんから確かめておきましょう。'},
+    {h:'予防',p:'胸部プロテクターは、心臓震盪を完全には防げないものの、リスクを下げる工夫として使われています。指導者や保護者が救命講習を受けておくことも大切です。'}],
+  deep:`<p><b>心臓震盪（commotio cordis）</b>：器質的心疾患のない胸部への非穿通性鈍的衝撃により心室細動が誘発される病態。心周期のT波頂点直前の受攻期（約10〜30ms）に、心臓直上へ衝撃が加わった時に起こりやすい。若年者（柔らかく薄い胸郭）に多い。</p><p><b>臨床像</b>：衝撃直後に数秒間動けた後に倒れることがある。初期波形はVFがほとんどで、ショック適応。救命率は早期の胸骨圧迫と除細動に強く依存する（国試頻出：心臓震盪＝VF＝AED）。</p><p><b>事後評価</b>：心電図・心エコー・MRIなどで器質的疾患（HCM、QT延長症候群など）を除外する。器質的疾患がなければ競技復帰が検討されることが多い。</p>`
+});
+
+/* ---------------- 03 窒息 ---------------- */
+CASES.push({
+  id:'choke',tease:'正月二日の昼。こたつでお雑煮。',where:'自宅・正月',no:'03',title:'正月二日',theme:'窒息（気道異物）',struct:'制限時間つき・3段階',scene:'newyear',
+  blurb:'正月二日のお雑煮。じいちゃんが、声を出せずに喉を押さえた。',
+  cast:{gpa:{name:'じいちゃん',look:'gpa',x:165,p:'sit'},gma:{name:'ばあちゃん',look:'gma',x:255,p:'sit'},op:OP,medic:{name:'救急隊員',look:'medic',x:340,show:false},doc:{name:'医師',look:'doctor',x:320,show:false}},
+  start:'intro',
+  nodes:{
+    intro:{lines:[
+      {d:'1月2日',t:'12:10'},'正月二日の昼。こたつの上には、母さんの作ったお雑煮が湯気を立てている。',
+      {a:'gpa',f:'smile',e:'note'},'gpa|「やっぱり正月は、つきたての餅に限るな」',
+      'gma|「お父さん、ちゃんと小さくして食べてくださいよ」',
+      'gpa|「わかっとる、わかっとる」','じいちゃんは笑いながら、大きな餅をのばして口に入れた。',
+      {bgm:'tense'},{a:'gpa',arm:'neck',f:'shock',t:'red',e:'!'},{fx:'shake'},
+      '次の瞬間、じいちゃんの動きが止まった。','両手で、自分の喉をつかんでいる。',
+      '声が出ていない。咳もできていない。顔が、みるみる赤黒くなっていく。'],
+      obs:[['声','出ない'],['咳','できない'],['手','両手で喉をつかんでいる'],['顔色','赤黒い']],
+      q:'どうする？（時間がない）',timer:24,
+      tmo:{t:'どうしていいか分からず、立ち尽くす',g:'bad',sc:-3,dt:1,res:['頭が真っ白になった。',{a:'gpa',t:'blue'},'じいちゃんの顔色が、紫色に変わっていく。','gma|「康太！ 背中！ 背中をたたいて！」'],next:'abd',why:'窒息では、数分で意識を失い、心臓が止まります。迷ったら、まず大声で人を呼び、背中を強くたたくこと。'},
+      choices:[
+        {t:'「詰まった？」と聞き、うなずくのを見て、ばあちゃんに119番を頼む。すぐに背中を強くたたく',g:'best',dt:1,sc:2,res:['「じいちゃん、詰まった？」','じいちゃんは、必死にうなずいた。','「ばあちゃん、119番！ 餅を詰まらせたって言って！」',{a:'gma',p:'stand',e:'!'},{a:'gpa',p:'lean'},'あなたはじいちゃんの横に回り、体を前かがみにさせた。','肩甲骨の間を、手のひらの付け根で、強く、何度もたたく。',{se:'hit'},{fx:'shake'},{se:'hit'},'……出てこない。'],next:'abd',why:'喉を両手でつかむしぐさ（チョークサイン）と、声も咳も出ない状態は、気道がほぼ完全に詰まっているサインです。人を呼んで119番を頼み、すぐに背中を強くたたきます（背部叩打法）。'},
+        {t:'お茶を飲ませて、餅を流し込む',g:'bad',dt:1,sc:-3,res:['湯呑みを口元に運ぶ。','お茶は口からあふれ、じいちゃんはさらに苦しそうに体をよじった。',{a:'gpa',p:'crouch',t:'blue'},'gma|「何してるの、119番よ！」',{a:'gma',p:'stand'}],next:'abd',why:'水やお茶を飲ませても、詰まった餅は流れません。液体が気管に入り、かえって苦しくさせます。'},
+        {t:'口に指を突っ込んで、餅をかき出す',g:'bad',dt:1,sc:-2,res:['じいちゃんの口に指を入れた。','奥に、白いものがかすかに触れる。だが、指先に押されて、さらに奥へ入っていく感触があった。',{a:'gma',p:'stand',e:'!'}],next:'abd',why:'見えない異物を指で探ると、奥に押し込んでしまうことがあります。指で取り除くのは、口の中に見えているものだけです。'},
+        {t:'掃除機を持ってきて、口から吸い出す',g:'bad',dt:2,sc:-2,res:['押し入れから掃除機を引っ張り出した。','ノズルを口に入れようとしたが、じいちゃんがもがいて、うまくいかない。',{a:'gma',p:'stand',e:'!'}],next:'abd',why:'掃除機による吸引は、口の中や喉を傷つける危険があり、一般の人に勧められる方法ではありません。準備している間に時間も失われます。'}
+      ]},
+    abd:{lines:[{a:'gpa',t:'blue',p:'lean',f:'pain'},'餅は、まだ出てこない。','じいちゃんの唇が、紫色になってきた。'],
+      obs:[['声','出ない'],['唇','紫色'],['意識','まだある']],q:'次の一手は？（時間がない）',timer:24,
+      tmo:{t:'背中をたたき続けるしかない',g:'bad',sc:-1,dt:1,res:['あなたは背中をたたき続けた。','何回目かで、じいちゃんの体から、ふっと力が抜けた——'],next:'down',why:'背部叩打で出なければ、腹部突き上げ法に切り替えます。'},
+      choices:[
+        {t:'後ろから抱きかかえ、へその少し上に握りこぶしを当て、もう片方の手で包んで、手前上方へ一気に突き上げる',g:'best',dt:1,sc:2,flag:'thrust',res:['あなたはじいちゃんの後ろに回り、腰に腕を回した。','へその少し上に握りこぶしを当て、もう片方の手で包む。','「いくよ！」',{se:'hit'},{fx:'shake'},'手前上方へ、一気に突き上げる。',{se:'hit'},{fx:'shake'},{a:'gpa',e:'cough'},'ぽろり、と餅のかけらがこたつ布団に落ちた。','だが、じいちゃんの体から、ふっと力が抜けた——'],next:'down',why:'背中をたたいても出ない時は、腹部突き上げ法（ハイムリック法）を行います。背部叩打と腹部突き上げを、異物が出るか反応がなくなるまで繰り返します（妊婦や乳児には腹部突き上げは行いません）。'},
+        {t:'背中をたたき続ける',g:'ok',dt:1,sc:0,res:['あなたは背中をたたき続けた。',{se:'hit'},{se:'hit'},'何回目かで、じいちゃんの体から、ふっと力が抜けた——'],next:'down',why:'背部叩打は正しい方法ですが、効果がない時は腹部突き上げ法に切り替えると、出せる可能性が高まります。'},
+        {t:'じいちゃんを逆さまにして、揺さぶる',g:'bad',dt:1,sc:-2,res:['抱え上げようとしたが、大人の体は重く、持ち上がらない。','もがいているうちに、じいちゃんの体から、ふっと力が抜けた——'],next:'down',why:'大人を逆さにするのは現実的ではなく、時間を失い、けがの危険もあります。'}
+      ]},
+    down:{lines:[{a:'gpa',p:'down',f:'closed',t:'blue',arm:''},{se:'thud'},'じいちゃんが、畳の上に崩れ落ちた。','呼びかけても、反応がない。胸も、ほとんど動いていない。'],
+      obs:[['反応','ない'],['呼吸','普段どおりの呼吸はない']],q:'どうする？',
+      choices:[
+        {t:'あおむけに寝かせ、すぐに胸骨圧迫を始める。口の中に餅が見えたら取り除く',g:'best',dt:3,sc:2,res:['あなたはじいちゃんをあおむけにし、胸の真ん中に両手を重ねた。','強く、速く、押し続ける。','30回押したところで口の中をのぞくと、白い餅が見えた。指でかき出す。','gma|「救急車、もうすぐ来るって！」'],next:'END',why:'反応がなくなったら、すぐに胸骨圧迫（心肺蘇生）を始めます。圧迫で異物が押し出されることもあります。口の中に見えたものだけ取り除き、見えなければ探らずに圧迫を続けます。'},
+        {t:'腹部突き上げを続けようと、無理に起こして立たせる',g:'bad',dt:2,sc:-2,res:['ぐったりした体を起こそうとしたが、まったく力が入っていない。','gma|「康太、もう寝かせて！ 心臓マッサージ！」','あなたは慌てて、胸骨圧迫を始めた。'],next:'END',why:'意識がなくなったら、腹部突き上げは中止し、寝かせて胸骨圧迫に切り替えます。'},
+        {t:'口の奥まで指を入れて、餅を探り続ける',g:'bad',dt:3,sc:-2,res:['指を喉の奥まで入れて探る。何も触れない。','その間、じいちゃんの胸は、まったく動いていない。','gma|「心臓マッサージを！」','あなたは慌てて、胸を押し始めた。'],next:'END',why:'見えない異物を探し続けるより、胸骨圧迫を優先します。'}
+      ]}
+  },
+  outcome(S){
+    const L=[{fx:'siren'},{a:'medic',show:true},'救急隊が到着し、喉の奥に残っていた餅を器具で取り出した。',{fx:'nosiren'},{bg:'hospital'},{a:'medic',show:false},{a:'gma',show:false},{a:'gpa',x:190,y:178,p:'down',f:'closed',t:''},{a:'doc',show:true}];
+    const tip=S.flags.thrust?'doc|「お腹を突き上げたと聞いています。内臓が傷ついていないか、念のため調べておきますね」':'';
+    if(S.score>=5){ L.push('救急車の中で、じいちゃんの心臓は再び動き出した。',tip,{d:'1週間後',t:'14:00'},{a:'gpa',p:'sit',y:186,f:'smile'},'gpa|「……餅は、小さく切って食べることにする」','gma|「最初からそうしてください」'); return {title:'「餅は小さく切る」',mood:'good',sum:'背部叩打・腹部突き上げ・胸骨圧迫が途切れずにつながり、救急車の中で心拍が戻った。1週間で退院した。',lines:L.filter(Boolean)}; }
+    if(S.score>=1){ L.push('病院で、じいちゃんの心臓は再び動き出した。',tip,'doc|「意識が戻るまで、少し時間がかかるかもしれません」',{d:'2週間後'},{a:'gpa',f:'weak'},'じいちゃんは目を覚ました。まだ言葉は少ないが、ばあちゃんの手を握り返した。'); return {title:'握り返した手',mood:'mid',sum:'病院で心拍は戻ったが、酸素が足りない時間が長く、回復には時間がかかった。',lines:L.filter(Boolean)}; }
+    L.push('病院で懸命の治療が続けられた。心臓は動き出したが、脳が受けたダメージは大きかった。','doc|「詰まってから、時間がたちすぎていました」'); return {title:'長すぎた数分',mood:'bad',sum:'心拍は戻ったが、酸素が届かなかった時間が長く、重い後遺症が残る見込みになった。',lines:L};
+  },
+  debrief:[
+    {h:'何が起きていたのか',p:'餅が喉に詰まり、空気の通り道（気道）がふさがりました。息ができなくなると、数分で意識を失い、心臓が止まります。'},
+    {h:'危険なサイン',ul:['両手で喉をつかむしぐさ（チョークサイン）','声が出ない、咳ができない、息を吸う時にヒューヒュー音がする','顔色が赤黒い→紫色に変わる']},
+    {h:'一般の人にできること',ul:['強い咳ができるなら、咳を続けさせる','咳もできなければ、人を呼んで119番を頼み、すぐ<b>背中を強くたたく</b>（背部叩打）','出なければ<b>腹部突き上げ</b>（妊婦・乳児には行わない）','反応がなくなったら寝かせて<b>胸骨圧迫</b>。口の中に見えたものだけ取り除く','腹部突き上げをした人は、出た後も必ず受診し、そのことを伝える']},
+    {h:'予防',p:'餅は小さく切り、よくかんで、一口ずつ。お茶や汁物で口を湿らせてから食べる。高齢の家族が食べる時は、周りの人も気にかけましょう。'}],
+  deep:`<p><b>完全気道閉塞</b>：発声・咳嗽不能、チアノーゼ、数分で意識消失→低酸素性心停止。</p><p><b>市民の気道異物除去</b>：意識あり→背部叩打・腹部突き上げ（妊婦・高度肥満は胸部突き上げ、乳児は背部叩打と胸部突き上げ）。意識消失→CPR（胸骨圧迫が異物除去の圧を生む）。盲目的指拭法は行わない。</p><p><b>医療機関</b>：喉頭鏡とMagill鉗子での除去。腹部突き上げ後は腹部臓器損傷の評価を。</p><p>餅による窒息は高齢者に多く、正月に集中する。</p>`
+});
+</script>
+<script>
+/* ---------------- 04 溺水 ---------------- */
+CASES.push({
+  id:'drown',tease:'夏休み。美咲と二人で海へ。',where:'海岸',no:'04',title:'波打ち際',theme:'溺水・118番',struct:'制限時間・飛び込むと即終了',scene:'beach',
+  blurb:'夏の海。沖で、小さな頭が静かに浮き沈みしている。',
+  cast:{sis:{name:'美咲',look:'sis',x:150},boy:{name:'男の子',look:'boy',x:265,y:168,p:'float',f:'shock',show:false,thumb:true},surfer:{name:'サーファー',look:'surfer',x:330,y:168,show:false},mother:{name:'男の子の母親',look:'officew',x:350,show:false},op:{name:'118番'},aed:{name:'AED'},medic:{name:'救急隊員',look:'medic',x:340,show:false},doc:{name:'医師',look:'doctor',x:320,show:false}},
+  start:'intro',
+  nodes:{
+    intro:{lines:[
+      {d:'8月',t:'14:20'},'夏休み。美咲と二人で、自転車で30分の海に来ていた。',
+      {a:'sis',f:'smile'},'sis|「お兄ちゃん、こっちの岩場のほう、すいてていいね」','監視員のいる海水浴場から、少し離れた浜だ。',
+      {a:'boy',show:true},'ふと沖を見ると、小学生くらいの男の子が、浮き沈みしている。',
+      '手を振るでもなく、声を上げるでもない。頭が、水面から出たり沈んだりしている。',
+      {a:'sis',f:'normal',e:'?'},'sis|「遊んでるのかな？」',{bgm:'tense'}],
+      obs:[['男の子','頭が浮いたり沈んだりしている'],['声','出していない'],['周り','監視員はいない。親の姿も見えない'],['距離','浜から20メートルほど']],
+      q:'どうする？',timer:24,
+      tmo:{t:'遊んでいるのかどうか、しばらく見ている',g:'bad',sc:-3,dt:1,res:[{a:'boy',y:178},'男の子の頭が、沈んだまま上がってこない。','「溺れてる……！ 誰か！」','sis|「118番する！」'],next:'throw',why:'溺れている人は、声を出したり手を振ったりする余裕がなく、静かに浮き沈みします。「遊んでいるように見える」こともあります。'},
+      choices:[
+        {t:'「溺れてる！」と大声で周りに知らせ、美咲に118番か119番を頼む。浮くものを探す',g:'best',dt:1,sc:2,res:['「溺れてる！ 誰か！」','「美咲、118番！ 海で子どもが溺れてるって！」',{a:'sis',arm:'chest',e:'!'},'sis|「わかった！」','あなたはあたりを見回した。浮き輪、クーラーボックス、空のペットボトル——'],next:'throw',why:'溺れている人は、声を出したり手を振ったりする余裕がないことが多く、静かに浮き沈みします。海の事故は118番（海上保安庁）。119番でも通報できます。'},
+        {t:'すぐに海に飛び込み、泳いで助けに行く',g:'fatal',dt:1,res:['あなたは服のまま海に飛び込んだ。',{se:'wave'},'男の子のそばまで泳ぎ着くと、男の子は無我夢中で、あなたの首にしがみついてきた。','重い。足がつかない。服が水を吸って、体が沈んでいく——',{fx:'dim'}],why:'溺れている人は必死で、近づいた人にしがみつきます。訓練を受けていない人が泳いで助けに行き、救助者も溺れてしまう事故が後を絶ちません。「飛び込まずに、浮くものを投げる」が原則です。'},
+        {t:'遊んでいるだけだろう。少し様子を見る',g:'bad',dt:1,sc:-3,res:[{adv:1},{a:'boy',y:178},'1分後。男の子の頭が、沈んだまま上がってこない。','「溺れてる……！ 誰か！」','sis|「118番する！」'],next:'throw',why:'溺れている人は、静かに浮き沈みします。「おかしい」と思ったら、すぐに大声で人を呼びましょう。'}
+      ]},
+    throw:{lines:[{a:'boy',y:168},'浜辺に、誰かが置いていった子ども用の浮き輪と、クーラーボックスがある。'],q:'どうする？',
+      choices:[
+        {t:'膝くらいまでの浅瀬から、浮き輪を男の子のすぐ近くに投げ入れ、「つかまって！」と叫び続ける',g:'best',dt:2,sc:2,res:['膝まで海に入り、浮き輪を思い切り投げた。','浮き輪は、男の子の少し先に落ちた。','「つかまって！ それにつかまって！」',{a:'boy',arm:'up'},'男の子の手が、浮き輪をつかんだ。',{a:'surfer',show:true},'騒ぎに気づいたサーファーが、ボードで男の子に近づいていく。'],next:'beach',why:'浮くものを投げれば、自分は安全な場所にいたまま助けられます。ペットボトル（少し水を入れると投げやすい）やクーラーボックスも浮き具になります。'},
+        {t:'浮き輪を持って、泳いで助けに行く',g:'bad',dt:2,sc:-2,res:['浮き輪を抱えて泳ぎ出した。','近づくと、男の子が浮き輪ではなく、あなたにしがみつこうとしてきた。','「浮き輪に！ 浮き輪につかまって！」','必死で押しつけ、なんとか男の子の手が浮き輪をつかんだ。',{a:'surfer',show:true},'そこへ、サーファーがボードで近づいてきた。'],next:'beach',why:'浮き具を持っていても、泳いで近づけばしがみつかれる危険があります。訓練を受けていなければ、陸から投げるのが原則です。'},
+        {t:'ロープになるものがないか、駐車場まで探しに行く',g:'ok',dt:3,sc:0,res:['駐車場まで走ったが、ロープは見つからない。',{adv:2},{a:'surfer',show:true},'戻ると、サーファーがボードで男の子に近づいていた。'],next:'beach',why:'探しに行く間にも時間は過ぎます。まず手近な浮くものを投げましょう。'}
+      ]},
+    beach:{lines:[{a:'boy',x:225,y:215,p:'down',f:'closed',t:'blue',arm:''},{a:'surfer',x:285,y:215},'サーファーが男の子を浜に引き上げた。','男の子はぐったりして、目を閉じている。','surfer|「おい……息、してないぞ！」','胸が、まったく動いていない。'],
+      obs:[['反応','ない'],['呼吸','胸が動いていない'],['顔色','青白い']],q:'どうする？',
+      choices:[
+        {t:'すぐに胸骨圧迫を始め、人工呼吸もできれば行う。サーファーにAEDを探してもらう',g:'best',dt:3,sc:2,res:['「AEDを！ 海水浴場の監視所にあるはずです！」',{a:'surfer',x:380},'男の子の胸の真ん中に手を当て、押し始めた。子どもの胸は、厚さの3分の1くらいまで沈むように。','30回押したら、あごを上げて、2回息を吹き込む。'],next:'aedw',why:'溺水では、体が酸欠になって心臓が止まります。胸骨圧迫に加えて、人工呼吸ができる人は行うと効果的です（できなければ胸骨圧迫だけでも続けます）。'},
+        {t:'お腹を押して、飲んだ水を吐かせる',g:'bad',dt:2,sc:-3,res:['男の子のお腹を押した。','口から少し水が出たが、その水が逆に喉の奥へ流れ込んでいく。','surfer|「心臓マッサージだろ！」','慌てて胸に手を移し、押し始めた。'],next:'aedw',why:'水を吐かせようとするのは時間の無駄で、吐いたものが気管に入る危険もあります。呼吸がなければ、すぐ胸骨圧迫です。'},
+        {t:'逆さまにして背中をたたき、水を出す',g:'bad',dt:2,sc:-3,res:['男の子の足を持って逆さにし、背中をたたいた。','水はほとんど出てこない。','surfer|「それより心臓マッサージだ！」','慌てて寝かせ、胸を押し始めた。'],next:'aedw',why:'肺から水を出そうとする必要はありません。その時間で、胸骨圧迫と人工呼吸を始めます。'}
+      ]},
+    aedw:{lines:[{adv:2},{a:'surfer',x:290},{se:'beep'},'surfer|「AED、持ってきた！」','男の子の体は、海水でびしょ濡れだ。胸には砂もついている。'],q:'AEDのパッドをどうする？',
+      choices:[
+        {t:'圧迫はサーファーに代わってもらい、胸の水と砂をタオルで素早く拭いてからパッドを貼る',g:'best',dt:1,sc:2,res:['「代わってください！」','バスタオルで胸の水と砂をさっと拭き、パッドを貼った。','aed|「心電図を調べています。……ショックは不要です。胸骨圧迫を続けてください」','押し続けて、何度目かで——',{a:'boy',e:'cough',f:'pain',t:''},{se:'hit'},'男の子が、水を吐いて激しく咳き込んだ。'],next:'after',why:'胸が濡れていると、電気が皮膚の表面を流れてしまい、パッドもはがれやすくなります。水や砂は素早く拭き取ってから貼ります。貼り薬があれば、はがして拭いてから貼ります。'},
+        {t:'一刻を争うので、濡れたままパッドを貼る',g:'bad',dt:1,sc:-2,res:['濡れた胸にパッドを押しつけた。端がめくれて、うまく貼りつかない。','aed|「パッドをしっかり貼ってください」','結局タオルで拭いて、貼り直すことになった。','押し続けて、何度目かで——',{a:'boy',e:'cough',f:'pain',t:''},'男の子が、水を吐いて咳き込んだ。'],next:'after',why:'濡れた胸ではパッドが密着せず、電気も皮膚の表面を流れてしまいます。数秒で拭けるので、拭いてから貼りましょう。'},
+        {t:'体が濡れている人にAEDは危ないので、使わずに圧迫だけ続ける',g:'bad',dt:2,sc:-2,res:['AEDを横に置いたまま、圧迫を続けた。','surfer|「拭けば使えるって書いてあるぞ！」','あなたはタオルで胸を拭き、パッドを貼った。','押し続けて、何度目かで——',{a:'boy',e:'cough',f:'pain',t:''},'男の子が、水を吐いて咳き込んだ。'],next:'after',why:'濡れていても、胸を拭けばAEDは使えます。水の中や水たまりの上でなければ、ためらう必要はありません。'}
+      ]},
+    after:{lines:[{a:'boy',p:'downr',f:'cry'},'男の子は、弱々しく泣き出した。',{a:'mother',show:true,e:'!'},'mother|「ゆうと！ ゆうと！」','母親が駆け寄ってきた。','mother|「ありがとうございます！ もう大丈夫です、このまま連れて帰ります……！」'],q:'どうする？',
+      choices:[
+        {t:'「元気に見えても、必ず病院で診てもらってください」と伝え、体を温めながら救急隊を待つ',g:'best',dt:6,sc:2,res:['「待ってください。一度溺れた人は、あとから肺の具合が悪くなることがあるんです。救急車、もう来ます」','母親は男の子をバスタオルで包み、うなずいた。',{fx:'siren'},'サイレンの音が近づいてくる。'],next:'END',why:'溺水のあとは、元気そうに見えても、数時間たってから呼吸が苦しくなることがあります。救急隊に引き継ぎ、必ず医療機関で診てもらいます。体が冷えているので保温も大切です。'},
+        {t:'元気になったので、母親に任せて帰る',g:'bad',dt:6,sc:-3,flag:'gohome',res:['「よかった……」',{a:'mother',x:420},{a:'boy',show:false},'母親は何度も頭を下げ、男の子を抱いて駐車場へ歩いていった。',{fx:'siren'},'救急車が着いた時、そこにはもう誰もいなかった。'],next:'END',why:'溺水のあとは、元気そうに見えても、数時間たってから呼吸が苦しくなることがあります。必ず医療機関で診てもらいます。'}
+      ]}
+  },
+  outcome(S){
+    const L=[{fx:'nosiren'},{bg:'hospital'},{a:'sis',show:false},{a:'surfer',show:false},{a:'mother',show:false},{a:'medic',show:false},{a:'boy',show:true,x:190,y:178,p:'down',f:'closed',t:''},{a:'doc',show:true}];
+    if(S.flags.gohome){ L.push('その夜。男の子は息苦しさを訴え、救急外来に運ばれた。','doc|「肺に水が入ったことで、肺炎を起こしています。数日入院しましょう」'); return {title:'その夜のこと',mood:'mid',sum:'蘇生は成功したが、病院に行かずに帰宅し、その夜に呼吸が苦しくなって入院した。',lines:L}; }
+    if(S.score>=7){ L.push('doc|「肺に少し水が入っていますが、早く心肺蘇生をしてもらえたので、脳への影響はなさそうです」',{d:'3日後'},{a:'boy',p:'sit',y:186,f:'smile'},'男の子は元気に退院した。','後日、母親から手紙が届いた。「浮き輪を投げてくれたお兄さんへ」'); return {title:'浮き輪を投げてくれたお兄さんへ',mood:'good',sum:'飛び込まずに浮き輪を投げ、浜でただちに心肺蘇生を行った。男の子は3日後に元気に退院した。',lines:L}; }
+    L.push('doc|「酸素が足りない時間が、少し長かったようです。しばらく入院して様子を見ます」',{a:'boy',f:'weak'},'男の子は助かった。回復には、少し時間がかかりそうだ。'); return {title:'少し長かった時間',mood:'mid',sum:'男の子は助かったが、救助と蘇生の開始が遅れ、回復に時間がかかることになった。',lines:L};
+  },
+  debrief:[
+    {h:'何が起きていたのか',p:'溺れて水を吸い込み、息ができなくなって、体が酸欠になりました。酸素が足りなくなると、やがて心臓が止まります。'},
+    {h:'危険なサイン',ul:['溺れている人は<b>静か</b>。声を出せず、手を振る余裕もない','頭が水面に出たり沈んだりしている','顔を上に向けて、口が水面すれすれ']},
+    {h:'一般の人にできること',ul:['大声で周りに知らせ、<b>118番</b>（海上保安庁）か119番','<b>飛び込まない</b>。浮き輪・ペットボトル・クーラーボックスなど浮くものを投げる','引き上げたら、呼吸がなければすぐ胸骨圧迫。人工呼吸ができれば行う','AEDのパッドは、胸の水を拭いてから貼る','水を吐かせようとしない','元気になっても、必ず病院へ']},
+    {h:'予防',p:'監視員のいる海水浴場で泳ぐ。子どもからは目を離さない。ライフジャケットを着る。'}],
+  deep:`<p><b>溺水の病態</b>：本質は低酸素。淡水・海水の違いは臨床上ほとんど問題にならない。呼吸原性心停止のため、人工呼吸の重要性が心原性より高い。</p><p><b>小児の胸骨圧迫</b>：胸の厚さの約1/3。</p><p><b>遅発性の呼吸障害</b>：誤嚥・サーファクタント障害による肺水腫・ARDSが数時間後に顕在化しうるため、症状が軽くても医療機関での観察が推奨される。低体温の合併にも注意。</p>`
+});
+
+/* ---------------- 05 交通事故 ---------------- */
+CASES.push({
+  id:'traffic',tease:'部活の帰り道、いつもの交差点。',where:'交差点・夕方',no:'05',title:'帰り道の交差点',theme:'交通事故・大量出血',struct:'二次事故・2人のどちらを先に',scene:'crossing',crashThumb:true,
+  blurb:'部活の帰り道。目の前で、車とバイクがぶつかった。',
+  cast:{rider:{name:'バイクの人',look:'rider',x:120,p:'down',f:'closed',show:false,thumb:true},child:{name:'女の子',look:'boy',x:368,y:222,p:'sit',f:'cry',show:false,thumb:false},driver:{name:'運転していた女性',look:'driver',x:300,show:false},pass:{name:'通行人の男性',look:'salary',x:40,show:false},medic:{name:'救急隊員',look:'medic',x:350,show:false},doc:{name:'医師',look:'doctor',x:320,show:false}},
+  start:'intro',
+  nodes:{
+    intro:{lines:[
+      {d:'金曜日',t:'18:05'},'部活の帰り道。自転車で、いつもの交差点にさしかかった。',
+      {se:'thud'},{fx:'shake'},{fx:'flash'},'ガシャン、という大きな音。',{bgm:'tense'},
+      {fx:'crash'},{a:'rider',show:true},{a:'driver',show:true,f:'shock',e:'!'},
+      '目の前で、右折してきた車とバイクがぶつかった。','交差点の真ん中に、バイクと人が倒れている。','後ろからは、車が次々と来ている。'],
+      obs:[['バイクの人','交差点の真ん中に倒れている'],['車','次々と来ている'],['運転者','車から降りてきた']],
+      q:'まず、どうする？',timer:20,
+      tmo:{t:'足がすくんで、その場から動けない',g:'bad',sc:-2,dt:1,res:['体が動かない。',{a:'pass',show:true},'通行人の男性が、後ろの車に手を振って止めてくれた。','pass|「君、119番できる？」','はっとして、あなたはスマートフォンを取り出した。'],next:'triage',why:'驚いて動けなくなるのは自然なことです。まず深呼吸して、「安全確保」「通報」から始めましょう。'},
+      choices:[
+        {t:'自転車を歩道に止め、後ろから来る車に大きく手を振って止まってもらう。近くの人に119番を頼む',g:'best',dt:1,sc:2,res:['自転車を歩道に放り出し、後ろから来た車に向かって両手を大きく振った。','車が止まり、ハザードランプがつく。',{a:'pass',show:true},'「すみません！ 119番お願いします！ 事故です！」','通行人の男性が、スマートフォンを取り出した。'],next:'triage',why:'事故現場では、まず二次事故を防ぐことが大切です。後続車に知らせ、安全を確保してから近づきます。自分がはねられては、誰も助けられません。'},
+        {t:'すぐに交差点の真ん中へ飛び出して、倒れた人に駆け寄る',g:'fatal',dt:1,res:['あなたは自転車を放り出して、交差点の真ん中へ走った。','その時、右側からクラクションが鳴り響いた——',{fx:'flash'},{se:'thud'},{fx:'dim'}],why:'交通量のある道路に飛び出すと、後続車にはねられる二次事故の危険があります。まず後続車を止め、安全を確保してから近づきます。'},
+        {t:'スマートフォンで、事故の様子を撮影しておく',g:'bad',dt:1,sc:-2,res:['あなたはスマートフォンを構えた。','画面越しに見るバイクの人は、ぴくりとも動かない。',{a:'pass',show:true},'pass|「撮ってないで、手伝って！」'],next:'triage',why:'記録は警察の仕事です。最初の数分は、安全確保と通報、そして人命が最優先です。'}
+      ]},
+    triage:{lines:[{a:'driver',x:290,f:'cry',arm:'chest'},'車から、運転していた女性が降りてきた。','driver|「痛い、痛い！ 腕が……！」','女性は腕を押さえて、大声で叫んでいる。','バイクの人は、倒れたまま声を出さない。'],
+      obs:[['女性','大声で痛がっている。歩ける'],['バイクの人','倒れたまま。声を出さない']],q:'どちらに先に向かう？',
+      choices:[
+        {t:'声を出さずに倒れている、バイクの人',g:'best',dt:1,sc:2,res:['あなたは、バイクの人のそばにしゃがんだ。','「大丈夫ですか！ 聞こえますか！」',{a:'rider',f:'pain'},'うめき声が返ってきた。反応はあるが、鈍い。','太ももから、血がどくどくと流れ出している。地面に、赤い水たまりが広がっていく。'],next:'bleed',why:'大声で痛がっている人は、少なくとも意識があり、呼吸もできています。声を出さない人の方が、重症の可能性が高いのです。けが人が複数いる時に、緊急度で優先順位をつけることを「トリアージ」と言います。'},
+        {t:'大声で痛がっている、運転していた女性',g:'bad',dt:2,sc:-2,res:['女性に駆け寄った。「大丈夫ですか？」','driver|「腕が……でも、私より、あの人を……！」','女性は、倒れているバイクの人を指さした。',{a:'rider',f:'pain'},'近づくと、太ももから、血がどくどくと流れ出している。'],next:'bleed',why:'大声で痛がっている人は、少なくとも意識があり、呼吸もできています。声を出さない人の方が、重症の可能性が高いのです。'}
+      ]},
+    bleed:{lines:[],obs:[['意識','呼びかけにうめく。反応が鈍い'],['出血','太ももから、どくどくと'],['ヘルメット','かぶったまま']],q:'どうする？',
+      choices:[
+        {t:'部活のタオルを傷口に当て、両手で体重をかけて強く押さえ続ける。ヘルメットは外さず、首を動かさない',g:'best',dt:3,sc:2,res:['かばんから部活のタオルを出し、傷口に当てた。','コンビニの袋を手にかぶせ、両手を重ねて、体重をかけて押さえる。','タオルは、みるみる赤く染まっていく。それでも、手を離さない。','「首は動かさないでください。ヘルメットもそのままで」'],next:'look',why:'大量出血には、傷口を直接強く押さえる「直接圧迫止血」が基本です。血液に直接触れないよう、ビニール袋や手袋を使います。頭や首を打っている可能性があるので、ヘルメットは外さず、首を動かさないようにします。'},
+        {t:'息がしやすいように、ヘルメットを外してあげる',g:'bad',dt:2,sc:-3,res:['あごひもをほどき、ヘルメットを引き抜こうとした。','首が、がくりと曲がる。','pass|「待って、首は動かさないほうが……！」','その間も、太ももからの出血は続いている。','あなたは慌てて、タオルで傷口を押さえた。'],next:'look',why:'事故で首の骨を痛めている可能性があります。ヘルメットを外すと首が動き、神経を傷つける危険があります。呼吸ができていれば、ヘルメットは救急隊に任せます。'},
+        {t:'脚の付け根を、ベルトできつく縛る',g:'ok',dt:2,sc:0,flag:'belt',res:['自分のベルトを外し、太ももの付け根に巻いて、きつく締めた。','出血の勢いが、少し弱まった気がする。','締めた時刻を覚えておこう、と思った。'],next:'look',why:'一般の人の止血は、まず傷口を直接強く押さえることが基本です。ベルトなどで縛る方法（止血帯）は、直接押さえても止まらない手足の大出血で使われることがありますが、正しく強く締めないと効果がなく、かえって出血が増えることもあります。使った時は、締めた時刻を救急隊に伝えます。'},
+        {t:'道路の上は危ないので、歩道まで引きずって運ぶ',g:'bad',dt:2,sc:-2,res:['脇に手を入れ、引きずろうとした。','うめき声が上がり、首がぐらりと揺れた。','出血が、さらに増えた気がする。','あなたは手を止め、タオルで傷口を押さえた。'],next:'look',why:'車が止まって安全が確保できているなら、動かさないのが原則です（火災など、その場にいるほうが危険な時は別です）。'}
+      ]},
+    look:{lines:['押さえ続けるうちに、出血は少しずつ弱まってきた。','driver|「……あの子は？ ねえ、あの子は！」','運転していた女性が、自分の車のほうを振り返って叫んでいる。'],q:'どうする？',
+      choices:[
+        {t:'通行人の男性に圧迫を代わってもらい（やり方を教えて）、車の周りにほかのけが人がいないか確かめる',g:'best',dt:2,sc:2,res:['「ここを、体重をかけて押さえ続けてください。離さないで」','男性が両手で押さえたのを確かめて、車の後ろに回った。',{a:'child',show:true},'後部座席のチャイルドシートで、小さな女の子が、声も出さずに震えていた。額から血が流れている。','「大丈夫だよ。お兄ちゃんがいるからね」','意識はある。泣く元気もないほど、おびえている。'],next:'report',why:'目立つけがの人に集中していると、静かにしている別のけが人を見落としがちです。手当てを代われる人がいれば任せて、周りにほかのけが人がいないか必ず見回しましょう。'},
+        {t:'目の前の出血を止めることに集中し、周りは見ない',g:'bad',dt:3,sc:-2,res:['あなたは傷口を押さえ続けた。','女性の叫び声は、だんだん泣き声に変わっていった。',{adv:3},{a:'child',show:true},'救急隊が来て初めて、車の後部座席に、額から血を流した小さな女の子がいることが分かった。'],next:'report',why:'けが人が一人とは限りません。特に子どもや高齢者は、声を出さずにいることがあります。手当てを代われる人がいれば任せて、周りを見回しましょう。'}
+      ]},
+    report:{lines:[{adv:5},{fx:'siren'},{a:'medic',show:true},'サイレンが近づき、救急車が止まった。','medic|「どなたか、状況を教えてください！」'],q:'救急隊に、何を伝える？',
+      choices:[
+        {t:'「6時5分ごろ、右折の車とバイクがぶつかりました。バイクの人は反応が鈍く、太ももから大量に出血していて、押さえています」',g:'best',dt:1,sc:2,res:['medic|「ありがとう。そのまま押さえていて。交代します」'],next:'END',why:'「いつ・何が起きたか」「意識の状態」「けがの場所と出血」「何をしたか」を短く伝えると、救急隊の判断が早くなります。'},
+        {t:'「とにかく血がすごいんです！ 早く！」',g:'ok',dt:2,sc:0,res:['medic|「落ち着いて。いつ、どんな事故でしたか？ この人の意識は？」','あなたは、一つずつ答えた。'],next:'END',why:'あせる気持ちは当然ですが、「いつ・何が・どんな状態か」を伝えると、救急隊はすぐに動けます。'},
+        {t:'「僕は見ていただけなので……」と、その場を離れる',g:'bad',dt:1,sc:-2,res:['あなたは、そっと現場を離れた。','振り返ると、救急隊員が周りの人に、事故の様子を聞いて回っていた。'],next:'END',why:'目撃者の情報は、救急隊にも警察にも大切です。可能な範囲で、見たことを伝えましょう。'}
+      ]}
+  },
+  outcome(S){
+    const L=[{fx:'nosiren'},{bg:'hospital'},{a:'driver',show:false},{a:'pass',show:false},{a:'medic',show:false},{a:'rider',x:190,y:178,p:'down',f:'closed'},{a:'doc',show:true}];
+    if(S.score>=9){ L.push('doc|「太ももの太い血管が傷ついていました。現場でずっと押さえてもらっていたおかげで、出血が最小限で済んでいます」',S.flags.belt?'doc|「ベルトを締めた時刻を伝えてもらえたのも助かりました」':'doc|「首の骨にもひびがありましたが、動かさずにいてくれたので、神経は無事です」',{d:'2週間後'},{a:'rider',p:'sit',y:186,f:'smile'},'rider|「タオルで押さえてくれてたの、君だったんだね。ありがとう」'); return {title:'赤く染まったタオル',mood:'good',sum:'後続車を止めて安全を確保し、声を出さない重症者を優先して、直接圧迫で止血を続けた。バイクの男性は回復した。',lines:L}; }
+    if(S.score>=2){ L.push('doc|「出血が多く、輸血が必要でした。命に別状はありませんが、しばらく入院です」',{a:'rider',f:'weak'}); return {title:'命はつながった',mood:'mid',sum:'男性は助かったが、出血が多く、輸血と長めの入院が必要になった。',lines:L}; }
+    L.push('doc|「出血が多く、危ない状態でした。集中治療室で治療を続けます」',{a:'rider',f:'closed'}); return {title:'失われた血液',mood:'bad',sum:'安全確保や止血が遅れ、男性は大量出血で危険な状態になった。',lines:L};
+  },
+  debrief:[
+    {h:'何が起きていたのか',p:'事故で太ももの血管が傷つき、大量に出血していました。人は体の血液の3分の1ほどを失うと、命が危険になります。'},
+    {h:'現場で最初にすること',ul:['<b>自分の安全</b>：後続車に知らせて止める。むやみに車道に飛び出さない','119番（警察へは110番）','けが人が複数なら、<b>声を出さない人</b>を優先して確認する']},
+    {h:'一般の人にできること',ul:['出血は、清潔な布で傷口を<b>直接強く押さえ続ける</b>（直接圧迫止血）','血液に直接触れないよう、ビニール袋や手袋を使う','ヘルメットは外さず、首を動かさない','安全なら、むやみに動かさない','手当てを代われる人がいたら任せ、ほかにけが人がいないか見回す（静かな子ども・高齢者を見落とさない）']}],
+  deep:`<p><b>出血性ショック</b>：循環血液量の約30〜40%の喪失で血圧低下が顕在化。大腿動脈損傷は短時間で致死的。</p><p><b>止血</b>：直接圧迫が第一。四肢の大出血で圧迫が無効な場合はターニケットが推奨され、装着時刻の記録が重要。</p><p><b>頸椎保護</b>：高エネルギー外傷では頸椎損傷を前提に扱う。ヘルメット除去は訓練者が2人法で行う。</p><p><b>トリアージ</b>：START法では歩行可能者は緑、呼吸・循環・意識で赤・黄を判断する。</p>`
+});
+
+/* ---------------- 06 架空の有毒物質事件 ---------------- */
+CASES.push({
+  id:'toxic',tease:'月曜の朝、通学ラッシュの地下鉄ホーム。（架空の出来事）',where:'地下鉄の駅',no:'06',title:'見えない霧',theme:'有毒物質による中毒',struct:'制限時間・近づくと即終了',scene:'station',
+  blurb:'通学ラッシュの地下鉄ホーム。降りてきた人たちが、次々とうずくまる。（架空の事件）',
+  cast:{salary:{name:'会社員の男性',look:'salary',x:110},officew:{name:'女性',look:'officew',x:315},kento:{name:'健人',look:'kento',x:215},op:OP,fire:{name:'消防隊員',look:'fire',x:340,show:false},doc:{name:'医師',look:'doctor',x:320,show:false}},
+  start:'intro',
+  nodes:{
+    intro:{lines:[
+      {sys:'この物語は架空の事件です。過去に国内で起きた事件の教訓を参考にしています。'},
+      {d:'月曜日',t:'07:52'},'朝の通学ラッシュ。みなと線・中央駅のホーム。',
+      'kento|「なあ康太、今日の小テスト、範囲どこだっけ」',{se:'beep'},
+      '電車が着き、ドアが開いた。',{fx:'haze'},{bgm:'tense'},
+      {a:'salary',p:'crouch',f:'pain'},'降りてきた会社員の男性が、ふらつきながらホームにひざをついた。',
+      {a:'officew',p:'crouch',f:'cry'},'少し離れたところで、女性も目を押さえてうずくまっている。',
+      '車内の床に、液体のしみた新聞紙の包みが見える。','鼻の奥がつんとする。なんだか、ホームの照明が暗く見える。'],
+      obs:[['倒れた人','何人も、同時に'],['症状','目の痛み・涙・鼻水・せき'],['車内','液体のしみた包み'],['あなた','鼻がつんとする。周りが暗く見える']],
+      q:'どうする？',timer:20,
+      tmo:{t:'何が起きているのか分からず、立ちすくむ',g:'bad',sc:-3,dt:1,flag:'exposed',res:['涙と鼻水が止まらない。視界がどんどん暗くなる。',{a:'kento',e:'!'},'kento|「康太、やばいって、逃げよう！」','健人に腕を引っ張られ、あなたは階段を駆け上がった。'],next:'above',why:'原因が分からないまま、何人もが同時に倒れていたら、その場に有毒な物質があると考えて、すぐ離れます。'},
+      choices:[
+        {t:'倒れた人に近づかず、ハンカチで口と鼻を覆い、健人の腕をつかんで地上へ向かう。「離れて！」と周りにも叫ぶ',g:'best',dt:2,sc:2,res:['「健人、息止めて！ 上へ！」','ハンカチで口と鼻を覆い、健人の腕をつかんで階段へ走る。','「みなさん、離れて！ 上へ！」','あなたの声に、周りの人たちも階段へ向かい始めた。'],next:'above',why:'原因の分からないまま、何人もが同時に倒れている現場では、有毒な物質が漂っている可能性があります。まず自分がその場を離れ、通報することが、結果として多くの人を救います。地下で発生した有毒ガスには空気より重いものも多く、地上へ出ることが大切です。'},
+        {t:'一番近くに倒れた男性を助け起こしに、包みのある車両のほうへ駆け寄る',g:'fatal',dt:1,res:['男性のそばに駆け寄り、肩を抱えた。','その瞬間、目の前が急に暗くなった。','息が苦しい。よだれが止まらない。足に力が入らない——',{fx:'dim'}],why:'何人もが同時に倒れている現場では、助けに近づいた人が次の被害者になってしまいます。過去の事件でも、救助しようとした人や駅員が被害を受けました。まず自分が離れ、通報することが最優先です。'},
+        {t:'何が起きているのか、スマホで撮影しながら様子を見る',g:'bad',dt:2,sc:-2,flag:'exposed',res:['スマートフォンを構えた。','画面がにじむ。涙と鼻水が止まらない。','kento|「康太、やばいって、逃げよう！」','健人に腕を引っ張られ、階段を駆け上がった。'],next:'above',why:'その場にとどまるほど、有毒な物質を吸い込みます。撮影より、まず離れることです。'}
+      ]},
+    above:{lines:S=>[{bg:'exit'},{fx:'nohaze'},{a:'salary',show:false},{a:'officew',show:false},{a:'kento',x:220,p:'crouch',f:'pain'},'地上に出た。朝の光が、いつもより暗く見える。','kento|「目が……痛い。なんか、暗い……」',S.flags.exposed?'あなたも、涙と鼻水が止まらない。胸が少し苦しい。':'あなたも、鼻の奥がまだつんとする。','階段からは、次々と人があふれ出してくる。'],
+      q:'どうする？',
+      choices:[
+        {t:'119番に電話して、「駅で何人も倒れている。目の痛み、暗く見える、鼻水、液体のしみた包みがあった」と具体的に伝える',g:'best',dt:2,sc:2,res:[{se:'ring'},'「救急です！ みなと線の中央駅で、何人も倒れています！」','「目が痛くて、暗く見えて、鼻水が止まらない人がたくさんいます。車内に、液体のしみた包みがありました」','op|「わかりました。毒物の可能性があります。駅には戻らないでください。風通しのいい場所で待っていてください」'],next:'decon',why:'「何人も同時に」「どんな症状か」「怪しい物」を具体的に伝えることで、消防や病院は毒物を疑い、防護服や解毒剤を準備して対応できます。'},
+        {t:'少し目が痛いだけ。遅刻しそうなので、学校へ向かう',g:'bad',dt:10,sc:-3,flag:'school',res:['健人と、学校へ歩き出した。',{adv:10},'10分後。涙と鼻水が止まらない。視界が、ますます暗い。',{a:'kento',p:'crouch',f:'pain',e:'!'},'kento|「気持ち悪い……」','あなたは慌てて119番に電話した。'],next:'decon',why:'原因不明の症状が出ている時は、自分も被害者の可能性があります。その場で通報し、救急隊の指示を受けましょう。症状が後から強くなることもあります。'},
+        {t:'まだホームにいる人を助けに、もう一度駅に戻る',g:'fatal',dt:1,res:['あなたは階段を駆け下りた。',{bg:'station'},{fx:'haze'},'ホームの空気は、さっきよりも重い。','胸が締めつけられ、膝が崩れた——',{fx:'dim'}],why:'有毒な物質が残っている場所に戻れば、あなたも倒れます。中の人の救助は、防護服を着た消防隊に任せます。「中にまだ人がいる」と伝えることが、あなたにできる救助です。'}
+      ]},
+    decon:{lines:[{fx:'siren'},{a:'fire',show:true},'消防隊が到着した。防護服を着た隊員もいる。','fire|「駅から出てきた人は、こちらに集まってください！」'],q:'救急隊を待つ間、自分たちはどうする？',
+      choices:[
+        {t:'上着を脱いでビニール袋に入れ、顔や手を水で洗い流す。目もよく洗う',g:'best',dt:5,sc:2,res:['上着を脱ぎ、コンビニの袋に入れて口を縛った。','ペットボトルの水で顔と手を洗い、目もよく洗い流す。健人にも同じようにさせた。','fire|「それでいい。服を脱ぐだけで、体についた毒物の大部分が取り除けます」'],next:'END',why:'服や髪に毒物がついていると、自分も周りの人も被害を受け続けます。上着を脱ぐだけで、ついた物質の大部分を取り除けるとされています。脱いだ服は袋に入れて密閉します。'},
+        {t:'早く病院に行きたいので、服のまま救急車に乗り込もうとする',g:'bad',dt:3,sc:-2,res:['止まっている救急車に駆け寄った。','fire|「待って！ その服のままだと、救急隊員や病院の人も被害を受けます！ まず服を脱いで！」','あなたは上着を脱ぎ、顔を洗った。'],next:'END',why:'服についた毒物は、救急車の中や病院でまわりの人に被害を広げます（二次汚染）。まず服を脱ぎ、洗い流します。'},
+        {t:'目薬をさして、様子を見る',g:'bad',dt:3,sc:-1,res:['かばんの目薬をさした。','しみるような痛みは、少しも引かない。','fire|「目は水で洗って！ 服も脱いで！」'],next:'END',why:'目薬では、目についた毒物は洗い流せません。大量の水で洗います。'}
+      ]}
+  },
+  outcome(S){
+    const L=[{fx:'calm'},{bg:'hospital'},{a:'fire',show:false},{a:'kento',x:190,y:178,p:'down',f:'weak'},{a:'doc',show:true},'doc|「暗く見えたのは、瞳が小さくなっていたからです。神経に作用する毒物の症状です」'];
+    if(S.score>=5){ L.push('doc|「すぐに離れて、服を脱いで洗ったのが良かった。二人とも軽症です」',{d:'翌日'},{a:'kento',p:'sit',y:186,f:'smile'},'kento|「お前が腕つかんでくれなかったら、オレ、あのホームにいたと思う」'); return {title:'腕をつかんだ手',mood:'good',sum:'倒れた人に近づかずに地上へ逃げ、具体的に通報し、服を脱いで洗い流した。二人とも軽症で済んだ。',lines:L}; }
+    L.push('doc|「毒物を吸った時間が長かったようです。解毒の薬を使いました。1日入院しましょう」',{a:'kento',f:'closed'}); return {title:'長かった数分',mood:'mid',sum:'その場にとどまった時間や、洗い流すまでの時間が長く、入院して解毒の治療が必要になった。',lines:L};
+  },
+  debrief:[
+    {h:'何が起きていたのか',p:'（架空の事件）神経の働きを狂わせる有毒な物質がまかれ、吸い込んだ人に、目の痛み・暗く見える・鼻水・よだれ・せき・吐き気などが起きました。重症になると、呼吸ができなくなります。'},
+    {h:'危険なサイン',ul:['<b>何人もが同時に</b>、原因不明で具合が悪くなる','変なにおい、液体、不審な包み','目が痛い、暗く見える、涙・鼻水・よだれが止まらない']},
+    {h:'一般の人にできること',ul:['<b>近づかない</b>。すぐにその場を離れ、地上・風上へ','口と鼻を布で覆う','119番で「何人も・どんな症状・怪しい物」を具体的に伝える','<b>中に戻らない</b>。「まだ人がいる」と消防に伝える','服を脱いで袋に入れ、顔や手を水で洗い流す']},
+    {h:'過去の教訓',p:'国内で実際に起きた有毒物質による事件では、原因が分からないまま救助に向かった駅員や、患者を受け入れた病院の職員にも被害が広がりました。「近づかない・離れる・脱ぐ・洗う」は、その教訓から生まれた行動です。'}],
+  deep:`<p><b>有機リン系（神経剤を含む）中毒</b>：アセチルコリンエステラーゼ阻害。ムスカリン様症状（縮瞳・流涎・流涙・発汗・気管支漏・徐脈・下痢）とニコチン様症状（線維束攣縮・筋力低下・呼吸筋麻痺）。縮瞳による「暗く見える」は特徴的（国試頻出）。</p><p><b>治療</b>：アトロピン（ムスカリン症状、気道分泌の改善を目標に反復）、プラリドキシム（PAM、エージング前のコリンエステラーゼ再賦活）、けいれんにはベンゾジアゼピン。</p><p><b>除染</b>：脱衣で大部分が除去される。医療機関での二次汚染の予防が重要。</p>`
+});
+
+/* ---------------- 07 架空のビル火災 ---------------- */
+CASES.push({
+  id:'fire',tease:'駅前の雑居ビル4階、塾の自習室。（架空の出来事）',where:'塾・夜',no:'07',title:'煙の向こう',theme:'火災・気道のやけど',struct:'即終了あり・あとから悪化',scene:'building',
+  blurb:'塾の入った雑居ビルで、火災報知器が鳴った。（架空の火災）',
+  cast:{kakeru:{name:'翔',look:'kento',x:150,show:false,thumb:true},fire:{name:'消防隊員',look:'fire',x:300,show:false},medic:{name:'救急隊員',look:'medic',x:340,show:false},doc:{name:'医師',look:'doctor',x:320,show:false}},
+  start:'intro',
+  nodes:{
+    intro:{lines:[
+      {sys:'この物語は架空の火災です。'},
+      {d:'水曜日',t:'19:40'},'駅前の雑居ビル4階。塾の自習室で、翔と並んで英語の長文を解いていた。',
+      'kakeru|「康太、ここの関係代名詞わかる？」',
+      {se:'alarm'},{bgm:'tense'},{fx:'red'},'突然、けたたましい火災報知器の音が鳴り響いた。',
+      {fx:'smoke'},{fx:'fire'},'廊下のドアのすき間から、灰色の煙が入ってくる。'],
+      obs:[['場所','4階の自習室'],['煙','廊下から入ってきている'],['近くに','エレベーターと階段']],
+      q:'どうする？（時間がない）',timer:20,
+      tmo:{t:'どうしていいか分からず、席から動けない',g:'bad',sc:-3,dt:2,flag:'smoke1',res:['煙がどんどん濃くなる。','kakeru|「康太！ 階段！」','翔に腕を引かれ、あなたは煙を吸い込みながら階段を駆け下りた。'],next:'outside',why:'火災では数十秒の差が生死を分けます。すぐに避難します。'},
+      choices:[
+        {t:'ハンカチで口と鼻を覆い、姿勢を低くして、翔と一緒に階段で避難する。エレベーターは使わない',g:'best',dt:2,sc:2,res:['「翔、低く！ 階段！」','ハンカチで口と鼻を覆い、腰をかがめて廊下に出た。','煙は天井のほうにたまっている。床に近いほど、まだ息ができる。','非常口の緑のランプを目指して、階段を駆け下りた。'],next:'outside',why:'煙は上にたまります。姿勢を低くし、口と鼻を覆って煙を吸わないようにします。火災の時、エレベーターは止まったり、煙が流れ込んだりするので使いません。'},
+        {t:'エレベーターで一気に1階まで降りる',g:'fatal',dt:1,res:['エレベーターのボタンを押す。扉が開き、乗り込んだ。','3階を過ぎたところで、がくん、と止まった。','明かりが消え、扉のすき間から、熱い煙が流れ込んでくる——',{fx:'dim'}],why:'火災の時のエレベーターは、停電で止まったり、火災の階で扉が開いたり、煙の通り道になったりします。避難は必ず階段で。'},
+        {t:'自習室にかばんとスマホを取りに戻ってから逃げる',g:'bad',dt:2,sc:-2,flag:'smoke1',res:['「かばん！」 自習室に戻り、かばんをつかんだ。','廊下に出ると、煙はもう胸の高さまで下りてきていた。','思わず吸い込んで、激しくむせる。','翔に腕を引かれ、階段を駆け下りた。'],next:'outside',why:'火災では、数十秒の差が生死を分けます。荷物は取りに戻らず、すぐに避難します。'}
+      ]},
+    outside:{lines:[{fx:'nosmoke'},{fx:'nored'},{a:'kakeru',show:true,p:'crouch',f:'pain',e:'cough'},'ビルの前の歩道に出た。見上げると、4階の窓から黒い煙が噴き出している。','kakeru|「先生が……田中先生が、まだ上に！ 教室の生徒を見に行くって……」'],q:'どうする？',
+      choices:[
+        {t:'自分は戻らず、到着した消防隊に「4階に先生が残っている」と伝える',g:'best',dt:3,sc:2,res:[{fx:'siren'},{a:'fire',show:true},'消防車が到着した。','「4階に、先生が一人残っています！ 自習室の奥の教室です！」','fire|「わかった。中には絶対に入らないで」','隊員たちが、空気ボンベを背負ってビルに入っていった。'],next:'burn',why:'建物の中に人が残っている時、一般の人が助けに戻るのは非常に危険です。「誰が・どこに」残っているかを消防隊に伝えることが、一番確実な救助につながります。'},
+        {t:'先生を助けに、もう一度階段を上る',g:'fatal',dt:1,res:['あなたはビルの入口に飛び込んだ。',{fx:'smoke'},'階段は、さっきとは比べものにならないほど煙が充満していた。','一息吸っただけで、目の前が真っ暗になった——',{fx:'dim'}],why:'火災の煙には一酸化炭素などの有毒なガスが含まれ、数回吸っただけで意識を失うことがあります。助けに戻るのではなく、消防隊に「誰がどこにいるか」を伝えます。'},
+        {t:'先生に電話をかけ続けて、無事を確かめる',g:'bad',dt:3,sc:-1,res:['先生のスマートフォンに何度も電話をかける。つながらない。',{fx:'siren'},{a:'fire',show:true},'その間に、消防車が到着した。','「4階に先生が！」 あなたは隊員に叫んだ。'],next:'burn',why:'電話より先に、到着した消防隊に「誰が・どこに」いるかを伝えることを優先します。'}
+      ]},
+    burn:{lines:[{adv:6},{fx:'nosiren'},{a:'fire',show:false},{a:'kakeru',p:'stand',f:'weak'},'翔の声が、かすれている。','kakeru|「平気、平気……ちょっと喉がイガイガするだけ」','顔はすすで黒く、鼻の穴のまわりも黒い。前髪の先が、少し縮れている。','右腕が赤く腫れて、水ぶくれができかけている。'],
+      obs:[['声','かすれている'],['顔','すすだらけ。鼻の穴も黒い'],['前髪','先が焦げている'],['右腕','赤く腫れ、水ぶくれ'],['本人','「平気」']],q:'翔に、何をする？',
+      choices:[
+        {t:'右腕を水で15〜20分冷やし続ける。そして「声のかすれと顔のすす」を救急隊に伝えて、必ず診てもらう',g:'best',dt:15,sc:2,flag:'told',res:['近くのコンビニで水を買い、翔の腕に少しずつかけ続ける。','「翔、声がかすれてるのは、喉もやけどしてるかもしれない。絶対に診てもらおう」',{a:'medic',show:true},'救急隊員に伝えると、隊員の表情が変わった。','medic|「すぐに運びます。喉のやけどは、あとから急に息ができなくなることがある」'],next:'END',why:'やけどは、すぐに流水で冷やします。そして、声のかすれ・顔のやけどやすす・鼻毛の焦げは、喉や気道のやけど（気道熱傷）のサインです。最初は元気でも、数時間で喉が腫れて息ができなくなることがあります。'},
+        {t:'元気そうなので、腕だけ冷やして一緒に家に帰る',g:'bad',dt:15,sc:-3,flag:'home',res:['水で腕を冷やすと、翔は「もう平気」と笑った。','二人で駅まで歩き、それぞれの家に帰った。'],next:'END',why:'声のかすれ・顔のすす・鼻毛の焦げは、気道のやけどのサインです。最初は元気でも、数時間で喉が腫れて息ができなくなることがあります。必ず救急隊に伝え、受診します。'},
+        {t:'腕の水ぶくれをつぶして、保冷剤を直接当てる',g:'bad',dt:5,sc:-2,res:['水ぶくれを指でつぶし、コンビニでもらった保冷剤を押し当てた。','kakeru|「いってぇ！」',{a:'medic',show:true},'通りかかった救急隊員が、すぐに止めた。','medic|「つぶさないで。冷やすのは水で。……君、声がかすれてるね。一緒に来て」'],next:'END',why:'水ぶくれは、傷を守る天然のカバーです。つぶすと感染の原因になります。氷や保冷剤を直接当てると冷えすぎて傷を深くすることがあります。流水で冷やしましょう。'}
+      ]}
+  },
+  outcome(S){
+    const L=[{bg:'hospital'},{a:'medic',show:false},{a:'kakeru',x:190,y:178,p:'down',f:'weak'},{a:'doc',show:true}];
+    if(S.flags.home){ L.push({t:'02:10',d:'その夜'},'その夜遅く、翔の家から電話があった。翔が、息が苦しいと言って救急車で運ばれたという。','doc|「喉が腫れて、空気の通り道が狭くなっていました。呼吸を助ける管を入れて治療しています」'); return {title:'その夜の電話',mood:'bad',sum:'腕のやけどは冷やしたが、気道のやけどのサインを見逃し、夜中に呼吸困難で運ばれた。',lines:L}; }
+    const fireman='doc|「消防隊が、4階の教室で先生を見つけて救助したそうです」';
+    if(S.score>=5){ L.push('doc|「喉の奥が少し腫れていました。早めに来てくれたので、薬と酸素で治療できています」',fireman,{d:'1週間後'},{a:'kakeru',p:'sit',y:186,f:'smile'},'kakeru|「関係代名詞、まだ教えてもらってないからな」'); return {title:'関係代名詞の続き',mood:'good',sum:'階段で低い姿勢で逃げ、戻らずに消防へ伝え、気道のやけどのサインを救急隊に伝えた。翔も先生も助かった。',lines:L}; }
+    L.push('doc|「煙を吸った量が多かったようです。数日入院して様子を見ます」',fireman); return {title:'吸い込んだ煙',mood:'mid',sum:'避難は遅れたが、翔は入院して治療を受けた。',lines:L};
+  },
+  debrief:[
+    {h:'何が起きていたのか',p:'（架空の火災）煙を吸い込み、熱い煙で喉や気道にやけどを負っていました。火災で亡くなる人の多くは、炎ではなく煙が原因です。'},
+    {h:'避難の原則',ul:['口と鼻を布で覆い、<b>姿勢を低く</b>（煙は上にたまる）','<b>エレベーターは使わない</b>。階段で','荷物を取りに戻らない','<b>中に戻らない</b>。「誰が・どこに」残っているかを消防隊に伝える']},
+    {h:'見逃してはいけないサイン（気道のやけど）',ul:['声がかすれる','顔のやけど、鼻や口のまわりのすす','鼻毛や前髪の焦げ','最初は元気でも、数時間で息ができなくなることがある → 必ず受診']},
+    {h:'やけどの手当て',ul:['すぐに水道水などの流水で15〜20分冷やす','水ぶくれはつぶさない','氷や保冷剤を直接当てない。油や味噌、アロエなどを塗らない','服がはりついていたら、無理にはがさない']}],
+  deep:`<p><b>気道熱傷</b>：顔面熱傷、鼻毛焦げ、口腔内すす、嗄声、喘鳴は上気道浮腫の危険因子。浮腫は数時間で進行するため早期の気道確保（挿管）を検討。</p><p><b>煙吸入</b>：CO中毒・シアン中毒の合併に注意（パルスオキシメータはCO-Hbを区別できない）。</p><p><b>熱傷の評価</b>：成人は9の法則、小児は5の法則で面積を算定。初期輸液はBaxter（Parkland）法が国試頻出。</p>`
+});
+</script>
+<script>
+SCENES.exit={bg:`${sky('ge','#bfe3ff','#eef8ff')}<rect width="400" height="250" fill="url(#ge)"/><g fill="#d9cfe6"><rect x="0" y="60" width="70" height="140"/><rect x="80" y="40" width="60" height="160"/><rect x="300" y="50" width="50" height="150"/><rect x="355" y="80" width="45" height="120"/></g>
+  <rect x="160" y="110" width="110" height="90" fill="#2e7d6b"/><rect x="172" y="122" width="86" height="78" fill="#3f4b59"/><g stroke="#8899aa" stroke-width="3"><path d="M176 196 h78 M180 186 h70 M184 176 h62 M188 166 h54"/></g><rect x="168" y="96" width="94" height="18" rx="4" fill="#fff"/><text x="215" y="109" font-size="10" font-weight="800" fill="#2e7d6b" text-anchor="middle">みなと線 中央駅 出口</text>
+  <rect x="0" y="200" width="400" height="50" fill="#c8cdd4"/><rect x="0" y="196" width="400" height="5" fill="#e3e6ea"/>`};
+
+/* ---------------- 08 アナフィラキシー ---------------- */
+CASES.push({
+  id:'ana',tease:'昼休みの教室。クラスメイトが手作りのお菓子を配っている。',where:'学校・昼休み',no:'08',title:'昼休みのクッキー',theme:'アナフィラキシー・エピペン',struct:'制限時間・良くなった後が危ない',scene:'classroom',
+  blurb:'昼休みの教室。手作りクッキーを食べたクラスメイトの様子が変わる。',
+  cast:{sakura:{name:'森下さくら',look:'sakura',x:262,p:'sit'},mai:{name:'舞',look:'mai',x:330},teacher:{name:'先生',look:'teacher',x:360,show:false},medic:{name:'救急隊員',look:'medic',x:350,show:false},doc:{name:'医師',look:'doctor',x:320,show:false}},
+  start:'intro',
+  nodes:{
+    intro:{lines:[
+      {d:'火曜日',t:'12:35'},'昼休みの教室。',
+      {a:'mai',f:'smile',e:'heart'},'mai|「みんなー、昨日焼いたクッキー持ってきたよ！」',
+      '舞が、手作りのクッキーを配っている。日直で一緒の森下さくらも、一枚受け取って口に入れた。',
+      {a:'sakura',f:'smile'},'sakura|「おいしい！ ……あれ、これ何が入ってる？」','mai|「隠し味に、アーモンドの粉をちょっとだけ」',
+      {bgm:'tense'},{a:'sakura',f:'shock',e:'!'},'さくらの顔色が変わった。','sakura|「……私、ナッツのアレルギーなの」',
+      {adv:5},{a:'sakura',f:'pain',t:'red',arm:'neck'},'5分後。さくらの首や腕に、赤いぶつぶつが広がっている。','唇が腫れて、ゼーゼーと苦しそうな息をしている。','sakura|「くるしい……かばんに……」'],
+      obs:[['皮膚','首や腕に赤いぶつぶつ'],['唇','腫れている'],['呼吸','ゼーゼーして苦しそう'],['本人','「かばんに……」']],
+      q:'どうする？（時間がない）',timer:24,
+      tmo:{t:'どうしていいか分からず、先生が来るのを待つ',g:'bad',sc:-3,dt:3,res:['あなたは、さくらの背中をさすることしかできなかった。','息の音が、だんだん高く、細くなっていく。'],next:'pen',why:'皮膚の症状に息苦しさが加わったら、命に関わります。エピペンがあれば迷わず使い、119番です。'},
+      choices:[
+        {t:'さくらのかばんからエピペン（自己注射薬）を出し、本人に打ってもらう。打てなければ手伝う。同時に先生と119番を頼む',g:'best',dt:1,sc:3,res:['「エピペン、かばんだね！」','かばんのポケットに、オレンジ色の先のペンがあった。','「舞、先生呼んで！ 誰か119番！」',{a:'mai',x:420},'さくらの手は震えて、うまく握れない。','「一緒にやるよ」','青い安全キャップを外し、オレンジ色の先端を、さくらの太ももの外側に当てる。','服の上から、カチッと音がするまで強く押しつけ、数秒そのまま押さえた。',{se:'hit'}],next:'lie',why:'皮膚の症状に加えて、息苦しさ・ゼーゼー・唇の腫れなどが出ている時は、命に関わるアナフィラキシーです。処方されたエピペンがあれば迷わず使います。本人が打てない時は、周りの人が手伝ったり代わりに打ったりできます。服の上からでも打てます。'},
+        {t:'保健室まで、肩を貸して歩いて連れていく',g:'bad',dt:2,sc:-3,res:['「保健室行こう、立てる？」','さくらを立たせて歩き出した瞬間、さくらの膝ががくんと折れた。',{a:'sakura',p:'crouch',t:'pale'},{fx:'shake'},'顔が真っ白だ。'],next:'pen',why:'アナフィラキシーでは血圧が下がっていることがあり、急に立たせたり歩かせたりすると、意識を失ったり心臓が止まったりする危険があります。その場で寝かせて、エピペンと119番です。'},
+        {t:'先生が来るまで、水を飲ませて落ち着かせる',g:'bad',dt:3,sc:-2,res:['水を飲ませようとしたが、さくらはむせて飲み込めない。',{a:'sakura',e:'cough'},'息の音が、さらに高く、細くなっていく。'],next:'pen',why:'喉の奥が腫れていて、水は助けになりません。'},
+        {t:'さくらのお母さんに電話して、どうしたらいいか聞く',g:'bad',dt:3,sc:-2,res:['さくらのスマートフォンから、お母さんに電話した。','電話の向こうで、お母さんが叫んだ。「エピペン！ かばんの中のエピペンを使って！」'],next:'pen',why:'保護者への連絡は大切ですが、後でできます。症状が重い時は、エピペンと119番が先です。'}
+      ]},
+    pen:{lines:[{a:'teacher',show:true,e:'!'},'teacher|「森下！ 大丈夫か！ エピペンは持ってるか？」'],q:'先生に、どう伝える？',
+      choices:[
+        {t:'「かばんの中です。すぐ打ってください！」と伝え、さくらを横に寝かせる',g:'ok',dt:1,sc:1,res:['先生がかばんからエピペンを取り出し、さくらの太ももの外側に打った。',{se:'hit'},{a:'sakura',p:'down',f:'weak'},'あなたは、さくらを床に寝かせた。'],next:'lie2',why:'遅れはしましたが、ここでエピペンを使えたことは大切です。'},
+        {t:'「救急車が来るまで、待ったほうがいいと思います」と伝える',g:'bad',dt:4,sc:-3,res:['teacher|「いや、待てない！」','先生はかばんからエピペンを取り出し、すぐに打った。',{se:'hit'},{a:'sakura',p:'down',f:'closed',t:'pale'}],next:'lie2',why:'救急車の到着には時間がかかります。アナフィラキシーでは、エピペンを打つのが早いほど効果があります。'}
+      ]},
+    lie:{lines:[{adv:4},{a:'sakura',f:'weak',t:'',arm:''},'数分たつと、さくらのゼーゼーいう息が、少し落ち着いてきた。','sakura|「……ちょっと、楽になった。トイレで顔、洗いたい……」','さくらが立ち上がろうとしている。'],q:'どうする？',
+      choices:[
+        {t:'立たせずに、その場で横に寝かせ、足を少し高くする（息が苦しければ上半身を少し起こす）。救急車を待つ',g:'best',dt:3,sc:2,res:['「だめ、立たないで。横になってて」',{a:'sakura',p:'down',f:'weak'},'ジャージを丸めて、さくらの足の下に入れた。',{a:'teacher',show:true},'先生が駆けつけてきた。'],next:'hand',why:'エピペンで一時的に良くなっても、急に立ち上がると血圧が下がり、急変することがあります。横に寝かせ、足を高くして救急隊を待ちます。息苦しい時は、上半身を少し起こした楽な姿勢にします。'},
+        {t:'楽になったなら大丈夫。トイレまで付き添う',g:'bad',dt:3,sc:-3,res:['さくらを支えて立たせた。','数歩歩いたところで、さくらの体が崩れ落ちた。',{a:'sakura',p:'down',f:'closed',t:'pale'},{fx:'shake'},{a:'teacher',show:true,e:'!'},'teacher|「横にしろ！ 救急車はまだか！」'],next:'hand',why:'エピペンの効果で良くなったように見えても、立ち上がると血圧が急に下がって倒れることがあります。救急隊が来るまで寝かせておきます。'}
+      ]},
+    lie2:{lines:[{adv:4},{a:'sakura',t:'',arm:''},'しばらくすると、さくらの息が少しずつ落ち着いてきた。'],next:null,
+      q:'救急車を待つ間、どうする？',
+      choices:[
+        {t:'寝かせたまま足を少し高くし、そばで呼吸と顔色を見守る',g:'best',dt:3,sc:2,res:['ジャージを丸めて、さくらの足の下に入れた。','胸が上下しているのを、じっと見守る。'],next:'hand',why:'エピペンで良くなっても、急に立つと急変することがあります。寝かせたまま救急隊を待ちます。'},
+        {t:'落ち着いたので、保健室のベッドまで歩かせる',g:'bad',dt:3,sc:-3,res:['さくらを立たせると、すぐに膝が崩れた。',{a:'sakura',p:'down',f:'closed',t:'pale'},'teacher|「動かすな！」'],next:'hand',why:'立ち上がると血圧が急に下がることがあります。'}
+      ]},
+    hand:{lines:[{fx:'siren'},{a:'medic',show:true},'救急隊が到着した。','medic|「エピペンは使いましたか？」'],q:'救急隊に、どう伝える？',
+      choices:[
+        {t:'「12時41分ごろに打ちました」と時刻を伝え、使い終わったエピペンを渡す。アーモンド入りのクッキーを食べたことも伝える',g:'best',dt:1,sc:2,res:['medic|「時刻とペン、助かります。原因の食べ物も分かった。病院に向かいます」'],next:'END',why:'打った時刻と使用済みのエピペンは、救急隊の判断に役立ちます。原因になった食べ物も伝えます。'},
+        {t:'「打ちました」とだけ伝える',g:'ok',dt:1,sc:0,res:['medic|「何時ごろですか？ 原因に心当たりは？」','あなたは、思い出しながら答えた。'],next:'END',why:'打った時刻・原因の食べ物・使用済みのペンを伝えると、より正確な治療につながります。'},
+        {t:'「もう良くなったので、病院はいいと思います」と答える',g:'bad',dt:1,sc:-3,flag:'refuse',res:['medic|「いや、必ず病院へ行きます。エピペンの効き目は一時的なんです」'],next:'END',why:'エピペンの効果は一時的で、数時間後に再び症状が出ること（二相性反応）があります。良くなっても、必ず病院で診てもらいます。'}
+      ]}
+  },
+  outcome(S){
+    const L=[{fx:'nosiren'},{bg:'hospital'},{a:'mai',show:false},{a:'teacher',show:false},{a:'medic',show:false},{a:'sakura',x:190,y:178,p:'down',f:'weak',t:''},{a:'doc',show:true}];
+    if(S.score>=6){ L.push('doc|「すぐにエピペンを使って、寝かせてくれたのが良かった。念のため一晩入院して、症状がぶり返さないか見ます」',{d:'翌日'},{a:'sakura',p:'sit',y:186,f:'smile'},'sakura|「春日くん、キャップの色まで知ってたね」','「保健の授業で、練習用のを触ったことがあったから」'); return {title:'青いキャップ',mood:'good',sum:'すぐにエピペンを使い、立たせずに寝かせて救急隊へ引き継いだ。さくらは翌日元気に退院した。',lines:L}; }
+    if(S.score>=1){ L.push('doc|「エピペンが少し遅れましたが、病院で追加の治療をしました。今夜は入院です」'); return {title:'少し遅れた一本',mood:'mid',sum:'エピペンを打つまでに時間がかかり、病院で追加の治療と入院が必要になった。',lines:L}; }
+    L.push('doc|「一時、血圧がかなり下がっていました。集中治療室で様子を見ます」',{a:'sakura',f:'closed'}); return {title:'下がった血圧',mood:'bad',sum:'エピペンの遅れや、立たせたことで血圧が大きく下がり、集中治療が必要になった。',lines:L};
+  },
+  debrief:[
+    {h:'何が起きていたのか',p:'食べ物のアレルギーで、全身に強い反応が起きる「アナフィラキシー」です。皮膚だけでなく、喉が腫れて息ができなくなったり、血圧が下がって意識を失ったりします。'},
+    {h:'危険なサイン',ul:['じんましん・赤みに加えて','息苦しさ、ゼーゼー、声がかすれる、唇やまぶたの腫れ','ぐったりする、顔色が悪い、意識がぼんやりする','くり返し吐く、強い腹痛']},
+    {h:'一般の人にできること',ul:['処方されたエピペンがあれば<b>迷わず使う</b>（太ももの外側、服の上からでよい）','本人が打てなければ、周りの人が手伝う・代わりに打つ','すぐ119番。打った時刻を伝え、使ったペンを渡す','<b>立たせない・歩かせない</b>。寝かせて足を高く（息苦しければ上半身を少し起こす）','良くなっても必ず病院へ（あとから症状がぶり返すことがある）']}],
+  deep:`<p><b>アナフィラキシーの診断</b>：皮膚・粘膜症状に呼吸器・循環器症状を伴う、またはアレルゲン曝露後の急速な血圧低下。</p><p><b>アドレナリン筋注</b>：大腿外側に0.01mg/kg（成人最大0.5mg）。エピペンは0.3mg（体重30kg以上）と0.15mg製剤。早期投与が予後を左右する。</p><p><b>体位</b>：急な座位・立位への変換で静脈還流が低下し心停止に至りうる（empty ventricle）。仰臥位・下肢挙上を保つ。</p><p><b>二相性反応</b>：数時間後の再燃に備え経過観察。</p>`
+});
+
+/* ---------------- 09 熊本地震・肺塞栓 ---------------- */
+CASES.push({
+  id:'pe',tease:'2016年4月、熊本地震。小学校の駐車場で。',where:'避難先の駐車場',no:'09',title:'眠れない夜',theme:'エコノミークラス症候群',struct:'あとから急変・最初は119番ではない',scene:'carpark',
+  blurb:'2016年、熊本地震。地震がおさまっても、危険は終わっていなかった。',
+  cast:{gma:{name:'ばあちゃん',look:'gma',x:240},kid:{name:'陽',look:'kid',x:180,show:false},doc:{name:'医療チームの医師',look:'doctor',x:340,show:false},op:OP},
+  start:'intro',
+  nodes:{
+    intro:{lines:[
+      {sys:'この物語は、2016年の熊本地震を背景にしたフィクションです。登場する家族は架空の人物です。'},
+      {d:'2016年4月16日',t:'01:25'},{fx:'night'},{fx:'quake'},'真夜中、突き上げるような揺れに飛び起きた。','2日前の夜にも大きな地震があった。今度のは、それよりずっと大きい。',
+      {d:'4月17日',t:'07:30'},{fx:'nonight'},{a:'kid',show:true},'家は傾き、壁に大きなひびが入った。余震は今も、何度も来る。',
+      '家族は近くの小学校の駐車場に車を停め、車の中で夜を明かした。','ばあちゃんは昨夜、軽自動車の助手席で、座ったまま眠った。',
+      'トイレは校舎の外の仮設トイレで、少し遠い。「トイレが遠いから」と、水をほとんど口にしていない。',
+      {a:'gma',f:'smile'},'gma|「みんな大変なんだから。私は大丈夫よ」'],
+      obs:[['ばあちゃん','元気はある。疲れている'],['水分','ほとんどとっていない'],['寝る場所','軽自動車の助手席（座ったまま）'],['トイレ','校舎の外の仮設。少し遠い']],
+      q:'ばあちゃんに、どう声をかける？',
+      choices:[
+        {t:'水をこまめに飲むよう勧め、トイレにも一緒に行く。ときどき一緒に車の外を歩く',g:'best',dt:30,sc:2,res:['「水、ちゃんと飲もう。トイレは一緒に行くから」','ばあちゃんは少し照れくさそうに、ペットボトルを受け取った。','昼には二人で、校庭の周りをゆっくり一周した。'],next:'night',why:'水分不足と、長時間同じ姿勢でいることが、足の静脈に血のかたまり（血栓）ができる大きな原因です。水をとり、歩き、足を動かすことが予防になります。'},
+        {t:'本人の気持ちを尊重して、そっとしておく',g:'bad',dt:30,sc:-2,res:['「そうだね。無理しないでね」','ばあちゃんは一日中、助手席に座ったまま過ごした。'],next:'night',why:'遠慮から水やトイレを我慢する高齢者は少なくありません。周りが声をかけ、一緒に動くことが予防につながります。'},
+        {t:'体力を温存できるよう、車の中でじっと安静にしていてもらう',g:'bad',dt:30,sc:-2,res:['「疲れてるんだから、車で休んでて」','ばあちゃんはうなずき、一日中、助手席から動かなかった。'],next:'night',why:'この場合の「安静」は、むしろ危険です。じっとしていると足の血の流れが滞り、血栓ができやすくなります。'},
+        {t:'甘い缶コーヒーとお菓子を渡して、元気を出してもらう',g:'ok',dt:30,sc:0,res:['「これでも飲んで、元気出して」','ばあちゃんは缶コーヒーを半分だけ飲んで、助手席に戻った。'],next:'night',why:'気持ちはうれしいものですが、水分補給の基本は水や麦茶です。それ以上に大切なのは、同じ姿勢を続けず、体を動かすことです。'}
+      ]},
+    night:{lines:[{t:'21:00'},{fx:'night'},'夜になると、また冷えてきた。',{fx:'shake'},'余震のたびに、車がぎしりと揺れる。今夜も車の中で眠るしかない。','ばあちゃんは今夜も、軽自動車の助手席に座ろうとしている。'],q:'どこで、どう寝てもらう？',
+      choices:[
+        {t:'ミニバンの後部座席を倒し、足を伸ばして横になれるようにする。寝る前に、かかとの上げ下ろし運動を一緒にする',g:'best',dt:30,sc:2,res:['荷物を寄せて、後部座席をフラットにした。','「足を伸ばして寝て。その前に、かかとを上げて、下げて……」',{a:'gma',f:'smile'},'二人で並んで、かかとの上げ下ろしを20回。ばあちゃんは「こんなので効くの？」と笑った。'],next:'leg',why:'座ったまま眠るのが最も危険です。足を伸ばして眠り、かかとの上げ下ろしやふくらはぎを軽くもむ運動で、足の血の流れを保ちます。'},
+        {t:'助手席のまま、毛布を何枚もかけてあげる',g:'bad',dt:30,sc:-1,res:['毛布を3枚重ねてかけた。','ばあちゃんは膝を曲げたまま、座席で小さく丸まって眠った。'],next:'leg',why:'寒さ対策は大切ですが、座ったまま膝を曲げて眠る姿勢は、足の血の流れを最も悪くします。'},
+        {t:'よく眠れるように、少しだけお酒を勧める',g:'bad',dt:30,sc:-2,res:['「少し飲んだら眠れるよ」','ばあちゃんは缶ビールを一本飲み、助手席で深く眠り込んだ。夜中、一度もトイレに起きなかった。'],next:'leg',why:'お酒は尿を増やして脱水を進めます。深く眠り込んで体を動かさなくなるのも危険です。'}
+      ]},
+    leg:{lines:[{d:'4月18日',t:'07:10'},{fx:'nonight'},{a:'gma',f:'pain'},'朝。ばあちゃんが顔をしかめて、左足をさすっている。','gma|「なんだか、左のふくらはぎが張って痛くてね」','ズボンの裾を上げてみると、左足だけがむくんで、右足より明らかに太い。少し赤みもある。','息苦しさはないという。'],
+      obs:[['左ふくらはぎ','張って痛い'],['左足','むくんで太い。少し赤い'],['右足','変わりない'],['呼吸','苦しくない']],q:'どうする？',
+      choices:[
+        {t:'避難所を巡回している医療チームや保健師に、「片足だけのむくみと痛み」を伝えて診てもらう',g:'best',dt:40,sc:3,flag:'dvt',res:['体育館の入口で、腕章をつけた医療チームの人に声をかけた。','「片足だけむくんで、痛いと言っていて……ずっと車中泊なんです」',{a:'doc',show:true},'医師がすぐに来て、持ち運びできる超音波の機械で調べてくれた。','doc|「足の静脈に、血のかたまりがあります。今日中に病院で治療を始めましょう。搬送を手配します」'],next:'collapse',why:'片足だけのむくみ・痛み・赤みは、足の深い静脈に血栓ができている（深部静脈血栓症）サインです。息苦しさがない段階で医療者に相談できれば、血栓が肺に流れる前に治療を始められます。'},
+        {t:'筋肉痛だろう。ふくらはぎを強くもみほぐしてあげる',g:'bad',dt:20,sc:-3,res:['「ずっと座ってたから、こってるんだよ」','ばあちゃんの左のふくらはぎを、両手でぐっともみほぐした。','gma|「痛い、痛い」'],next:'collapse',why:'予防のために軽くもむのは良いことですが、すでに片足だけが腫れて痛む時は、血栓ができている可能性があります。強くもむのは避け、医療者に相談しましょう。'},
+        {t:'すぐに119番に電話する',g:'ok',dt:60,sc:0,res:['119番は、なかなかつながらない。何度もかけ直す。','ようやくつながると、指令員はこう言った。','op|「息苦しいなどの症状が出たら、すぐにまた119番してください。避難所に医療チームがいれば、まずそちらで診てもらってください」','医療チームを探しに行く前に、昼になった。'],next:'collapse',why:'119番が間違いというわけではありません。ただ大災害の直後は救急要請が殺到し、つながりにくく、救急車もすぐには来られないことがあります。緊急症状がない段階なら、身近な医療チームへの相談が近道です。'},
+        {t:'疲れが出たのだろう。今日一日、様子を見る',g:'bad',dt:20,sc:-3,res:['「無理しないで、今日はゆっくりしてて」','ばあちゃんはうなずき、また助手席に座った。'],next:'collapse',why:'片足だけのむくみと痛みは、「疲れ」で片づけてはいけないサインです。'}
+      ]},
+    collapse:{lines:S=>[{t:'12:10'},{a:'doc',show:false},S.flags.dvt?'病院への搬送を待つ間、ばあちゃんがトイレに行きたいと言った。あなたは付き添って歩いた。':'昼過ぎ。ばあちゃんがトイレから戻ってくるのを、あなたは車の横で待っていた。',{bgm:'tense'},{a:'gma',p:'crouch',f:'pain',arm:'chest',t:'blue',e:'!'},'校舎の角を曲がったところで、ばあちゃんが急に胸を押さえてしゃがみこんだ。','gma|「……息が……くるしい……」','肩で息をしている。唇が、紫色っぽい。'],
+      obs:[['意識','ある'],['呼吸','速く、苦しそう'],['唇','紫色っぽい'],['様子','胸を押さえてしゃがみこんでいる']],q:'どうする？',
+      choices:[
+        {t:'その場で楽な姿勢をとらせ、周りの人に医療チームを呼んでもらう。同時に119番に電話する',g:'best',dt:3,sc:3,res:['「動かないで。そのままでいいから」','「すみません！ 医療チームの人を呼んでください！」','近くにいた人が、体育館へ走った。','あなたは119番を押す。今度は、つながるまで何度でもかけ直した。'],next:'down',why:'突然の息苦しさ・胸の痛み・意識が遠のく、は肺塞栓症（血栓が肺の血管に詰まる）のサインです。動かすと悪化することがあるので、その場で楽な姿勢をとらせます。ここは119番の出番です。近くに医療チームがいれば、同時に呼びます。'},
+        {t:'車の中で横にならせようと、肩を貸して車まで歩かせる',g:'bad',dt:4,sc:-3,res:['「車まで行こう。すぐそこだから」','肩を貸して歩き出したが、ばあちゃんの足は数歩で止まった。','体重が、ずしりとあなたにかかる。'],next:'down',why:'歩かせると、足からさらに血栓が流れたり、心臓への負担が増したりします。その場で楽な姿勢をとらせましょう。'},
+        {t:'自分の家の車に乗せて、病院まで運んでもらう',g:'bad',dt:20,sc:-2,res:['父さんの車で走り出した。','国道は、避難する車と支援の車で、ほとんど動かない。','ばあちゃんの返事が、だんだん弱くなっていく。','車を路肩に停め、119番に電話した。'],next:'down',why:'地震直後は道路の寸断や渋滞が起こりやすく、車内で急変しても対処できません。119番と、近くの医療チームを頼りましょう。'},
+        {t:'深呼吸をさせて、落ち着くのを待つ',g:'bad',dt:5,sc:-3,res:['「ゆっくり、深呼吸して」','ばあちゃんは息を吸おうとするが、うまく吸えない。','唇の色が、さっきよりも濃くなっている。','あなたは慌てて、周りに助けを求めた。'],next:'down',why:'肺の血管が詰まると、いくら深呼吸をしても体に酸素が取り込めません。すぐに助けが必要な状態です。'}
+      ]},
+    down:{lines:[{adv:3},{a:'gma',p:'down',f:'closed',arm:''},'ばあちゃんの体から、ふっと力が抜けた。','呼びかけると、うっすら目を開けるが、すぐに閉じてしまう。','胸は、浅く速く上下している。'],
+      obs:[['意識','呼ぶと少し目を開けるが、すぐ閉じる'],['呼吸','浅く、速い'],['唇','紫色']],q:'救急車か医療チームが来るまで、どうする？',
+      choices:[
+        {t:'そばを離れず、呼吸を見守り続ける。普段どおりの呼吸がなくなったらすぐ胸骨圧迫ができるよう、AEDを持ってきてもらう',g:'best',dt:4,sc:2,res:['ばあちゃんの胸の動きから、目を離さなかった。','「AEDも持ってきてください！」',{a:'doc',show:true},'やがて、医療チームの医師たちが、担架を持って駆けつけてきた。'],next:'END',why:'意識が遠のいた人は、急に心臓が止まることがあります。呼吸を見続け、止まったらすぐ胸骨圧迫とAED。準備しておくことで、その時に迷わず動けます。'},
+        {t:'水を飲ませて、意識をはっきりさせる',g:'bad',dt:4,sc:-2,res:['ペットボトルを口元に運ぶと、ばあちゃんはむせて、水を吐き出した。',{a:'doc',show:true},'やがて、医療チームが担架を持って駆けつけてきた。'],next:'END',why:'意識がぼんやりしている人に水を飲ませると、気管に入って窒息や肺炎の原因になります。'},
+        {t:'毛布をかけて寝かせ、自分は家族を呼びに走る',g:'bad',dt:4,sc:-2,res:['毛布をかけ、家族のいる車まで走った。','戻ってくると、ばあちゃんの周りに人だかりができていた。',{a:'doc',show:true},'医療チームが、すでに処置を始めていた。'],next:'END',why:'意識が悪い人から目を離すと、呼吸が止まっても気づけません。人を呼ぶ時は、その場から大声で。'}
+      ]}
+  },
+  outcome(S){
+    const L=[{bg:'hospital'},{a:'kid',show:false},{a:'gma',x:190,y:178,p:'down',f:'closed',t:''},{a:'doc',x:320}];
+    if(S.score>=9){ L.push('doc|「肺の血管に血栓が詰まる、肺血栓塞栓症でした。血栓を溶かす治療が効いています」',{d:'2週間後'},{a:'gma',p:'sit',y:186,f:'smile'},'gma|「これからは、水、ちゃんと飲むよ。足も動かす」'); return {title:'「水、ちゃんと飲むよ」',mood:'good',sum:'予防に気を配り、片足のむくみの段階で医療チームに相談し、急変時もすぐ助けを呼んだ。ばあちゃんは2週間で退院した。',lines:L}; }
+    if(S.score>=4){ L.push('doc|「肺血栓塞栓症です。集中治療室で、血栓を溶かす治療と呼吸の治療を続けます」',{d:'10日後'},{a:'gma',f:'weak'},'ばあちゃんは一般病棟に移った。体力が戻るまでには、まだ時間がかかりそうだ。'); return {title:'集中治療室の10日間',mood:'mid',sum:'肺血栓塞栓症で集中治療が必要になったが、ばあちゃんは回復に向かった。',lines:L}; }
+    L.push('担架に乗せられた直後、ばあちゃんの心臓が止まった。','医療チームが胸骨圧迫を続けながら、病院へ運んだ。','doc|「心臓は再び動き出しました。ただ、長い入院になります」'); return {title:'止まった心臓',mood:'bad',sum:'予防や早めの相談ができず、肺塞栓で心停止に至った。心拍は戻ったが、長い入院が始まった。',lines:L};
+  },
+  debrief:[
+    {h:'何が起きていたのか',p:'長時間同じ姿勢で座り続け、水分も足りなかったことで、足の深い静脈に血のかたまり（深部静脈血栓症）ができました。歩き出した時などに、その血栓が肺へ流れ、肺の血管を詰まらせました（肺血栓塞栓症）。これが、いわゆる「エコノミークラス症候群」です。'},
+    {h:'熊本地震で実際に起きたこと',p:'熊本地震では余震を恐れて車中泊をする人が非常に多く、発災直後からエコノミークラス症候群の患者が集中的に発生し、重篤な人や亡くなった人もいました。地震そのものを生き延びた後にも、命の危険は続きます。'},
+    {h:'予防のためにできること',ul:['水をこまめに飲む。トイレを我慢しない','ときどき歩く。座ったままでも、かかとの上げ下ろしや、ふくらはぎを軽くもむ','座ったまま眠らない。できるだけ足を伸ばして横になる','お酒は控える','弾性ストッキングが配られたら活用する']},
+    {h:'危険なサインと相談先',ul:['片足だけのむくみ・痛み・赤み → 避難所の医療チーム・保健師に相談','突然の息苦しさ・胸の痛み・失神 → すぐ119番（近くに医療チームがいれば同時に呼ぶ）']}],
+  deep:`<p><b>Virchowの三徴</b>：血流うっ滞（車中泊・長時間座位）、血管内皮障害、凝固能亢進（脱水など）。</p><p><b>肺血栓塞栓症</b>：突然の呼吸困難・胸痛・頻呼吸・頻脈・低酸素血症。失神やショックは広範型を示唆。安静解除後の歩行・排便がきっかけになりやすい（国試頻出）。</p><p><b>診断と治療</b>：D-dimer、下肢静脈エコー、造影CT、心エコーの右心負荷。抗凝固療法が基本で、ショック例では血栓溶解・カテーテル治療・ECMOを検討。</p>`
+});
+
+/* ---------------- 10 架空の地震・クラッシュ症候群 ---------------- */
+CASES.push({
+  id:'crush',tease:'夜明け前の大地震。（架空の出来事）',where:'自宅前・早朝',no:'10',title:'瓦礫の下',theme:'クラッシュ症候群',struct:'善意の救助と、その後の急変',scene:'rubble',
+  blurb:'夜明け前の大地震。向かいの家の下から、かすかな声が聞こえる。（架空の地震）',
+  cast:{sato:{name:'佐藤さん',look:'oldman',x:262,y:204,p:'down',f:'pain',show:false,thumb:true},dad:{name:'父さん',look:'dad',x:110,show:false},neighbor:{name:'近所のおじさん',look:'neighbor',x:160,show:false},fire:{name:'救助隊員',look:'fire',x:345,show:false},doc:{name:'医師',look:'doctor',x:320,show:false}},
+  start:'intro',
+  nodes:{
+    intro:{lines:[
+      {sys:'この物語は架空の地震です。過去の大震災の教訓を参考にしています。'},
+      {d:'2月',t:'05:12'},{fx:'night'},{fx:'quake'},'真っ暗な中、ものすごい揺れで目が覚めた。','タンスが倒れ、家じゅうの物が落ちてくる。','揺れがおさまると、家族は全員、なんとか無事だった。',
+      {t:'06:40'},{fx:'nonight'},'夜が明けてきた。外に出ると、町の景色が変わっていた。','向かいの佐藤さんの古い家が、つぶれている。',
+      {a:'neighbor',show:true,e:'!'},'neighbor|「佐藤のじいさんが、まだ中だ！」',{a:'sato',show:true},{bgm:'tense'},'瓦礫のすき間から、かすかな声が聞こえる。','sato|「……おーい……ここだ……足が、抜けん……」'],
+      obs:[['声','聞こえる。意識はある'],['足','太い梁の下敷き'],['家','半分つぶれ、まだ傾いている'],['余震','ときどき来る'],['におい','かすかにガスのにおい']],q:'どうする？',
+      choices:[
+        {t:'近づく前に、ガスのにおい・余震・建物の傾きを確かめる。大声で周りの大人を集め、消防にも知らせてもらう',g:'best',dt:5,sc:2,res:['佐藤さんの家の前で立ち止まった。かすかに、ガスのにおいがする。屋根は、まだぎしぎしと傾いている。','「父さん！ 近所の人を呼んで！ 誰か、ガスの元栓を閉めてください！」',{a:'dad',show:true},'dad|「消防に電話したが、つながらない。消防署まで、誰か走ってくれ！」','近所の若い人が、自転車で走っていった。'],next:'lift',why:'災害現場では、救助者が二次災害に巻き込まれないことが最優先です。ガスのにおい、余震、建物の傾きを確かめ、一人で無理に入らず、人を集めます。'},
+        {t:'すぐに、つぶれた家の中にもぐりこんで、佐藤さんのところへ行く',g:'fatal',dt:1,res:['瓦礫のすき間にもぐりこんだ。','その時、また大きな揺れが来た。',{fx:'quake'},'頭の上で、何かが崩れる音がした——',{fx:'dim'}],why:'余震で崩れかけた建物に一人で入ると、救助者自身が下敷きになります。安全を確かめ、人を集めてから動きます。'},
+        {t:'自分には何もできない。家に戻って、救助隊が来るのを待つ',g:'bad',dt:30,sc:-2,res:['あなたは家に戻った。',{adv:30},'30分後。外から、近所の人たちの声が聞こえてきた。','dad|「康太、手を貸せ！ 佐藤さんを出すぞ！」',{a:'dad',show:true}],next:'lift',why:'大災害の直後は、救助隊がすぐには来られません。過去の大震災でも、がれきの下から助け出された人の多くは、家族や近所の人に救出されました。安全を確かめたうえで、できることがあります。'}
+      ]},
+    lift:{lines:[{t:'08:00'},'近所の大人たちが集まってきた。梁の位置が見える。','neighbor|「この梁なら、大人4人で持ち上げられるぞ。引っぱり出そう」','佐藤さんは、地震からずっと、もう3時間近く両脚を挟まれたままだ。','sato|「早く……出してくれ……」'],
+      obs:[['挟まれている時間','約3時間'],['場所','両脚'],['佐藤さん','意識あり。顔色は悪い'],['消防','呼びに行っている']],q:'どうする？',
+      choices:[
+        {t:'救出はする。でも「長い時間脚を挟まれていた」ことを必ず救助隊や医療者に伝え、すぐ病院に運べるよう準備する。救出後もそばを離れない',g:'best',dt:5,sc:3,flag:'info',res:['「持ち上げましょう。でも、出したあとが大事なんです」','「長い時間挟まれていた人は、助け出した後に急に具合が悪くなることがあるって、保健の授業で習いました」','dad|「よし。救助隊が来たら、すぐ伝えよう」','いち、に、さん——',{fx:'shake'},'大人たちが梁を持ち上げ、佐藤さんを引き出した。',{a:'sato',x:200,y:215,f:'weak'}],next:'hand',why:'長時間（数時間）手足などを挟まれていた人は、助け出された後に、つぶれた筋肉から出た物質で心臓や腎臓に急激な異常が起きることがあります（クラッシュ症候群）。救出前から医療者に知らせ、救出後すぐに医療機関に運ぶことが大切です。'},
+        {t:'「早く出して」と言っているので、みんなで梁を持ち上げて引き出す',g:'ok',dt:5,sc:0,res:['いち、に、さん——',{fx:'shake'},'大人たちが梁を持ち上げ、佐藤さんを引き出した。',{a:'sato',x:200,y:215,f:'weak'},'sato|「ふう……助かった……」'],next:'hand',why:'救出自体は大切な行動です。ただし、長時間挟まれていた人は救出後に急変することがあるので、そのことを医療者に伝え、すぐに運ぶ準備が必要です。'},
+        {t:'救助隊が来るまで、何もせずに待つ',g:'bad',dt:60,sc:-1,res:['「プロに任せたほうがいい」','あなたたちは、佐藤さんに声をかけながら待った。',{adv:60},'1時間たっても、救助隊は来ない。町じゅうで、同じことが起きているのだ。','dad|「これ以上は待てない。出そう」',{fx:'shake'},'大人たちが梁を持ち上げ、佐藤さんを引き出した。',{a:'sato',x:200,y:215,f:'weak'}],next:'hand',why:'大災害の直後は、救助隊がすぐには来られないことが多いのが現実です。安全が確保でき、持ち上げられるなら救出します。そのうえで、挟まれていた時間を必ず伝えます。'}
+      ]},
+    hand:{lines:[{adv:30},{fx:'siren'},{a:'fire',show:true},'ようやく、救助隊が到着した。','sato|「足はしびれとるが、大丈夫だ。病院はいい、避難所に行く」','佐藤さんの両脚は、ぱんぱんに腫れている。'],q:'救助隊に、何を伝える？',
+      choices:[
+        {t:'「5時12分の地震から、8時ごろまで約3時間、両脚を梁に挟まれていました。そのあと助け出しました」',g:'best',dt:2,sc:2,res:['fire|「3時間……クラッシュ症候群の危険がある。すぐに病院へ運ぶ。伝えてくれて助かった」'],next:'END',why:'「何時から何時まで、どこを挟まれていたか」は、医療者がクラッシュ症候群を予想し、準備するための最重要情報です。'},
+        {t:'「さっき助け出しました。足が腫れています」',g:'ok',dt:2,sc:0,res:['fire|「どのくらいの時間、挟まれていましたか？」','あなたは時計を思い出しながら答えた。'],next:'END',why:'挟まれていた時間を伝えることが大切です。'},
+        {t:'本人が大丈夫と言っているので、避難所に連れていく',g:'bad',dt:2,sc:-3,flag:'shelter',res:['「じゃあ、避難所の小学校まで行きましょう」','父さんが肩を貸して、佐藤さんを避難所へ連れていった。',{a:'sato',show:false},{a:'fire',show:false}],next:'END',why:'救出直後は元気そうでも、数時間後に急変するのがクラッシュ症候群の怖さです。長時間挟まれていた人は、必ず医療者に伝えて病院へ運びます。'}
+      ]}
+  },
+  outcome(S){
+    const L=[{fx:'calm'},{bg:'hospital'},{a:'dad',show:false},{a:'neighbor',show:false},{a:'fire',show:false},{a:'sato',show:true,x:190,y:178,p:'down',f:'weak'},{a:'doc',show:true}];
+    if(S.flags.shelter){ L.push({t:'13:00'},'避難所に着いて数時間後、佐藤さんは急にぐったりし、脈が乱れはじめた。','救急車で運ばれた病院で、医師は言った。','doc|「つぶれた筋肉から出た物質で、腎臓と心臓に異常が起きています。透析が必要です」'); return {title:'数時間後の急変',mood:'bad',sum:'救出はできたが、長時間挟まれていたことを伝えずに避難所へ行き、数時間後に急変した。',lines:L}; }
+    if(S.score>=6){ L.push('doc|「挟まれていた時間を聞いていたので、到着前から点滴と検査の準備ができました。腎臓の働きも守れそうです」',{d:'3週間後'},{a:'sato',p:'sit',y:186,f:'smile'},'sato|「康太くん、ありがとうな。足も、ちゃんと歩けるようになるそうだ」'); return {title:'伝えた「3時間」',mood:'good',sum:'安全を確かめて人を集め、救出したうえで「何時間挟まれていたか」を伝えた。医療者は到着前から準備でき、佐藤さんは回復した。',lines:L}; }
+    L.push('doc|「腎臓の働きが落ちています。しばらく透析が必要です」',{a:'sato',f:'closed'}); return {title:'時間がかかった救出',mood:'mid',sum:'佐藤さんは助かったが、クラッシュ症候群で透析が必要になった。',lines:L};
+  },
+  debrief:[
+    {h:'何が起きていたのか',p:'重い梁に長時間脚を挟まれ、筋肉がつぶれていました。圧迫がとれて血が流れ出すと、つぶれた筋肉からカリウムなどの物質が一気に全身へ回り、心臓の不整脈や腎臓の障害を起こします（クラッシュ症候群）。'},
+    {h:'見逃してはいけないこと',ul:['数時間以上、手足や体を挟まれていた','救出直後は元気でも、数時間で急変することがある','手足の腫れ、しびれ、尿の色が濃くなる']},
+    {h:'一般の人にできること',ul:['近づく前に安全確認（余震・ガス・建物の傾き）','一人で入らず、人を集める','安全に救出できるなら救出する（大災害では近所の人による救出が大きな力になる）','<b>「何時から何時まで、どこを挟まれていたか」</b>を救助隊・医療者に伝える','元気そうでも、必ず病院へ']}],
+  deep:`<p><b>クラッシュ症候群</b>：圧挫による横紋筋融解。再灌流で高K血症（致死的不整脈）、ミオグロビン尿による急性腎障害、代謝性アシドーシス、循環血液量減少性ショックを来す。</p><p><b>救出前の医療（confined space medicine）</b>：救出前からの大量輸液が推奨され、高K血症への備え（心電図監視、カルシウム製剤など）が重要。救出後は透析を要することがある。</p><p>阪神・淡路大震災で多発し、災害医療体制（DMATなど）整備の契機の一つとなった。</p>`
+});
+
+/* ---------------- 11 一酸化炭素中毒（3連続正解） ---------------- */
+CASES.push({
+  id:'co',tease:'大雪で停電した、2日目の朝。',where:'自宅・冬の朝',no:'11',title:'静かな朝',theme:'一酸化炭素中毒',struct:'3連続正解でクリア・即終了あり',scene:'snowhouse',strict:true,
+  blurb:'大雪で停電した朝。家族の何人もが、頭が痛いと言っている。',
+  cast:{mom:{name:'母さん',look:'mom',x:120,p:'crouch',f:'pain',show:false},kid:{name:'陽',look:'kid',x:200,p:'down',f:'closed',show:false,thumb:true},neighbor:{name:'隣のおじさん',look:'neighbor',x:340,show:false},op:OP,medic:{name:'救急隊員',look:'medic',x:330,show:false},doc:{name:'医師',look:'doctor',x:320,show:false}},
+  start:'intro',
+  nodes:{
+    intro:{lines:[
+      {sys:'この症例は、3回連続で正しい判断をしなければクリアできません。判断によっては、その場で物語が終わります。'},
+      {d:'1月',t:'06:50'},'大雪で電線が切れ、停電は2日目に入った。','昨日の夕方、近所の人が貸してくれた発電機を、家とつながっているガレージで回し始めた。ようやく電気ストーブが使える。',
+      '雪が吹き込まないよう、ガレージのシャッターは閉めてある。',
+      {t:'07:20'},{bgm:'tense'},'目が覚めると、頭がずきずきと痛い。胸がむかむかする。','台所では母さんも、こめかみを押さえていた。','mom|「なんだか頭が痛くて……風邪かな」',
+      'ガレージの方から、発電機の低いうなりが聞こえる。','陽が、まだ起きてこない。ガレージの隣の部屋で寝ているはずだ。','部屋をのぞくと、陽は布団の中で眠っている。名前を呼んでも、ぼんやりして目を開けない。'],
+      obs:[['あなた','頭痛・吐き気'],['母さん','頭痛'],['陽','呼んでも、ぼんやりして起きない'],['ガレージ','発電機が動いている。シャッターは閉めたまま']],
+      q:'家族の何人もが、同じように具合が悪い。どうする？',
+      choices:[
+        {t:'「みんな外へ！」 陽を抱きかかえ、玄関や窓を開けながら、家族全員ですぐに家の外へ出る。ガレージには入らない',g:'best',dt:2,res:['「全員、外！ 今すぐ！」','あなたは陽を布団ごと抱き上げ、玄関の戸を開け放った。',{a:'mom',show:true},{a:'kid',show:true,p:'down',f:'closed'},'母さんたちも、上着をつかんで飛び出してくる。','冷たい雪の空気が、肺いっぱいに入ってきた。'],next:'outside',why:'家族の何人もが同時に頭痛・吐き気・ぼんやりを訴える時は、一酸化炭素（CO）中毒を疑います。COは色もにおいもありません。まず全員を新鮮な空気の場所へ。原因の機械を止めるより、人を外に出すのが先です。'},
+        {t:'原因は発電機かもしれない。まずガレージに入って、発電機を止める',g:'fatal',dt:1,res:['ガレージのドアを開け、中に入った。','排気のにおいは、ほとんどしない。発電機のスイッチに手を伸ばす。','その時、視界がぐらりと揺れた。','膝から力が抜け、冷たいコンクリートの床が近づいてくる——',{fx:'dim'}],why:'閉め切ったガレージの中は、一酸化炭素の濃度が非常に高くなっている可能性があります。高濃度のCOは、わずかな時間で意識を奪うことがあります。助けようとした人が倒れる「二次被害」は、実際のCO中毒事故でも繰り返し起きています。'},
+        {t:'季節柄、風邪だろう。頭痛薬を飲んで、陽はもう少し寝かせておく',g:'fatal',dt:1,res:['頭痛薬を飲み、布団に戻った。','発電機のうなりが、子守唄のように聞こえる。','まぶたが重い。体が、布団に沈んでいくようだ——',{fx:'dim'}],why:'COの初期症状（頭痛・吐き気・だるさ）は、風邪とよく似ています。原因のある空間で眠ってしまうと、気づかないまま意識を失い、命に関わります。'},
+        {t:'陽の部屋の窓を開けて、起きるまでそばで呼びかけ続ける',g:'bad',dt:5,res:['窓を開け、陽の名前を呼び続ける。','風は弱く、ガレージの隣の部屋には、まだ空気がよどんでいる。','自分の頭痛も、ますますひどくなってきた。'],why:'換気は大切ですが、COが充満した家の中で換気を待つより、まず人を外に出す方が確実で速い方法です。'}
+      ]},
+    outside:{lines:[{adv:2},'家の前の雪の上。','陽は、あなたの腕の中でぐったりしている。名前を呼ぶと少しだけ目を開け、またすぐに閉じてしまう。','母さんも、雪の上にしゃがみこんでいる。'],
+      obs:[['陽','呼ぶと少し目を開けるが、すぐ閉じる'],['呼吸','している'],['家族','頭痛・吐き気が続いている']],q:'次に、どうする？',
+      choices:[
+        {t:'119番に電話し、「家族全員が頭痛と吐き気。子どもの意識がもうろう。ガレージで発電機を使っていた」と伝える',g:'best',dt:1,res:[{se:'ring'},'「救急です！ 家族全員が頭痛と吐き気で、3歳の弟が、ぼんやりして起きません。ガレージで発電機を使っていました」','op|「一酸化炭素中毒の可能性があります。家の中には戻らないでください。救急車と消防車が向かいます」'],next:'neighbor',why:'「発電機を使っていた」という一言は、CO中毒を疑う決め手になります。消防は家の中のCO濃度も測ってくれます。意識がぼんやりしている子どもは、迷わず119番です。'},
+        {t:'子どものことなので、#8000（子ども医療電話相談）に電話して相談する',g:'bad',dt:10,res:['電話は、なかなかつながらない。','ようやくつながると、相談員はすぐに言った。「意識がはっきりしないなら、今すぐ119番をしてください」'],why:'#8000は、急ぐべきか迷う時の相談窓口です。呼んでも目を開けない、ぼんやりしているなど、意識の異常がある時は、迷わず119番です。'},
+        {t:'外の空気を吸えば、そのうち良くなるはず。しばらく様子を見る',g:'bad',dt:15,res:['15分たっても、陽は目を開けない。','あなた自身の頭痛も、まったく治まらない。'],why:'COは血液中のヘモグロビンと強く結びつき、新鮮な空気を吸っても、体から抜けるまで何時間もかかります。意識の異常がある場合は、病院での高濃度の酸素投与が必要です。'},
+        {t:'病院に向かうため、雪に埋もれた車のエンジンをかけ、車内を暖めて待つ',g:'fatal',dt:5,res:['家族を車に乗せ、エンジンをかけた。暖房が少しずつ効いてくる。','車は、夜のうちに積もった雪に、マフラーまで埋もれていた。','車内の空気が、また重くなっていく——',{fx:'dim'}],why:'雪でマフラー（排気管）がふさがれた車の中には、排気ガスが流れ込み、CO中毒が起こります。大雪の日の車内での待機は、実際に死亡事故が起きている危険な行動です。エンジンをかける前に、必ずマフラーの周りを除雪します。'}
+      ]},
+    neighbor:{lines:[{adv:3},{a:'neighbor',show:true,e:'!'},'騒ぎを聞きつけて、隣のおじさんが出てきた。','neighbor|「どうした！ うちに入りな、ストーブがあるから」','そして、あなたの家のガレージを見た。','neighbor|「発電機か。止めてきてやるよ」'],q:'どうする？',
+      choices:[
+        {t:'「ガレージには入らないで！ 消防が来るまで、家には誰も入らないでください」と止める。陽は毛布でくるんで温め、呼吸を見守る',g:'best',dt:5,res:['「待ってください！ 中は一酸化炭素がたまってるかもしれません！」',{a:'neighbor',e:'?'},'おじさんは足を止め、うなずいた。','あなたは陽を毛布にくるみ、胸がちゃんと上下しているのを見守り続けた。',{fx:'siren'},'遠くから、サイレンの音が近づいてくる。'],next:'END',why:'救助や後始末のために原因の空間に入ると、その人もCO中毒になります。換気と安全確認は消防に任せます。寒い日は、患者を温めることも忘れずに。'},
+        {t:'お礼を言って、発電機を止めてもらう',g:'bad',dt:3,res:['「助かります……」',{a:'neighbor',x:300},'おじさんは、ガレージに入っていった。','1分たっても、出てこない。','のぞきこむと、ガレージの床に、おじさんが倒れていた。',{a:'neighbor',p:'down',f:'closed'}],why:'救助や後始末のために原因の空間に入ると、その人もCO中毒になります。換気と安全確認は消防に任せます。'},
+        {t:'陽の意識をはっきりさせようと、水を少し飲ませる',g:'bad',dt:2,res:['コップの水を口元に運ぶ。',{a:'kid',e:'cough'},'陽はむせて、激しく咳き込んだ。'],why:'意識がぼんやりしている時に水を飲ませると、気管に入って窒息や肺炎の原因になります。'}
+      ]}
+  },
+  outcome(S){
+    return {title:'静かな朝の、その後',mood:'good',sum:'3回続けて正しく判断した。家族全員が助かり、陽も高気圧酸素治療を受けて回復した。',lines:[
+      {a:'medic',show:true},'救急隊は、家族全員に酸素マスクをつけた。',{fx:'nosiren'},{bg:'hospital'},{a:'mom',show:false},{a:'neighbor',show:false},{a:'medic',show:false},{a:'kid',show:true,x:190,y:178,p:'down',f:'closed'},{a:'doc',show:true},
+      '病院の検査で、家族全員の血液から、高い濃度の一酸化炭素が見つかった。','陽は、高い気圧の部屋で酸素を吸う治療を受けた。その日の夕方、目を開けて小さな声で言った。',
+      {a:'kid',f:'smile'},'kid|「……にいに」',
+      'doc|「一酸化炭素中毒は、数日から数週間たってから、もの忘れや動きの異常が出ることがあります。しばらくは様子をよく見てください」',
+      {d:'1か月後'},{a:'kid',p:'stand',y:215,x:200},'1か月後の外来。陽は、診察室の中を元気に走り回っていた。']};
+  },
+  debrief:[
+    {h:'何が起きていたのか',p:'発電機の排気ガスに含まれる一酸化炭素（CO）が、ガレージから家の中に流れ込んでいました。COは、血液の中で酸素を運ぶヘモグロビンと、酸素よりはるかに強く結びつきます。息をしていても、体が酸欠になります。'},
+    {h:'危険なサイン',ul:['頭痛・吐き気・めまい・だるさ（風邪とよく似ている）','<b>同じ場所にいる何人もが、同時に</b>具合が悪い → COを疑う','小さな子ども・高齢者は重くなりやすい','色もにおいもない']},
+    {h:'一般の人にできること',ul:['全員すぐに新鮮な空気の場所へ','原因の空間（ガレージなど）に入らない。二次被害を防ぐ','119番で「発電機・ストーブ・車」など原因を伝える','意識がぼんやりしていたら口から何も入れない。寒い時は保温']},
+    {h:'予防',ul:['発電機は屋外で、窓や換気口から離して使う。ガレージ・屋内・テント内では使わない','大雪の日に車内で待つ時は、マフラーの周りを除雪する','CO警報器をつける']}],
+  deep:`<p><b>CO-Hb</b>：COのヘモグロビン親和性は酸素の約200〜250倍。酸素解離曲線を左方移動させる。</p><p><b>パルスオキシメータの落とし穴</b>：CO-Hbを酸素化ヘモグロビンと区別できず、SpO₂が正常に見える（国試頻出）。診断はCOオキシメトリ。</p><p><b>治療</b>：100%酸素（CO-Hb半減期は室内気で約4〜6時間、100%酸素で約1時間前後）。重症例は高気圧酸素療法を検討。</p><p><b>間欠型CO中毒</b>：数日〜数週後に認知障害・パーキンソニズムなど。淡蒼球病変が特徴的。</p>`
+});
+</script>
+<script>
+/* ---------------- 12 低血糖 ---------------- */
+CASES.push({
+  id:'hypo',no:'12',title:'畑帰りのばあちゃん',theme:'低血糖',struct:'見過ごしの罠・飲み込めない時の判断',scene:'home',
+  tease:'日曜の夕方。畑から帰ってきたばあちゃんの様子が、どこか違う。',where:'自宅・夕方',
+  blurb:'糖尿病の薬を使っているばあちゃん。話がかみ合わず、冷や汗をかいている。',
+  cast:{gma:{name:'ばあちゃん',look:'gma',x:205,p:'sit'},mom:{name:'母さん',look:'mom',x:340,show:false},op:OP,medic:{name:'救急隊員',look:'medic',x:345,show:false},doc:{name:'医師',look:'doctor',x:320,show:false}},
+  start:'intro',
+  nodes:{
+    intro:{lines:[
+      {d:'日曜日',t:'17:20'},'ばあちゃんが、畑から帰ってきた。','gma|「草取りに夢中になって、お昼を食べそびれちゃった」',
+      'ばあちゃんは糖尿病で、毎日インスリンの注射をしている。',
+      {t:'17:50'},{bgm:'tense'},{a:'gma',f:'weak',t:'pale',e:'…'},'居間のソファで、ばあちゃんがぼんやりしている。',
+      '「ばあちゃん、夕飯もうすぐだって」','gma|「……あら、康太。今日は、学校は……？」','今日は日曜日だ。',
+      'よく見ると、額に冷や汗が浮かび、湯呑みを持つ手が小刻みに震えている。'],
+      obs:[['会話','かみ合わない'],['汗','冷や汗をかいている'],['手','小刻みに震えている'],['飲み込み','できそう'],['今日','昼食を抜いて畑仕事']],
+      q:'どうする？',
+      choices:[
+        {t:'低血糖を疑う。飲み込めるのを確かめて、ブドウ糖（なければ砂糖入りのジュース）をとらせる',g:'best',dt:2,sc:3,res:['「ばあちゃん、低血糖かも。これ、なめて」','薬箱の横に、ブドウ糖のタブレットがあった。','ばあちゃんはゆっくりかみ砕き、飲み込んだ。'],next:'recheck',why:'糖尿病の薬（特にインスリンや一部の飲み薬）を使っている人が、食事を抜いたり体を動かしたりした後に、冷や汗・ふるえ・ぼんやりを起こしたら、まず低血糖を疑います。飲み込めるうちに、ブドウ糖や砂糖入りのジュースをとらせます。'},
+        {t:'認知症が進んだのかもしれない。明日、病院に連れていこう',g:'bad',dt:20,sc:-3,res:['「疲れてるんだよ。今日は早く寝よう」',{adv:20},'20分後。ばあちゃんは、呼びかけてもうめき声しか返さなくなった。',{a:'gma',p:'slump',f:'closed'}],next:'worse',why:'高齢者の低血糖は、冷や汗やふるえがはっきりせず、「ぼけた」「疲れている」ように見えることがあります。糖尿病の薬を使っている人の急な様子の変化は、まず低血糖を疑います。'},
+        {t:'夕食前だから、いつものインスリンを打つよう声をかける',g:'fatal',dt:10,res:['「ばあちゃん、夕飯前の注射の時間だよ」','ばあちゃんは、ぼんやりしたまま注射をした。',{adv:10},{a:'gma',p:'down',f:'closed',t:'pale'},'10分後。ばあちゃんは、けいれんを起こして意識を失った——',{fx:'dim'}],why:'低血糖の時にインスリンを追加すると、血糖はさらに下がり、意識を失ったり、けいれんを起こしたり、命に関わります。「様子がおかしい時は注射をしない」が原則です。'},
+        {t:'砂糖をスプーン1杯なめてもらう',g:'ok',dt:2,sc:1,flag:'sugar',res:['台所の砂糖をスプーンに山盛りにして、なめてもらった。','お薬手帳を見ると、食後の血糖を上げにくくする薬（α-グルコシダーゼ阻害薬）も飲んでいる。'],next:'recheck',why:'糖分をとらせる判断は正解です。ただし、食後の血糖上昇を抑える薬（α-グルコシダーゼ阻害薬）を飲んでいる人は砂糖が吸収されにくいため、ブドウ糖を使います。'}
+      ]},
+    recheck:{lines:[{adv:15},{a:'gma',f:'weak',t:''},'15分後。ばあちゃんの汗は引いてきた。','gma|「……ああ、なんだか、ぼーっとしてたわ」','まだ少し、ぼんやりしている。'],
+      q:'次は？',
+      choices:[
+        {t:'もう一度ブドウ糖をとらせ、落ち着いたらおにぎりなど食事もとってもらう。今夜は様子を見守る',g:'best',dt:15,sc:2,res:['もう一粒ブドウ糖をなめてもらい、母さんがおにぎりを握ってくれた。',{a:'mom',show:true},{a:'gma',f:'smile'},'ばあちゃんは、ゆっくりとおにぎりを食べた。'],next:'END',why:'15分たっても回復しきらなければ、もう一度糖分をとります。インスリンや一部の飲み薬では、低血糖がぶり返すことがあるので、落ち着いたら食事をとり、その晩は見守ります。'},
+        {t:'良くなってきたので、夕飯までソファで寝かせておく',g:'bad',dt:40,sc:-3,res:['「少し寝てて」',{adv:40},{a:'gma',p:'slump',f:'closed',t:'pale'},'夕飯に呼びに行くと、ばあちゃんは、呼びかけにうめくだけになっていた。'],next:'worse',why:'一度良くなっても、薬が効いている間は血糖がまた下がることがあります。食事をとって、しばらく見守りましょう。'}
+      ]},
+    worse:{lines:[{bgm:'tense'},'ばあちゃんは、もう自分では飲み込めそうにない。'],
+      obs:[['意識','呼びかけにうめくだけ'],['飲み込み','できそうにない'],['呼吸','している']],
+      q:'どうする？',
+      choices:[
+        {t:'119番に電話し、「糖尿病でインスリンを使っている。低血糖かもしれない」と伝え、横向きに寝かせる',g:'best',dt:3,sc:2,res:[{se:'ring'},'「救急です。祖母が糖尿病でインスリンを使っていて、呼びかけにうめくだけになりました。低血糖かもしれません」','op|「救急車が向かいます。横向きに寝かせて、口には飲み物を入れないでください」',{a:'gma',p:'downr',f:'closed'}],next:'END',why:'自分で飲み込めない時は、無理に飲ませると気管に入ります。119番で「糖尿病の薬を使っている」と伝えると、救急隊は到着後すぐに血糖を測って対応できます。'},
+        {t:'主治医に習ったとおり、砂糖を少しだけ水で練って、頬の内側（歯ぐきとの間）に塗る。同時に119番を頼む',g:'best',dt:3,sc:2,res:['「母さん、119番！」',{a:'mom',show:true,e:'!'},'あなたは砂糖を数滴の水で練り、ばあちゃんの頬の内側に、指で少しずつ塗った。','横向きにして、口からあふれないように気をつける。'],next:'END',why:'飲み込めない時に口へ流し込むのは危険です。ただし、主治医から指導を受けている家族は、砂糖やブドウ糖を少量、頬の内側に塗って吸収させる方法がとられることがあります。いずれの場合も119番は必要です。'},
+        {t:'ジュースを口に流し込んで、糖分をとらせる',g:'bad',dt:3,sc:-3,flag:'aspir',res:['ジュースを口に流し込んだ。',{a:'gma',e:'cough'},{fx:'shake'},'ばあちゃんは激しくむせ、ジュースが口からあふれた。','母さんが119番に電話をかけた。',{a:'mom',show:true}],next:'END',why:'意識がはっきりせず、自分で飲み込めない人に液体を流し込むと、気管に入って窒息や肺炎を起こします。'}
+      ]}
+  },
+  outcome(S){
+    const L=[];
+    if(S.log.some(l=>l.q==='次は？'&&l.g==='best')){
+      L.push({fx:'calm'},{t:'19:00'},{a:'gma',p:'sit',f:'smile',t:''},'夕飯の食卓。ばあちゃんは、いつもの調子に戻っていた。','gma|「草取りの日は、ちゃんとお昼を食べないとね」','母さんが、ブドウ糖の袋を畑仕事のかごに入れた。');
+      return {title:'ブドウ糖の袋',mood:'good',sum:'低血糖にすぐ気づいて糖分をとらせ、食事と見守りで再発を防いだ。',lines:L};
+    }
+    L.push({fx:'siren'},{a:'medic',show:true},'救急隊が到着し、すぐに血糖を測った。','medic|「血糖がかなり低いです。点滴でブドウ糖を入れます」',{fx:'nosiren'},{bg:'hospital'},{a:'mom',show:false},{a:'medic',show:false},{a:'gma',x:190,y:178,p:'down',f:'weak',t:''},{a:'doc',show:true});
+    if(S.flags.aspir){ L.push('doc|「低血糖は戻りました。ただ、飲み物が気管に入って肺炎を起こしています。しばらく入院です」'); return {title:'気管に入ったジュース',mood:'mid',sum:'低血糖は治療できたが、飲み込めない時にジュースを流し込み、誤嚥性肺炎で入院になった。',lines:L}; }
+    L.push('doc|「点滴ですぐに意識が戻りました。インスリンの量と、食事のとり方を見直しましょう」',{a:'gma',f:'smile'},'gma|「迷惑かけたねえ」');
+    return {title:'点滴で戻った意識',mood:S.score>=1?'mid':'bad',sum:'低血糖に気づくのが遅れたが、119番で救急隊につなぎ、点滴で回復した。',lines:L};
+  },
+  debrief:[
+    {h:'何が起きていたのか',p:'昼食を抜いて畑仕事をしたうえに、インスリンが効いて、血液中のブドウ糖が足りなくなっていました（低血糖）。脳はブドウ糖を主なエネルギーにしているため、ぼんやりする・話がかみ合わない・意識を失う、といった症状が出ます。'},
+    {h:'危険なサイン',ul:['冷や汗、手のふるえ、動悸、強い空腹感','ぼんやり、話がかみ合わない、いつもと様子が違う','高齢者は症状がはっきりせず、いきなり意識を失うこともある（「ぼけた」「疲れた」と見過ごしやすい）']},
+    {h:'一般の人にできること',ul:['飲み込めるなら、ブドウ糖（5〜10g）か砂糖（その倍）、ブドウ糖入りのジュースを','食後の血糖を抑える薬（α-グルコシダーゼ阻害薬）を飲んでいる人には、砂糖ではなくブドウ糖','15分で良くならなければ、もう一度。回復したら食事をとり、その晩は見守る','飲み込めない時は、口に流し込まない。119番で「糖尿病の薬を使っている」と伝え、横向きに','主治医から指導を受けていれば、砂糖を少量、頬の内側に塗る方法もある','様子がおかしい時に、インスリンを打たない']}],
+  deep:`<p><b>低血糖の症状</b>：交感神経症状（発汗・振戦・動悸）は血糖70mg/dL前後から、中枢神経症状（意識障害・異常行動・けいれん）は50mg/dL以下で出やすい。高齢者・頻回の低血糖では無自覚性低血糖となる。</p><p><b>遷延性低血糖</b>：SU薬では低血糖が遷延・再発しやすく、入院観察を要することがある（国試頻出）。</p><p><b>α-グルコシダーゼ阻害薬</b>内服中はショ糖ではなくブドウ糖を用いる。</p><p><b>意識障害時</b>：50%ブドウ糖の静注。病院外ではグルカゴン（注射・点鼻）が選択肢。</p>`
+});
+
+/* ---------------- 13 鼻出血 ---------------- */
+CASES.push({
+  id:'nose',no:'13',title:'止まらない',theme:'鼻血（鼻出血）',struct:'よくある間違い・薬の落とし穴',scene:'home',
+  tease:'日曜の昼下がり。父さんが、テレビの前で鼻をかんだ。',where:'自宅・昼',
+  blurb:'父さんの鼻血。上を向く？ 首の後ろをたたく？ そして、思わぬ落とし穴。',
+  cast:{dad:{name:'父さん',look:'dad',x:205,p:'sit'},mom:{name:'母さん',look:'mom',x:340,show:false},doc:{name:'医師',look:'doctor',x:320,show:false}},
+  start:'intro',
+  nodes:{
+    intro:{lines:[
+      {d:'日曜日',t:'13:30'},'父さんがソファでテレビを見ながら、鼻をかんだ。',
+      {a:'dad',f:'shock',e:'!'},'dad|「うわ、鼻血だ」','ティッシュが真っ赤に染まり、ぽたぽたと床に垂れていく。',{bgm:'talk'}],
+      obs:[['出血','左の鼻から、ぽたぽた'],['父さん','意識はしっかり'],['持病','心臓の病気で通院中']],
+      q:'どうする？',
+      choices:[
+        {t:'座ったまま少し前かがみで下を向かせ、小鼻（鼻の先のやわらかい部分）を両側からしっかりつまんで、10分押さえ続けてもらう',g:'best',dt:10,sc:3,res:['「父さん、下向いて。小鼻をぎゅっとつまんで、そのまま10分」','父さんは前かがみになり、小鼻をつまんだ。','口に流れてきた血は、ティッシュに吐き出してもらう。'],next:'ten',why:'鼻血のほとんどは、鼻の入り口近くの血管（キーゼルバッハ部位）からの出血です。小鼻をしっかりつまんで、10分ほど圧迫し続けるのが基本です。下を向くのは、血を飲み込まないためです。'},
+        {t:'上を向かせて、首の後ろをトントンとたたく',g:'bad',dt:10,sc:-3,flag:'swallow',res:['「上向いて！ 首の後ろ、たたくよ」','父さんが上を向くと、血がのどの奥に流れていく。','dad|「うっ……気持ち悪い……」',{a:'dad',f:'pain',e:'cough'},{fx:'shake'},'父さんは、飲み込んだ血を吐いてしまった。'],next:'retry',why:'上を向くと、血がのどに流れて飲み込んでしまい、気分が悪くなったり吐いたりします。首の後ろをたたいても、鼻血は止まりません。'},
+        {t:'ティッシュを丸めて鼻に詰め、様子を見る',g:'ok',dt:10,sc:0,res:['ティッシュを丸めて、鼻に詰めた。','しばらくすると、ティッシュから血がにじみ出てきた。'],next:'retry',why:'詰め物だけでは、出血している血管を押さえることにはなりません。小鼻を外からつまんで圧迫するのが基本です。'},
+        {t:'横に寝かせて、安静にさせる',g:'bad',dt:10,sc:-2,flag:'swallow',res:['父さんをソファに寝かせた。','血がのどの奥に流れ込み、父さんは咳き込んだ。',{a:'dad',e:'cough'}],next:'retry',why:'寝かせると、血がのどに流れて飲み込んだり、むせたりします。座って下を向くのが基本です。'}
+      ]},
+    retry:{lines:['鼻血は、まだ止まらない。'],q:'あらためて、どうする？',
+      choices:[
+        {t:'座らせて下を向かせ、小鼻をしっかりつまんで10分押さえ続けてもらう',g:'ok',dt:10,sc:1,res:['父さんを座らせ、下を向いて小鼻をつまんでもらった。'],next:'ten',why:'遅れましたが、正しい方法に切り替えられました。'},
+        {t:'もう少しこのまま様子を見る',g:'bad',dt:15,sc:-2,res:[{adv:5},'床のティッシュが、どんどん赤くなっていく。','あなたは父さんを座らせ、小鼻をつまんでもらった。'],next:'ten',why:'正しく押さえない限り、なかなか止まりません。'}
+      ]},
+    ten:{lines:['10分たった。','押さえるのをやめると、また、つーっと血が垂れてきた。',{a:'mom',show:true},'mom|「あなた、心臓の薬……血をサラサラにする薬、飲んでるでしょ」'],
+      obs:[['出血','10分押さえても、まだ続く'],['薬','血をサラサラにする薬を飲んでいる']],
+      q:'どうする？',
+      choices:[
+        {t:'つまむ場所が骨の上でなく小鼻であることを確かめ、もう10分、途中で離さずに押さえ続けてもらう',g:'best',dt:10,sc:2,res:['「父さん、そこ骨のとこだよ。もっと下の、やわらかいところ」','つまむ位置を直して、もう一度、時計を見ながら10分。今度は途中で一度も離さない。'],next:'twenty',why:'つまむのは、鼻の骨の部分ではなく、その下のやわらかい小鼻です。途中で「止まったかな」と離すと、またはじめからになります。'},
+        {t:'止まったか確かめるために、1分ごとに手を離して見る',g:'bad',dt:10,sc:-2,res:['1分ごとに手を離しては、血が止まったか確かめる。','そのたびに、血がつーっと垂れてくる。'],next:'twenty',why:'押さえるのを途中でやめると、固まりかけた血がはがれて、また出血します。'},
+        {t:'血が止まらないなら、今日はサラサラの薬をやめておこう',g:'bad',dt:10,sc:-2,flag:'stopmed',res:['「今日は薬、飲まないでおきなよ」','父さんはうなずき、夜の薬を飲まないことにした。','鼻血は、まだ止まらない。'],next:'twenty',why:'血液をサラサラにする薬は、脳梗塞や心筋梗塞を防ぐために飲んでいます。自己判断でやめると、かえって危険です。必ず主治医に相談します。'}
+      ]},
+    twenty:{lines:['さらに10分たった。','それでも、血がにじむように出続けている。',{a:'dad',f:'weak',t:'pale'},'父さんの顔色が、少し悪くなってきた。'],
+      q:'どうする？',
+      choices:[
+        {t:'圧迫を続けたまま、救急外来に電話して受診する（ふらついて歩けないなら119番）。飲んでいる薬の名前も伝える',g:'best',dt:5,sc:2,res:['母さんが救急外来に電話し、薬の名前を伝えた。','「すぐ来てください」と言われ、母さんの運転で病院へ向かった。','父さんは、車の中でも小鼻を押さえ続けた。'],next:'END',why:'20〜30分押さえても止まらない時、血をサラサラにする薬を飲んでいる時、顔色が悪い・ふらつく時は、医療機関を受診します。'},
+        {t:'寝れば止まるだろう。少し横になってもらう',g:'bad',dt:30,sc:-3,res:['父さんは横になった。',{adv:30},'30分後。父さんは、口からも血を吐き出した。のどの奥に、ずっと流れ込んでいたのだ。','母さんが、慌てて119番に電話した。'],next:'END',why:'寝ると、出血がのどに流れ込んで見えなくなり、気づかないうちに多くの血を失うことがあります。'}
+      ]}
+  },
+  outcome(S){
+    const L=[{bg:'hospital'},{a:'mom',show:false},{a:'dad',x:190,y:178,p:'down',f:'weak',t:''},{a:'doc',show:true}];
+    const med=S.flags.stopmed?'doc|「それから、サラサラの薬は自己判断でやめないでください。かえって脳梗塞の危険が高まります」':'doc|「サラサラの薬は、主治医と相談するまで、いつもどおり続けてください」';
+    if(S.score>=7){ L.push('doc|「鼻の入り口近くの血管から出ていました。焼いて止めておきましたよ。ずっと押さえていてくれたので、出血は少なくて済みました」',med,{a:'dad',p:'sit',y:186,f:'smile'},'dad|「首の後ろをトントン……って、昔はそう習ったんだけどなあ」'); return {title:'首の後ろのトントン',mood:'good',sum:'下を向いて小鼻を圧迫し、止まらない時は薬のことを伝えて受診した。出血は最小限で済んだ。',lines:L}; }
+    if(S.score>=1){ L.push('doc|「出血が長く続いていました。焼いて止めておきます」',med); return {title:'長引いた鼻血',mood:'mid',sum:'鼻血は病院で止められたが、正しい圧迫が遅れて出血が長引いた。',lines:L}; }
+    L.push('doc|「かなりの量の血を失っています。点滴をして、今夜は入院しましょう」',med,{a:'dad',f:'closed'}); return {title:'のどに流れていた血',mood:'bad',sum:'正しく押さえず、寝かせたことで、のどに流れた出血に気づけなかった。',lines:L};
+  },
+  debrief:[
+    {h:'何が起きていたのか',p:'鼻の入り口近くの細い血管（キーゼルバッハ部位）が切れて出血していました。血液をサラサラにする薬を飲んでいたため、止まりにくくなっていました。'},
+    {h:'正しい止め方',ul:['座って、少し前かがみで<b>下を向く</b>','<b>小鼻</b>（骨より下のやわらかい部分）を両側からしっかりつまむ','10分間、途中で離さずに押さえ続ける','口に流れてきた血は飲み込まずに吐き出す']},
+    {h:'よくある間違い',ul:['上を向く・寝かせる（血を飲み込んで吐き気、気づかないうちに大量出血）','首の後ろをたたく（効果はない）','何度も離して確かめる','血をサラサラにする薬を自己判断でやめる']},
+    {h:'受診の目安',ul:['20〜30分押さえても止まらない','血をサラサラにする薬を飲んでいる','顔色が悪い、ふらつく、何度もくり返す']}],
+  deep:`<p><b>鼻出血</b>：大部分は前方（Kiesselbach部位）からの出血で、用手圧迫で止血できる。後方出血（蝶口蓋動脈領域）は高齢者・高血圧・抗血栓薬内服者に多く、咽頭へ流れて出血量を過小評価しやすい。</p><p><b>処置</b>：ボスミン（アドレナリン）・キシロカイン含浸ガーゼ、電気凝固・化学焼灼、タンポン（メロセル等）、後方ではバルーン、難治例は血管塞栓・動脈結紮。</p><p><b>抗血栓薬</b>：原則継続し、主治医と中止の是非を検討する。</p><p>オスラー病（遺伝性出血性毛細血管拡張症）も反復例の鑑別に挙がる。</p>`
+});
+
+/* ---------------- 14 ムカデ ---------------- */
+CASES.push({
+  id:'centi',no:'14',title:'夜中の泣き声',theme:'ムカデ咬傷・アナフィラキシー',struct:'手当てに気を取られて見落とす',scene:'home',
+  tease:'夏の夜中。隣の部屋から、陽の泣き声が聞こえる。',where:'自宅・夜中',
+  blurb:'布団の中にムカデ。手当てのあと、本当に大事なのは——。',
+  cast:{kid:{name:'陽',look:'kid',x:205,p:'sit',f:'cry'},mom:{name:'母さん',look:'mom',x:290},op:OP,medic:{name:'救急隊員',look:'medic',x:345,show:false},doc:{name:'医師',look:'doctor',x:320,show:false}},
+  start:'intro',
+  nodes:{
+    intro:{lines:[
+      {d:'8月',t:'02:10'},{fx:'night'},'夜中、陽の泣き声で目が覚めた。','kid|「いたいー！ あしー！」',
+      {a:'mom',e:'!'},'母さんが布団をめくると、10センチほどの赤黒いムカデが、はい出していった。',
+      {bgm:'tense'},'陽の足の甲に、小さな2つの咬み跡がある。まわりが赤く腫れてきた。'],
+      obs:[['足','甲に2つの咬み跡。赤く腫れている'],['陽','痛がって泣いている'],['ほかの症状','今のところない']],
+      q:'まず、どうする？',
+      choices:[
+        {t:'洗面所で、咬まれたところを流水でよく洗い流す',g:'best',dt:3,sc:2,res:['陽を抱えて洗面所へ行き、足の甲に水を流した。','kid|「つめたいー！」','傷口のまわりを、水を流しながら洗う。'],next:'pain',why:'まず流水で洗い、皮膚についた毒や汚れを流します。'},
+        {t:'傷口に口をつけて、毒を吸い出す',g:'bad',dt:2,sc:-2,res:['あなたは陽の足に口をつけて吸った。','血がにじんだだけで、腫れは引かない。','母さん：「口の中の菌が入っちゃう！ 洗って！」','あなたは洗面所で、陽の足を水で洗った。'],next:'pain',why:'口で吸っても毒はほとんど取れず、口の中の細菌が傷に入る心配もあります。流水で洗いましょう。'},
+        {t:'虫刺されの薬を塗って、また寝かせる',g:'bad',dt:5,sc:-2,res:['かゆみ止めを塗って、布団に戻した。','陽は泣きやまない。','kid|「いたいー……」'],next:'pain',why:'まずは流水で洗います。そしてムカデの咬傷では、このあと全身の反応が出ないか見守ることが大切です。'}
+      ]},
+    pain:{lines:['腫れが広がり、陽は痛がって泣き続けている。'],q:'痛みに、どう対処する？',
+      choices:[
+        {t:'やけどしない程度の熱めのお湯（大人の手で確かめて、40〜43℃くらい）に、足をしばらくつける',g:'best',dt:10,sc:2,res:['洗面器にお湯をためて、自分の手で熱すぎないか確かめた。','陽の足を、そっとつける。','kid|「……ちょっと、いたくなくなった」'],next:'ana',why:'ムカデの毒は熱に弱いとされ、日本では熱めのお湯につける方法がよく勧められます。ただし、子どもの皮膚はやけどしやすいので、必ず大人の手で温度を確かめます。（冷やす方法を勧める資料もあり、見解は分かれています）'},
+        {t:'保冷剤をタオルで包んで、腫れたところを冷やす',g:'best',dt:10,sc:2,res:['保冷剤をタオルで包んで、足の甲に当てた。','kid|「……ちょっと、いたくなくなった」'],next:'ana',why:'冷やすと腫れと痛みがやわらぎます。保冷剤は直接当てず、布で包みます。（熱めのお湯につける方法もあり、見解は分かれています）'},
+        {t:'とにかく熱いほうが効くはず。沸かしたてのお湯をかける',g:'bad',dt:3,sc:-3,flag:'burn',res:['やかんのお湯を、少し冷ましてかけた。','kid|「あついーっ！」','陽の足の甲が、真っ赤になった。'],next:'ana',why:'熱すぎるお湯は、やけどを起こします。特に子どもの皮膚は薄く、大人が「熱め」と感じる温度でもやけどします。'}
+      ]},
+    ana:{lines:[{adv:10},{a:'kid',f:'weak',t:'red'},'10分ほどたった。陽の泣き声が、急に弱くなった。','顔を見ると、まぶたが腫れて、首や胸に赤いぶつぶつが広がっている。','ひゅー、ひゅー、と苦しそうな息をしている。'],
+      obs:[['皮膚','首や胸に赤いぶつぶつ'],['まぶた','腫れている'],['呼吸','ひゅーひゅー、苦しそう'],['様子','泣き声が弱く、ぐったり']],
+      q:'どうする？（時間がない）',timer:24,
+      tmo:{t:'どうしていいか分からず、陽を抱きしめる',g:'bad',sc:-3,dt:3,res:['あなたは陽を抱きしめることしかできなかった。','母さん：「救急車！ 康太、119番！」','あなたは慌てて電話をかけた。'],why:'咬まれたあとに全身のじんましん・まぶたの腫れ・息苦しさが出たら、アナフィラキシーです。すぐ119番です。',next:'END'},
+      choices:[
+        {t:'アナフィラキシーを疑ってすぐ119番。陽を横に寝かせ、息が苦しそうなら上半身を少し起こす',g:'best',dt:3,sc:3,res:[{se:'ring'},'「救急です！ 3歳の弟がムカデに咬まれて、全身にぶつぶつが出て、息が苦しそうです！」','op|「すぐ向かいます。横にして、立たせたり歩かせたりしないでください」',{a:'kid',p:'down',f:'weak'},'陽を布団に寝かせ、胸の動きを見守った。'],next:'END',why:'ムカデや蜂に刺されたあと、全身のじんましん、まぶたや唇の腫れ、息苦しさ、ぐったりする、などが出たらアナフィラキシーです。迷わず119番。立たせずに寝かせます。'},
+        {t:'かゆみ止めを全身に塗って、朝まで様子を見る',g:'bad',dt:20,sc:-4,res:['かゆみ止めを、首や胸に塗った。',{adv:20},{a:'kid',p:'down',f:'closed',t:'pale'},'20分後。陽の唇が紫色になり、ぐったりして動かない。','あなたは震える手で、119番を押した。'],next:'END',why:'全身の症状や息苦しさは、塗り薬ではどうにもなりません。命に関わるアナフィラキシーの可能性があります。'},
+        {t:'自分たちの車で、夜間の救急病院に連れていく',g:'ok',dt:25,sc:0,res:['母さんの運転で、夜間救急へ向かった。','夜道は空いていたが、病院まで25分かかった。','後部座席で、陽の呼吸がどんどん苦しそうになっていく。'],next:'END',why:'受診を急ぐ判断は正しいのですが、息が苦しい時は、車内で悪化しても対処できません。救急車なら、隊員がすぐに処置を始められます。'}
+      ]}
+  },
+  outcome(S){
+    const L=[{fx:'nonight'},{bg:'hospital'},{a:'mom',show:false},{a:'kid',x:190,y:178,p:'down',f:'weak',t:''},{a:'doc',show:true}];
+    if(S.score>=6){ L.push('doc|「アナフィラキシーでした。アドレナリンの注射ですぐに落ち着きました。早く呼んでくれてよかった」',S.flags.burn?'doc|「足の甲は、やけども少しありますね。お湯の温度には気をつけて」':'',{a:'kid',p:'sit',y:186,f:'smile'},'kid|「にいに、むかで、こわい」'); return {title:'こわいムカデ',mood:'good',sum:'傷を洗って痛みに対処し、全身の症状が出た瞬間にアナフィラキシーと気づいて119番した。',lines:L.filter(Boolean)}; }
+    if(S.score>=1){ L.push('doc|「アナフィラキシーでした。少し時間がかかりましたが、治療で落ち着いてきています。今夜は入院しましょう」'); return {title:'夜間救急の25分',mood:'mid',sum:'アナフィラキシーの治療は間に合ったが、到着までに時間がかかった。',lines:L}; }
+    L.push('doc|「血圧がかなり下がっていました。集中治療室で様子を見ます」',{a:'kid',f:'closed'}); return {title:'塗り薬では止まらなかった',mood:'bad',sum:'全身の症状を軽く見てしまい、アナフィラキシーの治療が遅れた。',lines:L};
+  },
+  debrief:[
+    {h:'何が起きていたのか',p:'ムカデの毒で足が腫れただけでなく、毒に対して全身のアレルギー反応（アナフィラキシー）が起きていました。ムカデや蜂では、まれにこうした全身の反応が起きます。'},
+    {h:'咬まれた時の手当て',ul:['まず流水でよく洗う','痛みには、やけどしない程度の熱めのお湯（40〜43℃くらい）につける方法と、布で包んだ保冷剤で冷やす方法がある（見解が分かれている）','子どもは大人の手で温度を確かめる','口で毒を吸い出さない']},
+    {h:'本当に大事なこと',ul:['咬まれた後しばらくは、<b>全身の変化</b>を見守る','全身のじんましん、まぶたや唇の腫れ、息苦しさ、ぐったり → すぐ119番','立たせない・歩かせない。寝かせる（息苦しければ上半身を少し起こす）']}],
+  deep:`<p><b>ムカデ咬傷</b>：毒にはセロトニン、ヒスタミン、各種酵素などが含まれる。局所症状が主体だが、アナフィラキシーの報告がある。</p><p><b>局所処置</b>：温熱療法（毒の熱変性を期待）と冷却のいずれも行われており、エビデンスは限定的。</p><p><b>アナフィラキシー</b>：アドレナリン0.01mg/kg筋注（大腿外側）。二相性反応に備えた経過観察。</p>`
+});
+
+/* ---------------- 15 駅前の男性（頭部外傷） ---------------- */
+CASES.push({
+  id:'drunk',no:'15',title:'駅前のベンチ',theme:'頭部外傷（酔っ払いと思い込む罠）',struct:'思い込みの罠',scene:'exit',
+  tease:'塾の帰り、夜の駅前。ベンチの前に、男性が座り込んでいる。',where:'駅前・夜',
+  blurb:'酒のにおい、ろれつが回らない。周りは「酔っ払いだ」と言うけれど。',
+  cast:{man:{name:'男性',look:'salary',x:200,p:'crouch',f:'weak'},woman:{name:'通りがかりの女性',look:'officew',x:330},op:OP,medic:{name:'救急隊員',look:'medic',x:345,show:false},doc:{name:'医師',look:'doctor',x:320,show:false}},
+  start:'intro',
+  nodes:{
+    intro:{lines:[
+      {d:'金曜日',t:'21:40'},'塾の帰り。駅前の出口のそばで、スーツの男性が地面に座り込んでいる。',
+      'お酒のにおいがする。','man|「……だいじょぶ……らいじょうぶ、れす……」','ろれつが回っていない。',
+      'woman|「酔っ払いでしょ。関わらないほうがいいよ」','通りがかりの女性が、そう言って通り過ぎようとした。'],
+      obs:[['におい','お酒のにおい'],['言葉','ろれつが回らない'],['様子','座り込んで、眠そう']],
+      q:'どうする？',
+      choices:[
+        {t:'声をかけ、反応や呼吸、けががないかを確かめる',g:'best',dt:2,sc:2,res:['「大丈夫ですか？ 聞こえますか？」','男性は目を開けるが、すぐに閉じそうになる。','肩に手を回そうとして、気づいた。後頭部の髪が、血で濡れている。',{a:'man',e:'!'}],next:'head',why:'「酔っ払い」に見えても、頭のけが、低血糖、脳卒中などが隠れていることがあります。決めつけずに、反応・呼吸・けがを確かめます。'},
+        {t:'酔っ払いだから、関わらずに通り過ぎる',g:'bad',dt:20,sc:-3,res:['あなたは、そのまま改札へ向かった。',{adv:20},'電車を待つ間も、男性のことが気になった。','戻ってみると、男性は横に倒れ、いびきをかいていた。',{a:'man',p:'down',f:'closed'},'後頭部の髪が、血で濡れている。'],next:'head',why:'お酒のにおいがすると「酔っ払い」と決めつけがちですが、頭のけがや低血糖、脳卒中が隠れていることがあります。'},
+        {t:'酔いをさまさせようと、水を飲ませる',g:'bad',dt:3,sc:-2,res:['自販機で水を買い、男性に飲ませようとした。',{a:'man',e:'cough'},'男性はむせて、水を吐き出した。','その拍子に見えた後頭部の髪が、血で濡れている。'],next:'head',why:'意識がはっきりしない人に水を飲ませると、むせたり気管に入ったりします。まず反応とけがを確かめます。'}
+      ]},
+    head:{lines:[{bgm:'tense'},{a:'woman',x:300,e:'!'},'woman|「その人、さっきあの階段で、後ろ向きに転んでたよ……」','女性が、出口の階段を指さした。','男性はうとうとして、呼びかけにも返事が遅い。'],
+      obs:[['後頭部','出血している'],['状況','階段で後ろ向きに転んだ'],['意識','うとうと。返事が遅い'],['におい','お酒のにおい']],
+      q:'どうする？',
+      choices:[
+        {t:'119番に電話し、「階段で転んで頭を打った。お酒のにおいはするが、ろれつが回らず、うとうとしている」と伝える',g:'best',dt:2,sc:2,res:[{se:'ring'},'「救急です。駅前で男性が、階段で転んで後頭部を打ったそうです。お酒のにおいはしますが、ろれつが回らず、うとうとしています」','op|「すぐ向かいます。首を大きく動かさないようにして、そばにいてください」'],next:'vomit',why:'頭を打った後の意識の変化は、頭の中の出血のサインかもしれません。お酒を飲んでいても、それを理由に軽く考えてはいけません。'},
+        {t:'駅員さんに知らせて、あとは任せる',g:'ok',dt:5,sc:0,res:['改札の駅員さんに知らせた。','駅員さんはすぐに119番に電話してくれた。'],next:'vomit',why:'人に知らせるのは良い行動です。ただ、頭を打って意識がおかしい時は、まず119番を。知らせた後も、可能ならそばで様子を見ます。'},
+        {t:'近くの交番まで、肩を貸して連れていく',g:'bad',dt:5,sc:-3,res:['男性を立たせようとしたが、膝ががくりと折れた。',{a:'man',p:'down',f:'closed'},'女性が、慌てて119番に電話した。'],next:'vomit',why:'頭を打っている人を無理に立たせたり歩かせたりすると、転んで再び頭を打ったり、首を痛めたりする危険があります。'}
+      ]},
+    vomit:{lines:[{adv:3},{a:'man',p:'down',f:'pain'},'男性が、急に吐きそうにえずき始めた。','意識が、さっきより遠くなっている気がする。'],
+      q:'どうする？',
+      choices:[
+        {t:'首を大きくひねらないよう、頭と体を一緒に支えて横向きにする',g:'best',dt:2,sc:2,res:['女性に手伝ってもらい、頭と肩と腰を一緒に支えて、ゆっくり横向きにした。',{a:'man',p:'downr',f:'closed'},'男性は少し吐いたが、のどに詰まることはなかった。'],next:'END',why:'吐いたものがのどに詰まらないよう横向きにします。頭を打っている時は首のけがの可能性もあるので、頭と体を一緒にゆっくり動かします。'},
+        {t:'あおむけのまま、背中をさすって様子を見る',g:'bad',dt:2,sc:-3,flag:'asp',res:['あおむけのまま、男性は吐いた。','吐いたものが口の中にたまり、ごぼごぼと音を立てる。','女性：「横！ 横にして！」','慌てて横向きにした。',{a:'man',p:'downr'}],next:'END',why:'あおむけで吐くと、吐いたものがのどに詰まったり、気管に入ったりします。'},
+        {t:'起こして座らせ、吐かせる',g:'bad',dt:2,sc:-2,res:['男性を起こそうとしたが、体に力が入らず、ぐにゃりと崩れた。','頭が、ベンチの角にぶつかりそうになった。','女性と二人で、なんとか横向きに寝かせた。',{a:'man',p:'downr'}],next:'END',why:'意識が悪い人を無理に起こすのは危険です。横向きに寝かせます。'}
+      ]}
+  },
+  outcome(S){
+    const L=[{fx:'siren'},{a:'medic',show:true},'救急隊が到着し、男性を運んでいった。',{fx:'nosiren'},{bg:'hospital'},{a:'woman',show:false},{a:'medic',show:false},{a:'man',x:190,y:178,p:'down',f:'closed'},{a:'doc',show:true}];
+    if(S.score>=5){ L.push('doc|「頭の中に出血がありました（急性硬膜下血腫）。すぐに手術をして、命は助かりました。「酔っ払い」で片づけられていたら、間に合わなかったでしょう」',{d:'1か月後'},{a:'man',p:'sit',y:186,f:'smile'},'後日、男性から塾あてに、お礼の手紙が届いた。'); return {title:'「酔っ払い」ではなかった',mood:'good',sum:'酔っ払いと決めつけず、頭のけがに気づいて119番し、吐いた時も横向きにした。手術が間に合った。',lines:L}; }
+    if(S.score>=1){ L.push('doc|「頭の中に出血があり、手術をしました。少し時間がたっていたので、回復にはリハビリが必要です」'); return {title:'遅れた数十分',mood:'mid',sum:'頭のけがに気づくのが遅れ、手術はできたがリハビリが必要になった。',lines:L}; }
+    L.push('doc|「頭の中の出血が大きく、手術をしましたが、厳しい状態です」'); return {title:'見過ごされた出血',mood:'bad',sum:'「酔っ払い」と思い込み、頭の中の出血に気づくのが大きく遅れた。',lines:L};
+  },
+  debrief:[
+    {h:'何が起きていたのか',p:'階段で後ろ向きに転び、後頭部を強く打って、頭の中で出血していました（急性硬膜下血腫）。お酒のにおいのせいで、「ろれつが回らない」「うとうとしている」が酔いのせいに見えていました。'},
+    {h:'「酔っ払い」に隠れているもの',ul:['頭のけが（頭の中の出血）','低血糖（糖尿病の薬を使っている人）','脳卒中','お酒と薬の飲み合わせ、急性アルコール中毒そのもの']},
+    {h:'一般の人にできること',ul:['決めつけずに、声をかけて反応・呼吸・けがを確かめる','頭を打った後に意識がおかしければ、お酒を飲んでいても119番','吐きそうなら、頭と体を一緒に支えて横向きに','無理に立たせたり、歩かせたりしない']}],
+  deep:`<p><b>急性硬膜下血腫</b>：架橋静脈の破綻。高齢者・飲酒者・抗血栓薬内服者に多く、対側損傷（contrecoup）で生じることも多い。CTで三日月型の高吸収域。</p><p><b>アルコールと頭部外傷</b>：酩酊は意識レベル評価を困難にし、頭部CTの閾値を下げるべき要因。GCSの経時的低下は手術適応判断に重要。</p><p><b>意識障害の鑑別（AIUEOTIPS）</b>：アルコール、低血糖、外傷、脳卒中などを系統的に除外する。</p>`
+});
+
+/* ---------------- 16 自転車で転んだ美咲（意識清明期） ---------------- */
+CASES.push({
+  id:'lucid',no:'16',title:'「平気だって」',theme:'頭部外傷（あとから悪化）',struct:'元気そうでも、あとで急変',scene:'home',
+  tease:'塾から帰ってきた美咲の、おでこにすり傷。',where:'自宅・夜',
+  blurb:'自転車で転んで頭を打った美咲。「平気だって」と笑うけれど。',
+  cast:{sis:{name:'美咲',look:'sis',x:205},mom:{name:'母さん',look:'mom',x:330,show:false},op:OP,medic:{name:'救急隊員',look:'medic',x:345,show:false},doc:{name:'医師',look:'doctor',x:320,show:false}},
+  start:'intro',
+  nodes:{
+    intro:{lines:[
+      {d:'木曜日',t:'19:10'},'美咲が塾から帰ってきた。おでこにすり傷があり、制服が汚れている。',
+      '「どうしたの、それ」','sis|「自転車で、段差でこけた。ヘルメット、かぶってなかったんだよね」',
+      'sis|「頭ちょっと打ったけど、平気。……でも、こける前のこと、あんまり覚えてないんだよね」',{a:'sis',f:'smile'},'美咲は笑っている。話し方も、いつもどおりだ。'],
+      obs:[['意識','はっきりしている'],['おでこ','すり傷とこぶ'],['記憶','転ぶ前のことを覚えていない'],['本人','「平気」']],
+      q:'どうする？',
+      choices:[
+        {t:'「転ぶ前のことを覚えていない」のは気になる。今日のうちに受診する（迷えば#7119に相談）',g:'best',dt:40,sc:3,flag:'er',res:['「頭打って、記憶が抜けてるなら、病院で診てもらおう」','母さんが#7119に電話すると、「今日のうちに受診を」と言われた。',{a:'mom',show:true},'母さんの車で、夜間の救急外来に向かった。'],next:'erpath',why:'頭を打った後に、その前後のことを覚えていない、意識を失った、何度も吐く、強い頭痛、などがあれば、元気そうでも受診します。迷う時は救急相談（#7119など）に電話できます。'},
+        {t:'元気そうなので、今夜は家族で様子を見る。頭痛や吐き気、眠気が強くならないか、ときどき声をかける',g:'ok',dt:0,sc:1,flag:'watch',res:['「今夜はときどき様子見に行くからね」','sis|「大げさだなあ」'],next:'night',why:'見守る判断は悪くありません。ただ、記憶が抜けているのは注意が必要なサインです。受診も考えましょう。'},
+        {t:'本人が平気と言うので、そのまま部屋で寝かせる',g:'bad',dt:0,sc:-3,flag:'alone',res:['「ならいいけど」','美咲は夕飯を食べて、自分の部屋に戻っていった。',{a:'sis',show:false}],next:'night',why:'頭を打った後は、最初は元気でも、数時間たってから頭の中の出血が大きくなり、急に悪化することがあります。その夜は一人にせず、見守ります。'}
+      ]},
+    night:{lines:S=>[{t:'22:40'},{bgm:'tense'},S.flags.alone?'夜。美咲の部屋から、物音がした。のぞくと、美咲がベッドの横で吐いていた。':'夜。様子を見に行くと、美咲がベッドの横で吐いていた。',{a:'sis',show:true,p:'crouch',f:'pain',t:'pale'},'sis|「……頭が、割れるみたいに、いたい……」','言葉が、いつもより遅い。目を閉じそうになっている。'],
+      obs:[['頭痛','割れるように痛い'],['吐き気','吐いた'],['意識','うとうと。言葉が遅い']],
+      q:'どうする？',
+      choices:[
+        {t:'すぐ119番。「数時間前に自転車で転んで頭を打った」と伝える',g:'best',dt:3,sc:2,res:[{se:'ring'},'「救急です！ 妹が夕方、自転車で転んで頭を打って、今、ひどい頭痛で吐いて、うとうとしています！」','op|「すぐ向かいます。吐いたものが詰まらないよう、横向きにしてください」',{a:'sis',p:'downr',f:'closed'},'あなたは美咲を横向きに寝かせた。'],next:'END',why:'頭を打った後の強い頭痛、くり返す嘔吐、意識が悪くなる、は頭の中の出血が大きくなっているサインです。すぐ119番です。'},
+        {t:'疲れて具合が悪いのだろう。頭痛薬を飲ませて、朝まで寝かせる',g:'bad',dt:60,sc:-4,res:['頭痛薬を飲ませて、寝かせた。',{adv:60},{a:'sis',p:'down',f:'closed',t:'pale'},'1時間後。母さんが様子を見に行くと、美咲は呼びかけても目を開けなかった。','母さんの悲鳴が聞こえた。'],next:'END',why:'「頭を打った日の夜の頭痛と嘔吐」は、決して様子を見てはいけないサインです。'},
+        {t:'母さんの車で、夜間救急に連れていく',g:'ok',dt:30,sc:0,res:['母さんの車で、夜間救急へ向かった。','後部座席で、美咲の返事がだんだんなくなっていく。'],next:'END',why:'受診を急ぐ判断は正しいのですが、意識が悪くなっている時は、救急車で頭の手術ができる病院へ直接運んでもらうのが確実です。'}
+      ]},
+    erpath:{lines:[{bg:'hospital'},{a:'mom',show:false},{a:'doc',show:true},{a:'sis',x:190,y:178,p:'down',f:'normal'},{t:'20:30'},'doc|「CTで、頭の骨にひびと、その内側に小さな出血が見つかりました。今夜は入院して様子を見ます」',{t:'23:10'},{bgm:'tense'},{a:'sis',f:'pain',t:'pale'},'夜、美咲は病室で急に強い頭痛を訴え、吐いた。'],
+      q:'病室で付き添っていたあなたは、どうする？',
+      choices:[
+        {t:'すぐにナースコールを押し、「急に強い頭痛で吐いた。言葉が遅い」と伝える',g:'best',dt:1,sc:2,res:[{se:'beep'},'看護師と医師がすぐに駆けつけ、もう一度CTが撮られた。'],next:'END',why:'入院中でも、変化に気づいてすぐ知らせることが大切です。'},
+        {t:'夜中なので、朝の回診まで待つ',g:'bad',dt:30,sc:-3,res:['朝まで待とうと思った。',{adv:30},'見回りに来た看護師が、美咲の様子に気づいて医師を呼んだ。'],next:'END',why:'入院中でも、急な変化はすぐ知らせます。遠慮はいりません。'}
+      ]}
+  },
+  outcome(S){
+    const L=[];
+    if(!S.flags.er) L.push({fx:'siren'},{a:'medic',show:true},'救急隊が、美咲を頭の手術ができる病院へ運んだ。',{fx:'nosiren'},{bg:'hospital'},{a:'mom',show:false},{a:'medic',show:false},{a:'sis',x:190,y:178,p:'down',f:'closed'},{a:'doc',show:true});
+    if(S.score>=3){ L.push('doc|「頭の骨と、その内側の膜の間に出血が広がっていました（急性硬膜外血腫）。すぐに手術をしたので、後遺症はほとんど残らないでしょう」',{d:'2週間後'},{a:'sis',p:'sit',y:186,f:'smile'},'sis|「……ヘルメット、明日から、かぶる」'); return {title:'明日からのヘルメット',mood:'good',sum:'頭を打った後の記憶の抜けや、夜の頭痛・嘔吐を見逃さなかった。手術が間に合った。',lines:L}; }
+    if(S.score>=0){ L.push('doc|「急性硬膜外血腫でした。手術はしましたが、少し時間がたっていたので、しばらくリハビリが必要です」'); return {title:'少し遅れた夜',mood:'mid',sum:'悪化に気づいて手術はできたが、時間がかかり、リハビリが必要になった。',lines:L}; }
+    L.push('doc|「出血が大きく、脳が強く圧迫されていました。緊急手術をしましたが、厳しい状態です」',{a:'sis',f:'closed'}); return {title:'「平気だって」',mood:'bad',sum:'「平気」の言葉を信じて一人で寝かせ、夜の悪化に気づくのが遅れた。',lines:L};
+  },
+  debrief:[
+    {h:'何が起きていたのか',p:'転んだ時に頭の骨にひびが入り、その内側の血管から少しずつ出血していました（急性硬膜外血腫）。出血が大きくなるまでの数時間は、元気そうに見えることがあります。'},
+    {h:'受診したほうがいいサイン',ul:['頭を打った前後のことを覚えていない','一時的に意識を失った','強い頭痛、何度も吐く、けいれん','うとうとする、言葉がおかしい、手足が動きにくい','血をサラサラにする薬を飲んでいる']},
+    {h:'家でできること',ul:['頭を打った日は、元気そうでも一人にしない','夜も何度か様子を見て、頭痛・吐き気・眠気の変化に注意','悪化したら、ためらわず119番。「何時ごろ、どう頭を打ったか」を伝える','迷う時は救急相談（#7119など）']}],
+  deep:`<p><b>急性硬膜外血腫</b>：側頭骨骨折に伴う中硬膜動脈損傷が典型。CTで凸レンズ型の高吸収域。受傷直後の意識障害→意識清明期（lucid interval）→再度の意識障害という経過が教科書的（国試頻出）だが、全例にみられるわけではない。</p><p><b>手術適応</b>：血腫量、厚さ、正中偏位、意識レベル、瞳孔所見などで判断。早期の開頭血腫除去で予後良好となりやすい。</p><p><b>軽症頭部外傷のCT適応</b>：健忘、意識消失、嘔吐、高エネルギー受傷機転、抗凝固薬内服などが参考になる。</p>`
+});
+
+/* ---------------- 17 ボタン電池の誤飲 ---------------- */
+CASES.push({
+  id:'battery',no:'17',title:'リモコンのふた',theme:'子どもの誤飲（ボタン電池）',struct:'吐かせる？ 様子を見る？',scene:'home',
+  tease:'土曜の午後。陽が、居間で一人で遊んでいる。',where:'自宅・午後',
+  blurb:'リモコンの裏ぶたが開いている。電池が、一つ足りない。',
+  cast:{kid:{name:'陽',look:'kid',x:205},gma:{name:'ばあちゃん',look:'gma',x:330,show:false},op:OP,doc:{name:'医師',look:'doctor',x:320,show:false}},
+  start:'intro',
+  nodes:{
+    intro:{lines:[
+      {d:'土曜日',t:'15:20'},'陽が、居間で一人で遊んでいる。','kid|「にいに、みてー」',
+      '陽が見せたのは、テレビのリモコンだ。裏ぶたが外れている。','床に、平たい丸い電池が一つ落ちている。入っていたのは、二つのはずだ。',
+      {bgm:'tense'},{a:'kid',e:'?'},'「陽、電池、お口に入れた？」','kid|「……んー？」','陽は、よだれをたらしながら首をかしげた。'],
+      obs:[['リモコン','平たい丸い電池（ボタン電池）が一つ足りない'],['陽','元気。よだれが多い'],['呼吸','ふつう']],
+      q:'どうする？',
+      choices:[
+        {t:'口の中を確かめる（見えなければ指で探らない）。すぐに受診する。残っている電池とリモコンを持っていく',g:'best',dt:5,sc:3,res:['口の中をのぞいたが、電池は見えない。','「ばあちゃん、陽が電池を飲んだかも！ すぐ病院！」',{a:'gma',show:true,e:'!'},'残っていた電池とリモコンを袋に入れた。'],next:'go',why:'ボタン電池を飲み込むと、食道にひっかかった場合、短い時間で粘膜が溶けるようにただれ、穴があくこともあります。元気そうでも、すぐに受診します。同じ電池を持っていくと、種類と大きさがすぐ分かります。'},
+        {t:'指をのどに入れて、吐かせる',g:'bad',dt:3,sc:-3,res:['陽ののどに指を入れた。','陽は泣き叫び、えずいたが、電池は出てこない。','kid|「いやー！」'],next:'go',why:'吐かせると、電池が食道で引っかかったり、吐いたものが気管に入ったりする危険があります。誤飲では、自己判断で吐かせないのが原則です。'},
+        {t:'元気そうだし、そのうちうんちで出てくるだろう',g:'bad',dt:60,sc:-4,flag:'late',res:['陽は、そのまま遊び続けた。',{adv:60},{a:'kid',f:'cry'},'1時間後。陽が、夕方のおやつを嫌がって泣き出した。','kid|「のど、いたい……」','あなたは青くなって、ばあちゃんを呼んだ。',{a:'gma',show:true}],next:'go',why:'ボタン電池は、食道に引っかかると、2時間ほどでも重い傷になることがあります。「元気だから様子を見る」は危険です。'},
+        {t:'#8000（子ども医療電話相談）に電話して、どうしたらいいか聞く',g:'ok',dt:15,sc:1,res:['電話は混み合っていて、なかなかつながらない。','ようやくつながると、相談員はすぐに言った。「ボタン電池なら、今すぐ受診してください」',{a:'gma',show:true}],next:'go',why:'相談は悪くありませんが、ボタン電池の誤飲は「すぐ受診」が決まっています。迷わず受診しましょう。'}
+      ]},
+    go:{lines:['陽は、のどが渇いたのか、水を欲しがっている。','kid|「おみず、のみたい」'],
+      q:'病院に着くまで、どうする？',
+      choices:[
+        {t:'病院で検査や処置があるかもしれないので、何も飲ませず、食べさせない',g:'best',dt:20,sc:2,res:['「ごめんね、病院で先生に聞いてからね」','陽を抱っこして、ばあちゃんの運転で病院へ向かった。'],next:'END',why:'食道に電池が引っかかっている場合、内視鏡で取り出すことがあります。受診先の指示があるまで、飲んだり食べたりさせないようにします。'},
+        {t:'のどを通りやすくするために、牛乳を飲ませる',g:'bad',dt:20,sc:-2,res:['牛乳を飲ませた。陽はむせながら半分飲んだ。','ばあちゃんの運転で、病院へ向かった。'],next:'END',why:'牛乳で電池が流れるわけではありません。処置の妨げになることもあるので、受診先の指示があるまで飲ませないようにします。'}
+      ]}
+  },
+  outcome(S){
+    const L=[{bg:'hospital'},{a:'gma',show:false},{a:'kid',x:190,y:178,p:'down',f:'closed'},{a:'doc',show:true},'レントゲンで、陽ののどの少し下、食道に、丸い電池が引っかかっているのが見えた。'];
+    if(S.score>=4){ L.push('doc|「内視鏡で取り出しました。早く来てくれたので、食道の傷は浅くて済みました」',{a:'kid',p:'sit',y:186,f:'smile'},'家に帰ると、ばあちゃんがリモコンの裏ぶたにテープをぐるぐる巻きにしていた。'); return {title:'テープでぐるぐる',mood:'good',sum:'吐かせず、様子も見ず、すぐ受診した。電池は食道から取り出され、傷は浅く済んだ。',lines:L}; }
+    if(S.score>=0){ L.push('doc|「取り出しましたが、食道に少し深い傷があります。数日入院して、様子を見ましょう」'); return {title:'食道の傷',mood:'mid',sum:'電池は取り出せたが、受診までの時間や対応で、食道に傷が残った。',lines:L}; }
+    L.push('doc|「食道の壁が深くただれています。穴があきかけていて、しばらく入院が必要です」',{a:'kid',f:'cry'}); return {title:'「うんちで出る」はずが',mood:'bad',sum:'様子を見ている間に、電池が食道を深く傷つけた。',lines:L};
+  },
+  debrief:[
+    {h:'何が起きていたのか',p:'平たく丸いボタン電池（コイン形リチウム電池）が、食道に引っかかっていました。体の中で電流が流れ、短い時間で食道の粘膜がただれていきます。'},
+    {h:'一般の人にできること',ul:['ボタン電池を飲んだかもしれない → <b>元気でもすぐ受診</b>','吐かせない','受診先の指示があるまで、飲ませない・食べさせない','同じ電池や、電池が入っていた物を持っていく','息が苦しそう・ぐったりしている時は119番']},
+    {h:'予防',ul:['電池のふたはネジ止めやテープで固定','電池（使用済みも）は子どもの手の届かない場所へ','誤飲の相談先：#8000（子ども医療電話相談）、日本中毒情報センターの中毒110番']}],
+  deep:`<p><b>ボタン電池誤飲</b>：特に直径20mm程度のリチウムコイン電池が食道に停留すると、陰極側で水酸化物が生成され、2時間以内に重篤な粘膜損傷を来しうる。食道穿孔、気管食道瘻、大動脈食道瘻の報告がある。</p><p><b>画像</b>：胸部X線で、正面像の二重輪郭（halo sign）、側面像の段差でコインと鑑別。</p><p><b>処置</b>：食道停留は緊急内視鏡的摘出。胃内でも条件により摘出を検討。</p>`
+});
+</script>
+<script>
+/* =========================================================
+   エンジン
+   ========================================================= */
+let C=null, S=null;
+let REC={}; try{ REC=JSON.parse(localStorage.getItem('kyk_rec2')||'{}')||{}; }catch(e){}
+let SPOIL=false; try{ SPOIL=localStorage.getItem('kyk_spoil')==='1'; }catch(e){}
+const saveRec=()=>{ try{localStorage.setItem('kyk_rec2',JSON.stringify(REC))}catch(e){} };
+const hm=m=>{ m=((m%1440)+1440)%1440; return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0'); };
+const toMin=s=>{ const [h,m]=s.split(':').map(Number); return h*60+m; };
+const shuffle=a=>{ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+const esc=s=>String(s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+function show(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id)); window.scrollTo(0,0); }
+const FXK=['red','smoke','haze','dim','night','siren'];
+
+function computeMax(c){
+  const memo={};
+  const dfs=id=>{ if(!id||id==='END') return 0; if(memo[id]!==undefined) return memo[id]; memo[id]=0; const n=c.nodes[id];
+    let v; if(n.mini) v=2+dfs(n.next); else if(!n.choices) v=0; else v=Math.max(...n.choices.filter(x=>x.g!=='fatal').map(x=>(x.sc||0)+dfs(x.next)));
+    return memo[id]=v; };
+  return Math.max(1,dfs(c.start));
+}
+function gradeOf(sc,max){ const r=sc/max; return r>=.85?'S':r>=.6?'A':r>=.3?'B':'C'; }
+
+/* ---- 描画 ---- */
+function sceneSvg(view,cast,thumb){
+  const sc=SCENES[view.scene]||SCENES.home;
+  let s=sc.bg;
+  const split=sc.split||0; let back='',front='';
+  for(const [id,a] of Object.entries(view.actors)){
+    const c=cast[id]; if(!c||!c.look||!a.show) continue;
+    const L=LOOK[c.look]; const top=-(DIM[L.k].leg+DIM[L.k].body)-DIM[L.k].head*2;
+    const g=`<g class="actor ${a.p==='stand'||!a.p?'idle':''}" ${thumb?'':`id="ac_${id}"`} data-p="${a.p||'stand'}" data-f="${a.f||'normal'}" data-t="${a.t||''}" data-arm="${a.arm||''}" style="transform:translate(${a.x}px,${a.y||215}px) scale(${c.sc||1});transition:transform .9s ease">${fig(L)}${a.e&&!thumb?`<g transform="translate(0,${top+6})">${emoteSvg(a.e,0)}</g>`:''}</g>`;
+    if(split && (a.y||215)>=split) front+=g; else back+=g;
+  }
+  s+=back;
+  if(sc.fg) s+=sc.fg;
+  s+=front;
+  if(sc.fx) s+=sc.fx;
+  if(view.crash&&sc.crash) s=s.replace('<!--crash-->',sc.crash);
+  return s;
+}
+function render(){
+  $('sc').innerHTML=sceneSvg(S.view,C.cast);
+  FXK.forEach(k=>$('fx'+k[0].toUpperCase()+k.slice(1)).classList.toggle('on',!!S.view.fx[k]));
+  const fw=document.getElementById('fireWin'); if(fw) fw.setAttribute('opacity',S.view.fire?1:0);
+}
+function updActor(id,ch){
+  const a=S.view.actors[id]||(S.view.actors[id]={x:200,show:false});
+  Object.assign(a,ch);
+  const el=document.getElementById('ac_'+id);
+  if(!el || ch.show!==undefined || ch.e!==undefined){ render(); if(ch.e) setTimeout(()=>{ if(S&&S.view.actors[id]&&S.view.actors[id].e===ch.e){ S.view.actors[id].e=null; const g=document.querySelector('#ac_'+id+' .emote'); if(g) g.parentNode.remove(); } },1800); return; }
+  if(ch.p!==undefined){ el.dataset.p=ch.p; el.classList.toggle('idle',ch.p==='stand'); }
+  if(ch.f!==undefined) el.dataset.f=ch.f;
+  if(ch.t!==undefined) el.dataset.t=ch.t;
+  if(ch.arm!==undefined) el.dataset.arm=ch.arm;
+  if(ch.x!==undefined||ch.y!==undefined) el.style.transform=`translate(${a.x}px,${a.y||215}px) scale(${C.cast[id].sc||1})`;
+}
+function setClock(){ $('hm').textContent=hm(S.clock); $('day').textContent=S.day||''; const c=$('clock'); c.classList.remove('tick'); void c.offsetWidth; c.classList.add('tick'); }
+function stageFx(k){ const st=$('stage'); st.classList.remove('shake','quake'); void st.offsetWidth; st.classList.add(k); setTimeout(()=>st.classList.remove(k),k==='quake'?1900:500); }
+
+/* ---- 行の処理 ---- */
+let queue=[], onDone=null, typing=null, waiting=false;
+function play(lines,cb){ queue=lines.slice(); onDone=cb; step(); }
+function step(){
+  while(queue.length){
+    const it=queue.shift();
+    if(typeof it==='string'){ say(it); return; }
+    if(it.sys){ say('@sys|'+it.sys); return; }
+    doAction(it);
+    if(it.wait){ waiting=true; setTimeout(()=>{ waiting=false; step(); },it.wait); return; }
+  }
+  const f=onDone; onDone=null; f&&f();
+}
+function doAction(it){
+  if(it.a){ const ch={...it}; delete ch.a; delete ch.wait; updActor(it.a,ch); return; }
+  if(it.d!==undefined) S.day=it.d;
+  if(it.t){ S.clock=toMin(it.t); setClock(); }
+  if(it.adv){ S.clock+=it.adv; setClock(); }
+  if(it.bg){ S.view.scene=it.bg; render(); }
+  if(it.fx){
+    const k=it.fx;
+    if(k==='shake'||k==='quake'){ stageFx(k); if(k==='quake') sfx('quake'); }
+    else if(k==='flash'){ const f=$('fxFlash'); f.classList.add('on'); setTimeout(()=>f.classList.remove('on'),180); }
+    else if(k==='fire'){ S.view.fire=true; render(); }
+    else if(k==='crash'){ S.view.crash=true; render(); }
+    else if(k==='calm'){ FXK.forEach(x=>S.view.fx[x]=false); render(); }
+    else if(k.startsWith('no')){ S.view.fx[k.slice(2)]=false; render(); }
+    else { S.view.fx[k]=true; render(); if(k==='siren') sfx('siren'); }
+  }
+  if(it.se) sfx(it.se);
+  if(it.bgm!==undefined) music(it.bgm);
+}
+function say(line){
+  let who=null, txt=line;
+  const m=line.match(/^(@?\w+)\|(.*)$/s); if(m){ who=m[1]; txt=m[2]; }
+  const nm=$('name'), tx=$('txt');
+  nm.className='name'; tx.className='txt';
+  if(who==='@sys'){ nm.textContent='SYSTEM'; nm.classList.add('sys'); nm.style.display='block'; tx.classList.add('sys'); }
+  else if(who){ const c=C.cast[who]; nm.textContent=(c&&c.name)||who; if(c&&!c.look) nm.classList.add('voice'); nm.style.display='block'; sfx('blip'); }
+  else { nm.style.display='none'; tx.classList.add('narr'); }
+  $('nextI').style.visibility='hidden';
+  let i=0; clearInterval(typing);
+  tx.textContent='';
+  const chars=[...txt];
+  typing=setInterval(()=>{ i+=2; tx.textContent=chars.slice(0,i).join(''); if(i>=chars.length){ clearInterval(typing); typing=null; $('nextI').style.visibility='visible'; } },28);
+  if(window.__fast){ clearInterval(typing); typing=null; tx.textContent=txt; }
+}
+function tapBox(){
+  if($('sheet').classList.contains('on')||waiting) return;
+  if(typing){ clearInterval(typing); typing=null; const l=$('txt'); l.textContent=l.dataset.full||l.textContent; finishType(); return; }
+  if(onDone||queue.length) step();
+}
+function finishType(){ $('nextI').style.visibility='visible'; }
+// 全文保持（タップで即表示用）
+const _say=say;
+say=function(line){ _say(line); const m=line.match(/^(@?\w+)\|(.*)$/s); $('txt').dataset.full=m?m[2]:line; };
+$('box').addEventListener('click',tapBox);
+$('stage').addEventListener('click',e=>{ if(e.target.closest('.topbtns')) return; tapBox(); });
+
+/* ---- 症例の開始・ノード ---- */
+function startCase(i){
+  C=CASES[i]; C.max=C.max||computeMax(C);
+  const actors={}; for(const [id,c] of Object.entries(C.cast)) if(c.look) actors[id]={x:c.x||200,y:c.y,p:c.p||'stand',f:c.f||'normal',show:c.show!==false};
+  S={flags:{},score:0,clock:0,day:'',log:[],node:null,snap:null,view:{scene:C.scene,actors,fx:{},fire:false,crash:false}};
+  $('hudNo').textContent=C.no; $('hudTitle').textContent=C.title;
+  $('hm').textContent='--:--'; $('day').textContent=''; $('txt').textContent=''; $('name').style.display='none';
+  closeSheet(); show('play'); render(); sfx('start'); music(C.bgm||'town');
+  enterNode(C.start);
+}
+function enterNode(id){
+  if(id==='END') return ending();
+  const n=C.nodes[id]; S.node=id;
+  if(n.mini==='cpr') return runCPR(()=>enterNode(n.next));
+  const lines=typeof n.lines==='function'?n.lines(S):n.lines;
+  play(lines||[],()=>{
+    if(!n.choices) return ending();
+    S.snap=JSON.stringify({...S,snap:null});
+    openChoices(n);
+  });
+}
+let tmr=null;
+function openChoices(n){
+  $('cpr').style.display='none'; $('choices').style.display='flex';
+  $('chips').innerHTML=(n.obs||[]).map(([a,b])=>`<span class="chip"><b>${esc(a)}</b>${esc(b)}</span>`).join('');
+  $('q').textContent=n.q||'どうする？';
+  const box=$('choices'); box.innerHTML='';
+  shuffle(n.choices).forEach(c=>{ const b=document.createElement('button'); b.className='btn'; b.textContent=c.t; b.onclick=()=>choose(n,c); box.appendChild(b); });
+  $('sheet').classList.add('on'); sfx('msg');
+  clearInterval(tmr); const tb=$('timer');
+  if(n.timer && !window.__notimer){
+    tb.classList.add('on'); const t0=performance.now(), T=n.timer*1000; const bar=$('timerBar');
+    tmr=setInterval(()=>{ const r=1-(performance.now()-t0)/T; bar.style.width=Math.max(0,r*100)+'%'; if(r<=0){ clearInterval(tmr); choose(n,n.tmo,true); } else if(Math.floor(r*T/1000)!==Math.floor((r*T+60)/1000)) sfx('cur'); },60);
+  } else tb.classList.remove('on');
+}
+function closeSheet(){ $('sheet').classList.remove('on'); clearInterval(tmr); }
+function choose(n,c,timedOut){
+  closeSheet(); sfx(timedOut?'back':'ok');
+  const best=n.choices.find(x=>x.g==='best');
+  S.log.push({q:n.q||'どうする？',you:timedOut?'（時間切れ）'+c.t:c.t,g:c.g,why:c.why||'',best:best&&best!==c?best.t:null,bestWhy:best&&best!==c?best.why:null});
+  S.score+=(c.sc||0); if(c.flag) S.flags[c.flag]=true;
+  if(c.dt){ S.clock+=c.dt; setClock(); }
+  play(c.res||[],()=>{
+    if(c.g==='fatal') return fail('fatal',c);
+    if(C.strict && c.g!=='best') return fail('strict',c);
+    enterNode(c.next);
+  });
+}
+function retry(){
+  const st=JSON.parse(S.snap); const snap=S.snap; S=Object.assign(st,{snap});
+  show('play'); render(); setClock(); music(C.bgm2||'tense');
+  $('txt').textContent=''; $('name').style.display='none';
+  openChoices(C.nodes[S.node]);
+}
+function ending(){
+  const o=C.outcome(S);
+  music(o.mood==='good'?'hope':o.mood==='mid'?'talk':'night');
+  play(o.lines||[],()=>{
+    const g=C.strict?'S':gradeOf(S.score,C.max);
+    const order='SABC'; if(!REC[C.id]||order.indexOf(g)<order.indexOf(REC[C.id])){ REC[C.id]=g; saveRec(); }
+    $('outCase').textContent=`CASE ${C.no}　${C.title}`;
+    $('outGrade').className='grade '+g; $('outGrade').textContent=g; $('outGradeLbl').textContent='対応の評価';
+    $('outTitle').textContent=o.title; $('outText').textContent=o.sum||'';
+    $('retryNode').style.display='none'; sfx(o.mood==='good'?'jingle':'lvl');
+    setTimeout(()=>show('out'),400);
+  });
+}
+function fail(kind,c){
+  music(null); sfx('drop');
+  setTimeout(()=>{
+    $('outCase').textContent=`CASE ${C.no}　${C.title}`;
+    $('outGrade').className='grade X'; $('outGrade').textContent=kind==='fatal'?'終':'×';
+    $('outGradeLbl').textContent=kind==='fatal'?'この判断で、物語は終わる':'連続正解ならず';
+    $('outTitle').textContent=kind==='fatal'?'取り返しのつかない判断':'その判断では、助けられない';
+    $('outText').textContent=c.why||'';
+    $('retryNode').style.display='block'; show('out');
+  },500);
+}
+$('retryNode').onclick=retry;
+$('outMenu').onclick=()=>{ renderMenu(); music('title'); show('menu'); };
+$('debMenu').onclick=$('outMenu').onclick;
+$('quit').onclick=e=>{ e.stopPropagation(); queue=[]; onDone=null; clearInterval(typing); closeSheet(); renderMenu(); music('title'); show('menu'); };
+$('toDeb').onclick=()=>{ renderDebrief(); show('deb'); };
+$('debRetry').onclick=()=>startCase(CASES.indexOf(C));
+$('snd').onclick=e=>{ e.stopPropagation(); setSound(!SOUND); };
+$('snd2').onclick=()=>setSound(!SOUND);
+$('toMenu').onclick=()=>{ audioInit(); renderMenu(); music('title'); show('menu'); };
+function renderDebrief(){
+  $('debCase').textContent=`CASE ${C.no}　${C.title}　― ${C.theme}`;
+  const mk={best:'◎',ok:'○',bad:'×',fatal:'✕'};
+  $('debLog').innerHTML=S.log.map(l=>`<div class="rv"><div class="h"><span class="mk ${l.g}">${mk[l.g]}</span><span>${esc(l.q)}</span></div><div class="you">あなた：${esc(l.you)}</div><div style="margin-top:6px">${esc(l.why)}</div>${l.best?`<div class="bt"><b>より良い判断：</b>${esc(l.best)}<br>${esc(l.bestWhy||'')}</div>`:''}</div>`).join('')||'<div class="mute small">記録なし</div>';
+  $('debSecs').innerHTML=C.debrief.map(s=>`<div class="sec"><h3>${s.h}</h3>${s.p?`<p>${s.p}</p>`:''}${s.ul?`<ul>${s.ul.map(x=>`<li>${x}</li>`).join('')}</ul>`:''}</div>`).join('');
+  $('debDeepBody').innerHTML=C.deep; $('debDeep').open=false;
+}
+
+/* ---- 症例一覧 ---- */
+function renderMenu(){
+  $('spoilOn').checked=SPOIL;
+  $('cases').innerHTML=CASES.map((c,i)=>{
+    const r=REC[c.id], open=SPOIL||!!r;
+    const actors={};
+    for(const [id,a] of Object.entries(c.cast)){ if(!a.look) continue;
+      if(open){ if(a.thumb===false) continue; if(a.show===false&&!a.thumb) continue; actors[id]={x:a.tx||a.x||200,y:a.y,p:a.tp||a.p,f:a.tf||a.f,show:true}; }
+      else { if(a.show===false||a.pre===false) continue; actors[id]={x:a.x||200,y:a.y,p:a.pp||(a.p==='down'?'stand':a.p)||'stand',f:'smile',show:true}; } }
+    const svg=sceneSvg({scene:c.scene,actors,fx:{},crash:open&&c.crashThumb},c.cast,true);
+    return `<button class="case" data-i="${i}"><svg class="thumb" viewBox="0 30 400 200" preserveAspectRatio="xMidYMid slice">${svg}</svg><div class="body">${r?`<span class="badge ${r}">${r}</span>`:''}<div class="no">CASE ${c.no}</div><h3>${c.title}</h3><p>${open?c.blurb:(c.tease||c.blurb)}</p>${open?`<div class="tags"><span class="tag">${c.theme}</span><span class="tag st">${c.struct}</span></div>`:`<div class="tags"><span class="tag">${c.where||''}</span></div>`}</div></button>`;
+  }).join('');
+  document.querySelectorAll('#cases .case').forEach(b=>b.onclick=()=>startCase(+b.dataset.i));
+}
+$('spoilOn').onchange=()=>{ SPOIL=$('spoilOn').checked; try{localStorage.setItem('kyk_spoil',SPOIL?'1':'0')}catch(e){} renderMenu(); };
+
+/* ---- 胸骨圧迫ミニゲーム ---- */
+function runCPR(cb){
+  $('chips').innerHTML=''; $('q').textContent='胸骨圧迫'; $('choices').style.display='none'; $('timer').classList.remove('on');
+  const P=$('cpr'); P.style.display='flex'; $('sheet').classList.add('on');
+  $('cprDone').style.display='none'; $('pad').style.pointerEvents='auto';
+  $('cprMsg').innerHTML='胸の真ん中を押すつもりで、円をテンポよくタップ。<br>最初のタップから10秒間。目標は1分間に100〜120回。';
+  const lo=60,hi=160, pct=v=>Math.max(0,Math.min(100,(v-lo)/(hi-lo)*100));
+  $('band').style.left=pct(100)+'%'; $('band').style.width=(pct(120)-pct(100))+'%'; $('needle').style.left='0%'; $('bpm').textContent='--'; $('bpm').className='bpm';
+  let taps=[],t0=0,timer=null,done=false; const pad=$('pad');
+  const end=()=>{
+    done=true; clearInterval(timer); pad.style.pointerEvents='none';
+    const iv=[]; for(let i=1;i<taps.length;i++) iv.push(taps[i]-taps[i-1]);
+    let g,sc,msg,bpm=0;
+    if(iv.length<5){ g='bad'; sc=-1; msg='圧迫がほとんどできなかった。'; }
+    else{ const mean=iv.reduce((a,b)=>a+b,0)/iv.length; bpm=Math.round(60000/mean); const sd=Math.sqrt(iv.reduce((a,b)=>a+(b-mean)**2,0)/iv.length); const steady=sd/mean<.2;
+      if(bpm>=100&&bpm<=120){ g=steady?'best':'ok'; sc=steady?2:1; msg=`平均 ${bpm}回/分。${steady?'テンポも安定していて、理想的です。':'テンポは良いが、少しばらつきがある。'}`; }
+      else if(bpm>=90&&bpm<=130){ g='ok'; sc=1; msg=`平均 ${bpm}回/分。${bpm<100?'少し遅い。':'少し速すぎる。'}目標は100〜120回/分。`; }
+      else { g='bad'; sc=-1; msg=`平均 ${bpm}回/分。${bpm<100?'遅すぎて、十分な血流が作れない。':'速すぎて、胸が戻りきらず血液が心臓に戻らない。'}`; } }
+    if(S.flags.soft){ msg+=' ただ、押す力が弱く、胸はほとんど沈んでいなかった。'; if(g==='best'){g='ok';sc=1;} }
+    S.score+=sc;
+    S.log.push({q:'胸骨圧迫のテンポ',you:bpm?`平均 ${bpm}回/分`:'ほとんど押せなかった',g,why:msg+' 胸骨圧迫は、約5cmの深さで、1分間に100〜120回。押したら胸が元に戻るまで力を抜き、できるだけ中断しないこと。',best:null,bestWhy:null});
+    $('cprMsg').textContent=msg; $('cprDone').style.display='block'; $('guide').classList.remove('go'); sfx(g==='best'?'lvl':'ok');
+  };
+  pad.onpointerdown=e=>{ e.preventDefault(); e.stopPropagation(); if(done) return; const now=performance.now();
+    if(!t0){ t0=now; timer=setInterval(()=>{ const left=Math.max(0,10-(performance.now()-t0)/1000); $('cprLeft').textContent='あと '+left.toFixed(1)+' 秒'; if(left<=0) end(); },100); }
+    taps.push(now); sfx('hit'); pad.classList.add('hit'); setTimeout(()=>pad.classList.remove('hit'),90); stageFx('shake');
+    if(taps.length>=3){ const r=taps.slice(-5); const m=(r[r.length-1]-r[0])/(r.length-1); const b=Math.round(60000/m); $('bpm').textContent=b; $('bpm').className='bpm '+(b>=100&&b<=120?'in':'out'); $('needle').style.left=pct(b)+'%'; } };
+  $('cprLeft').textContent='あと 10.0 秒';
+  $('guideOn').onchange=()=>$('guide').classList.toggle('go',$('guideOn').checked); $('guide').classList.toggle('go',$('guideOn').checked);
+  $('cprDone').onclick=e=>{ e.stopPropagation(); P.style.display='none'; $('choices').style.display='flex'; closeSheet(); play([`あなたは押し続けた。${S.log[S.log.length-1].you}。`],cb); };
+  window.__cprEnd=fake=>{ taps=fake; end(); };
+}
+
+/* ---- タイトルの主人公 ---- */
+$('meSvg').innerHTML=`<g class="actor idle" data-p="stand" data-f="smile">${fig(LOOK.me)}</g>`;
+setSound(SOUND);
+</script>
+<script>renderMenu();</script>
+</body>
+</html>
