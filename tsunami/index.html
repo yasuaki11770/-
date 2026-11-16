@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>この美しいまちに住む、あなたへ ―南海トラフ地震</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fdf6ec;--card:#ffffff;--ink:#3a3330;--mute:#7d736d;--line:#eadfd2;--acc:#ff6b5b;--acc2:#ffa94d;--teal:#25b0a0;--blue:#4c8fe0;--sea:#2a8fc0;--good:#3fb57a;--ok:#f0a92e;--bad:#ff6b5b;--fz:1}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'M PLUS Rounded 1c','Hiragino Maru Gothic ProN','Hiragino Sans','Yu Gothic UI','Meiryo',system-ui,sans-serif;font-size:16px;overscroll-behavior:none}
+button{font:inherit;color:inherit;cursor:pointer}
+ruby rt{font-size:.5em;font-weight:500;opacity:.85}
+body.nofuri rt{display:none}
+.screen{display:none;min-height:100dvh;flex-direction:column;max-width:760px;margin:0 auto;padding:calc(14px + env(safe-area-inset-top)) 16px calc(20px + env(safe-area-inset-bottom))}
+.screen.on{display:flex}
+h1,h2,h3{margin:0;font-weight:800}
+.btn{background:var(--card);border:2px solid var(--line);border-radius:16px;padding:13px 16px;font-size:calc(15.5px*var(--fz));text-align:left;width:100%;line-height:1.75;box-shadow:0 3px 0 var(--line)}
+.btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--line)}
+.btn.primary{background:var(--acc);border-color:#e85445;color:#fff;text-align:center;font-weight:800;box-shadow:0 4px 0 #d94436}
+.btn.sea{background:var(--sea);border-color:#1f7aa8;color:#fff;text-align:center;font-weight:800;box-shadow:0 4px 0 #1b6b93}
+.btn.ghost{background:transparent;border-color:transparent;box-shadow:none;text-align:center;color:var(--mute)}
+.mute{color:var(--mute)} .small{font-size:calc(13px*var(--fz))}
+/* ---- title ---- */
+#title{justify-content:center;gap:14px}
+#title .logo{background:linear-gradient(160deg,#2f9ed1,#3cc0b0 60%,#ffb35c);color:#fff;border-radius:28px;padding:24px 22px 18px;box-shadow:0 8px 0 #1f7aa8;position:relative;overflow:hidden}
+#title .kicker{font-size:12px;letter-spacing:.18em;font-weight:800;opacity:.92}
+#title h1{font-size:clamp(27px,7.4vw,38px);line-height:1.4;margin-top:8px}
+#title h1 small{display:block;font-size:.62em;margin-top:6px;letter-spacing:.06em}
+#title .lead{font-size:calc(15px*var(--fz));line-height:1.95;margin-top:10px}
+.seaw{width:100%;height:36px;margin-top:6px;display:block}
+.seaw path{fill:none;stroke:#fff;stroke-width:3;stroke-linecap:round;opacity:.85}
+.seaw .w1{animation:sw 4s ease-in-out infinite}.seaw .w2{animation:sw 5.5s ease-in-out infinite reverse;opacity:.5}
+@keyframes sw{50%{transform:translateX(-18px)}}
+.settings{background:var(--card);border:2px solid var(--line);border-radius:16px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.set-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:calc(14px*var(--fz))}
+.set-row .lbl{min-width:6.5em;font-weight:700}
+.seg{display:flex;border:2px solid var(--line);border-radius:12px;overflow:hidden}
+.seg button{border:none;background:#fff;padding:6px 12px;font-size:calc(14px*var(--fz));font-weight:700;color:var(--mute)}
+.seg button.on{background:var(--sea);color:#fff}
+.disc{font-size:calc(12px*var(--fz));color:var(--mute);line-height:1.75;border-top:2px solid var(--line);padding-top:12px}
+.note{background:#fff8e6;border:2px solid #f4dfb0;border-radius:14px;padding:10px 12px;font-size:calc(13px*var(--fz));line-height:1.75;color:#7a5a20}
+/* ---- menu ---- */
+#menu{gap:12px}
+.stagehead{display:flex;align-items:baseline;gap:8px;margin-top:6px}
+.stagehead h3{font-size:calc(18px*var(--fz))}
+.stagehead span{font-size:calc(12.5px*var(--fz));color:var(--mute)}
+.cases{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.case{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:0;text-align:left;overflow:hidden;box-shadow:0 4px 0 var(--line);display:flex;flex-direction:column}
+.case:active{transform:translateY(2px)}
+.case[disabled]{opacity:.62;cursor:default}
+.case .thumb{height:96px;display:block;width:100%}
+.case .body{padding:10px 12px 12px}
+.case .no{font-size:11px;color:var(--sea);font-weight:800;letter-spacing:.08em}
+.case h3{font-size:calc(17px*var(--fz));margin:2px 0 4px;line-height:1.5}
+.case p{margin:0;font-size:calc(13px*var(--fz));line-height:1.7;color:#5f5650}
+.stars{color:#e8a317;letter-spacing:1px;font-size:13px}
+.tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+.tag{font-size:11px;border-radius:99px;padding:2px 8px;background:#f4ece2;color:#7a6c60;font-weight:700}
+.tag.x{background:#e2f2fb;color:#1f6f99}
+.tag.wip{background:#eee;color:#888}
+.badge{float:right;font-weight:800;font-size:20px;line-height:1}
+.badge.S{color:#e7b416}.badge.A{color:var(--good)}.badge.B{color:var(--blue)}.badge.C{color:var(--mute)}.badge.X{color:#3a3330;font-size:14px}
+/* ---- play ---- */
+#play{padding:0;max-width:760px;height:100dvh;min-height:0;overflow:hidden;position:relative;user-select:none;-webkit-user-select:none;transition:background .8s}
+.stage{position:relative;flex:none;height:calc(min(62.5vw,475px,50vh) + env(safe-area-inset-top));padding-top:env(safe-area-inset-top);overflow:hidden;background:#cfe6f5}
+.stage svg.sc{position:absolute;inset:0;width:100%;height:100%;display:block}
+.stage svg.sc{top:env(safe-area-inset-top)!important;height:calc(100% - env(safe-area-inset-top))!important}
+.hud{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:flex-start;padding:calc(10px + env(safe-area-inset-top)) 12px 0;z-index:6;pointer-events:none}
+.pill{background:#ffffffe6;border-radius:99px;padding:5px 12px;font-size:12px;font-weight:700;box-shadow:0 2px 6px #0001;max-width:58%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pill b{color:var(--sea)}
+.clock{background:#ffffffe6;border-radius:14px;padding:4px 10px;text-align:right;box-shadow:0 2px 6px #0001;font-weight:800;font-size:20px;font-variant-numeric:tabular-nums;line-height:1.1;transition:background .8s,color .8s}
+.clock small{display:block;font-size:10px;color:var(--mute);font-weight:700}
+.clock.tick{animation:tick .6s}
+.clock.el{background:#2b3440e8;color:#fff}.clock.el small{color:#ffcf9a}
+@keyframes tick{0%{transform:scale(1.15)}100%{transform:none}}
+.topbtns{position:absolute;top:calc(56px + env(safe-area-inset-top));right:12px;z-index:7;display:flex;gap:6px}
+.topbtns button{background:#ffffffd0;border:none;border-radius:99px;width:36px;height:36px;font-size:15px;box-shadow:0 2px 6px #0001}
+/* FX overlays */
+.fxl{position:absolute;inset:0;pointer-events:none;z-index:4;opacity:0;transition:opacity .8s}
+#fxRed{background:radial-gradient(ellipse at center,transparent 45%,#ff3b2f66 100%);animation:pulse 1.6s infinite}
+@keyframes pulse{50%{filter:brightness(1.4)}}
+#fxSmoke{background:linear-gradient(0deg,#7d7d7d00,#6d6a6acc 70%)}
+#fxSmoke:before,#fxSmoke:after{content:'';position:absolute;left:-20%;right:-20%;height:60%;top:10%;background:radial-gradient(circle at 30% 50%,#8888 0,transparent 40%),radial-gradient(circle at 70% 40%,#7779 0,transparent 45%);animation:drift 6s linear infinite alternate}
+#fxSmoke:after{top:30%;animation-duration:9s;animation-direction:reverse}
+@keyframes drift{from{transform:translateX(-8%)}to{transform:translateX(8%)}}
+#fxDust{background:linear-gradient(0deg,#c9b79a99,#d8cbb455 60%,transparent)}
+#fxDim{background:#10141cc4}
+#fxNight{background:#14224fa0}
+#fxDusk{background:linear-gradient(180deg,#2c3a4fb0,#55607066)}
+#fxSiren{background:linear-gradient(90deg,#ff3b3b55,transparent 40%,transparent 60%,#3b6bff55);animation:siren .7s steps(2) infinite}
+@keyframes siren{50%{background:linear-gradient(90deg,#3b6bff55,transparent 40%,transparent 60%,#ff3b3b55)}}
+#fxFlash{background:#fff}
+#fxBlack{background:#000;transition:opacity 1.6s}
+.fxl.on{opacity:1}
+.stage.shake{animation:shake .45s}
+.stage.quake{animation:shake .3s 6}
+.stage.bigquake{animation:bigq 2.4s infinite}
+@keyframes shake{0%,100%{transform:none}20%{transform:translate(-6px,2px)}40%{transform:translate(5px,-3px)}60%{transform:translate(-4px,3px)}80%{transform:translate(3px,-2px)}}
+@keyframes bigq{0%{transform:none}5%{transform:translate(-9px,3px) rotate(-.6deg)}10%{transform:translate(8px,-4px)}15%{transform:translate(-7px,4px) rotate(.5deg)}20%{transform:translate(9px,-2px)}25%{transform:translate(-5px,3px)}30%{transform:translate(4px,-2px)}38%{transform:translate(-3px,1px)}46%{transform:translate(3px,-1px)}55%{transform:translate(-8px,3px) rotate(-.5deg)}60%{transform:translate(10px,-4px)}65%{transform:translate(-9px,4px) rotate(.6deg)}70%{transform:translate(7px,-3px)}78%{transform:translate(-4px,2px)}86%{transform:translate(3px,-2px)}100%{transform:none}}
+/* actors */
+.actor{transition:opacity .5s}
+.actor .bd{transform-box:fill-box;transform-origin:50% 100%;transition:transform .7s cubic-bezier(.5,1.6,.6,1)}
+.actor.idle .bob{animation:bob 2.6s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 100%}
+@keyframes bob{50%{transform:translateY(-1.5px) scaleY(1.01)}}
+.actor[data-p="sit"] .bd{transform:translateY(14%) scaleY(.82)}
+.actor[data-p="slump"] .bd{transform:translateY(14%) scaleY(.8) rotate(-9deg)}
+.actor[data-p="crouch"] .bd{transform:scaleY(.68) rotate(6deg)}
+.actor[data-p="duck"] .bd{transform:translateY(6%) scaleY(.6)}
+.actor[data-p="down"] .bd{transform:rotate(-88deg) translateX(-8%)}
+.actor[data-p="downr"] .bd{transform:rotate(88deg) translateX(8%)}
+.actor[data-p="lean"] .bd{transform:rotate(-8deg)}
+.actor[data-p="run"] .bd{transform:rotate(-10deg)}
+.actor[data-p="run"] .bob{animation:runb .35s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 100%}
+@keyframes runb{50%{transform:translateY(-3px)}}
+.actor .arm{transform-box:fill-box;transform-origin:50% 8%;transition:transform .5s}
+.actor[data-arm="neck"] .arm.l{transform:rotate(150deg) translate(0,-2px)}
+.actor[data-arm="neck"] .arm.r{transform:rotate(-150deg) translate(0,-2px)}
+.actor[data-arm="head"] .arm.l{transform:rotate(160deg)} .actor[data-arm="head"] .arm.r{transform:rotate(-160deg)}
+.actor[data-arm="chest"] .arm.r{transform:rotate(-125deg)}
+.actor[data-arm="point"] .arm.r{transform:rotate(-100deg)}
+.actor[data-arm="up"] .arm.l{transform:rotate(165deg)} .actor[data-arm="up"] .arm.r{transform:rotate(-165deg)}
+.actor[data-arm="wave"] .arm.r{animation:wave .6s infinite alternate}
+@keyframes wave{from{transform:rotate(-150deg)}to{transform:rotate(-175deg)}}
+.actor .fc{display:none}
+.actor[data-f="normal"] .fc.normal,.actor[data-f="smile"] .fc.smile,.actor[data-f="pain"] .fc.pain,.actor[data-f="weak"] .fc.weak,.actor[data-f="closed"] .fc.closed,.actor[data-f="shock"] .fc.shock,.actor[data-f="droop"] .fc.droop,.actor[data-f="cry"] .fc.cry{display:inline}
+.actor .tint{opacity:0;transition:opacity .8s}
+.actor[data-t="pale"] .tint{opacity:.55;fill:#e6eef2}
+.emote{animation:pop .35s cubic-bezier(.4,2,.6,1)}
+@keyframes pop{from{transform:scale(0)}to{transform:scale(1)}}
+.emote{transform-box:fill-box;transform-origin:50% 100%}
+.wave{animation:wv 3s ease-in-out infinite}
+@keyframes wv{50%{transform:translateX(-12px)}}
+.surge{animation:surge 9s ease-in forwards}
+@keyframes surge{from{transform:translateX(0)}to{transform:translateX(-260px)}}
+.flood{transition:transform 4s ease-out}
+.rain line{animation:fall .6s linear infinite}
+@keyframes fall{from{transform:translateY(-20px)}to{transform:translateY(270px)}}
+/* dialog box */
+.box{position:relative;flex:1 1 auto;overflow:visible;background:var(--card);border-top:3px solid #bfe3f2;padding:14px 18px calc(16px + env(safe-area-inset-bottom));min-height:150px;cursor:pointer;z-index:5;transition:background .8s,color .8s,border-color .8s}
+.name{position:absolute;top:-17px;left:16px;background:var(--sea);color:#fff;border-radius:99px;padding:3px 14px;font-weight:800;font-size:calc(14px*var(--fz));box-shadow:0 3px 0 #1b6b93;z-index:6}
+.name.voice{background:var(--blue);box-shadow:0 3px 0 #3a73b8}
+.name.sys{background:var(--acc2);box-shadow:0 3px 0 #e0892a}
+.name.radio{background:#5a5f66;box-shadow:0 3px 0 #3a3e44}
+.name.me{background:var(--acc);box-shadow:0 3px 0 #d94436}
+.txt{font-size:calc(17.5px*var(--fz));line-height:1.95;min-height:3.6em;white-space:pre-wrap;max-height:calc(100dvh - min(62.5vw,475px,50vh) - 90px);overflow:auto}
+body:not(.nofuri) .txt{line-height:2.15}
+.txt.narr{color:#4e4540}
+.txt.sys{font-size:calc(14.5px*var(--fz));color:#a2622a}
+.txt.radio{letter-spacing:.06em;color:#4a4f56;animation:flick 2.2s infinite}
+.txt.radio .echo{opacity:.38;filter:blur(.4px)}
+@keyframes flick{0%,100%{opacity:1}47%{opacity:1}50%{opacity:.55}53%{opacity:1}80%{opacity:.8}}
+.txt .hid{color:#9aa3ad;letter-spacing:.05em}
+.txt .gb{display:inline-block;filter:blur(.6px);transform:skewX(-8deg);color:#8a8f96}
+.next{position:absolute;right:16px;bottom:calc(10px + env(safe-area-inset-bottom));color:var(--sea);font-size:14px;animation:nb 1s infinite}
+@keyframes nb{50%{transform:translateY(3px)}}
+/* modes */
+#play.m-tense{background:#18202a}
+#play.m-tense .box{background:#222c38;color:#eef3f7;border-top-color:#ff6b5b}
+#play.m-tense .txt.narr{color:#dfe6ec}
+#play.m-tense .txt.radio{color:#cfd6dd}
+#play.m-tense .next{color:#ffb4a8}
+#play.m-night{background:#121a33}
+#play.m-night .box{background:#1d2747;color:#e9edf8;border-top-color:#8fa6ff}
+#play.m-night .txt.narr{color:#d9def0}
+#play.m-night .next{color:#b5c3ff}
+/* choice sheet */
+.sheet{position:absolute;left:0;right:0;bottom:0;top:calc(min(62.5vw,475px,50vh) + env(safe-area-inset-top));overflow:auto;background:var(--card);border-radius:22px 22px 0 0;box-shadow:0 -6px 20px #0002;padding:14px 14px calc(16px + env(safe-area-inset-bottom));transform:translateY(105%);transition:transform .35s cubic-bezier(.3,1.2,.5,1);z-index:8}
+.sheet.on{transform:none}
+.sheet .q{font-weight:800;font-size:calc(17px*var(--fz));margin:2px 4px 10px;line-height:1.7}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 2px 10px}
+.chip{background:#eef6ff;color:#2d5f9a;border-radius:10px;padding:4px 9px;font-size:calc(12.5px*var(--fz));line-height:1.6}
+.chip b{color:#6a8bb3;font-weight:700;margin-right:4px}
+.choices{display:flex;flex-direction:column;gap:9px}
+.timer{height:8px;background:#f2e8de;border-radius:99px;overflow:hidden;margin:0 2px 10px;display:none}
+.timer.on{display:block}
+.timer i{display:block;height:100%;background:linear-gradient(90deg,var(--acc),var(--acc2));width:100%}
+/* cpr */
+.cpr{display:flex;flex-direction:column;align-items:center;gap:10px}
+.pad{width:170px;height:170px;border-radius:50%;background:radial-gradient(circle,#ffe1d9,#ffb4a3);border:5px solid var(--acc);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:22px;color:#c23f30;touch-action:manipulation;position:relative;transition:transform .06s}
+.pad.hit{transform:scale(.92)}
+.pad .guide{position:absolute;inset:-14px;border-radius:50%;border:3px solid #ff6b5b88;opacity:0}
+.pad .guide.go{animation:beat .545s infinite}
+@keyframes beat{0%{opacity:1;transform:scale(1)}70%{opacity:0;transform:scale(1.15)}100%{opacity:0}}
+.bpm{font-size:36px;font-weight:800;font-variant-numeric:tabular-nums}
+.bpm.in{color:var(--good)}.bpm.out{color:var(--ok)}
+.meter{width:100%;max-width:320px;height:12px;background:#f2e8de;border-radius:99px;position:relative;overflow:hidden}
+.meter .band{position:absolute;top:0;bottom:0;background:#bfe9cf}
+.meter .needle{position:absolute;top:-2px;bottom:-2px;width:5px;background:var(--ink);border-radius:3px;transition:left .15s}
+/* result / debrief */
+#out,#deb,#src,#msg{gap:14px}
+.res-card{background:var(--card);border:2px solid var(--line);border-radius:22px;padding:18px;box-shadow:0 5px 0 var(--line)}
+.grade{font-size:72px;font-weight:800;line-height:1}
+.grade.S{color:#e7b416}.grade.A{color:var(--good)}.grade.B{color:var(--blue)}.grade.C{color:var(--mute)}.grade.X{color:#3a3330;font-size:46px}
+.lesson{background:#eef8fc;border:2px solid #cfe8f3;border-radius:16px;padding:12px 14px;font-size:calc(14.5px*var(--fz));line-height:1.85}
+.lesson h4{margin:0 0 4px;font-size:calc(14px*var(--fz));color:#1f6f99}
+.lesson ul{margin:0;padding-left:1.2em}
+.lesson .src{font-size:calc(12px*var(--fz));color:var(--mute);margin-top:6px}
+.rv{background:var(--card);border:2px solid var(--line);border-radius:16px;padding:12px 14px;font-size:calc(14px*var(--fz));line-height:1.8}
+.rv .h{display:flex;gap:10px;align-items:flex-start;font-weight:800;margin-bottom:4px}
+.mk{flex:none;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;font-weight:800}
+.mk.best{background:var(--good)}.mk.ok{background:var(--ok)}.mk.bad{background:var(--bad)}.mk.fatal{background:#3a3330}
+.rv .you{color:var(--blue);font-weight:700}
+.rv .bt{margin-top:8px;padding-top:8px;border-top:2px dashed var(--line);color:#2f7a52}
+.sec{background:var(--card);border:2px solid var(--line);border-radius:16px;padding:14px 16px;line-height:1.9;font-size:calc(15px*var(--fz))}
+.sec h3{font-size:calc(16px*var(--fz));margin-bottom:6px;color:#1f6f99}
+.sec ul{margin:0;padding-left:1.2em}
+.sec p{margin:0 0 6px}
+.sec a{color:#1f6f99;word-break:break-all}
+.heard{display:flex;flex-direction:column;gap:8px}
+.heard div{border-left:4px solid #cfe8f3;padding-left:10px}
+.heard .s{color:var(--mute)}
+details.deep{background:#eef5ff;border:2px solid #d3e3f7;border-radius:16px;padding:2px 16px;font-size:calc(14px*var(--fz));line-height:1.85}
+details.deep summary{padding:10px 0;font-weight:800;color:#2d5f9a;cursor:pointer}
+.row{display:flex;gap:10px}
+.letter{background:#fffdf7;border:2px solid #eadfc6;border-radius:18px;padding:20px 18px;line-height:2.1;font-size:calc(16px*var(--fz));white-space:pre-wrap}
+</style>
+</head>
+<body>
+
+<section id="title" class="screen on">
+  <div class="logo">
+    <div class="kicker">四万十・幡多　防災ストーリーゲーム</div>
+    <h1>この美しいまちに<br>住む、あなたへ<small>― 南海トラフ地震</small></h1>
+    <svg class="seaw" viewBox="0 0 400 36" preserveAspectRatio="none"><path class="w1" d="M-40 18 q20 -12 40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0"/><path class="w2" d="M-40 28 q20 -10 40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0"/></svg>
+    <div class="lead" id="titleLead"></div>
+  </div>
+  <div class="settings" id="settings"></div>
+  <button class="btn primary" id="toMenu">はじめる</button>
+  <div class="row"><button class="btn" id="toMsg" style="text-align:center">作者からのメッセージ</button><button class="btn" id="toSrc" style="text-align:center">出典・資料</button></div>
+  <div class="disc" id="titleDisc"></div>
+</section>
+
+<section id="menu" class="screen">
+  <div class="row" style="justify-content:space-between;align-items:center"><h2 style="font-size:24px">8人の物語</h2><button class="btn ghost small" id="menuBack" style="width:auto;padding:4px 8px">設定</button></div>
+  <div class="small mute" style="line-height:1.8" id="menuLead"></div>
+  <div id="stories"></div>
+  <div class="disc" id="menuDisc"></div>
+</section>
+
+<section id="play" class="screen">
+  <div class="stage" id="stage">
+    <svg class="sc" id="sc" viewBox="0 0 400 250" preserveAspectRatio="xMidYMax slice"></svg>
+    <div class="fxl" id="fxNight"></div><div class="fxl" id="fxDusk"></div><div class="fxl" id="fxDust"></div><div class="fxl" id="fxSmoke"></div><div class="fxl" id="fxRed"></div><div class="fxl" id="fxSiren"></div><div class="fxl" id="fxDim"></div><div class="fxl" id="fxFlash"></div><div class="fxl" id="fxBlack"></div>
+    <div class="hud"><div class="pill"><b id="hudNo"></b>　<span id="hudTitle"></span></div><div class="clock" id="clock"><small id="day"></small><span id="hm">--:--</span></div></div>
+    <div class="topbtns"><button id="snd" title="音">🔊</button><button id="quit" title="一覧へ">✕</button></div>
+  </div>
+  <div class="box" id="box"><div class="name" id="name" style="display:none"></div><div class="txt" id="txt"></div><div class="next" id="nextI">▼</div></div>
+  <div class="sheet" id="sheet">
+    <div class="timer" id="timer"><i id="timerBar"></i></div>
+    <div class="chips" id="chips"></div>
+    <div class="q" id="q"></div>
+    <div class="choices" id="choices"></div>
+    <div id="cpr" class="cpr" style="display:none">
+      <div class="small" id="cprMsg" style="text-align:center;line-height:1.7"></div>
+      <div class="bpm" id="bpm">--</div>
+      <div class="meter"><div class="band" id="band"></div><div class="needle" id="needle"></div></div>
+      <div class="pad" id="pad"><div class="guide" id="guide"></div>押す</div>
+      <label class="small"><input type="checkbox" id="guideOn"> テンポの目安を表示（110回/分）</label>
+      <div id="cprLeft" class="small mute">あと 10.0 秒</div>
+      <button class="btn primary" id="cprDone" style="display:none">続ける</button>
+    </div>
+  </div>
+</section>
+
+<section id="out" class="screen">
+  <div class="res-card">
+    <div class="mute small" id="outCase"></div>
+    <div class="row" style="align-items:flex-end;gap:14px;margin-top:6px"><div class="grade" id="outGrade"></div><div><div class="mute small" id="outGradeLbl"></div><h2 id="outTitle" style="font-size:21px;line-height:1.6"></h2></div></div>
+    <div id="outText" style="margin-top:10px;line-height:1.9;font-size:calc(15.5px*var(--fz))"></div>
+  </div>
+  <div id="outLesson" style="display:flex;flex-direction:column;gap:10px"></div>
+  <button class="btn primary" id="toDeb">振り返りと解説を見る</button>
+  <button class="btn" id="retryNode" style="display:none;text-align:center">この判断の直前からやり直す</button>
+  <button class="btn ghost" id="outMenu">物語の一覧へ</button>
+</section>
+
+<section id="deb" class="screen">
+  <h2 style="font-size:24px">振り返り</h2>
+  <div class="mute small" id="debCase"></div>
+  <h3 style="font-size:16px;margin-top:4px">あなたの判断</h3>
+  <div id="debLog" style="display:flex;flex-direction:column;gap:10px"></div>
+  <h3 style="font-size:16px;margin-top:8px">解説</h3>
+  <div id="debSecs" style="display:flex;flex-direction:column;gap:10px"></div>
+  <details class="deep" id="debDeep"><summary>もっと深く ― 医療者・指導者向け</summary><div id="debDeepBody"></div></details>
+  <button class="btn primary" id="debRetry">もう一度プレイする</button>
+  <button class="btn ghost" id="debMenu">物語の一覧へ</button>
+  <div class="disc" id="debDisc"></div>
+</section>
+
+<section id="src" class="screen">
+  <h2 style="font-size:24px">出典・資料</h2>
+  <div id="srcBody" style="display:flex;flex-direction:column;gap:10px"></div>
+  <button class="btn ghost" id="srcBack">もどる</button>
+</section>
+
+<section id="msg" class="screen">
+  <h2 style="font-size:24px">作者からのメッセージ</h2>
+  <div class="letter" id="msgBody"></div>
+  <button class="btn ghost" id="msgBack">もどる</button>
+</section>
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+/* =========================================================
+   サウンド（The Magic City のBGM・効果音シンセを移植）
+   ========================================================= */
+let SOUND = true;
+try{ SOUND = localStorage.getItem('tsu_snd')!=='0'; }catch(e){}
+const AU = { ctx:null, master:null, bgm:null, sfx:null, song:null, timer:null, step:0, next:0, want:null };
+function audioInit(){
+  if(AU.ctx){ if(AU.ctx.state==='suspended') AU.ctx.resume(); return; }
+  try{
+    const C = new (window.AudioContext||window.webkitAudioContext)();
+    AU.ctx=C; AU.master=C.createGain(); AU.master.connect(C.destination);
+    AU.bgm=C.createGain(); AU.bgm.connect(AU.master); AU.sfx=C.createGain(); AU.sfx.connect(AU.master);
+    AU.lp=C.createBiquadFilter(); AU.lp.type='lowpass'; AU.lp.frequency.value=2400; AU.lp.connect(AU.bgm);
+    const n=C.createBuffer(1,C.sampleRate*.5,C.sampleRate); const d=n.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1; AU.noise=n;
+    vol();
+    if(AU.want!==null){ const w=AU.want; AU.want=null; music(w); }
+  }catch(e){ AU.ctx=null; }
+}
+function vol(){ if(!AU.ctx) return; AU.master.gain.value = SOUND?1:0; AU.bgm.gain.value=.16; AU.sfx.gain.value=.3; }
+const mtof = m => 440*Math.pow(2,(m-69)/12);
+function tone(t,f,dur,type='square',v=.2,dest,a=.005,r=.06){
+  const C=AU.ctx; const o=C.createOscillator(), g=C.createGain();
+  o.type=type; o.frequency.setValueAtTime(f,t);
+  g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(v,t+a); g.gain.setValueAtTime(v,t+Math.max(a,dur-r)); g.gain.linearRampToValueAtTime(0,t+dur);
+  o.connect(g); g.connect(dest||AU.sfx); o.start(t); o.stop(t+dur+.02); return o;
+}
+function noise(t,dur,v,freq=6000,dest){ const C=AU.ctx; const s=C.createBufferSource(); s.buffer=AU.noise; const f=C.createBiquadFilter(); f.type='bandpass'; f.frequency.value=freq; const g=C.createGain(); g.gain.setValueAtTime(v,t); g.gain.exponentialRampToValueAtTime(.001,t+dur); s.connect(f); f.connect(g); g.connect(dest||AU.sfx); s.start(t); s.stop(t+dur); }
+function sfx(k){
+  if(!AU.ctx||!SOUND) return; const t=AU.ctx.currentTime;
+  switch(k){
+    case 'cur': tone(t,1320,.04,'square',.06); break;
+    case 'ok': tone(t,784,.06,'square',.1); tone(t+.06,1175,.09,'square',.1); break;
+    case 'back': tone(t,523,.06,'square',.09); tone(t+.06,392,.08,'square',.08); break;
+    case 'blip': tone(t,880+Math.random()*120,.025,'square',.03); break;
+    case 'lvl': [0,4,7,12,16].forEach((s,i)=>tone(t+i*.08,mtof(72+s),.14,'square',.1)); break;
+    case 'start': [0,7,12,19].forEach((s,i)=>tone(t+i*.11,mtof(60+s),.5,'triangle',.14,null,.01,.3)); break;
+    case 'jingle': [[67,0],[72,.14],[76,.28],[79,.42],[84,.62]].forEach(([n,d])=>tone(t+d,mtof(n),.22,'square',.07)); break;
+    case 'msg': tone(t,1568,.07,'sine',.1); tone(t+.09,2093,.1,'sine',.09); break;
+    case 'ring': for(let k2=0;k2<2;k2++){ tone(t+k2*.5,440,.38,'sine',.12); tone(t+k2*.5,480,.38,'sine',.12);} break;
+    case 'thud': noise(t,.25,.5,300); tone(t,110,.18,'sine',.3); break;
+    case 'hit': noise(t,.06,.3,1200); tone(t,180,.07,'sine',.2); break;
+    case 'quake': for(let i=0;i<10;i++) noise(t+i*.12,.3,.5,120+Math.random()*80); break;
+    case 'beep': tone(t,1000,.12,'sine',.12); tone(t+.35,1000,.12,'sine',.12); break;
+    case 'shock': noise(t,.35,.5,2500); tone(t,90,.3,'sawtooth',.2); break;
+    case 'alarm': for(let i=0;i<8;i++) tone(t+i*.25,i%2?880:1100,.2,'square',.06); break;
+    case 'wave': noise(t,1.6,.25,500); break;
+    case 'rumble': noise(t,.7,.35,90+Math.random()*60); noise(t+.2,.5,.2,220); break;
+    case 'roar': for(let i=0;i<6;i++) noise(t+i*.4,1.2,.3-i*.03,300+i*40); break;
+    case 'crackle': for(let i=0;i<5;i++) noise(t+i*.07+Math.random()*.05,.05,.12,3000+Math.random()*2000); break;
+    case 'chime': [[79,0],[76,.42],[72,.84],[67,1.26]].forEach(([n,d])=>{ tone(t+d,mtof(n),.9,'sine',.12,null,.01,.7); tone(t+d+.12,mtof(n),.7,'sine',.04,null,.01,.6); }); break;
+    case 'mail': for(let i=0;i<6;i++){ tone(t+i*.36,1046,.16,'square',.07); tone(t+i*.36+.18,1318,.16,'square',.07);} break;
+    case 'crash': noise(t,.5,.6,800); noise(t+.1,.4,.4,3000); tone(t,70,.3,'sine',.3); break;
+    case 'glass': for(let i=0;i<7;i++) tone(t+i*.03,3000+Math.random()*2500,.08,'sine',.05); noise(t,.25,.25,5000); break;
+    case 'drop': [76,72,67,60].forEach((n,i)=>tone(t+i*.16,mtof(n),.3,'triangle',.12)); break;
+    case 'siren': { const o=AU.ctx.createOscillator(), g=AU.ctx.createGain(); o.type='sawtooth'; o.frequency.setValueAtTime(500,t); for(let i=0;i<4;i++){ o.frequency.linearRampToValueAtTime(900,t+i*1.6+.8); o.frequency.linearRampToValueAtTime(500,t+i*1.6+1.6);} g.gain.setValueAtTime(.0001,t); g.gain.linearRampToValueAtTime(.05,t+.8); g.gain.linearRampToValueAtTime(0,t+6.4); o.connect(g); g.connect(AU.sfx); o.start(t); o.stop(t+6.5); break; }
+  }
+}
+const SONGS = {
+  title:{bpm:76,ch:[[53,57,60,64],[52,55,59,62],[50,53,57,60],[48,52,55,59]],bass:[41,40,38,36],arp:1,hat:0},
+  town:{bpm:100,ch:[[53,57,60,64],[57,60,64,67],[58,62,65,69],[55,60,64,70]],bass:[41,45,46,48],arp:1,hat:1},
+  talk:{bpm:88,ch:[[48,52,55,59],[45,48,52,55],[50,53,57,60],[43,47,50,53]],bass:[36,33,38,31],arp:0,hat:0},
+  night:{bpm:72,ch:[[57,60,64,67],[53,57,60,64],[50,53,57,60],[52,56,59,62]],bass:[45,41,38,40],arp:1,hat:0},
+  tense:{bpm:118,ch:[[50,53,57,62],[46,50,53,58],[43,46,50,55],[45,49,52,57]],bass:[38,34,31,33],arp:1,hat:1,pulse:1},
+  hope:{bpm:84,ch:[[48,52,55,60],[53,57,60,65],[55,59,62,67],[52,55,60,64]],bass:[36,41,43,40],arp:1,hat:0}
+};
+function music(name){
+  if(!AU.ctx){ AU.want=name; return; }
+  if(AU.song===name) return;
+  AU.song=name; AU.step=0; AU.next=AU.ctx.currentTime+.1;
+  clearInterval(AU.timer); if(!name) return;
+  AU.timer=setInterval(schedule,60);
+}
+function schedule(){
+  const C=AU.ctx, sg=SONGS[AU.song]; if(!sg||!C) return;
+  const st=60/sg.bpm/2;
+  while(AU.next<C.currentTime+.25){
+    const t=AU.next, s=AU.step, bar=(s>>3)%4, ch=sg.ch[bar], b=s%8;
+    if(b===0) ch.forEach(n=>tone(t,mtof(n),st*7.6,'sawtooth',.022,AU.lp,.25,.6));
+    if(b===0||b===4||(sg.pulse&&b%2===0)) tone(t,mtof(sg.bass[bar]-(b===4&&!sg.pulse?-12:0)),st*(sg.pulse?1.6:3.4),'triangle',.16,AU.lp,.01,.1);
+    if(sg.arp&&(b%2===1||sg.bpm>95)) tone(t,mtof(ch[(s*3)%4]+12),st*.9,'square',.022,AU.lp,.005,.05);
+    if(sg.hat&&b%2===1) noise(t,.04,.05,8000,AU.lp);
+    AU.next+=st*(b%2===0?1.08:.92); AU.step++;
+  }
+}
+function setSound(on){ SOUND=on; try{localStorage.setItem('tsu_snd',on?'1':'0')}catch(e){} vol(); ['snd'].forEach(i=>{ if($(i)) $(i).textContent=on?'🔊':'🔇'; }); }
+document.addEventListener('pointerdown',audioInit,{passive:true});
+
+
+/* =========================================================
+   2Dキャラクター
+   look: {k:'old'|'adult'|'teen'|'child', skin, hair, hs:髪型, top, bot, x:小物}
+   ========================================================= */
+const LOOK = {
+  me:{k:'teen',skin:'#f5cfae',hair:'#2b2320',hs:'short',top:'#3d7be0',bot:'#2f3b55'},
+  gpa:{k:'old',skin:'#efc8a5',hair:'#d9d6d0',hs:'old',top:'#8d6e63',bot:'#5d5a57',x:'glasses'},
+  gma:{k:'old',skin:'#f3d0b1',hair:'#d8d3cf',hs:'bun',top:'#b39ddb',bot:'#6d6a8a'},
+  mom:{k:'adult',skin:'#f6d3b5',hair:'#5a3a2a',hs:'bob',top:'#ff9db0',bot:'#58607a',x:'apron'},
+  dad:{k:'adult',skin:'#efc6a2',hair:'#2b2320',hs:'short',top:'#6fb3a8',bot:'#3d4660'},
+  sis:{k:'teen',skin:'#f8d6b8',hair:'#3a2a22',hs:'pony',top:'#3f51b5',bot:'#2c3570',x:'ribbon'},
+  kid:{k:'child',skin:'#fbd9bd',hair:'#3a2a22',hs:'kid',top:'#ffca28',bot:'#4c8fe0'},
+  taku:{k:'teen',skin:'#e8b892',hair:'#1b1714',hs:'spiky',top:'#1e88e5',bot:'#1e88e5',x:'num'},
+  sakura:{k:'teen',skin:'#f8d6b8',hair:'#4a2c22',hs:'long',top:'#33496e',bot:'#33496e',x:'ribbon'},
+  kento:{k:'teen',skin:'#f2cba9',hair:'#2a2420',hs:'short',top:'#9ccc65',bot:'#3d4660',x:'glasses'},
+  boy:{k:'child',skin:'#f2c49c',hair:'#2a2420',hs:'kid',top:'#ff7043',bot:'#ff7043'},
+  rider:{k:'adult',skin:'#efc6a2',hair:'#222',hs:'short',top:'#37474f',bot:'#263238',x:'helmet'},
+  driver:{k:'adult',skin:'#f6d3b5',hair:'#6b4a3a',hs:'bob',top:'#ffb74d',bot:'#5d6475'},
+  salary:{k:'adult',skin:'#efc6a2',hair:'#2b2320',hs:'short',top:'#455a64',bot:'#37474f',x:'tie'},
+  officew:{k:'adult',skin:'#f6d3b5',hair:'#3a2a22',hs:'long',top:'#90a4ae',bot:'#455a64'},
+  oldman:{k:'old',skin:'#efc8a5',hair:'#cfcac4',hs:'bald',top:'#a1887f',bot:'#6d5d55'},
+  teacher:{k:'adult',skin:'#efc6a2',hair:'#4a3a30',hs:'short',top:'#f5f5f5',bot:'#5d6475',x:'tie'},
+  medic:{k:'adult',skin:'#efc6a2',hair:'#2b2320',hs:'short',top:'#c7d0d8',bot:'#c7d0d8',x:'medic'},
+  doctor:{k:'adult',skin:'#f6d3b5',hair:'#3a2a22',hs:'bob',top:'#ffffff',bot:'#7fb7e6',x:'vest'},
+  surfer:{k:'adult',skin:'#d9a27a',hair:'#3a2a22',hs:'spiky',top:'#26a69a',bot:'#26a69a'},
+  neighbor:{k:'old',skin:'#efc8a5',hair:'#9e9a95',hs:'short',top:'#795548',bot:'#4e4a47',x:'cap'},
+  fire:{k:'adult',skin:'#efc6a2',hair:'#2b2320',hs:'short',top:'#2b3a4a',bot:'#2b3a4a',x:'fire'}
+};
+const DIM = { old:{leg:30,body:38,head:14,arm:30}, adult:{leg:36,body:40,head:14,arm:34}, teen:{leg:36,body:38,head:14.5,arm:33}, child:{leg:18,body:24,head:13,arm:20} };
+function fig(L){
+  const d=DIM[L.k]; const top=-(d.leg+d.body); const hy=top-d.head+3; const w=L.k==='child'?20:26;
+  let s='<g class="bd"><g class="bob">';
+  // 影
+  s+=`<ellipse cx="0" cy="1" rx="${w*.7}" ry="3" fill="#0002"/>`;
+  // 脚
+  s+=`<rect x="${-w/2+3}" y="${-d.leg}" width="${w/2-4}" height="${d.leg}" rx="3" fill="${L.bot}"/><rect x="1" y="${-d.leg}" width="${w/2-4}" height="${d.leg}" rx="3" fill="${L.bot}"/>`;
+  s+=`<rect x="${-w/2+2}" y="-4" width="${w/2-2}" height="5" rx="2" fill="#4a3f3a"/><rect x="0" y="-4" width="${w/2-2}" height="5" rx="2" fill="#4a3f3a"/>`;
+  // 腕（後ろ）
+  const armC = (L.x==='medic'||L.x==='fire')?L.top:L.top;
+  s+=`<g class="arm l"><rect x="${-w/2-6}" y="${top+3}" width="7" height="${d.arm}" rx="3.5" fill="${armC}"/><circle cx="${-w/2-2.5}" cy="${top+3+d.arm}" r="3.6" fill="${L.skin}"/></g>`;
+  s+=`<g class="arm r"><rect x="${w/2-1}" y="${top+3}" width="7" height="${d.arm}" rx="3.5" fill="${armC}"/><circle cx="${w/2+2.5}" cy="${top+3+d.arm}" r="3.6" fill="${L.skin}"/></g>`;
+  // 胴体
+  s+=`<rect x="${-w/2}" y="${top}" width="${w}" height="${d.body+4}" rx="${w*.35}" fill="${L.top}"/>`;
+  if(L.x==='apron') s+=`<rect x="${-w/2+4}" y="${top+10}" width="${w-8}" height="${d.body-4}" rx="4" fill="#fff6e8"/>`;
+  if(L.x==='tie') s+=`<path d="M0 ${top+2} l-3 4 l3 16 l3 -16 z" fill="#d84343"/>`;
+  if(L.x==='uni') s+=`<text x="0" y="${top+24}" font-size="13" font-weight="800" fill="#1f3a6b" text-anchor="middle">1</text><rect x="${-w/2}" y="${top+d.body-4}" width="${w}" height="4" fill="#1f3a6b"/>`;
+  if(L.x==='num') s+=`<text x="0" y="${top+24}" font-size="13" font-weight="800" fill="#fff" text-anchor="middle">7</text>`;
+  if(L.x==='medic') s+=`<rect x="${-w/2}" y="${top+16}" width="${w}" height="4" fill="#ff8f00"/><rect x="${-w/2}" y="${top+26}" width="${w}" height="3" fill="#ff8f00"/>`;
+  if(L.x==='vest') s+=`<rect x="${-w/2+2}" y="${top+4}" width="${w-4}" height="${d.body-6}" rx="5" fill="#ff7a59" opacity=".85"/><text x="0" y="${top+22}" font-size="7" font-weight="800" fill="#fff" text-anchor="middle">医療</text>`;
+  if(L.x==='fire') s+=`<rect x="${-w/2}" y="${top+20}" width="${w}" height="4" fill="#ffd54f"/>`;
+  if(L.x==='happi') s+=`<path d="M${-w/2+2} ${top+2} L0 ${top+16} L${w/2-2} ${top+2}" stroke="#fff" stroke-width="3" fill="none"/><rect x="${-w/2}" y="${top+d.body-6}" width="${w}" height="4" fill="#e53935"/><text x="0" y="${top+29}" font-size="7" font-weight="800" fill="#fff" text-anchor="middle">消防</text>`;
+  if(L.x==='work') s+=`<rect x="${-w/2+3}" y="${top+6}" width="8" height="6" rx="1" fill="#ffffff55"/><rect x="${-w/2}" y="${top+d.body-4}" width="${w}" height="3" fill="#ffffff44"/>`;
+  if(L.x==='cardigan') s+=`<rect x="-3" y="${top+2}" width="6" height="${d.body}" fill="#ffffff66"/>`;
+  // 頭
+  s+=`<rect x="-4" y="${top-5}" width="8" height="7" fill="${L.skin}"/>`;
+  s+=hairBack(L,hy,d.head);
+  s+=`<circle cx="0" cy="${hy}" r="${d.head}" fill="${L.skin}"/>`;
+  s+=`<circle class="tint" cx="0" cy="${hy}" r="${d.head}"/>`;
+  s+=`<ellipse cx="-8" cy="${hy+5}" rx="3" ry="2" fill="#ff9a8a" opacity=".45"/><ellipse cx="8" cy="${hy+5}" rx="3" ry="2" fill="#ff9a8a" opacity=".45"/>`;
+  s+=faces(hy);
+  s+=hairFront(L,hy,d.head);
+  if(L.x==='glasses') s+=`<g fill="none" stroke="#5a4a40" stroke-width="1.3"><circle cx="-5.5" cy="${hy+1}" r="4"/><circle cx="5.5" cy="${hy+1}" r="4"/><path d="M-1.5 ${hy+1} h3"/></g>`;
+  if(L.x==='helmet') s+=`<path d="M${-d.head-2} ${hy+2} a${d.head+2} ${d.head+3} 0 0 1 ${2*d.head+4} 0 z" fill="#263238"/><rect x="${-d.head+1}" y="${hy-3}" width="${2*d.head-2}" height="5" rx="2" fill="#90a4ae" opacity=".7"/>`;
+  if(L.x==='medic') s+=`<path d="M${-d.head-1} ${hy-2} a${d.head+1} ${d.head+1} 0 0 1 ${2*d.head+2} 0 z" fill="#eceff1"/><rect x="-3" y="${hy-12}" width="6" height="3" fill="#ff8f00"/>`;
+  if(L.x==='fire') s+=`<path d="M${-d.head-2} ${hy-1} a${d.head+2} ${d.head+2} 0 0 1 ${2*d.head+4} 0 l3 3 h${-2*d.head-10} z" fill="#c0c7cf"/>`;
+  if(L.x==='uni') s+=`<path d="M${-d.head} ${hy-3} a${d.head} ${d.head-1} 0 0 1 ${2*d.head} 0 h7 v2 h${-2*d.head-7} z" fill="#1f3a6b"/><text x="0" y="${hy-6}" font-size="6" font-weight="800" fill="#fff" text-anchor="middle">K</text>`;
+  if(L.x==='happi'||L.x==='work') s+=`<path d="M${-d.head} ${hy-3} a${d.head} ${d.head-1} 0 0 1 ${2*d.head} 0 h6 v2 h${-2*d.head-6} z" fill="${L.x==='happi'?'#26364a':'#5b6e63'}"/>`;
+  if(L.x==='cap') s+=`<path d="M${-d.head} ${hy-3} a${d.head} ${d.head-1} 0 0 1 ${2*d.head} 0 h6 v2 h${-2*d.head-6} z" fill="#3e6b4f"/>`;
+  if(L.x==='ribbon') s+=`<path d="M-4 ${top+1} l4 4 l4 -4 l-1 6 h-6 z" fill="#e53935"/>`;
+  s+='</g></g>';
+  return s;
+}
+function hairBack(L,hy,r){
+  if(L.hs==='long') return `<path d="M${-r-2} ${hy} q0 ${r*2.2} ${r*.6} ${r*2} h${r*2.8} q${r*.6} 0 ${r*.6} ${-r*2} z" fill="${L.hair}"/>`;
+  if(L.hs==='pony') return `<path d="M${r-2} ${hy-4} q${r} 4 ${r*.5} ${r*1.8} q-4 -6 -6 -12z" fill="${L.hair}"/>`;
+  if(L.hs==='bun') return `<circle cx="0" cy="${hy-r-2}" r="${r*.45}" fill="${L.hair}"/>`;
+  return '';
+}
+function hairFront(L,hy,r){
+  const c=L.hair;
+  switch(L.hs){
+    case 'short': return `<path d="M${-r} ${hy-1} a${r} ${r} 0 0 1 ${2*r} 0 q-4 -5 -9 -4 q-5 -3 -10 2 q-3 -2 ${-r+19} 2 z" fill="${c}"/>`;
+    case 'spiky': return `<path d="M${-r} ${hy} l2 -9 l4 3 l3 -8 l4 6 l4 -7 l3 7 l4 -3 l1 11 q-6 -6 -12 -5 q-7 -1 -13 5z" fill="${c}"/>`;
+    case 'old': return `<path d="M${-r} ${hy+2} q-1 -10 6 -13 q0 4 -3 9 z M${r} ${hy+2} q1 -10 -6 -13 q0 4 3 9 z" fill="${c}"/>`;
+    case 'bald': return `<path d="M${-r} ${hy+3} q-1 -7 4 -9 q0 4 -2 9z M${r} ${hy+3} q1 -7 -4 -9 q0 4 2 9z" fill="${c}"/>`;
+    case 'bun': case 'bob': return `<path d="M${-r-1} ${hy+5} a${r+1} ${r+2} 0 0 1 ${2*r+2} 0 q-3 -10 -12 -9 q-6 -1 -10 4 q-3 2 -2 5z" fill="${c}"/>`;
+    case 'long': return `<path d="M${-r-1} ${hy+4} a${r+1} ${r+2} 0 0 1 ${2*r+2} 0 q-4 -9 -13 -8 q-5 0 -8 3z" fill="${c}"/>`;
+    case 'pony': return `<path d="M${-r} ${hy+2} a${r} ${r+1} 0 0 1 ${2*r} 0 q-4 -8 -12 -7 q-5 0 -8 4z" fill="${c}"/>`;
+    case 'kid': return `<path d="M${-r} ${hy} a${r} ${r} 0 0 1 ${2*r} 0 q-6 -3 -12 -1 q-4 -2 -8 2z" fill="${c}"/>`;
+  }
+  return '';
+}
+function faces(y){
+  const k='#3a2a22';
+  return `<g class="fc normal"><circle cx="-5" cy="${y+1}" r="1.9" fill="${k}"/><circle cx="5" cy="${y+1}" r="1.9" fill="${k}"/><path d="M-3 ${y+7} q3 2 6 0" stroke="${k}" stroke-width="1.4" fill="none" stroke-linecap="round"/></g>
+  <g class="fc smile"><path d="M-7 ${y+2} q2 -3 4 0 M3 ${y+2} q2 -3 4 0" stroke="${k}" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M-4 ${y+6} q4 5 8 0 z" fill="#c9504a"/></g>
+  <g class="fc pain"><path d="M-7 ${y-1} l4 2 l-4 2 M7 ${y-1} l-4 2 l4 2" stroke="${k}" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M-4 ${y+8} q1 -2 2 0 q1 2 2 0 q1 -2 2 0 q1 2 2 0" stroke="${k}" stroke-width="1.3" fill="none"/><path d="M10 ${y-8} q3 4 0 6 q-3 -2 0 -6z" fill="#7fc4ff"/></g>
+  <g class="fc weak"><path d="M-7 ${y+1} h4 M3 ${y+1} h4" stroke="${k}" stroke-width="1.6" stroke-linecap="round"/><path d="M-3 ${y+8} h6" stroke="${k}" stroke-width="1.3" stroke-linecap="round"/></g>
+  <g class="fc closed"><path d="M-7 ${y} q2 2 4 0 M3 ${y} q2 2 4 0" stroke="${k}" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M-2 ${y+8} h4" stroke="${k}" stroke-width="1.2" stroke-linecap="round"/></g>
+  <g class="fc shock"><circle cx="-5" cy="${y}" r="3" fill="#fff" stroke="${k}" stroke-width="1"/><circle cx="5" cy="${y}" r="3" fill="#fff" stroke="${k}" stroke-width="1"/><circle cx="-5" cy="${y}" r="1.3" fill="${k}"/><circle cx="5" cy="${y}" r="1.3" fill="${k}"/><ellipse cx="0" cy="${y+8}" rx="2.6" ry="3.2" fill="#7a2f2a"/></g>
+  <g class="fc droop"><circle cx="-5" cy="${y+1}" r="1.9" fill="${k}"/><path d="M3 ${y+1} h4" stroke="${k}" stroke-width="1.6" stroke-linecap="round"/><path d="M-5 ${y+9} q4 -1 9 -3" stroke="${k}" stroke-width="1.4" fill="none" stroke-linecap="round"/></g>
+  <g class="fc cry"><path d="M-7 ${y} q2 2 4 0 M3 ${y} q2 2 4 0" stroke="${k}" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M-5 ${y+2} v6 M5 ${y+2} v6" stroke="#7fc4ff" stroke-width="2" stroke-linecap="round"/><path d="M-3 ${y+9} q3 -3 6 0" stroke="${k}" stroke-width="1.3" fill="none"/></g>`;
+}
+function emoteSvg(e,y){
+  const bub=(c,inner)=>`<g class="emote"><path d="M-11 ${y-24} h22 a5 5 0 0 1 5 5 v10 a5 5 0 0 1 -5 5 h-7 l-4 5 l-4 -5 h-7 a5 5 0 0 1 -5 -5 v-10 a5 5 0 0 1 5 -5z" fill="#fff" stroke="${c}" stroke-width="2"/>${inner}</g>`;
+  switch(e){
+    case '!': return bub('#ff6b5b',`<text x="0" y="${y-9}" font-size="15" font-weight="800" fill="#ff6b5b" text-anchor="middle">！</text>`);
+    case '?': return bub('#4c8fe0',`<text x="0" y="${y-9}" font-size="14" font-weight="800" fill="#4c8fe0" text-anchor="middle">？</text>`);
+    case '…': return bub('#8a807a',`<text x="0" y="${y-11}" font-size="12" font-weight="800" fill="#8a807a" text-anchor="middle">…</text>`);
+    case 'heart': return bub('#ff7aa0',`<path d="M0 ${y-9} l-5 -5 a3 3 0 0 1 5 -4 a3 3 0 0 1 5 4z" fill="#ff7aa0"/>`);
+    case 'note': return bub('#25b0a0',`<text x="0" y="${y-9}" font-size="13" fill="#25b0a0" text-anchor="middle">♪</text>`);
+    case 'zz': return bub('#8a807a',`<text x="0" y="${y-9}" font-size="11" font-weight="800" fill="#8a807a" text-anchor="middle">zz</text>`);
+    case 'cough': return bub('#ffa94d',`<text x="0" y="${y-10}" font-size="9" font-weight="800" fill="#e0892a" text-anchor="middle">ゴホッ</text>`);
+  }
+  return '';
+}
+
+
+const sky=(id,a,b)=>`<defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs>`;
+
+/* =========================================================
+   背景（viewBox 400×250、地面 y≈215）
+   ========================================================= */
+const roofs=(y,list,col)=>list.map(([x,w,h],i)=>`<rect x="${x}" y="${y-h}" width="${w}" height="${h}" fill="${col||['#efe3cf','#e6dccb','#f3eadb'][i%3]}"/><path d="M${x-4} ${y-h} L${x+w/2} ${y-h-h*.55} L${x+w+4} ${y-h}z" fill="${['#5e6f86','#6e5e55','#4f6a6a'][i%3]}"/>`).join('');
+const SCENES = {
+  /* 下田小学校：教室 */
+  class4:{bg:`<rect width="400" height="250" fill="#fff4dc"/><rect x="40" y="30" width="210" height="96" rx="4" fill="#2f6b4f" stroke="#a0683e" stroke-width="6"/>
+    <text x="145" y="66" font-size="13" fill="#fff" text-anchor="middle" opacity=".9">4年　算数</text><text x="145" y="92" font-size="12" fill="#fff" text-anchor="middle" opacity=".75">84 ÷ 4 ＝ ？</text><text x="230" y="118" font-size="8" fill="#fff" text-anchor="end" opacity=".55">10月　日直</text>
+    <rect x="280" y="26" width="104" height="114" fill="#bfe6ff" stroke="#fff" stroke-width="6"/><path d="M332 26 v114" stroke="#fff" stroke-width="4"/><path d="M286 110 q20 -24 46 -10 q24 -20 50 2 v32 h-96z" fill="#7cb87a"/>
+    <rect x="0" y="180" width="400" height="70" fill="#e2c49a"/><g stroke="#cfae80" stroke-width="2"><path d="M0 200 H400 M0 225 H400"/></g><rect x="8" y="60" width="22" height="120" fill="#c98e5a"/><rect x="10" y="70" width="18" height="24" fill="#f6e7c8"/><rect x="10" y="100" width="18" height="24" fill="#f6e7c8"/>`,
+    fg:`<g fill="#d9a877"><rect x="60" y="196" width="70" height="10" rx="2"/><rect x="170" y="196" width="70" height="10" rx="2"/><rect x="280" y="196" width="70" height="10" rx="2"/></g><g fill="#8a8f96"><rect x="66" y="206" width="5" height="30"/><rect x="119" y="206" width="5" height="30"/><rect x="176" y="206" width="5" height="30"/><rect x="229" y="206" width="5" height="30"/><rect x="286" y="206" width="5" height="30"/><rect x="339" y="206" width="5" height="30"/></g>`,split:220},
+  classwreck:{bg:`<rect width="400" height="250" fill="#f3e6cc"/><g transform="rotate(-3 145 78)"><rect x="40" y="30" width="210" height="96" rx="4" fill="#2f6b4f" stroke="#a0683e" stroke-width="6"/><text x="145" y="66" font-size="13" fill="#fff" text-anchor="middle" opacity=".9">4年　算数</text></g>
+    <rect x="280" y="26" width="104" height="114" fill="#bfe6ff" stroke="#fff" stroke-width="6"/><path d="M290 40 l30 40 l-14 22 M350 30 l-10 50 l24 30" stroke="#fff" stroke-width="2" fill="none"/><path d="M332 26 v114" stroke="#fff" stroke-width="4"/>
+    <rect x="0" y="180" width="400" height="70" fill="#dcbf95"/><g stroke="#cfae80" stroke-width="2"><path d="M0 200 H400 M0 225 H400"/></g>
+    <g transform="rotate(62 30 180)"><rect x="8" y="60" width="22" height="120" fill="#c98e5a"/></g><g fill="#f6e7c8"><rect x="60" y="214" width="16" height="10" transform="rotate(20 68 219)"/><rect x="88" y="222" width="18" height="8" transform="rotate(-14 97 226)"/></g>`,
+    fg:`<g fill="#d9f2ff" stroke="#9fc9df" stroke-width=".8"><path d="M300 232 l8 -6 l4 8z"/><path d="M322 240 l10 -4 l-2 8z"/><path d="M350 228 l6 -8 l5 9z"/><path d="M276 244 l9 -3 l-3 6z"/><path d="M366 242 l8 -6 l2 8z"/></g>
+    <g fill="#d9a877"><rect x="150" y="200" width="70" height="10" rx="2" transform="rotate(8 185 205)"/></g>`,split:220},
+  /* 校庭 */
+  yard:{bg:`${sky('gy','#9fd6ff','#e2f4ff')}<rect width="400" height="250" fill="url(#gy)"/><path d="M0 120 q60 -60 130 -40 q50 -40 110 -10 q60 -30 160 10 V170 H0z" fill="#86bf7c"/><path d="M0 140 q80 -40 170 -10 q90 -30 230 0 V170 H0z" fill="#6fae6b"/>
+    <rect x="0" y="152" width="120" height="14" fill="#5fb6e0"/><path d="M0 156 h120" stroke="#fff" stroke-width="1.5" opacity=".7"/>
+    <rect x="200" y="66" width="190" height="122" fill="#f2eee6"/><rect x="200" y="62" width="190" height="8" fill="#c9c2b6"/><g fill="#a9d4f0">${[78,110,142].map(y=>[212,248,284,320,356].map(x=>`<rect x="${x}" y="${y}" width="24" height="18"/>`).join('')).join('')}</g>
+    <circle cx="295" cy="52" r="9" fill="#fff" stroke="#c9c2b6" stroke-width="3"/><path d="M295 52 v-5 M295 52 h4" stroke="#555" stroke-width="1.5"/><rect x="270" y="168" width="40" height="20" fill="#8a7a66"/>
+    <rect x="0" y="170" width="400" height="80" fill="#d9b98a"/><g stroke="#e8d3b0" stroke-width="2" fill="none"><ellipse cx="120" cy="214" rx="90" ry="20"/></g>
+    <g stroke="#9aa3ad" stroke-width="1.5"><path d="M0 172 h190"/>${Array.from({length:20},(_,i)=>`<path d="M${i*10} 162 v10"/>`).join('')}<path d="M0 162 h190"/></g>
+    <rect x="160" y="150" width="34" height="16" rx="2" fill="#fff" stroke="#ccc"/><text x="177" y="161" font-size="6" text-anchor="middle" fill="#555">下田小学校</text>`},
+  /* 下田の町なか：倒れたブロック塀 */
+  road:{bg:`${sky('gr2','#a7d3f0','#e6f3fb')}<rect width="400" height="250" fill="url(#gr2)"/><path d="M0 110 q90 -50 200 -30 q110 -30 200 0 V170 H0z" fill="#7fb879"/>
+    ${roofs(178,[[6,70,46],[90,60,40],[260,64,44],[338,58,50]])}<rect x="0" y="176" width="400" height="74" fill="#a9a39a"/><path d="M0 176 H400" stroke="#cfc8bd" stroke-width="4"/>
+    <g transform="rotate(-7 190 120)"><rect x="186" y="40" width="7" height="140" fill="#8d7b68"/><rect x="170" y="54" width="40" height="4" fill="#6d5d50"/></g><path d="M0 60 Q100 74 192 58 T400 62" stroke="#444" stroke-width="1" fill="none"/>`,
+    fg:`<g fill="#bdbab3" stroke="#8f8b84" stroke-width="1"><rect x="150" y="196" width="26" height="12" transform="rotate(-12 163 202)"/><rect x="176" y="204" width="26" height="12" transform="rotate(8 189 210)"/><rect x="204" y="198" width="26" height="12" transform="rotate(-20 217 204)"/><rect x="230" y="206" width="26" height="12"/><rect x="160" y="214" width="26" height="12" transform="rotate(14 173 220)"/><rect x="214" y="216" width="26" height="12" transform="rotate(-6 227 222)"/><rect x="256" y="196" width="26" height="12" transform="rotate(30 269 202)"/></g>
+    <rect x="120" y="150" width="30" height="40" fill="#c7c3bb" stroke="#8f8b84"/>`,split:224},
+  /* 避難路の坂道 */
+  slope:{bg:`${sky('gs2','#a7d3f0','#eaf6fd')}<rect width="400" height="250" fill="url(#gs2)"/><path d="M0 250 L0 170 Q120 150 230 90 T400 20 V250z" fill="#79b36f"/><path d="M0 250 L0 196 Q150 178 260 120 T400 66 V250z" fill="#5d9e5a"/>
+    <path d="M0 236 Q150 214 270 150 T400 98" stroke="#d8c7a2" stroke-width="30" fill="none" stroke-linecap="round"/><path d="M0 222 Q150 200 265 138 T400 86" stroke="#8a6d55" stroke-width="2" fill="none"/>
+    <g fill="#4f8a4c"><circle cx="40" cy="150" r="22"/><circle cx="330" cy="40" r="26"/><circle cx="370" cy="70" r="20"/></g>
+    <rect x="300" y="110" width="4" height="40" fill="#777"/><rect x="270" y="96" width="62" height="20" rx="3" fill="#2e8b57"/><text x="301" y="104" font-size="6" fill="#fff" text-anchor="middle">津波避難場所</text><text x="301" y="112" font-size="6" fill="#fff" text-anchor="middle">有隣公園 →</text>`},
+  /* 有隣公園（高台）から海と町を見下ろす。v.flood:0〜3、v.pull:潮が引く、v.surge:白い線 */
+  park:{bg:`${sky('gp','#9fd0f2','#e9f6fd')}<rect width="400" height="250" fill="url(#gp)"/><rect x="0" y="96" width="400" height="40" fill="#3f9fd0"/><path d="M0 104 h400 M0 118 h400" stroke="#fff" stroke-width="1" opacity=".5"/>
+    <path d="M250 96 q40 -24 90 -18 q40 6 60 18z" fill="#7aa88a"/><path d="M0 136 h400 v14 h-400z" fill="#e6d7ad"/>
+    ${roofs(172,[[10,30,16],[46,26,14],[78,34,18],[118,28,15],[152,32,17],[190,26,14],[222,34,16],[262,28,15],[296,30,17],[334,32,14],[370,26,16]])}
+    <rect x="0" y="170" width="400" height="12" fill="#8fb27e"/>`,
+    dyn:v=>{ let s='';
+      if(v.pull) s+=`<rect x="0" y="96" width="400" height="22" fill="#9fd0f2"/><rect x="0" y="112" width="400" height="24" fill="#cdbb8e"/>`;
+      if(v.surge) s+=`<g class="surge"><path d="M400 118 q-10 -6 -20 0 t-20 0 t-20 0 t-20 0 t-20 0 v18 h100z" fill="#fff" opacity=".9"/><rect x="400" y="110" width="400" height="28" fill="#2f7fb0"/></g>`;
+      if(v.flood) s+=`<rect class="flood" x="0" y="${[0,166,152,138][v.flood]}" width="400" height="${[0,20,34,48][v.flood]}" fill="#4a7f9e" opacity=".92"/><path d="M0 ${[0,166,152,138][v.flood]} h400" stroke="#d8eef8" stroke-width="2"/>`;
+      return s; },
+    fg:`<rect x="0" y="182" width="400" height="68" fill="#8cbf6e"/><g stroke="#8d6e63" stroke-width="3"><path d="M0 186 h400"/>${Array.from({length:14},(_,i)=>`<path d="M${i*30+10} 186 v14"/>`).join('')}</g>`,split:150},
+  /* 旧下田中学校の体育館（避難所・夜） */
+  gym:{bg:`<rect width="400" height="250" fill="#3b3430"/><rect x="0" y="0" width="400" height="120" fill="#4a423c"/><g fill="#1c2747">${[30,110,190,270,350].map(x=>`<rect x="${x-24}" y="16" width="48" height="34"/>`).join('')}</g><g stroke="#4a423c" stroke-width="3">${[30,110,190,270,350].map(x=>`<path d="M${x} 16 v34"/>`).join('')}</g>
+    <rect x="160" y="60" width="80" height="50" fill="#5a524b"/><rect x="186" y="96" width="28" height="4" fill="#d84343"/><path d="M190 100 l4 14 h12 l4 -14" stroke="#eee" stroke-width="1" fill="none"/>
+    <rect x="0" y="120" width="400" height="130" fill="#8a6a48"/><g stroke="#7a5c3d" stroke-width="1">${Array.from({length:10},(_,i)=>`<path d="M0 ${130+i*12} H400"/>`).join('')}</g>
+    <circle cx="330" cy="118" r="40" fill="#ffcf7a" opacity=".18"/><rect x="324" y="112" width="12" height="14" rx="2" fill="#ffd98a"/>`,
+    fg:`<g opacity=".95"><rect x="10" y="214" width="80" height="22" rx="6" fill="#7e8fb0"/><rect x="100" y="218" width="80" height="22" rx="6" fill="#a27e8e"/><rect x="236" y="216" width="80" height="22" rx="6" fill="#7ea08a"/><rect x="326" y="220" width="70" height="22" rx="6" fill="#9a8f7a"/></g>
+    <g fill="#c9c2b6"><rect x="200" y="150" width="34" height="22" rx="2"/><rect x="204" y="142" width="26" height="10" rx="2"/></g><text x="217" y="165" font-size="6" fill="#555" text-anchor="middle">受付</text>`,split:206},
+  /* 準備中の物語のサムネイル用 */
+  irino:{bg:`${sky('gi','#7cc8ff','#d8f1ff')}<rect width="400" height="250" fill="url(#gi)"/><path d="M0 120 H400 V178 H0z" fill="#2fa6d9"/><g class="wave"><path d="M-20 136 q20 -6 40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0" stroke="#fff" stroke-width="3" fill="none" opacity=".7"/></g><path d="M0 176 Q200 166 400 178 V250 H0z" fill="#f2dca0"/><g fill="#3f7a4a"><path d="M300 176 l10 -40 l10 40z"/><path d="M330 176 l12 -52 l12 52z"/><path d="M362 176 l10 -36 l10 36z"/></g>`},
+  port:{bg:`${sky('gq','#a7d3f0','#e6f3fb')}<rect width="400" height="250" fill="url(#gq)"/><path d="M0 110 q90 -50 200 -30 q110 -30 200 0 V160 H0z" fill="#7fb879"/><rect x="0" y="150" width="400" height="40" fill="#3f9fd0"/><rect x="40" y="128" width="70" height="26" fill="#ffffff"/><path d="M36 128 h78 l-8 -10 h-62z" fill="#e57373"/><rect x="200" y="96" width="140" height="64" fill="#dfe7ea"/><rect x="200" y="92" width="140" height="6" fill="#9fb0b8"/><text x="270" y="130" font-size="9" fill="#5b6e7a" text-anchor="middle">加工場</text><rect x="0" y="186" width="400" height="64" fill="#a9a39a"/>`},
+  mart:{bg:`<rect width="400" height="250" fill="#f6f1e8"/><g fill="#e6eef2">${[40,140,240,340].map(x=>`<rect x="${x-34}" y="70" width="68" height="110" rx="3"/>`).join('')}</g><g fill="#f3c77a">${[40,140,240,340].map(x=>[90,120,150].map(y=>`<rect x="${x-28}" y="${y}" width="56" height="14" rx="2"/>`).join('')).join('')}</g><rect x="0" y="30" width="400" height="22" fill="#e53935"/><rect x="0" y="180" width="400" height="70" fill="#d7d1c6"/>`},
+  hosp:{bg:`<rect width="400" height="250" fill="#eef6f7"/><rect x="250" y="30" width="110" height="90" fill="#cbeaff" stroke="#fff" stroke-width="6"/><path d="M305 30 v90" stroke="#fff" stroke-width="4"/><rect x="0" y="190" width="400" height="60" fill="#dbe7ea"/><g fill="#9fc3d6">${[40,90,140].map(x=>`<rect x="${x}" y="160" width="36" height="30" rx="4"/>`).join('')}</g><rect x="20" y="40" width="160" height="26" rx="4" fill="#4c8fe0"/><text x="100" y="58" font-size="11" fill="#fff" text-anchor="middle">内科　受付</text>`}
+};
+
+/* =========================================================
+   全体の設定：舞台、断り書き、出典、作者メッセージ
+   ========================================================= */
+const STORIES=[];
+const AREAS=[
+  {id:'irino',name:'入野の浜（黒潮町）',sub:'津波が一番早く来る'},
+  {id:'shimoda',name:'下田（四万十川の河口）',sub:'約18分で津波。言葉と役目'},
+  {id:'nakamura',name:'中村・具同・古津賀',sub:'その場は安全。でも家族は低い所に'}
+];
+const TITLE_LEAD='四万十川が海に出会う、この美しいまちで。<br>その日、大地が三分間ゆれ続けたら。<br>あなたは、生き延びる判断ができるだろうか。';
+const DISC_TITLE='この物語に出てくる人物と出来事は架空です。場所は実在しますが、学校・病院・お店・消防団の実際の避難計画や対応とは関係ありません。津波の時間と高さは、高知県・四万十市・黒潮町の公表資料（2025年度の想定など）をもとにしています。想定は目安です。実際の地震では、想定より早く、高い津波が来ることもあります。';
+const DISC_MENU='物語はどれからでも始められます。物語どうしは、ところどころで交わっています。ほかの人の物語で選んだことが、別の物語に響くことがあります。四万十市立市民病院の物語は、建物の構造・避難計画・職員の動きが架空で、実際の避難計画とは関係ありません。';
+const DISC_DEB='手当ての内容は、一般の人向けに簡単にしています。実際には、119番の指令員や医療者の指示に従ってください。救命講習（消防署など）を一度受けておくことをおすすめします。';
+const SRC_NOTE='史実の数字は、確認できたものだけを使っています。資料によって数字が違う場合は、そのことを書いています。';
+/* 作者からのメッセージ（あとから自由に書きかえてください） */
+const AUTHOR_MSG=`（ここに、作者からのメッセージが入ります）
+
+四万十市のみなさんへ。
+
+この画面の文章は、あとから書きかえられるようにしてあります。`;
+
+const SOURCES=[
+  {h:'津波の想定・避難場所',items:[
+    ['高知県「令和7年度［高知県版］南海トラフ地震による最大クラスの震度分布・津波浸水予測」','https://www.pref.kochi.lg.jp/doc/2025100100137/'],
+    ['四万十市「津波避難マップ」（平野地区・下田地区など）','https://www.city.shimanto.lg.jp/soshiki/2/1435.html'],
+    ['四万十市「指定緊急避難場所・指定避難所一覧」（2026年8月20日更新）','https://www.city.shimanto.lg.jp/soshiki/2/27435.html'],
+    ['四万十市「防災情報伝達手段」（防災行政無線の聞き返し 0880-34-7800）','https://www.city.shimanto.lg.jp/soshiki/2/1465.html'],
+    ['黒潮町「南海トラフ地震・津波防災計画の基本的な考え方」','https://www.town.kuroshio.lg.jp/img/files/pv/sosiki/2023/05/jisintunamibousaikeikaku_kangaekata0.pdf']]},
+  {h:'過去の災害の教訓',items:[
+    ['石橋克彦「1946年昭和南海地震」（『南海トラフ巨大地震―歴史・科学・社会』岩波書店、2014）','https://plaza.umin.ac.jp/GHDNet/circle/14/y9051.pdf'],
+    ['内閣府 平成26年版防災白書「大規模広域災害時の自助・共助の例」','https://www.bousai.go.jp/kaigirep/hakusho/h26/honbun/0b_2s_01_00.html'],
+    ['総務省消防庁「大規模災害時における消防団活動のあり方等に関する検討会」報告書（2012年）','https://www.fdma.go.jp/pressrelease/houdou/items/h24/2408/240830_1houdou/01_houkokusyo.pdf'],
+    ['地震調査研究推進本部「北海道南西沖の地震活動」','https://jishin.go.jp/regional_seismicity/rs_kaiko/k14_hokkaidonanseioki'],
+    ['内閣府「熊本地震の被害の状況」（2019年）','https://www.bousai.go.jp/taisaku/kyuujo/pdf/r01kaigi/siryo8.pdf']]}
+];
+
+/* ---------- まだ書いていない物語（一覧に「準備中」で出す） ---------- */
+const STUB=(o)=>STORIES.push(Object.assign({ready:false,nodes:{},start:null,debrief:[],outcome:()=>({})},o));
+LOOK.nanami={k:'child',skin:'#fbd9bd',hair:'#5a3a2a',hs:'pony',top:'#7ec8e3',bot:'#f48fb1'};
+LOOK.daichi={k:'adult',skin:'#d9a27a',hair:'#3a2a22',hs:'spiky',top:'#26a69a',bot:'#26a69a'};
+LOOK.keiko={k:'adult',skin:'#f6d3b5',hair:'#5a3a2a',hs:'bob',top:'#ce93d8',bot:'#58607a'};
+LOOK.sumiko={k:'old',skin:'#f3d0b1',hair:'#d8d3cf',hs:'bun',top:'#9fa8da',bot:'#6d6a8a',x:'cardigan'};
+LOOK.genichi={k:'old',skin:'#efc8a5',hair:'#d9d6d0',hs:'old',top:'#bcd6e6',bot:'#bcd6e6'};
+STUB({id:'nanami',area:'irino',who:'少女（10歳）',title:'ことばの分からない浜で',place:'SUNLIFE COFFEE WAVES.',stars:4,scene:'irino',blurb:'県外からの家族旅行。お母さんたちとはぐれて、一人でカフェにいる。',xs:['X1','X2'],cast:{n:{look:'nanami',x:200}}});
+STUB({id:'surfer',area:'irino',who:'サーファー（20歳）',title:'海の上では揺れない',place:'入野の浜',stars:5,scene:'irino',blurb:'沖で波を待っている。海の上では、揺れがよく分からない。',xs:['X1','X2'],cast:{n:{look:'daichi',x:200}}});
+STUB({id:'luis',area:'shimoda',who:'技能実習生（30歳）',title:'にげる／ひなんじょ',place:'下田の加工場',stars:4,scene:'port',blurb:'フィリピンから来て3年目。日本語は、ほとんど分からない。',xs:['X4','X5','X6'],cast:{n:{look:'luis',x:200}}});
+STUB({id:'fire',area:'shimoda',who:'消防団員（60歳）',title:'閉めに行くか',place:'下田分団',stars:5,scene:'port',blurb:'地震の時は、水門を閉めに行く役目がある。',xs:['X3','X4'],cast:{n:{look:'hamada',x:200}}});
+STUB({id:'keiko',area:'nakamura',who:'主婦（50歳）',title:'赤鉄橋の向こう',place:'マルナカ（具同）',stars:3,scene:'mart',blurb:'買い物中に地震。古津賀の家には、熱で休んだ中学生の息子がいる。',xs:['X7'],cast:{n:{look:'keiko',x:200}}});
+STUB({id:'sumiko',area:'nakamura',who:'外来患者（70歳）',title:'お父さんが家におる',place:'四万十市立市民病院',stars:2,scene:'hosp',blurb:'内科の順番待ちの最中に地震。古津賀の家には、足の悪い夫がいる。',xs:['X7','X8'],cast:{n:{look:'sumiko',x:200}}});
+STUB({id:'genichi',area:'nakamura',who:'入院患者（80歳）',title:'わしはもうええけん',place:'四万十市立市民病院',stars:3,scene:'hosp',blurb:'昭和南海地震の年に生まれた。足が弱く、自分では速く動けない。',xs:['X8'],cast:{n:{look:'genichi',x:200}}});
+
+/* =========================================================
+   ふりがな辞書（長いものから優先して当てる）
+   「漢字＋送りがな」：ふりがなは漢字の部分だけ。例 '上が':'あ' → 上(あ)が
+   ここにない言葉は、本文に {漢字|よみ} と書けば個別に付けられる
+   ========================================================= */
+const RUBY={
+'例':'れい','文字列':'もじれつ','動き':'うご','動か':'うご','動く':'うご','動け':'うご','動い':'うご','動':'うご','性':'せい','違う':'ちが','違':'ちが','対応':'たいおう','警戒':'けいかい','床':'ゆか','右':'みぎ','第一':'だいいち','避け':'さ','置き去り':'おきざ','防ぎ':'ふせ','防':'ふせ','差':'さ','市':'し','勝手':'かって','願い':'ねが','周り':'まわ','何':'なに','列':'れつ','家庭':'かてい','お子さん':'こ','小さ':'ちい','最小限':'さいしょうげん','公園':'こうえん','尽くす':'つ','横一列':'よこいちれつ','枚':'まい','素人':'しろうと','変化':'へんか','腰':'こし','姿':'すがた','働く':'はたら','働':'はたら','切っ':'き','切れ':'き','切ら':'き','切':'き','戸籍':'こせき','丸':'まる','死者':'ししゃ','得意':'とくい','案内':'あんない','自ら':'みずか','川沿い':'かわぞ','予防':'よぼう','校内':'こうない','管理職':'かんりしょく','不在':'ふざい','二次':'にじ','定め':'さだ','共有':'きょうゆう','変形':'へんけい','受傷部':'じゅしょうぶ','末梢':'まっしょう','循環':'じゅんかん','運動':'うんどう','開放創':'かいほうそう','清潔':'せいけつ','浜':'はま','職員':'しょくいん','従っ':'したが','字':'じ','版':'ばん','方等':'かたとう','県外':'けんがい','父さん':'とう','子':'こ','速く':'はや',
+'分け':'わ','日ごろ':'ひ','人数':'にんずう','数え':'かぞ','直接':'ちょくせつ','合図':'あいず','通じ':'つう','緊急連絡先':'きんきゅうれんらくさき','語':'ご','心配':'しんぱい','全体':'ぜんたい','自体':'じたい','目線':'めせん','令和':'れいわ','年度':'ねんど','震度分布':'しんどぶんぷ','津波浸水予測':'つなみしんすいよそく','指定緊急避難場所':'していきんきゅうひなんばしょ','指定避難所':'していひなんじょ','更新':'こうしん','伝達手段':'でんたつしゅだん','基本的':'きほんてき','考え方':'かんがえかた','巨大地震':'きょだいじしん','歴史':'れきし','科学':'かがく','社会':'しゃかい','岩波書店':'いわなみしょてん','平成':'へいせい','防災白書':'ぼうさいはくしょ','大規模':'だいきぼ','広域':'こういき','自助':'じじょ','共助':'きょうじょ','活動':'かつどう','検討会':'けんとうかい','報告書':'ほうこくしょ','地震調査研究推進本部':'じしんちょうさけんきゅうすいしんほんぶ','状況':'じょうきょう','石橋克彦':'いしばしかつひこ','最大':'さいだい','最大クラス':'さいだい','関する':'かん','関係':'かんけい','構造':'こうぞう','病院':'びょういん','店':'みせ','建物':'たてもの','過去':'かこ','記録':'きろく','交わ':'まじ','響く':'ひび','年れい':'ねん','住んで':'す','始め':'はじ','選ん':'えら','選':'えら','内科':'ないか','順番待':'じゅんばんま','最中':'さいちゅう','熱':'ねつ','中学生':'ちゅうがくせい','外来':'がいらい','入院':'にゅういん','役目':'やくめ','美し':'うつく','出会':'であ','三分間':'さんぷんかん','生き延び':'いの','延び':'の','救命':'きゅうめい','講習':'こうしゅう','受け':'う','一般の人':'いっぱん','人向け':'ひとむ','自由':'じゆう','書きかえ':'か','画':'が','状態':'じょうたい','背景':'はいけい','台詞':'せりふ','発生':'はっせい','実習':'じっしゅう','年目':'ねんめ','同じ':'おな','同時':'どうじ','初めて':'はじ','正しい':'ただ','正し':'ただ','正':'ただ','早め':'はや','意味':'いみ','挑戦中':'ちょうせんちゅう','明日':'あした','口':'くち','電':'でん','反響':'はんきょう','個別':'こべつ','三分':'さんぷん','付け':'つ','付':'つ','以上':'いじょう','未満':'みまん','開始':'かいし','耳':'みみ','傾け':'かたむ','前もって':'まえ','一番近い':'いちばんちか','放送':'ほうそう','聞き返':'ききかえ','防災情報':'ぼうさいじょうほう','速報':'そくほう','視点':'してん','計画':'けいかく','授乳室':'じゅにゅうしつ','更衣室':'こういしつ','生理用品':'せいりようひん','物干し場':'ものほしば','参画':'さんかく','男女共同参画':'だんじょきょうどうさんかく','復興':'ふっこう','参考':'さんこう','集め':'あつ','飛び出':'とびだ','手間':'てま','職場':'しょくば','名':'な','声をかけ':'こえ','空':'そら','立た':'た','夜も':'よる','水分':'すいぶん','介助':'かいじょ','能登':'のと','熊本':'くまもと','東日本':'ひがしにほん','直前':'ちょくぜん','振り返り':'ふりかえ','解説':'かいせつ','評価':'ひょうか','話し合':'はなしあ','延':'の','終わり':'お','次の':'つぎ','付き':'つ','以外':'いがい','所在地':'しょざいち','地':'ち',
+// 地名・施設
+'四万十市立市民病院':'しまんとしりつしみんびょういん','四万十市':'しまんとし','四万十川':'しまんとがわ','四万十':'しまんと','下田小学校':'しもだしょうがっこう','旧下田中学校':'きゅうしもだちゅうがっこう','下田中学校':'しもだちゅうがっこう','下田地区':'しもだちく','下田分団':'しもだぶんだん','下田港':'しもだこう','下田':'しもだ','有隣公園':'ゆうりんこうえん','黒潮町':'くろしおちょう','入野':'いりの','高知県版':'こうちけんばん','高知県':'こうちけん','中村':'なかむら','具同':'ぐどう','古津賀':'こつが','赤鉄橋':'あかてっきょう','幡多':'はた','平野地区':'ひらのちく','平野':'ひらの','保育所':'ほいくしょ','加工場':'かこうば','保健室':'ほけんしつ','職員室':'しょくいんしつ','体育館':'たいいくかん','中学校':'ちゅうがっこう','小学校':'しょうがっこう','学校':'がっこう','神社':'じんじゃ','石段':'いしだん','寺':'てら','防災倉庫':'ぼうさいそうこ','内閣府':'ないかくふ','総務省消防庁':'そうむしょうしょうぼうちょう','消防署':'しょうぼうしょ',
+// 人
+'岡村先生':'おかむらせんせい','岡村':'おかむら','教頭先生':'きょうとうせんせい','校長先生':'こうちょうせんせい','先生方':'せんせいがた','先生':'せんせい','陽菜':'ひな','大翔':'ひろと','颯太':'そうた','美咲':'みさき','浜田':'はまだ','七海':'ななみ','大地':'だいち','恵子':'けいこ','翔太':'しょうた','源一':'げんいち','保護者':'ほごしゃ','家族旅行':'かぞくりょこう','家族':'かぞく','子ども':'こども','大人':'おとな','少女':'しょうじょ','主婦':'しゅふ','息子':'むすこ','夫':'おっと','母':'はは','兄':'あに','親子':'おやこ','二人':'ふたり','三人':'さんにん','一人':'ひとり','一人ずつ':'ひとり','数人':'すうにん','何人':'なんにん','全員':'ぜんいん','全校':'ぜんこう','低学年':'ていがくねん','学年':'がくねん','年生':'ねんせい','担任':'たんにん','女性用':'じょせいよう','男性用':'だんせいよう','女性':'じょせい','男女別':'だんじょべつ','男女':'だんじょ','男の人':'おとこ','女の子':'おんな','年寄':'としよ','近所':'きんじょ','地区':'ちく','外国人':'がいこくじん','外国':'がいこく','技能実習生':'ぎのうじっしゅうせい','消防団員':'しょうぼうだんいん','消防団':'しょうぼうだん','自主防災会':'じしゅぼうさいかい','外来患者':'がいらいかんじゃ','入院患者':'にゅういんかんじゃ','医療者':'いりょうしゃ','指令員':'しれいいん','被災者':'ひさいしゃ','性的少数者':'せいてきしょうすうしゃ','判断者':'はんだんしゃ','職員':'しょくいん','人物':'じんぶつ','作者':'さくしゃ','本人':'ほんにん','誰':'だれ','人':'ひと',
+// 災害
+'南海トラフ':'なんかいトラフ','南海地震':'なんかいじしん','昭和南海地震':'しょうわなんかいじしん','東日本大震災':'ひがしにほんだいしんさい','熊本地震':'くまもとじしん','能登半島地震':'のとはんとうじしん','北海道南西沖':'ほっかいどうなんせいおき','緊急地震速報':'きんきゅうじしんそくほう','大津波警報':'おおつなみけいほう','津波警報':'つなみけいほう','津波避難':'つなみひなん','津波':'つなみ','地震発生':'じしんはっせい','地震':'じしん','余震':'よしん','警報':'けいほう','第一波':'だいいっぱ','第二波':'だいには','第三波':'だいさんぱ','波':'なみ','浸水区域':'しんすいくいき','浸水':'しんすい','想定':'そうてい','避難所':'ひなんじょ','避難場所':'ひなんばしょ','避難路':'ひなんろ','避難計画':'ひなんけいかく','避難行動':'ひなんこうどう','避難':'ひなん','防災行政無線':'ぼうさいぎょうせいむせん','防災無線':'ぼうさいむせん','防災':'ぼうさい','災害関連死':'さいがいかんれんし','関連死':'かんれんし','災害':'さいがい','犠牲':'ぎせい','悲劇':'ひげき','教訓':'きょうくん','停電':'ていでん','断水':'だんすい','渋滞':'じゅうたい','孤立':'こりつ','被害':'ひがい','地鳴り':'じな','沿岸':'えんがん','海岸':'かいがん','海抜':'かいばつ','高台':'たかだい','河口':'かこう','水門':'すいもん','解除':'かいじょ','発表':'はっぴょう','南海':'なんかい',
+// 体・医療
+'骨折':'こっせつ','右足首':'みぎあしくび','足首':'あしくび','足先':'あしさき','足元':'あしもと','関節':'かんせつ','血管':'けっかん','神経':'しんけい','脱水':'だっすい','持病':'じびょう','病気':'びょうき','感覚':'かんかく','手当て':'てあ','手当':'てあて','添え木':'そえぎ','固定':'こてい','救護':'きゅうご','救命講習':'きゅうめいこうしゅう','腫れ':'は','腫':'は','痛み':'いた','痛':'いた','顔':'かお','頭':'あたま','背中':'せなか','肩':'かた','唇':'くちびる','指':'ゆび','足':'あし','体':'からだ','息':'いき','命':'いのち','血':'ち','骨':'ほね','薬':'くすり','元気':'げんき','我慢':'がまん','悪化':'あっか','症候群':'しょうこうぐん','脚':'あし',
+// 学校・もの
+'教室':'きょうしつ','校庭':'こうてい','校舎':'こうしゃ','校門':'こうもん','校内放送':'こうないほうそう','廊下':'ろうか','算数':'さんすう','授業中':'じゅぎょうちゅう','授業':'じゅぎょう','名簿':'めいぼ','番号札':'ばんごうふだ','番号':'ばんごう','受付':'うけつけ','性別欄':'せいべつらん','性別':'せいべつ','欄':'らん','住所':'じゅうしょ','名前':'なまえ','保険証':'ほけんしょう','在留':'ざいりゅう','書類':'しょるい','机':'つくえ','棚':'たな','窓':'まど','柵':'さく','塀':'へい','坂道':'さかみち','坂':'さか','崖':'がけ','屋根':'やね','島':'しま','船':'ふね','車':'くるま','道':'みち','町':'まち','港':'みなと','家':'いえ','海':'うみ','山':'やま','川':'かわ','沖':'おき','潮':'しお','泥':'どろ','水':'みず','底':'そこ','緑':'みどり','光':'ひかり','音':'おと','声':'こえ','言葉':'ことば','日本語':'にほんご','英語':'えいご','通訳':'つうやく','翻訳':'ほんやく','携帯電話':'けいたいでんわ','電話':'でんわ','画面':'がめん','法被':'はっぴ','作業着':'さぎょうぎ','上着':'うわぎ','服':'ふく','新聞紙':'しんぶんし','段ボール':'だん','雑誌':'ざっし','傘':'かさ','袋':'ふくろ','便器':'べんき','個室':'こしつ','簡易':'かんい','仮設':'かせつ','入口':'いりぐち','毛布':'もうふ','発電機':'はつでんき','明かり':'あ','地図':'ちず','物語':'ものがたり','出来事':'できごと','架空':'かくう','実在':'じつざい','舞台':'ぶたい','出典':'しゅってん','資料':'しりょう','公表資料':'こうひょうしりょう','掃除用具入れ':'そうじようぐい','柄':'え','整復':'せいふく','用':'よう',
+// 時
+'地震発生から':'じしんはっせい','時間目':'じかんめ','時間':'じかん','時刻':'じこく','時':'とき','平日':'へいじつ','翌朝':'よくあさ','夜中':'よなか','夜':'よる','今':'いま','一瞬':'いっしゅん','瞬間':'しゅんかん','最初':'さいしょ','最後':'さいご','途中':'とちゅう','直後':'ちょくご','数分':'すうふん','何分':'なんぷん','何度':'なんど','一度':'いちど','一晩':'ひとばん','数十秒後':'すうじゅうびょうご','分後':'ふんご','約':'やく','月':'がつ','日':'にち','年':'ねん','歳':'さい','分':'ふん',
+// よく使う言葉（漢字＋送りがな）
+'大丈夫':'だいじょうぶ','大切':'たいせつ','大声':'おおごえ','大き':'おお','大':'おお','一緒':'いっしょ','一番':'いちばん','一刻':'いっこく','一歩':'いっぽ','一斉':'いっせい','一言':'ひとこと','一つ':'ひと','安全':'あんぜん','安心':'あんしん','危険':'きけん','危な':'あぶ','必要':'ひつよう','確認':'かくにん','確か':'たし','確実':'かくじつ','判断':'はんだん','指示':'しじ','待機':'たいき','移動':'いどう','説得':'せっとく','混乱':'こんらん','相談':'そうだん','配慮':'はいりょ','工夫':'くふう','任意':'にんい','返事':'へんじ','正解':'せいかい','正確':'せいかく','自分':'じぶん','自然':'しぜん','様子':'ようす','場所':'ばしょ','所':'ところ','方':'ほう','前':'まえ','後ろ':'うし','後':'あと','上':'うえ','下':'した','横':'よこ','隅':'すみ','端':'はし','先':'さき','中':'なか','外':'そと','間':'あいだ','形':'かたち','色':'いろ','目':'め','手':'て','気':'き','心':'こころ','次々':'つぎつぎ','次':'つぎ','別':'べつ','他':'ほか','本当':'ほんとう','無理':'むり','無事':'ぶじ','絶対':'ぜったい','当然':'とうぜん','実際':'じっさい','精一杯':'せいいっぱい','責任':'せきにん','約束':'やくそく','最善':'さいぜん','目安':'めやす','余裕':'よゆう','原則':'げんそく','事前':'じぜん','運営':'うんえい','支援':'しえん','偏見':'へんけん','国籍':'こくせき','課題':'かだい','問題':'もんだい','不便':'ふべん','防犯':'ぼうはん','居場所':'いばしょ','準備中':'じゅんびちゅう','一覧':'いちらん','役':'やく','文章':'ぶんしょう','場合':'ばあい','内容':'ないよう','一般':'いっぱん','簡単':'かんたん','史実':'しじつ','数字':'すうじ','最新':'さいしん','集落':'しゅうらく','電気':'でんき',
+'上げ':'あ','上ばき':'うわ','上り':'のぼ','上る':'のぼ','下り':'お','下ろ':'お','見下ろ':'みお','見え':'み','見る':'み','見た':'み','見て':'み','見せ':'み','見つ':'み','見に':'み','見':'み','来た':'き','来て':'き','来る':'く','来ん':'こ','来よ':'き','来ら':'こ','来':'き','行か':'い','行き':'い','行く':'い','行け':'い','行こ':'い','行っ':'い','行':'い','出し':'だ','出す':'だ','出て':'で','出た':'で','出張':'しゅっちょう','出発':'しゅっぱつ','出':'で','入っ':'はい','入れ':'い','入ろ':'はい','入':'はい','引い':'ひ','引く':'ひ','引き返':'ひきかえ','引き':'ひ','引っ':'ひ','引':'ひ','渡し':'わた','渡す':'わた','渡せ':'わた','渡ら':'わた','渡り':'わた','渡':'わた','戻っ':'もど','戻ら':'もど','戻り':'もど','戻る':'もど','戻れ':'もど','戻':'もど','歩い':'ある','歩き':'ある','歩':'ある','走っ':'はし','走り':'はし','走ら':'はし','走れ':'はし','走':'はし','逃げ':'に','逃':'に','待っ':'ま','待ち':'ま','待つ':'ま','待て':'ま','待た':'ま','待':'ま','書い':'か','書き':'か','書く':'か','書け':'か','書':'か','呼ば':'よ','呼ん':'よ','呼び':'よ','呼':'よ','言っ':'い','言わ':'い','言う':'い','言い':'い','言え':'い','言':'い','聞い':'き','聞き':'き','聞こ':'き','聞':'き','話し':'はな','話':'はなし','読み':'よ','読':'よ','使え':'つか','使う':'つか','使っ':'つか','使用禁止':'しようきんし','使':'つか','取っ':'と','取り':'と','取':'と','持っ':'も','持':'も','置い':'お','置':'お','作っ':'つく','作ら':'つく','作り':'つく','作る':'つく','作':'つく','着い':'つ','着':'つ','向か':'む','向け':'む','向':'む','近づ':'ちかづ','近い':'ちか','近く':'ちか','近':'ちか','遠く':'とお','遠':'とお','高い':'たか','高く':'たか','高さ':'たか','高':'たか','低い':'ひく','低':'ひく','長い':'なが','長く':'なが','長':'なが','早く':'はや','早い':'はや','早':'はや','速く':'はや','強く':'つよ','強い':'つよ','強':'つよ','少し':'すこ','少':'すこ','多く':'おお','多い':'おお','多':'おお','重い':'おも','重':'おも','深さ':'ふか','深':'ふか','短く':'みじか','短い':'みじか','短':'みじか','白い':'しろ','黒い':'くろ','青':'あお','真っ':'ま','楽に':'らく','悪う':'わる','悪い':'わる','悪':'わる','弱':'よわ','若い':'わか','静ま':'しず','暗が':'くら','明る':'あか',
+'揺れ':'ゆ','揺':'ゆ','倒れ':'たお','倒':'たお','崩れ':'くず','崩':'くず','割れ':'わ','割':'わ','落ち':'お','落':'お','傾い':'かたむ','傾':'かたむ','曲が':'ま','曲':'ま','折れ':'お','流れ':'なが','流':'なが','押し':'お','押':'お','守っ':'まも','守る':'まも','守れ':'まも','守':'まも','助か':'たす','助け':'たす','助':'たす','救っ':'すく','救':'すく','残っ':'のこ','残さ':'のこ','残':'のこ','終わ':'お','始':'はじ','止め':'と','止ま':'と','止':'と','閉め':'し','閉':'し','開':'ひら','決め':'き','決':'き','頼む':'たの','頼ん':'たの','頼':'たの','伝え':'つた','伝':'つた','届か':'とど','届':'とど','集ま':'あつ','集':'あつ','並ん':'なら','並':'なら','座ら':'すわ','座':'すわ','立っ':'た','立て':'た','立':'た','休ま':'やす','休ん':'やす','休':'やす','泣い':'な','泣き':'な','泣':'な','笑っ':'わら','笑':'わら','叫ん':'さけ','叫':'さけ','鳴り':'な','鳴':'な','響':'ひび','飲ま':'の','飲ん':'の','飲':'の','食べ':'た','食':'た','買え':'か','買':'か','捨て':'す','捨':'す','包む':'つつ','包':'つつ','巻き':'ま','巻':'ま','当て':'あ','当た':'あ','当':'あ','冷やし':'ひ','冷や':'ひ','冷':'ひ','握っ':'にぎ','握':'にぎ','越え':'こ','越':'こ','乗っ':'の','乗り':'の','乗':'の','運ん':'はこ','運':'はこ','進む':'すす','進':'すす','通っ':'とお','通る':'とお','通':'とお','知ら':'し','知':'し','思っ':'おも','思':'おも','考え':'かんが','覚え':'おぼ','覚':'おぼ','迷っ':'まよ','迷':'まよ','失う':'うしな','失':'うしな','疑う':'うたが','疑':'うたが','困っ':'こま','困':'こま','疲れ':'つか','疲':'つか','汚れ':'よご','汚':'よご','固ま':'かた','固':'かた','控え':'ひか','控':'ひか','離れ':'はな','離':'はな','加え':'くわ','加':'くわ','配ら':'くば','配':'くば','任せ':'まか','任':'まか','励ま':'はげ','頑張':'がんば','招き':'まね','招':'まね','傷つ':'きず','傷':'きず','争っ':'あらそ','争':'あらそ','覆う':'おお','解け':'と','解':'と','続い':'つづ','続け':'つづ','続':'つづ','起き':'お','起':'お','知っ':'し','合わ':'あ','合':'あ','直':'なお','急い':'いそ','急':'いそ','寄っ':'よ','寄':'よ','打っ':'う','打':'う','振ら':'ふ','振':'ふ','散ら':'ち','散':'ち','移っ':'うつ','移':'うつ','駆け':'か','駆':'か','結ぶ':'むす','結':'むす','貸し':'か','貸':'か','飛び':'と','飛':'と','転ん':'ころ','転':'ころ','裏':'うら','角':'かど','線':'せん','身':'み','用を足':'ようをた','無':'な','生':'う','初め':'はじ','幸い':'さいわ','間に合':'まにあ','間違':'まちが','気持':'きも','顔色':'かおいろ','元':'もと','数':'かず','側':'がわ','全':'ぜん','本':'ほん','真':'ま','番':'ばん','線路':'せんろ','場':'ば','物':'もの','字':'じ','結局':'けっきょく','手間取':'てまど','手招':'てまね','手元':'てもと','手伝':'てつだ','背負':'せお','連れ':'つ','連':'つ','迎え':'むか','迎':'むか','帰る':'かえ','帰っ':'かえ','帰':'かえ','返し':'かえ','返':'かえ','浴':'あ','鳴ら':'な','和ら':'やわ','任意に':'にんい','誰でも':'だれ','誰か':'だれ'
+};
+
+/* =========================================================
+   エンジン（「その瞬間、あなたは」のエンジンを津波編用に拡張）
+   ・時計：地震発生からの経過時間
+   ・長い揺れ、緊迫モード・夜モード
+   ・ふりがな（自動＋{漢字|よみ}）、文字の大きさ
+   ・聞き取れない言葉：[[表示|本当の言葉|標準語訳]]、⟪伏せ字⟫
+   ・物語どうしの記録（交差）
+   ========================================================= */
+let C=null, S=null;
+const LS=(k,v)=>{ try{ if(v===undefined) return localStorage.getItem(k); localStorage.setItem(k,v); }catch(e){ return null; } };
+let REC={}; try{ REC=JSON.parse(LS('tsu_rec')||'{}')||{}; }catch(e){}
+let XREC={}; try{ XREC=JSON.parse(LS('tsu_x')||'{}')||{}; }catch(e){}
+let SET={fz:1,furi:true}; try{ Object.assign(SET,JSON.parse(LS('tsu_set')||'{}')||{}); }catch(e){}
+const saveRec=()=>LS('tsu_rec',JSON.stringify(REC));
+const saveX=()=>LS('tsu_x',JSON.stringify(XREC));
+const saveSet=()=>LS('tsu_set',JSON.stringify(SET));
+/** 他の物語の記録を読む：X('fire','school') */
+const X=(story,key)=>XREC[story]?XREC[story][key]:undefined;
+const hm=m=>{ m=((m%1440)+1440)%1440; return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0'); };
+const el=m=>{ m=Math.max(0,Math.round(m)); return m<60?m+'分':Math.floor(m/60)+'時間'+(m%60?(m%60)+'分':''); };
+const toMin=s=>{ const [h,m]=s.split(':').map(Number); return h*60+m; };
+const shuffle=a=>{ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+const esc=s=>String(s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+function show(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id)); window.scrollTo(0,0); }
+const FXK=['red','smoke','dust','dim','night','dusk','siren','black'];
+
+/* ---------- 文字の整形（ふりがな・聞き取れない言葉） ---------- */
+let RUBY_KEYS=null;
+function rubyKeys(){ if(!RUBY_KEYS) RUBY_KEYS=Object.keys(RUBY).sort((a,b)=>b.length-a.length); return RUBY_KEYS; }
+const rb=(k,y)=>`<ruby>${esc(k)}<rt>${esc(y)}</rt></ruby>`;
+const KANJI=/[一-鿿々]/;
+/** 平文を、ふりがな付きのトークン列にする */
+function plainTokens(s,out){
+  const keys=rubyKeys(); let i=0;
+  while(i<s.length){
+    const ch=s[i];
+    if(KANJI.test(ch)){
+      let hit=null; for(const k of keys){ if(s.startsWith(k,i)){ hit=k; break; } }
+      if(hit){ const mm=hit.match(/^([\u4e00-\u9fff々]+)([^\u4e00-\u9fff々]+)$/); out.push(mm?rb(mm[1],RUBY[hit])+esc(mm[2]):rb(hit,RUBY[hit])); i+=hit.length; continue; }
+      if(window.__miss) window.__miss.add(ch);
+    }
+    out.push(esc(ch)); i++;
+  }
+}
+/** 整形してトークン列（1トークン＝文字送りの1単位）を返す。heardに聞き取れなかった言葉を集める */
+function tokens(src,heard){
+  const out=[]; const re=/\{([^|{}]+)\|([^{}]+)\}|\[\[([^|\]]*)\|([^|\]]*)(?:\|([^\]]*))?\]\]|⟪([^⟫]*)⟫|《([^》]*)》/g;
+  let last=0,m;
+  while((m=re.exec(src))){
+    plainTokens(src.slice(last,m.index),out);
+    if(m[1]!==undefined) out.push(rb(m[1],m[2]));
+    else if(m[3]!==undefined){ out.push(`<span class="gb">${esc(m[3])}</span>`); if(heard) heard.push({s:m[3],r:m[4],t:m[5]||''}); }
+    else if(m[6]!==undefined){ out.push(`<span class="hid">${'〇'.repeat([...m[6]].length)}</span>`); if(heard) heard.push({s:'〇'.repeat([...m[6]].length),r:m[6],t:''}); }
+    else if(m[7]!==undefined){ const t=[]; plainTokens(m[7],t); out.push(`<span class="echo">${t.join('')}</span>`); }
+    last=re.lastIndex;
+  }
+  plainTokens(src.slice(last),out);
+  return out;
+}
+const fmt=s=>tokens(String(s)).join('');
+
+/* ---------- 描画 ---------- */
+function sceneSvg(view,cast,thumb){
+  const sc=SCENES[view.scene]||SCENES.yard;
+  let s=sc.bg;
+  if(sc.dyn) s+=sc.dyn(view);
+  const split=sc.split||0; let back='',front='';
+  for(const [id,a] of Object.entries(view.actors)){
+    const c=cast[id]; if(!c||!c.look||!a.show) continue;
+    const L=LOOK[c.look]; if(!L) continue;
+    const g=`<g class="actor ${a.p==='stand'||!a.p?'idle':''}" ${thumb?'':`id="ac_${id}"`} data-p="${a.p||'stand'}" data-f="${a.f||'normal'}" data-t="${a.t||''}" data-arm="${a.arm||''}" style="transform:translate(${a.x}px,${a.y||215}px) scale(${a.sc||c.sc||1});transition:transform .9s ease">${fig(L)}${a.e?emoteSvg(a.e,-(DIM[L.k].leg+DIM[L.k].body)-DIM[L.k].head*2-4):''}</g>`;
+    if(split && (a.y||215)>=split) front+=g; else back+=g;
+  }
+  s+=back;
+  if(sc.fg) s+=sc.fg;
+  if(sc.fgdyn) s+=sc.fgdyn(view);
+  s+=front;
+  return s;
+}
+function render(){
+  $('sc').innerHTML=sceneSvg(S.view,C.cast);
+  FXK.forEach(k=>$('fx'+k[0].toUpperCase()+k.slice(1)).classList.toggle('on',!!S.view.fx[k]));
+}
+function updActor(id,ch){
+  const a=S.view.actors[id]||(S.view.actors[id]={x:200,show:false});
+  Object.assign(a,ch);
+  const elx=document.getElementById('ac_'+id);
+  if(!elx || ch.show!==undefined || ch.e!==undefined){ render(); if(ch.e) setTimeout(()=>{ if(S&&S.view.actors[id]&&S.view.actors[id].e===ch.e){ S.view.actors[id].e=null; const g=document.querySelector('#ac_'+id+' .emote'); if(g) g.remove(); } },1800); return; }
+  if(ch.p!==undefined){ elx.dataset.p=ch.p; elx.classList.toggle('idle',ch.p==='stand'); }
+  if(ch.f!==undefined) elx.dataset.f=ch.f;
+  if(ch.t!==undefined) elx.dataset.t=ch.t;
+  if(ch.arm!==undefined) elx.dataset.arm=ch.arm;
+  if(ch.x!==undefined||ch.y!==undefined||ch.sc!==undefined) elx.style.transform=`translate(${a.x}px,${a.y||215}px) scale(${a.sc||C.cast[id].sc||1})`;
+}
+function setClock(){
+  const c=$('clock');
+  if(S.q0!=null){ $('hm').textContent=el(S.clock-S.q0); $('day').textContent=(S.day?S.day+'・':'')+'地震発生から'; c.classList.add('el'); }
+  else { $('hm').textContent=hm(S.clock); $('day').textContent=S.day||''; c.classList.remove('el'); }
+  c.classList.remove('tick'); void c.offsetWidth; c.classList.add('tick');
+}
+const elapsed=()=>S.q0==null?0:S.clock-S.q0;
+function stageFx(k){ const st=$('stage'); st.classList.remove('shake','quake'); void st.offsetWidth; st.classList.add(k); setTimeout(()=>st.classList.remove(k),k==='quake'?1900:500); }
+let rumbleT=null;
+function bigQuake(on){
+  const st=$('stage'); st.classList.toggle('bigquake',on); clearInterval(rumbleT);
+  if(on){ sfx('quake'); rumbleT=setInterval(()=>sfx('rumble'),650); if(navigator.vibrate) try{navigator.vibrate([400,100,300,100,500])}catch(e){} }
+}
+function setMode(m){ const p=$('play'); p.classList.remove('m-tense','m-night'); if(m) p.classList.add('m-'+m); S.mode=m||''; }
+
+/* ---------- 行の処理 ---------- */
+let queue=[], onDone=null, typing=null, waiting=false;
+function play(lines,cb){ queue=lines.filter(x=>x!==''&&x!=null&&x!==false); onDone=cb; step(); }
+function step(){
+  while(queue.length){
+    const it=queue.shift();
+    if(typeof it==='string'){ say(it); return; }
+    if(it.sys){ say('@sys|'+it.sys); return; }
+    if(it.radio){ sfx('chime'); say('@radio|'+it.radio); return; }
+    doAction(it);
+    if(it.wait){ waiting=true; setTimeout(()=>{ waiting=false; step(); },window.__fast?0:it.wait); return; }
+  }
+  const f=onDone; onDone=null; f&&f();
+}
+function doAction(it){
+  if(it.a){ const ch={...it}; delete ch.a; delete ch.wait; updActor(it.a,ch); return; }
+  if(it.d!==undefined){ S.day=it.d; setClock(); }
+  if(it.t){ S.clock=toMin(it.t); setClock(); }
+  if(it.q0){ S.q0=S.clock; setClock(); }
+  if(it.at!==undefined){ S.clock=(S.q0||0)+it.at; setClock(); }
+  if(it.adv){ S.clock+=it.adv; setClock(); }
+  if(it.bg){ S.view.scene=it.bg; render(); }
+  if(it.v){ Object.assign(S.view,it.v); render(); }
+  if(it.mode!==undefined) setMode(it.mode);
+  if(it.set){ Object.assign(S.flags,it.set); }
+  if(it.fx){
+    const k=it.fx;
+    if(k==='shake'||k==='quake'){ stageFx(k); if(k==='quake') sfx('quake'); }
+    else if(k==='bigquake') bigQuake(true);
+    else if(k==='noquake') bigQuake(false);
+    else if(k==='flash'){ const f=$('fxFlash'); f.classList.add('on'); setTimeout(()=>f.classList.remove('on'),180); }
+    else if(k==='calm'){ FXK.forEach(x=>S.view.fx[x]=false); bigQuake(false); render(); }
+    else if(k.startsWith('no')){ S.view.fx[k.slice(2)]=false; render(); }
+    else { S.view.fx[k]=true; render(); if(k==='siren') sfx('siren'); }
+  }
+  if(it.se) sfx(it.se);
+  if(it.bgm!==undefined) music(it.bgm);
+}
+let typedFull='';
+function say(line){
+  let who=null, txt=line;
+  const m=line.match(/^(@?\w+)\|(.*)$/s); if(m){ who=m[1]; txt=m[2]; }
+  const nm=$('name'), tx=$('txt');
+  nm.className='name'; tx.className='txt';
+  if(who==='@sys'){ nm.textContent='おしらせ'; nm.classList.add('sys'); nm.style.display='block'; tx.classList.add('sys'); }
+  else if(who==='@radio'){ nm.textContent='防災行政無線'; nm.classList.add('radio'); nm.style.display='block'; tx.classList.add('radio'); sfx('crackle'); }
+  else if(who==='@me'){ nm.textContent=(C.me||'')+'（心の声）'; nm.classList.add('me'); nm.style.display='block'; tx.classList.add('narr'); }
+  else if(who){ const c=C.cast[who]; nm.textContent=(c&&c.name)||who; if(c&&!c.look) nm.classList.add('voice'); if(c&&c.me) nm.classList.add('me'); nm.style.display='block'; sfx('blip'); }
+  else { nm.style.display='none'; tx.classList.add('narr'); }
+  $('nextI').style.visibility='hidden';
+  const tk=tokens(txt,S.heard); typedFull=tk.join('');
+  let i=0; clearInterval(typing); tx.innerHTML='';
+  typing=setInterval(()=>{ i+=2; tx.innerHTML=tk.slice(0,i).join(''); if(i>=tk.length){ clearInterval(typing); typing=null; $('nextI').style.visibility='visible'; } },30);
+  if(window.__fast){ clearInterval(typing); typing=null; tx.innerHTML=typedFull; }
+}
+function tapBox(){
+  if($('sheet').classList.contains('on')||waiting) return;
+  if(typing){ clearInterval(typing); typing=null; $('txt').innerHTML=typedFull; $('nextI').style.visibility='visible'; return; }
+  if(onDone||queue.length) step();
+}
+$('box').addEventListener('click',tapBox);
+$('stage').addEventListener('click',e=>{ if(e.target.closest('.topbtns')) return; tapBox(); });
+
+/* ---------- 物語の開始・ノード ---------- */
+function computeMax(c){
+  const memo={};
+  const dfs=id=>{ if(!id||id==='END') return 0; if(memo[id]!==undefined) return memo[id]; memo[id]=0; const n=c.nodes[id];
+    let v; if(n.mini) v=2+dfs(n.next); else if(!n.choices) v=n.go?(typeof n.go==='string'?dfs(n.go):Math.max(0,...(n.goAll||[]).map(dfs))):(n.next?dfs(n.next):0); else v=Math.max(...n.choices.filter(x=>x.g!=='fatal').map(x=>(x.sc||0)+dfs(x.next)));
+    return memo[id]=v; };
+  return Math.max(1,dfs(c.start));
+}
+function gradeOf(sc,max){ const r=sc/max; return r>=.85?'S':r>=.6?'A':r>=.3?'B':'C'; }
+function startCase(i){
+  C=STORIES[i]; C.max=C.max||computeMax(C);
+  const actors={}; for(const [id,c] of Object.entries(C.cast)) if(c.look) actors[id]={x:c.x||200,y:c.y,p:c.p||'stand',f:c.f||'normal',show:c.show!==false};
+  S={flags:{},x:{},heard:[],score:0,clock:0,q0:null,day:'',mode:'',log:[],node:null,snap:null,view:{scene:C.scene,actors,fx:{}}};
+  $('hudNo').textContent=C.who; $('hudTitle').textContent=C.title;
+  $('hm').textContent='--:--'; $('day').textContent=''; $('clock').classList.remove('el'); $('txt').textContent=''; $('name').style.display='none';
+  setMode(''); bigQuake(false);
+  closeSheet(); show('play'); render(); sfx('start'); music(C.bgm||'town');
+  enterNode(C.start);
+}
+function enterNode(id){
+  if(id==='END') return ending();
+  const n=C.nodes[id]; S.node=id;
+  if(n.mini==='cpr') return runCPR(()=>enterNode(n.next));
+  const lines=typeof n.lines==='function'?n.lines(S):n.lines;
+  play(lines||[],()=>{
+    if(n.fatal) return fail('fatal',typeof n.fatal==='function'?n.fatal(S):n.fatal);
+    if(n.go) return enterNode(typeof n.go==='function'?n.go(S):n.go);
+    if(!n.choices) return ending();
+    S.snap=JSON.stringify({...S,snap:null});
+    openChoices(n);
+  });
+}
+let tmr=null;
+function openChoices(n){
+  $('cpr').style.display='none'; $('choices').style.display='flex';
+  const obs=typeof n.obs==='function'?n.obs(S):(n.obs||[]);
+  $('chips').innerHTML=obs.map(([a,b])=>`<span class="chip"><b>${fmt(a)}</b>${fmt(b)}</span>`).join('');
+  $('q').innerHTML=fmt(n.q||'どうする？');
+  const box=$('choices'); box.innerHTML='';
+  const list=n.choices.filter(c=>!c.need||c.need(S));
+  (n.fixed?list:shuffle(list)).forEach(c=>{ const b=document.createElement('button'); b.className='btn'; b.innerHTML=fmt(c.t); b.onclick=()=>choose(n,c); box.appendChild(b); });
+  $('sheet').classList.add('on'); $('sheet').scrollTop=0; sfx('msg');
+  clearInterval(tmr); $('timer').classList.remove('on');
+}
+function closeSheet(){ $('sheet').classList.remove('on'); clearInterval(tmr); }
+function choose(n,c,timedOut){
+  closeSheet(); sfx(timedOut?'back':'ok');
+  const best=n.choices.find(x=>x.g==='best'&&(!x.need||x.need(S)));
+  S.log.push({q:n.q||'どうする？',you:c.t,g:c.g,why:c.why||'',best:best&&best!==c?best.t:null,bestWhy:best&&best!==c?best.why:null});
+  S.score+=(c.sc||0); if(c.flag) S.flags[c.flag]=true; if(c.x) Object.assign(S.x,c.x);
+  if(c.dt){ S.clock+=c.dt; setClock(); }
+  const res=typeof c.res==='function'?c.res(S):(c.res||[]);
+  play(res,()=>{
+    if(c.g==='fatal') return fail('fatal',c);
+    enterNode(typeof c.next==='function'?c.next(S):c.next);
+  });
+}
+function commitX(){ XREC[C.id]=Object.assign(XREC[C.id]||{},S.x,{done:1}); saveX(); }
+function retry(){
+  const st=JSON.parse(S.snap); const snap=S.snap; S=Object.assign(st,{snap});
+  show('play'); setMode(S.mode); bigQuake(false); render(); setClock(); music(C.bgm2||'tense');
+  $('txt').textContent=''; $('name').style.display='none';
+  openChoices(C.nodes[S.node]);
+}
+function lessonHtml(list){
+  return (list||[]).map(l=>`<div class="lesson"><h4>${fmt(l.h)}</h4>${l.p?`<div>${fmt(l.p)}</div>`:''}${l.ul?`<ul>${l.ul.map(x=>`<li>${fmt(x)}</li>`).join('')}</ul>`:''}${l.src?`<div class="src">${esc(l.src)}</div>`:''}</div>`).join('');
+}
+function ending(){
+  const o=C.outcome(S);
+  music(o.mood==='good'?'hope':o.mood==='mid'?'talk':'night');
+  play(o.lines||[],()=>{
+    bigQuake(false);
+    const g=gradeOf(S.score,C.max);
+    const order='SABC'; if(!REC[C.id]||REC[C.id]==='X'||order.indexOf(g)<order.indexOf(REC[C.id])){ REC[C.id]=g; saveRec(); }
+    S.x.alive=o.dead?0:1; commitX();
+    $('outCase').textContent=`${C.who}　${C.title}`;
+    $('outGrade').className='grade '+g; $('outGrade').textContent=g; $('outGradeLbl').textContent=o.dead?'生き延びることはできなかった':'生き延びた';
+    $('outTitle').innerHTML=fmt(o.title); $('outText').innerHTML=fmt(o.sum||'');
+    $('outLesson').innerHTML=lessonHtml((o.lessons||[]).concat(C.lessons||[]));
+    $('retryNode').style.display='none'; sfx(o.mood==='good'?'jingle':'lvl');
+    setTimeout(()=>show('out'),400);
+  });
+}
+function fail(kind,c){
+  music(null); sfx('drop'); bigQuake(false);
+  if(!REC[C.id]){ REC[C.id]='X'; saveRec(); }
+  S.x.alive=0; commitX();
+  setTimeout(()=>{
+    $('outCase').textContent=`${C.who}　${C.title}`;
+    $('outGrade').className='grade X'; $('outGrade').textContent='終';
+    $('outGradeLbl').textContent='この判断で、物語は終わる';
+    $('outTitle').innerHTML=fmt(c.title||'取り返しのつかない判断'); $('outText').innerHTML=fmt(c.why||'');
+    $('outLesson').innerHTML=lessonHtml((c.lessons||[]).concat(C.lessons||[]));
+    $('retryNode').style.display='block'; show('out');
+  },600);
+}
+$('retryNode').onclick=retry;
+$('outMenu').onclick=()=>{ renderMenu(); music('title'); show('menu'); };
+$('debMenu').onclick=$('outMenu').onclick;
+$('quit').onclick=e=>{ e.stopPropagation(); queue=[]; onDone=null; clearInterval(typing); closeSheet(); bigQuake(false); renderMenu(); music('title'); show('menu'); };
+$('toDeb').onclick=()=>{ renderDebrief(); show('deb'); };
+$('debRetry').onclick=()=>startCase(STORIES.indexOf(C));
+$('snd').onclick=e=>{ e.stopPropagation(); setSound(!SOUND); };
+function renderDebrief(){
+  $('debCase').textContent=`${C.who}　${C.title}`;
+  const mk={best:'◎',ok:'○',bad:'×',fatal:'✕'};
+  $('debLog').innerHTML=S.log.map(l=>`<div class="rv"><div class="h"><span class="mk ${l.g}">${mk[l.g]}</span><span>${fmt(l.q)}</span></div><div class="you">あなた：${fmt(l.you)}</div><div style="margin-top:6px">${fmt(l.why)}</div>${l.best?`<div class="bt"><b>より良い判断：</b>${fmt(l.best)}<br>${fmt(l.bestWhy||'')}</div>`:''}</div>`).join('')||'<div class="rv">（まだ判断していません）</div>';
+  let h=C.debrief.map(s=>`<div class="sec"><h3>${fmt(s.h)}</h3>${s.p?`<p>${fmt(s.p)}</p>`:''}${s.ul?`<ul>${s.ul.map(x=>`<li>${fmt(x)}</li>`).join('')}</ul>`:''}</div>`).join('');
+  const seen=new Set(), heard=S.heard.filter(x=>{ const k=x.s+'|'+x.r; if(seen.has(k)) return false; seen.add(k); return true; });
+  if(heard.length) h+=`<div class="sec"><h3>聞き取れなかった言葉</h3><div class="heard">${heard.map(x=>`<div><div class="s">聞こえた言葉：${esc(x.s)}</div><div><b>本当は：</b>${fmt(x.r)}</div>${x.t?`<div class="s">意味：${fmt(x.t)}</div>`:''}</div>`).join('')}</div></div>`;
+  if(C.talk) h+=`<div class="sec"><h3>話し合ってみよう</h3><ul>${C.talk.map(x=>`<li>${fmt(x)}</li>`).join('')}</ul></div>`;
+  $('debSecs').innerHTML=h;
+  $('debDeepBody').innerHTML=C.deep||''; $('debDeep').open=false; $('debDeep').style.display=C.deep?'block':'none';
+  $('debDisc').innerHTML=fmt(DISC_DEB);
+}
+
+/* ---------- 一覧 ---------- */
+function renderMenu(){
+  $('menuLead').innerHTML=fmt('自分と近い年れいの人や、住んでいる場所に近い物語から始めてみてください。★が多いほど、津波までの時間が短く、判断がむずかしい物語です。');
+  $('menuDisc').innerHTML=fmt(DISC_MENU);
+  let h='';
+  for(const ar of AREAS){
+    h+=`<div class="stagehead"><h3>${fmt(ar.name)}</h3><span>${fmt(ar.sub)}</span></div><div class="cases">`;
+    STORIES.forEach((c,i)=>{ if(c.area!==ar.id) return;
+      const r=REC[c.id];
+      const actors={};
+      for(const [id,a] of Object.entries(c.cast)){ if(!a.look||a.thumb===false) continue; if(a.show===false&&!a.thumb) continue; actors[id]={x:a.tx||a.x||200,y:a.ty||a.y,p:a.tp||a.p||'stand',f:a.tf||'normal',show:true}; }
+      const svg=sceneSvg({scene:c.scene,actors,fx:{}},c.cast,true);
+      const xs=(c.xs||[]).length;
+      h+=`<button class="case" data-i="${i}" ${c.ready?'':'disabled'}><svg class="thumb" viewBox="0 30 400 200" preserveAspectRatio="xMidYMid slice">${svg}</svg><div class="body">${r?`<span class="badge ${r}">${r==='X'?'挑戦中':r}</span>`:''}<div class="no">${esc(c.who)}</div><h3>${fmt(c.title)}</h3><div class="stars">${'★'.repeat(c.stars)}${'☆'.repeat(5-c.stars)}</div><p>${fmt(c.blurb)}</p><div class="tags"><span class="tag">${fmt(c.place)}</span>${xs?`<span class="tag x">交わる物語 ${xs}</span>`:''}${c.ready?'':'<span class="tag wip">準備中</span>'}</div></div></button>`;
+    });
+    h+='</div>';
+  }
+  $('stories').innerHTML=h;
+  document.querySelectorAll('#stories .case').forEach(b=>{ if(!b.disabled) b.onclick=()=>startCase(+b.dataset.i); });
+}
+
+/* ---------- 設定・タイトル ---------- */
+function applySet(){
+  document.documentElement.style.setProperty('--fz',SET.fz);
+  document.body.classList.toggle('nofuri',!SET.furi);
+}
+function renderSettings(){
+  const seg=(key,opts)=>`<div class="seg">${opts.map(([v,l])=>`<button data-k="${key}" data-v="${v}" class="${String(SET[key])===String(v)?'on':''}">${l}</button>`).join('')}</div>`;
+  $('settings').innerHTML=`<div class="set-row"><span class="lbl">文字の大きさ</span>${seg('fz',[[0.9,'小'],[1,'中'],[1.18,'大']])}</div>
+  <div class="set-row"><span class="lbl">ふりがな</span>${seg('furi',[[true,'あり'],[false,'なし']])}</div>
+  <div class="set-row"><span class="lbl">音</span><div class="seg"><button id="sndA" class="${SOUND?'on':''}">あり</button><button id="sndB" class="${SOUND?'':'on'}">なし</button></div></div>`;
+  $('settings').querySelectorAll('button[data-k]').forEach(b=>b.onclick=()=>{ const k=b.dataset.k; SET[k]=k==='fz'?+b.dataset.v:b.dataset.v==='true'; saveSet(); applySet(); renderSettings(); });
+  $('sndA').onclick=()=>{ setSound(true); renderSettings(); }; $('sndB').onclick=()=>{ setSound(false); renderSettings(); };
+}
+function renderSources(){
+  $('srcBody').innerHTML=SOURCES.map(g=>`<div class="sec"><h3>${fmt(g.h)}</h3><ul>${g.items.map(([t,u])=>`<li>${fmt(t)}${u?`<br><a href="${esc(u)}" target="_blank" rel="noopener">${esc(u)}</a>`:''}</li>`).join('')}</ul></div>`).join('')+`<div class="note">${fmt(SRC_NOTE)}</div>`;
+}
+$('toMenu').onclick=()=>{ audioInit(); renderMenu(); music('title'); show('menu'); };
+$('menuBack').onclick=()=>{ renderSettings(); show('title'); };
+$('toSrc').onclick=()=>{ renderSources(); show('src'); };
+$('srcBack').onclick=()=>show('title');
+$('toMsg').onclick=()=>{ $('msgBody').innerHTML=fmt(AUTHOR_MSG); show('msg'); };
+$('msgBack').onclick=()=>show('title');
+
+function runCPR(cb){
+  $('chips').innerHTML=''; $('q').textContent='胸骨圧迫'; $('choices').style.display='none'; $('timer').classList.remove('on');
+  const P=$('cpr'); P.style.display='flex'; $('sheet').classList.add('on');
+  $('cprDone').style.display='none'; $('pad').style.pointerEvents='auto';
+  $('cprMsg').innerHTML='胸の真ん中を押すつもりで、円をテンポよくタップ。<br>最初のタップから10秒間。目標は1分間に100〜120回。';
+  const lo=60,hi=160, pct=v=>Math.max(0,Math.min(100,(v-lo)/(hi-lo)*100));
+  $('band').style.left=pct(100)+'%'; $('band').style.width=(pct(120)-pct(100))+'%'; $('needle').style.left='0%'; $('bpm').textContent='--'; $('bpm').className='bpm';
+  let taps=[],t0=0,timer=null,done=false; const pad=$('pad');
+  const end=()=>{
+    done=true; clearInterval(timer); pad.style.pointerEvents='none';
+    const iv=[]; for(let i=1;i<taps.length;i++) iv.push(taps[i]-taps[i-1]);
+    let g,sc,msg,bpm=0;
+    if(iv.length<5){ g='bad'; sc=-1; msg='圧迫がほとんどできなかった。'; }
+    else{ const mean=iv.reduce((a,b)=>a+b,0)/iv.length; bpm=Math.round(60000/mean); const sd=Math.sqrt(iv.reduce((a,b)=>a+(b-mean)**2,0)/iv.length); const steady=sd/mean<.2;
+      if(bpm>=100&&bpm<=120){ g=steady?'best':'ok'; sc=steady?2:1; msg=`平均 ${bpm}回/分。${steady?'テンポも安定していて、理想的です。':'テンポは良いが、少しばらつきがある。'}`; }
+      else if(bpm>=90&&bpm<=130){ g='ok'; sc=1; msg=`平均 ${bpm}回/分。${bpm<100?'少し遅い。':'少し速すぎる。'}目標は100〜120回/分。`; }
+      else { g='bad'; sc=-1; msg=`平均 ${bpm}回/分。${bpm<100?'遅すぎて、十分な血流が作れない。':'速すぎて、胸が戻りきらず血液が心臓に戻らない。'}`; } }
+    if(S.flags.soft){ msg+=' ただ、押す力が弱く、胸はほとんど沈んでいなかった。'; if(g==='best'){g='ok';sc=1;} }
+    S.score+=sc;
+    S.log.push({q:'胸骨圧迫のテンポ',you:bpm?`平均 ${bpm}回/分`:'ほとんど押せなかった',g,why:msg+' 胸骨圧迫は、約5cmの深さで、1分間に100〜120回。押したら胸が元に戻るまで力を抜き、できるだけ中断しないこと。',best:null,bestWhy:null});
+    $('cprMsg').textContent=msg; $('cprDone').style.display='block'; $('guide').classList.remove('go'); sfx(g==='best'?'lvl':'ok');
+  };
+  pad.onpointerdown=e=>{ e.preventDefault(); e.stopPropagation(); if(done) return; const now=performance.now();
+    if(!t0){ t0=now; timer=setInterval(()=>{ const left=Math.max(0,10-(performance.now()-t0)/1000); $('cprLeft').textContent='あと '+left.toFixed(1)+' 秒'; if(left<=0) end(); },100); }
+    taps.push(now); sfx('hit'); pad.classList.add('hit'); setTimeout(()=>pad.classList.remove('hit'),90); stageFx('shake');
+    if(taps.length>=3){ const r=taps.slice(-5); const m=(r[r.length-1]-r[0])/(r.length-1); const b=Math.round(60000/m); $('bpm').textContent=b; $('bpm').className='bpm '+(b>=100&&b<=120?'in':'out'); $('needle').style.left=pct(b)+'%'; } };
+  $('cprLeft').textContent='あと 10.0 秒';
+  $('guideOn').onchange=()=>$('guide').classList.toggle('go',$('guideOn').checked); $('guide').classList.toggle('go',$('guideOn').checked);
+  $('cprDone').onclick=e=>{ e.stopPropagation(); P.style.display='none'; $('choices').style.display='flex'; closeSheet(); play([`あなたは押し続けた。${S.log[S.log.length-1].you}。`],cb); };
+  window.__cprEnd=fake=>{ taps=fake; end(); };
+}
+
+
+/* =========================================================
+   物語4　下田小学校の先生　岡村先生（40歳）「校庭の1分」
+   行：'文字列'＝地の文、'id|「…」'＝台詞、'@me|…'＝心の声、{radio}、{sys}
+       {t:'10:38'}時刻、{q0:1}地震発生、{at:分}発生からの時刻、{adv:分}
+       {a:id,...}人物、{fx}、{mode:'tense'|'night'|''}、{v:{...}}背景の状態、{bg}
+   ========================================================= */
+LOOK.okamura={k:'adult',skin:'#efc6a2',hair:'#2b2320',hs:'short',top:'#6f9fc8',bot:'#4a5568'};
+LOOK.kyoto={k:'adult',skin:'#efc8a5',hair:'#9e9a95',hs:'short',top:'#5d6d7e',bot:'#3e4a59',x:'glasses'};
+LOOK.hina={k:'child',skin:'#fbd9bd',hair:'#3a2a22',hs:'pony',top:'#ff8fab',bot:'#5c6bc0'};
+LOOK.hiroto={k:'child',skin:'#f2c49c',hair:'#2a2420',hs:'kid',top:'#4fc3f7',bot:'#37474f'};
+LOOK.misaki={k:'child',skin:'#f8d6b8',hair:'#4a2c22',hs:'bob',top:'#ffd54f',bot:'#8d6e63'};
+LOOK.sota={k:'child',skin:'#f6cfae',hair:'#2a2420',hs:'kid',top:'#81c784',bot:'#455a64'};
+LOOK.kid1={k:'child',skin:'#f8d6b8',hair:'#3a2a22',hs:'kid',top:'#ba68c8',bot:'#37474f'};
+LOOK.kid2={k:'child',skin:'#f2c8a4',hair:'#4a3020',hs:'bob',top:'#ff8a65',bot:'#5d4037'};
+LOOK.smom={k:'adult',skin:'#f6d3b5',hair:'#5a3a2a',hs:'bob',top:'#a5d6a7',bot:'#58607a'};
+LOOK.hamada={k:'old',skin:'#d9a27a',hair:'#bdb8b0',hs:'short',top:'#26364a',bot:'#26364a',x:'happi'};
+LOOK.luis={k:'adult',skin:'#c99a6e',hair:'#1b1714',hs:'short',top:'#6d8b74',bot:'#3e4a52',x:'work'};
+LOOK.jiisan={k:'old',skin:'#efc8a5',hair:'#cfcac4',hs:'bald',top:'#a1887f',bot:'#6d5d55'};
+LOOK.bousai={k:'adult',skin:'#efc6a2',hair:'#6b4a3a',hs:'bob',top:'#ff9800',bot:'#5d6475'};
+
+const KIDS=['kid1','hiroto','misaki','sota','kid2'];
+const kidsAt=(xs,p,y,extra)=>KIDS.map((k,i)=>({a:k,show:true,x:xs[i],y:y||215,p:p||'stand',...(extra||{})}));
+
+STORIES.push({
+  id:'teacher', area:'shimoda', ready:true, who:'先生（40歳）', me:'岡村先生',
+  title:'校庭の1分', place:'下田小学校', stars:4, scene:'yard', bgm:'town',
+  blurb:'4年生の算数の授業中。子どもたちを、どこへ連れて行くか。', xs:['X3','X5','X6'],
+  cast:{
+    okamura:{name:'岡村先生',look:'okamura',x:300,me:true,thumb:true,tx:250},
+    kyoto:{name:'教頭先生',look:'kyoto',x:330,show:false,hata:true},
+    hina:{name:'陽菜',look:'hina',x:240,hata:true,thumb:true,tx:190,ty:215},
+    hiroto:{name:'大翔',look:'hiroto',x:160,hata:true,thumb:true,tx:150,ty:215},
+    misaki:{name:'美咲',look:'misaki',x:200,hata:true,show:false},
+    sota:{name:'颯太',look:'sota',x:120,hata:true,show:false},
+    kid1:{name:'子ども',look:'kid1',x:80,hata:true,show:false,thumb:true,tx:110,ty:215},
+    kid2:{name:'子ども',look:'kid2',x:60,hata:true,show:false},
+    smom:{name:'美咲のお母さん',look:'smom',x:360,show:false,hata:true},
+    hamada:{name:'浜田さん（消防団）',look:'hamada',x:380,show:false,hata:true},
+    jiisan:{name:'近所のおじいさん',look:'jiisan',x:350,show:false,hata:true},
+    bousai:{name:'自主防災会の人',look:'bousai',x:120,show:false,hata:true},
+    luis:{name:'ルイス',look:'luis',x:330,show:false},
+    phone:{name:'携帯電話'}
+  },
+  start:'intro',
+  nodes:{
+    intro:{lines:[
+      {sys:'この物語の人物と出来事は架空です。下田小学校は実在の学校ですが、学校の実際の避難計画や先生方の対応とは関係ありません。津波の時間と高さは、高知県・四万十市の公表資料をもとにしています。'},
+      {bg:'class4'},{d:'10月の平日'},{t:'10:38'},{a:'okamura',x:300},{a:'hina',x:250,p:'sit'},{a:'hiroto',x:150,p:'sit'},{a:'kid1',show:true,x:80,p:'sit'},
+      'ここは四万十川の河口にある、下田小学校。','3時間目は、4年生の算数。窓の外には、いつもと同じ山の緑が見える。',
+      'okamura|「84を4つに分けると、いくつずつになるかな？」',
+      'hiroto|「はい！ 21！」',
+      'okamura|「正解。じゃあ、次は——」',
+      {t:'10:40'},{se:'mail'},{fx:'red'},'その時、教室じゅうの携帯電話と、校内放送が、同時に鳴りだした。',
+      'phone|「緊急地震速報です。強い揺れに警戒してください」',
+      {fx:'nored'},{q0:1},{fx:'bigquake'},{mode:'tense'},{bgm:'tense'},
+      'okamura|「机の下！ 机の脚を持って！」',
+      {a:'hina',p:'duck'},{a:'hiroto',p:'duck'},{a:'kid1',p:'duck'},{a:'okamura',p:'crouch'},
+      '床が、横に大きく振られる。立っていられない。',{se:'glass'},'窓ガラスが割れる音。棚の上の物が、次々に落ちてくる。',
+      'hina|「先生！ こわい！」',
+      'okamura|「大丈夫、頭を守って！ 先生はここにおるけん！」',
+      {at:1},'揺れは、おさまらない。1分。',{se:'crash'},'後ろの棚が倒れた。',
+      {at:2},'2分。まだ揺れている。長い。こんなに長い揺れは、生まれて初めてだ。',
+      '@me|この揺れ方は、南海地震だ。下田は海と川のすぐそば。津波が来る。',
+      {at:3},{fx:'noquake'},{bg:'classwreck'},{fx:'dust'},
+      'やっと、揺れがおさまった。',{a:'hina',p:'sit',f:'cry'},{a:'hiroto',p:'sit',f:'shock'},{a:'kid1',p:'sit',f:'shock'},{a:'okamura',p:'stand',f:'shock'},
+      'hina|「いたい……足が、いたい……」',
+      '倒れた棚が、陽菜の右の足首に当たったらしい。陽菜は足を押さえて泣いている。'],
+      obs:[['教室','窓ガラスが割れて、床に散らばっている'],['子どもたち','12人。泣いている子もいる'],['陽菜','倒れた棚で右足首を打った。歩けない'],['揺れ','おさまった。でも、また来るかもしれない']],
+      q:'揺れがおさまった。まず、どうする？',
+      choices:[
+        {t:'上ばきのまま、ガラスのない側を通って廊下に出るよう言い、すぐに人数を数える。歩けない陽菜は自分が背負う。手当ては、高い所に着いてからにする',g:'best',dt:2,sc:2,
+          res:['okamura|「みんな、上ばきのまま。ガラスのない、こっち側を通って廊下へ。走らない！」','okamura|「1、2、3……12人。全員おるね」',{a:'okamura',x:250},'okamura|「陽菜、先生の背中に乗って」',{a:'hina',x:256,y:205,p:'sit'},'hina|「……うん」'],next:'yard',
+          why:'海の近くでは、揺れがおさまったら一刻も早く高い所へ向かうことが第一です。割れたガラスを避ける、人数を確かめるといった短い確認はけがや置き去りを防ぎます。歩けない人は背負って運び、手当ては安全な場所に着いてから行います。'},
+        {t:'陽菜の足首は折れているかもしれない。動かす前に、その場で添え木を当てて、しっかり固定してから動く',g:'bad',dt:6,sc:-1,flag:'splinted',
+          res:['okamura|「ちょっと待ってね。足を固定するけん」','教室の掃除用具入れから、ちりとりの柄と、タオルを持ってくる。',{adv:3},'結ぶのに、思ったより手間取る。ほかの子どもたちは、先生の手元を、じっと見ている。',{adv:3},'okamura|「よし……行こう」',{a:'hina',x:256,y:205,p:'sit'}],next:'yard',
+          why:'骨折の固定は大切な手当てですが、浸水する場所で時間をかけると、逃げる時間がなくなります。数分の差が命を分けるのが津波です。歩けない人は背負って運び、固定は高い所に着いてから行います。'},
+        {t:'とにかく早く。「校庭へ走れ！」と、子どもたちをすぐに外へ出す。陽菜は、ほかの子に肩を貸してもらう',g:'bad',dt:1,sc:-1,flag:'cut',
+          res:['okamura|「校庭へ！ 走れ！」','子どもたちが、一斉に教室を飛び出す。',{se:'glass'},'kid1|「いたっ！」','一人が、割れたガラスで足の裏を切った。','廊下の角で、二人がぶつかって転ぶ。',{adv:2},'結局、全員を校庭に集めて数え直すのに、時間がかかってしまった。',{a:'hina',x:256,y:205,p:'sit'}],next:'yard',
+          why:'急ぐことは正しいのですが、揺れの直後の校舎は、割れたガラスや倒れた物で危険です。あわてて走らせると、けがや転倒で、かえって時間がかかります。「走らない・押さない」で、短い確認をしてから、まとまって速く動きます。'}
+      ]},
+    yard:{lines:S=>[
+      {bg:'yard'},{fx:'nodust'},{a:'okamura',x:290,p:'stand',f:'normal'},{a:'hina',x:296,y:205,p:'sit',f:'cry'},...kidsAt([70,110,150,190,230]),
+      'ほかの学年も、次々に校庭へ出てきた。下田小学校の子どもたちが、ほぼ全員、校庭に集まっている。',
+      {radio:'こちらは、防災しまんとし、です。《……です》　ただいま、高知県の沿岸に、大津波警報が、発表されました。《……されました》　海岸や川の近くの{方|かた}は、ただちに、高い所へ、避難してください。《……てください》'},
+      '防災無線が、山に反響して、何度も重なって聞こえる。',
+      {a:'kyoto',show:true,x:350},'教頭先生が、名簿を手に、息を切らせて来た。校長先生は、出張で中村に出ている。',
+      'kyoto|「全員そろうたら、ここで待機します。市から指示が来るまで、勝手に動いたらいかん」',
+      '@me|待機……？ 校庭の海抜は低い。有隣公園の高台までは、子どもの足でも数分のはずだ。',
+      'sota|「先生、津波、来るが？」'],
+      obs:[['大津波警報','発表された'],['ここ','下田小学校の校庭。海抜が低い'],['有隣公園','すぐ近くの高台'],['教頭先生','「指示が来るまで待機」'],['全校','子どもたちが校庭に集まっている']],
+      q:'教頭先生は「待機」と言う。どうする？',
+      choices:[
+        {t:'「待っていたら間に合いません。今すぐ全員で、有隣公園へ上がりましょう」と、教頭先生に強く言う',g:'best',dt:2,sc:3,flag:'allSchool',x:{allSchool:1},
+          res:['okamura|「教頭先生、指示を待っていたら、間に合いません。今すぐ、全員で有隣公園へ上がりましょう」','kyoto|「……けんど、市からは——」','okamura|「揺れたら高い所へ。それが一番の指示です。お願いします！」',{a:'kyoto',e:'!'},'教頭先生は、一瞬だけ海の方を見て、うなずいた。','kyoto|「……よし。全校、有隣公園へ移動！ 低学年から！」',...kidsAt([60,100,140,180,220],'run')],next:'parent',
+          why:'東日本大震災では、校庭で長く待機したことが悲劇につながった例があります。大きな揺れの後、海の近くでは「指示を待たずに高い所へ」。周りの大人を説得して全員で動くことが、一番多くの命を守ります。'},
+        {t:'教頭先生と言い争っている時間はない。自分のクラスだけでも、先に有隣公園へ向かう',g:'ok',dt:1,sc:1,flag:'myClass',x:{allSchool:0},
+          res:['okamura|「4年生、先生について来て！ 有隣公園へ上がるよ！」','kyoto|「岡村先生！ 待ちなさい！」','振り返らずに歩き出す。','すると、それを見た5年生の担任が、自分のクラスを連れて後に続いた。',{adv:1},'一人、また一人。気づけば、全校が動き出していた。',...kidsAt([60,100,140,180,220],'run')],next:'parent',
+          why:'「誰かが逃げ始めると、周りも逃げ始める」ことは、多くの災害で知られています。先に動いたことで全校が動きました。ただ、最初から全員で動けるよう説得できれば、もっと確実です。'},
+        {t:'指示を待つ。ここで勝手に動けば、子どもたちが混乱する。全員そろって、指示が出てから動く方が安全だ',g:'bad',dt:0,sc:-2,flag:'waited',x:{allSchool:0},
+          res:S=>X('fire','school')?[
+            'okamura|「……わかりました。待機します」',{adv:3},'子どもたちを座らせて、名簿で人数を確かめる。',
+            {a:'hamada',show:true,x:380,p:'run'},'その時、校門の方から、法被を着た男の人が走ってきた。',
+            'hamada|「何しよるがな！ 校庭におったらいかん！ はよう上がれ！ 津波が来るぞ！」',
+            '消防団の浜田さんだ。水門を閉めに行く途中で、校庭の子どもたちを見て、寄ってくれたのだ。',
+            'kyoto|「……全校、有隣公園へ！ 急いで！」',{a:'hamada',show:false},...kidsAt([60,100,140,180,220],'run')]:[
+            'okamura|「……わかりました。待機します」',{adv:3},'子どもたちを座らせて、名簿で人数を確かめる。',...kidsAt([70,110,150,190,230],'sit'),
+            {radio:'大津波警報が、発表されています。《……ています》　ただちに、高い所へ、避難してください。'},{adv:3},
+            'sota|「先生、まだ？」','okamura|「もうちょっと、待とうね」',{adv:2},
+            '近所の人が、校門の外を、山の方へ走っていくのが見えた。','kyoto|「……指示が来ん。電話もつながらん。……移動しましょう。有隣公園へ」',...kidsAt([60,100,140,180,220],'run')],
+          next:'parent',
+          why:'指示を待つ気持ちは自然です。でも、大きな揺れの後の津波警報では、市からの個別の指示は来ないことが多く、防災無線の「ただちに高い所へ」がその指示です。東日本大震災では、校庭で長く待機したことが悲劇につながった例があります。'}
+      ]},
+    parent:{lines:[
+      {bg:'yard'},{a:'okamura',x:290,p:'stand'},{a:'kyoto',show:false},...kidsAt([60,100,140,180,220]),{a:'misaki',show:true,x:200},
+      {a:'smom',show:true,x:380,p:'run'},'校門から、一人のお母さんが走りこんできた。美咲のお母さんだ。車を道ばたに止めたままにしている。',{a:'smom',x:240,p:'stand'},
+      'smom|「美咲！ 帰るで！ 先生、この子、連れて帰りますけん」',
+      'okamura|「お母さん、今は——」',
+      'smom|「家に、ばあちゃんが一人でおるがです。足が悪うて、一人じゃ逃げれんがです！」',
+      '美咲の家は、下田港のすぐそばだ。',{a:'misaki',f:'cry'},'misaki|「お母さん……」'],
+      obs:[['美咲の家','下田港のすぐそば。海に近い'],['お母さん','「家に、足の悪いおばあちゃんが一人でおる」'],['美咲','お母さんの手をにぎって泣いている'],['列','全校が有隣公園へ動き出している']],
+      q:'お母さんは、美咲を連れて帰ると言う。どうする？',
+      choices:[
+        {t:'「港の方へ行くのは危ない。お母さんも一緒に、有隣公園へ上がってください」と頼む。おばあちゃんのことは、近所の人と消防団に伝えてもらう',g:'best',dt:2,sc:3,flag:'together',x:{handover:0},
+          res:['okamura|「お母さん、港の方へ行ったら、間に合わんかもしれません。美咲ちゃんと一緒に、有隣公園へ上がってください」','smom|「けんど、ばあちゃんが……！」','okamura|「おばあちゃんのことは、消防団の人に、すぐ伝えます。お母さんが戻って、二人とも、三人とも、助からんかったら……美咲ちゃんが一人になります」',{a:'smom',e:'…'},'お母さんは、唇をかんで、美咲の手を強くにぎった。','smom|「……わかった。美咲、行くで」',{a:'smom',x:230},'列の後ろを歩いていた地区の人に、おばあちゃんのことを頼んだ。'],next:'route',
+          why:'東日本大震災では、迎えに来た保護者に子どもを引き渡した後、帰り道で親子が犠牲になった例があります。津波警報が出ている時は、子どもを引き渡さず、保護者にも一緒に高い所へ逃げてもらうことが大切です。学校と家庭で、引き渡しのルールを前もって決めておきましょう。'},
+        {t:'保護者が迎えに来たのだから、美咲を引き渡す。家族のことは、家族が決めることだ',g:'bad',dt:1,sc:-2,flag:'handed',x:{handover:1},
+          res:['okamura|「……わかりました。気をつけて」','smom|「美咲、行くで！」',{a:'smom',x:400,p:'run'},{a:'misaki',x:400,p:'run'},'二人は、校門の車へ走っていった。','車は、港の方へ走り出した。',{a:'smom',show:false},{a:'misaki',show:false},'@me|……本当に、これでよかったのか。'],next:'route',
+          why:'迎えに来た保護者に引き渡すのは、ふだんなら当たり前のことです。でも、津波警報が出ている時、海の方の家へ向かうのは危険です。東日本大震災では、引き渡した後に親子が犠牲になった例があります。'},
+        {t:'「警報が出ている間は引き渡せません」と、美咲は渡さない。お母さんには、一人で行ってもらうしかない',g:'ok',dt:2,sc:0,flag:'refused',x:{handover:0},
+          res:['okamura|「警報が出ている間は、お子さんを引き渡せません。美咲ちゃんは、学校が責任を持って高台へ連れていきます」','smom|「……そんな……！」','お母さんは、美咲を見て、それから港の方を見た。','smom|「美咲、先生と行きよりなさい。お母さん、ばあちゃん連れて、すぐ行くけん！」',{a:'smom',x:400,p:'run'},'お母さんは、一人で車へ走っていった。',{a:'smom',show:false},'misaki|「お母さーん！」'],next:'route',
+          why:'子どもを守ることはできました。でも、お母さんが危険な方へ向かうのを止められていません。保護者にも一緒に避難してもらい、残された家族のことは地区の人や消防団に伝えるのが、一番多くの命を守ります。'}
+      ]},
+    route:{lines:[
+      {bg:'road'},{a:'okamura',x:230,p:'stand'},{a:'hina',x:236,y:205,p:'sit',f:'normal'},...kidsAt([60,100,140,170,200]),
+      {a:'misaki',show:false},{a:'smom',show:false},
+      '学校を出て、決めていた道を、有隣公園へ向かう。',{se:'crash'},{fx:'shake'},'——と、角を曲がったところで、足が止まった。',
+      'ブロック塀が道いっぱいに倒れて、ふさがっている。残った塀も、ぐらぐらと傾いている。',
+      {a:'hiroto',x:150,e:'!'},'hiroto|「先生！ 保育所の横の道の方が近いで！ お兄ちゃんが、地震の時はあっちを上がれって言いよった！」'],
+      obs:[['いつもの道','ブロック塀が倒れてふさがっている。残りの塀も傾いている'],['大翔','「保育所の横の道の方が近い」'],['陽菜','先生の背中'],['子どもたち','列になって歩いている']],
+      q:'決めていた道がふさがれている。どうする？',
+      choices:[
+        {t:'大翔の言う、保育所の横の避難路へ向かう',g:'best',dt:2,sc:2,flag:'kidRoute',
+          res:['okamura|「大翔、ありがとう！ みんな、保育所の横の道へ！」','hiroto|「こっち！」',{a:'hiroto',p:'run',x:300},'大翔が先頭に立って、走り出した。',...kidsAt([200,240,280,300,320],'run')],next:'climb',
+          why:'子どもたちが防災の授業や家族から聞いたことを覚えていて、大人より先に正しい道を見つけることがあります。東日本大震災でも、子どもたちが自分たちで判断して高台へ逃げ、助かった例があります。決めた道がふさがれていたら、すぐ別の道へ。'},
+        {t:'倒れたブロックを乗り越えて、決めていた道を進む。知らない道に入るより確実だ',g:'bad',dt:4,sc:-1,flag:'wall',
+          res:['okamura|「足元に気をつけて。ゆっくり乗り越えるよ」','陽菜を背負ったまま、崩れたブロックの上を一歩ずつ進む。','小さい子の手を一人ずつ引いて、渡らせる。',{fx:'shake'},'その時、余震。残っていた塀が、さらに崩れた。','kid2|「きゃあっ！」','幸い、誰にも当たらなかった。でも、全員が渡りきるまでに、何分もかかってしまった。'],next:'climb',
+          why:'倒れたブロック塀の周りは、余震で残りの塀が崩れる危険があります。子ども連れで乗り越えるのは時間もかかります。ふさがれた道にこだわらず、すぐ別の道へ。'},
+        {t:'いったん学校へ戻り、地図で別の道を確かめてから進む',g:'bad',dt:5,sc:-1,flag:'back',
+          res:['okamura|「いったん戻るよ！」','子どもたちの列を、ぐるりと引き返させる。','学校の職員室の地図で、別の道を確かめる。',{adv:2},'もう一度、出発。','sota|「先生、さっき大翔が言いよった道は？」'],next:'climb',
+          why:'迷った時に確かめることは大切ですが、津波の時は引き返すだけで数分を失います。日ごろから避難路を2本以上、実際に歩いておくことが大切です。'}
+      ]},
+    climb:{lines:S=>{
+        const arr=elapsed()+2;
+        const base=[{bg:'slope'},{a:'okamura',x:200,p:'run'},{a:'hina',x:206,y:205,p:'sit'},...kidsAt([60,90,120,150,170],'run'),{adv:2},
+          '坂道を、上へ、上へ。息が切れる。背中の陽菜が、ずっしりと重い。'];
+        if(arr>18) return base.concat([{mode:'tense'},{fx:'dusk'},'坂の途中で、後ろから、聞いたことのない音がした。',{se:'roar'},'ゴオオオ……という、地鳴りのような音。','振り返ると、さっきまで歩いていた町の向こうから、黒い水が——',{fx:'black'},{wait:1200}]);
+        if(arr>=16) return base.concat([{se:'roar'},'坂の上の方から、地区の人が叫んでいる。','jiisan|「はよう上がれ！ 来よるぞ！」',{a:'jiisan',show:true,x:360},'振り返ると、坂の下の道に、水が流れこんでくるのが見えた。','最後の子どもが坂を上りきった、その数十秒後、坂の下は水につかった。',{a:'jiisan',show:false}]);
+        return base.concat(['上の方から、地区の人たちが手招きしている。','最後の子どもまで、全員が坂を上りきった。','okamura|「着いた……！ みんな、おるね！」']);
+      },
+      go:S=>elapsed()>18?'late':'park',goAll:['park','late']},
+    late:{lines:[{fx:'noblack'},{fx:'dim'},{mode:'night'},'——','（この物語は、ここで終わります）'],
+      fatal:S=>({title:'あと、数分',
+        why:'有隣公園への坂道を上りきる前に、津波が来てしまいました。下田地区では、地震から約18分で、足を取られる深さ（30cm）の津波が来ると想定されています。'
+          +[S.flags.splinted?' 教室で陽菜の足を固定するのに使った時間。':'',S.flags.waited?' 校庭で指示を待った時間。':'',S.flags.wall?' 崩れた塀を乗り越えた時間。':'',S.flags.back?' 学校へ引き返した時間。':'',S.flags.cut?' あわてて走らせて、集め直した時間。':''].join('')
+          +' 一つひとつは数分でも、重なると命に届きます。揺れがおさまったら、手当ても確認も最小限にして、すぐに高い所へ。'})},
+    park:{lines:S=>[
+      {bg:'park'},{fx:'nodusk'},{mode:'tense'},{v:{pull:true}},{a:'okamura',x:250,p:'stand',f:'normal'},{a:'hina',x:200,p:'sit',y:218},...kidsAt([60,95,130,160,300]),
+      S.flags.handed?'':(S.flags.together?{a:'smom',show:true,x:340}:''),
+      S.flags.handed||S.flags.refused?'':{a:'misaki',show:true,x:320},
+      '有隣公園。高台から、下田の町と、四万十川の河口が見下ろせる。',
+      'kid1|「先生……海が……」','海の水が、大きく沖へ引いていく。ふだんは見えない海の底が、遠くまで見えている。',
+      {a:'jiisan',show:true,x:370},'jiisan|「ここまでは来ん。想定でも、ここは大丈夫じゃ。ここで休んじょったらえい」',
+      'sota|「先生、海、見に行ってもいい？ 公園の端から、よう見えるで」',
+      '@me|この上には、旧下田中学校がある。避難所になる場所だ。'],
+      obs:[['有隣公園','高台。想定では浸水しない'],['海','潮が大きく引いている'],['旧下田中学校','さらに上。避難所になる'],['近所のおじいさん','「ここなら大丈夫」'],['子どもたち','息が上がっている。海を見たがる子も']],
+      q:'高台に着いた。ここで止まるか？',
+      choices:[
+        {t:'「想定より大きいかもしれない」と、子どもたちを励まして、さらに上の旧下田中学校まで上がる',g:'best',dt:5,sc:2,flag:'higher',x:{higher:1},
+          res:['okamura|「もうひと頑張り！ 中学校まで上がるよ！」','kid1|「えー、まだ上がるが……」','okamura|「想定は、目安。もっと大きい津波が来るかもしれん。一番高い所まで行こう」','jiisan|「……ほうか。わしも行くか」',{a:'jiisan',x:400,p:'run'},'おじいさんも、つえをついて、後からついてきた。'],next:'wave',
+          why:'想定は「これより大きくならない」という約束ではありません。東日本大震災では、想定の浸水区域の外でも多くの人が犠牲になりました。高知県の資料にも「想定にとらわれず、最善を尽くす」と書かれています。行ける所まで、より高く。'},
+        {t:'想定では、ここは浸水しない。息の上がった子どもたちを、ここで休ませる',g:'ok',dt:0,sc:0,flag:'stayed',x:{higher:0},
+          res:['okamura|「みんな、ここで少し休もう。座って」',...kidsAt([60,95,130,160,300],'sit')],next:'wave',
+          why:'想定では、有隣公園は浸水しない高さです。休むこと自体は間違いではありません。ただ、想定より大きな津波が来ることもあります。余裕があるうちに、より高い所へ移っておくと安心です。'},
+        {t:'子どもたちと一緒に、公園の端から、海の様子を見る。何が起きているか、自分の目で確かめたい',g:'bad',dt:0,sc:-2,flag:'watch',x:{higher:0},
+          res:['okamura|「……少しだけね。柵より前に出んこと」',{a:'okamura',x:200},...kidsAt([150,180,210,240,270]),'子どもたちが、柵にしがみついて、海を見下ろす。','kid2|「すごい……海の底が、見えよる……」'],next:'wave',
+          why:'津波を見に行くことは、絶対にしてはいけません。高台の端は、地震で崩れやすくなっていることもあります。海を見ている時間があれば、さらに高い所へ。子どもたちに見せるべきなのは、海ではなく、逃げる大人の背中です。'}
+      ]},
+    wave:{lines:S=>[
+      {at:18},{v:{pull:false,surge:true}},{se:'roar'},{fx:'shake'},
+      S.flags.higher?'旧下田中学校の校庭から、下の町を見下ろす。':'公園の上から、下の町を見下ろす。',
+      '沖から、白い線が、横一列に近づいてくる。','あっという間に、それは港をのみこみ、川をさかのぼっていった。',
+      {v:{flood:1}},{wait:600},{v:{flood:2}},'家の屋根が、水の上に、島のように並んでいる。',{v:{flood:3}},
+      S.flags.watch?'kid2|「……うわああん！」':'hina|「……先生」',
+      S.flags.watch?'柵の前で見ていた子どもたちが、泣き出した。水は、公園の崖の下まで来ている。足がすくんで、動けない子もいる。':'陽菜が、先生の服をぎゅっとにぎった。',
+      'さっきまでいた下田小学校の校庭も、もう見えない。',
+      S.flags.stayed||S.flags.watch?'水は、有隣公園の崖の、すぐ下まで来ていた。想定では「ここまでは来ない」はずの高さに、あと少しだった。':'',
+      '@me|もし、あのまま校庭で待っていたら……。',
+      {adv:12},{v:{surge:false}},'それから何度も、水は押しては引いた。',{d:''},'——'],
+      go:'splint'},
+    splint:{lines:[
+      {bg:'park'},{mode:''},{v:{flood:2,surge:false,pull:false}},{a:'okamura',x:230,p:'crouch'},{a:'hina',x:190,p:'sit',y:218,f:'pain'},...kidsAt([60,95,130,280,320],'sit'),
+      '少し落ち着いたところで、陽菜の足を見る。',
+      '右の足首が、ぱんぱんに腫れている。少し、形が曲がって見える。','hina|「さわったら、いたい……」'],
+      obs:[['陽菜','右足首が腫れて、さわると強く痛がる'],['足の形','少し曲がって見える'],['つま先','色はふつう。指は動かせる'],['手元','段ボール、新聞紙、タオル、ガムテープ']],
+      q:'陽菜の足首を手当てする。どうする？',
+      choices:[
+        {t:'曲がった形のまま、段ボールをすねから足先まで当て、タオルで包んで固定する。冷やして、足を少し高くする。つま先の色と感覚を、ときどき確かめる',g:'best',dt:5,sc:2,
+          res:['okamura|「動かさんよ。このままの形で、段ボールを当てるね」','段ボールを2枚、足首の上（すね）から足先までを包むように当て、タオルで巻き、ガムテープでとめる。','ペットボトルの水で冷やしたタオルを当て、たたんだ上着の上に足をのせる。','okamura|「つま先、さわってるのわかる？ 指、動かせる？」','hina|「……うん。ちょっと、楽になった」',{a:'hina',f:'weak'}],next:'return',
+          why:'骨折が疑われる時は、無理に元の形に戻さず、そのままの形で、けがをした所の上と下の関節をふくめて固定します。段ボールや雑誌も添え木になります。冷やして、少し高くすると腫れと痛みが和らぎます。固定がきつすぎないか、つま先の色・感覚・動きを確かめます。'},
+        {t:'曲がっているので、まっすぐに引っぱって戻してから、しっかり固定する',g:'bad',dt:3,sc:-2,
+          res:['okamura|「ちょっと、がまんしてね」','足首を、まっすぐに引こうとした瞬間——','hina|「いたいいたいいたい！！」',{a:'hina',f:'cry'},'陽菜が泣き叫ぶ。顔が真っ青になっていく。','okamura|「ご、ごめん……！」','結局、そのままの形で、段ボールを当てた。'],next:'return',
+          why:'曲がった骨を素人が戻そうとすると、強い痛みだけでなく、血管や神経を傷つけるおそれがあります。そのままの形で固定し、医療者に任せます。'},
+        {t:'骨は折れていないかもしれない。少し休ませて、歩けるか様子を見る',g:'bad',dt:1,sc:-1,
+          res:['okamura|「少し休んだら、歩けるかもしれんね」','しばらくして、陽菜は立とうとした。','hina|「……いたい！ むり……」',{a:'hina',f:'cry'},'腫れは、さっきよりひどくなっている。','あわてて、段ボールで固定した。'],next:'return',
+          why:'強い痛み、腫れ、形の変化があれば、骨折を疑って固定します。避難所までの移動もあります。歩かせると、悪化させるおそれがあります。'}
+      ]},
+    return:{lines:[
+      {at:50},{bg:'park'},{v:{flood:1}},{a:'okamura',x:250,p:'stand'},{a:'hina',x:190,p:'sit',y:218,f:'weak'},...kidsAt([60,95,130,280,320],'sit'),{a:'sota',show:true,x:150,p:'sit'},
+      '地震から、50分。','水が、少しずつ引いていく。町は、泥と、がれきでいっぱいだ。',
+      {a:'jiisan',show:true,x:370},'jiisan|「水が引いたぞ。わしは、家を見てくる。船も心配じゃ」',
+      'そうだ——','@me|保健室に、颯太のエピペンが置いてある。颯太は食べ物のアレルギーがある。それに、全校の名簿と、緊急連絡先も、職員室だ。',
+      '@me|学校までは、走れば5分。取って、すぐ戻れば……。',
+      {radio:'大津波警報が、発表されています。《……ています》　第二波、第三波が、来るおそれがあります。高い所から、離れないでください。'}],
+      obs:[['海','第一波が引いた。町は泥だらけ'],['大津波警報','まだ出ている'],['保健室','颯太のエピペンと、全校の名簿'],['颯太','食べ物のアレルギーがある。今は元気'],['おじいさん','家と船を見に下りようとしている']],
+      q:'水が引いた。学校へ下りるか？',
+      choices:[
+        {t:'下りない。下りようとするおじいさんにも「警報が解けるまで、戻らんで」と声をかける。颯太のアレルギーは、救護の人に伝えて、食べ物に気をつける',g:'best',dt:5,sc:2,flag:'stopOld',
+          res:['okamura|「おじいさん、待ってください！ 警報が解けるまで、下りたらいかん！ 次の波の方が、大きいかもしれん」','jiisan|「……けんど、船が」','okamura|「船は、また買えます。命は、買えません」',{a:'jiisan',e:'…'},'おじいさんは、しばらく海を見て、それから、その場に腰を下ろした。',{a:'jiisan',p:'sit'},
+            {at:70},{se:'roar'},{v:{flood:3,surge:true}},{fx:'shake'},'1時間10分後。','第一波よりも大きな水が、もう一度、町をのみこんだ。','学校も、おじいさんの家のあたりも、また水の下になった。',{v:{surge:false}},'jiisan|「……先生、ありがとう」'],next:'gym',
+          why:'東日本大震災では、第一波の後に、家の様子を見に行ったり、物を取りに戻ったりして、第二波・第三波で犠牲になった人がいました。津波は何度も来て、後の波の方が大きいこともあります。警報が解除されるまで、高い所から離れないこと。'},
+        {t:'自分は下りないが、おじいさんを止める余裕はない。大人の判断は、本人にまかせる',g:'ok',dt:5,sc:0,flag:'letGo',
+          res:['okamura|「……気をつけて」','おじいさんは、坂を下りていった。',{a:'jiisan',show:false},{at:70},{se:'roar'},{v:{flood:3,surge:true}},{fx:'shake'},'1時間10分後。','第一波よりも大きな水が、もう一度、町をのみこんだ。',{v:{surge:false}},'坂の下を、何度も見た。おじいさんの姿は、見えなかった。'],next:'gym',
+          why:'子どもたちを守るだけで精一杯なのは当然です。それでも、「警報が解けるまで戻らないで」という一言は、誰にでもかけられます。その一言が、命を救うことがあります。'},
+        {t:'名簿とエピペンは、子どもたちのために必要だ。走れば5分で着く。自分が取りに下りる',g:'fatal',
+          res:['okamura|「教頭先生、子どもたちをお願いします！ 保健室から、エピペンと名簿を取ってきます！」','kyoto|「岡村先生！」','坂を、走って下りる。','泥に足を取られながら、学校へ。保健室の棚から、エピペンの入った袋をつかんだ。','その時、遠くで、あの音がした。',{se:'roar'},{fx:'black'},{wait:1400},'——'],
+          title:'第二波',
+          why:'第一波の後、水が引くと、もう大丈夫だと思いがちです。でも、津波は何度も来て、後の波の方が大きいこともあります。東日本大震災では、第一波の後に家や職場へ戻った人が、第二波・第三波で犠牲になりました。薬や名簿は、命があれば、後から何とかなります。警報が解除されるまで、高い所から離れないこと。',
+          lessons:[{h:'元になった教訓　東日本大震災（2011年）',p:'第一波の後に戻った人の犠牲。津波は何度も来る。警報が解除されるまで戻らない。'}]}
+      ]},
+    gym:{lines:S=>[
+      {bg:'gym'},{d:'その夜'},{at:540},{mode:'night'},{bgm:'night'},{fx:'calm'},
+      {a:'okamura',x:270,p:'stand'},{a:'hina',x:60,p:'sit',y:222,f:'closed'},{a:'kid1',x:100,show:true,p:'sit',y:224,f:'closed'},{a:'hiroto',show:false},{a:'sota',show:false},{a:'kid2',show:false},{a:'misaki',show:false},{a:'jiisan',show:false},{a:'smom',show:false},{a:'kyoto',show:false},
+      '夜。旧下田中学校の体育館が、避難所になった。','停電。明かりは、発電機につないだライトがいくつかだけ。',
+      '下田の人たち、加工場で働く人たち、子どもたち。体育館は、人でいっぱいだ。',
+      '迎えに来られた家族に、子どもたちを一人ずつ引き渡した。迎えの来ない子は、まだ数人いる。',
+      {a:'bousai',show:true,x:150},'地区の自主防災会の人たちが、避難所の受付を始めている。',
+      'bousai|「岡村先生、ちょっと手伝うてもらえん？ 名簿を作らんといかんがよ」'],
+      obs:[['名簿','名前・住所・性別・年れい・けがや病気'],['避難している人','地区の人、加工場で働く外国人の人たち、子どもたち'],['受付','人が並んでいる']],
+      q:'名簿の作り方を相談された。どうする？',
+      choices:[
+        {t:'性別の欄は「書きたい人だけ」にし、「呼ばれたい名前」の欄を作る。呼び出しは名前を大声で読まず、受付で番号札を渡す',g:'best',dt:10,sc:2,flag:'rosterKind',x:{roster:'kind'},
+          res:['okamura|「性別の欄は、書きたい人だけにしませんか。それと、呼ばれたい名前の欄も。呼び出しは番号札にしたら、名前を大声で呼ばんですみます」','bousai|「番号札……ほうか、その方が早いし、ええね」','段ボールを切って、番号札を作った。'],next:'toilet',
+          why:'避難所では、名前を大声で呼ばれたくない人や、戸籍の性別と自分の性が違う人、DVなどで居場所を知られたくない人もいます。性別欄を任意にする、番号札で呼ぶといった小さな工夫で、誰もが安心して名簿に名前を書けます。東日本大震災では、避難所での女性や性的少数者への配慮が足りなかったことが課題になりました。'},
+        {t:'いつもの名簿の形（名前・住所・男女に丸）で、とにかく早く全員に書いてもらう',g:'ok',dt:5,sc:0,x:{roster:'plain'},
+          res:['okamura|「いつもの形で、早く全員書いてもらいましょう」','受付に、長い列ができた。'],next:'toilet',
+          why:'早く名簿を作ることは大切です。ただ、男女に丸をつける欄や、名前の読み上げに困る人もいます。性別欄を任意にしたり、番号で呼んだりする工夫が、誰もが安心できる避難所につながります。'},
+        {t:'名簿は、保険証や在留カードの名前どおりに書いてもらう。確認のため、マイクで一人ずつ名前を読み上げる',g:'bad',dt:8,sc:-1,x:{roster:'loud'},
+          res:['okamura|「書類どおりの名前で書いてもらって、マイクで読み上げて確認しましょう」','体育館に、名前を読み上げる声が響く。','読み上げられても、返事をしない人が何人かいた。'],next:'toilet',
+          why:'正確さは大切ですが、大声で名前を呼ばれることがつらい人もいます（戸籍の性別と自分の性が違う人、DV被害から逃れている人など）。返事をしない人がいたのは、そのためかもしれません。'}
+      ]},
+    toilet:{lines:[
+      {a:'bousai',show:true,x:150},'名簿の次に困ったのは、トイレだった。','断水していて、校舎のトイレは流せない。仮設トイレは、まだ届かない。',
+      'bousai|「トイレがひどいことになりよる。お年寄りの中には、トイレに行かんですむよう、水を飲まん言う人もおるがよ」'],
+      obs:[['水','断水している'],['トイレ','流せない。もう汚れ始めている'],['仮設トイレ','まだ届かない'],['お年寄り','「トイレに行かんですむよう、水は飲まん」']],
+      q:'トイレをどうする？',
+      choices:[
+        {t:'校舎のトイレに、袋と固まる薬で簡易トイレを作る。男女別に加え、誰でも使える個室を1つ作り、夜も明かりをつける。「水は飲んでください」と呼びかける',g:'best',dt:15,sc:2,x:{toilet:'all'},
+          res:['防災倉庫にあった簡易トイレの袋を、便器にかぶせる。','女性用、男性用、そして「どなたでも」と書いた個室を一つ。','トイレまでの廊下に、ライトを置いた。','okamura|「みなさん、水は飲んでください。トイレは使えます。我慢したら、体をこわします」'],next:'luis',
+          why:'能登半島地震などでも、避難所のトイレは大きな問題になりました。トイレが不便だと水を控え、脱水やエコノミークラス症候群、災害関連死につながります。男女別に加え、誰でも使える個室があると、性的少数者や介助が必要な人、子ども連れの人も使いやすくなります。夜の明かりは、防犯のためにも大切です。'},
+        {t:'校舎のトイレに、男女別の簡易トイレを作る',g:'ok',dt:12,sc:0,x:{toilet:'mf'},
+          res:['防災倉庫にあった簡易トイレの袋を、便器にかぶせ、女性用と男性用を作った。'],next:'luis',
+          why:'簡易トイレを作るのは大切な一歩です。男女別に加えて、誰でも使える個室や夜の明かりがあると、介助が必要な人、子ども連れの人、性的少数者の人も使いやすくなります。'},
+        {t:'流せないトイレを使うと、もっとひどくなる。トイレは使用禁止にして、「水分はなるべく控えて」と呼びかける',g:'bad',dt:5,sc:-2,x:{toilet:'none'},
+          res:['okamura|「トイレは、使用禁止にします。水分は、なるべく控えてください」','体育館が、しんと静まった。','夜中、外の暗がりで用を足そうとして、転んでけがをしたお年寄りがいた。'],next:'luis',
+          why:'水を控えると、脱水や血のかたまり（エコノミークラス症候群）、持病の悪化を招き、災害関連死につながります。熊本地震では、直接の死者よりも、災害関連死の方がずっと多くなりました。トイレを使えるようにすることは、命を守ることです。'}
+      ]},
+    luis:{lines:S=>[
+      {a:'bousai',show:false},{a:'luis',show:true,x:360,f:'normal'},'体育館の入口に、作業着の若い人が、一人で立っていた。中に入ろうとしない。',
+      '加工場で働く、フィリピンの人らしい。手には、ぬれたスマートフォンを握っている。',
+      'bousai|「外国の人じゃ。言葉が通じんがよ。名簿も書けんみたいで」',
+      'luis|「[[スミマセン……ダイジョウブ……|すみません……だいじょうぶ……]]」',
+      '小さな声。でも、どう見ても、大丈夫そうではない。',
+      S.x.roster==='kind'?'受付の机には、さっき作った番号札と、「呼ばれたい名前」の欄のある名簿が置いてある。':''],
+      obs:[['入口の人','作業着。一人で立っている'],['言葉','日本語はほとんど通じないらしい'],['手元','ぬれたスマートフォン'],['体育館','夜。人でいっぱい']],
+      q:'入口に立つ人に、どうする？',
+      choices:[
+        {t:'近くまで行って、ゆっくり、短い言葉で話しかける。「だいじょうぶ？」「ここ、ひなんじょ」。翻訳アプリも使う',g:'best',dt:5,sc:2,x:{talk:'easy'},
+          res:['okamura|「こんばんは。だいじょうぶ？　ここは、ひなんじょ、です。はいって、いいです」','ゆっくり、短く。身ぶりもつけて。','自分のスマートフォンの翻訳アプリに話しかけて、画面を見せる。',{a:'luis',f:'smile',e:'…'},'luis|「……[[サラマッ ポ|Salamat po.|ありがとうございます（タガログ語）]]」','その人は、画面を見て、少しだけ笑った。','luis|「ワタシ、ルイス」','okamura|「ルイスさん。わたしは、おかむら、です」'],next:'END',
+          why:'外国から来た人には、「やさしい日本語」（短く、はっきり、ゆっくり、むずかしい言葉を使わない）と、翻訳アプリ、身ぶりが役に立ちます。言葉が通じなくても、「ここにいていい」と伝わることが一番大切です。'},
+        {t:'英語の得意な6年生の子に、通訳を頼む',g:'ok',dt:5,sc:0,x:{talk:'eng'},
+          res:['okamura|「英語、話せるよね。ちょっと、手伝ってくれる？」','6年生の女の子が、おそるおそる英語で話しかけた。','luis|「……Thank you.」','その人は、少しほっとした顔をした。',{a:'luis',f:'smile'},'でも、女の子は、疲れきった顔をしていた。'],next:'END',
+          why:'英語が通じれば助かります。ただ、子どもも被災者で、疲れています。子どもに大人の通訳を背負わせすぎないよう、大人が「やさしい日本語」や翻訳アプリで直接話しかけることが大切です。'},
+        {t:'「外国の{方|かた}は、こちらにまとまってください」と、外国人の人たちを体育館の隅に案内する',g:'bad',dt:3,sc:-1,x:{talk:'group'},
+          res:['okamura|「外国の{方|かた}は、こちらへ。まとまっていただけますか」','その人は、言われるまま、体育館の隅に移った。',{a:'luis',x:380,f:'droop'},'そこだけ、誰も近づかない場所になった。'],next:'END',
+          why:'まとめた方が支援しやすいこともあります。でも、国籍や言葉で人を分けると、孤立や偏見につながりやすくなります。まずは一人の人として、やさしい日本語で話しかけ、困りごとを聞くことから。'}
+      ]}
+  },
+  outcome(S){
+    const L=[{bg:'gym'},{d:'翌朝'},{at:1260},{mode:''},{a:'luis',show:false},{a:'okamura',x:270,p:'stand',f:'normal'},{a:'hina',x:200,p:'sit',y:222,f:'smile'}];
+    L.push('翌朝。体育館の窓から、白い光が入ってきた。');
+    let sum='';
+    if(S.flags.handed){ L.push('美咲とお母さんの車は、港へ向かう途中で、渋滞に巻きこまれたという。','二人は車を捨てて、近くの神社の石段を駆け上がり、助かった。','でも、おばあちゃんは、まだ見つかっていない。','@me|あの時、「一緒に上がってください」と、言えていたら。'); sum+='美咲とお母さんは助かったが、おばあちゃんは見つかっていない。'; }
+    else if(S.flags.refused){ L.push('美咲は、一晩じゅう、体育館の入口を見ていた。','お母さんは、その夜、避難所に来なかった。','@me|あの時、お母さんにも「一緒に」と言えていたら。'); sum+='美咲は無事だった。でも、一人で家へ向かったお母さんは、その夜、避難所に来なかった。'; }
+    else { L.push({a:'misaki',show:true,x:330,f:'smile'},{a:'smom',show:true,x:360},'美咲とお母さんが、毛布を持って来た。','smom|「先生……ばあちゃん、近所の人が背負うて、お寺の上まで連れて上がってくれちょった」','misaki|「先生、ありがとう」'); sum+='全校の子どもたちと、美咲のお母さんも、高台へ逃げられた。'; }
+    if(S.flags.letGo) sum+='家を見に下りたおじいさんは、戻らなかった。';
+    if(S.flags.stopOld) sum+='下りようとしたおじいさんも、引き止めることができた。';
+    L.push('hina|「先生、足、もういたくないよ。……ちょっとだけ、いたいけど」','okamura|「ようがんばったね、陽菜」');
+    if(S.x.talk==='easy') L.push({a:'luis',show:true,x:360,f:'smile'},'入口の方で、ルイスさんが、配られたおにぎりを、誰かに分けているのが見えた。');
+    const good=!S.flags.handed&&!S.flags.refused&&S.score>=C.max*.6;
+    return {title:good?'全員で、高台へ':S.flags.handed||S.flags.refused?'守れたもの、守れなかったもの':'高台へ、たどり着いた',mood:good?'good':'mid',sum,lines:L};
+  },
+  lessons:[
+    {h:'正しい避難行動',ul:['揺れがおさまったら、指示を待たずに高い所へ','歩けない人は背負って運ぶ。手当ては高い所で','津波警報の間は、子どもを引き渡さず、保護者にも一緒に逃げてもらう','想定にとらわれず、行ける所まで、より高く','第一波の後も、警報が解けるまで戻らない']},
+    {h:'元になった教訓　東日本大震災（2011年）',p:'校庭での待機が悲劇を招いた例と、子どもたちが自ら高台へ逃げて助かった例。引き渡し後の犠牲。想定の外での犠牲。第一波の後に戻った人の犠牲。'}
+  ],
+  debrief:[
+    {h:'下田では、何が起きるのか',p:'高知県の最新の想定（2025年度）では、下田の集落は3〜5m、港や川沿いは5〜10m浸水するとされています。四万十市の津波避難マップでは、下田地区で足を取られる深さ（30cm）の津波が来るまで、地震から約18分です。下田小学校は、この浸水区域の中にあります。'},
+    {h:'学校で大切なこと',ul:['揺れがおさまったら、指示を待たずに高い所へ。「待機」が一番危ない','人数確認は短く。歩けない子は背負う','<b>津波警報の間は、子どもを保護者に引き渡さない</b>。保護者にも一緒に逃げてもらう。ルールは前もって学校と家庭で決めておく','避難路は2本以上、実際に子どもたちと歩いておく','子どもの「こっちが高い」という声に耳を傾ける']},
+    {h:'骨折が疑われる時の手当て',ul:['無理に元の形に戻さない','そのままの形で、けがをした所の上と下の関節をふくめて固定する（段ボール、雑誌、傘なども添え木になる）','冷やして、少し高くする','つま先の色・感覚・動きを確かめる（きつすぎないか）','津波の危険がある時は、固定より先に、背負って高い所へ']},
+    {h:'避難所で、周りができること',ul:['名簿の性別欄は任意に。「呼ばれたい名前」の欄','呼び出しは、名前の大声より番号札','トイレは男女別に加え、誰でも使える個室を。夜も明かりを','「水は飲んで」と呼びかける（脱水・エコノミークラス症候群・関連死の予防）','外国から来た人には、やさしい日本語と翻訳アプリで、まず話しかける']},
+    {h:'防災無線が聞き取れなかったら',p:'四万十市では、防災行政無線の放送内容を、電話（0880-34-7800）で聞き返すことができます。LINEやYahoo!防災速報でも、市の防災情報が届きます。'}
+  ],
+  talk:['迎えに来た保護者に「子どもを連れて帰る」と言われたら、あなたはどうしますか。','あなたの学校（職場・家）から、一番近い高台まで、何分かかりますか。道は2本ありますか。','避難所の名簿に、どんな欄があったら、誰もが安心して名前を書けるでしょうか。'],
+  deep:`<p><b>学校の津波避難</b>：大きな揺れ＝避難開始の合図とし、校内の安全確認・人数確認は最小限にする。管理職不在時の判断者を決めておく。避難場所に着いた後も「より高い所」への二次避難を想定する。</p>
+  <p><b>引き渡し</b>：津波警報・大津波警報の発表中は、原則として引き渡さず、保護者も学校と一緒に避難する、などのルールを事前に定め、保護者と共有しておく。</p>
+  <p><b>骨折の固定</b>：変形があっても整復はしない。受傷部をはさむ2関節を固定し、固定後に末梢の循環・感覚・運動（CSM）を確認する。開放創があれば清潔なガーゼで覆う。</p>
+  <p><b>避難所運営</b>：内閣府「男女共同参画の視点からの防災・復興ガイドライン」などを参考に、運営への女性の参画、更衣室・授乳室・物干し場、生理用品の配り方、性的少数者への配慮を事前に計画しておく。</p>`
+});
+
+/* ---------- 起動 ---------- */
+const ORD={nanami:1,surfer:2,teacher:3,luis:4,fire:5,keiko:6,sumiko:7,genichi:8};
+STORIES.sort((a,b)=>(ORD[a.id]||99)-(ORD[b.id]||99));
+$('titleLead').innerHTML=fmt(TITLE_LEAD.replace(/<br>/g,'\n')).replace(/\n/g,'<br>');
+$('titleDisc').innerHTML=fmt(DISC_TITLE);
+applySet(); renderSettings(); setSound(SOUND); renderMenu();
+
+</script>
+</body>
+</html>

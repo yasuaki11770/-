@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>この美しいまちに住む、あなたへ ―南海トラフ地震</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fdf6ec;--card:#ffffff;--ink:#3a3330;--mute:#7d736d;--line:#eadfd2;--acc:#ff6b5b;--acc2:#ffa94d;--teal:#25b0a0;--blue:#4c8fe0;--sea:#2a8fc0;--good:#3fb57a;--ok:#f0a92e;--bad:#ff6b5b;--fz:1}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'M PLUS Rounded 1c','Hiragino Maru Gothic ProN','Hiragino Sans','Yu Gothic UI','Meiryo',system-ui,sans-serif;font-size:16px;overscroll-behavior:none}
+button{font:inherit;color:inherit;cursor:pointer}
+ruby rt{font-size:.5em;font-weight:500;opacity:.85}
+body.nofuri rt{display:none}
+.screen{display:none;min-height:100dvh;flex-direction:column;max-width:760px;margin:0 auto;padding:calc(14px + env(safe-area-inset-top)) 16px calc(20px + env(safe-area-inset-bottom))}
+.screen.on{display:flex}
+h1,h2,h3{margin:0;font-weight:800}
+.btn{background:var(--card);border:2px solid var(--line);border-radius:16px;padding:13px 16px;font-size:calc(15.5px*var(--fz));text-align:left;width:100%;line-height:1.75;box-shadow:0 3px 0 var(--line)}
+.btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--line)}
+.btn.primary{background:var(--acc);border-color:#e85445;color:#fff;text-align:center;font-weight:800;box-shadow:0 4px 0 #d94436}
+.btn.sea{background:var(--sea);border-color:#1f7aa8;color:#fff;text-align:center;font-weight:800;box-shadow:0 4px 0 #1b6b93}
+.btn.ghost{background:transparent;border-color:transparent;box-shadow:none;text-align:center;color:var(--mute)}
+.mute{color:var(--mute)} .small{font-size:calc(13px*var(--fz))}
+/* ---- title ---- */
+#title{justify-content:center;gap:14px}
+#title .logo{background:linear-gradient(160deg,#2f9ed1,#3cc0b0 60%,#ffb35c);color:#fff;border-radius:28px;padding:24px 22px 18px;box-shadow:0 8px 0 #1f7aa8;position:relative;overflow:hidden}
+#title .kicker{font-size:12px;letter-spacing:.18em;font-weight:800;opacity:.92}
+#title h1{font-size:clamp(27px,7.4vw,38px);line-height:1.4;margin-top:8px}
+#title h1 small{display:block;font-size:.62em;margin-top:6px;letter-spacing:.06em}
+#title .lead{font-size:calc(15px*var(--fz));line-height:1.95;margin-top:10px}
+.seaw{width:100%;height:36px;margin-top:6px;display:block}
+.seaw path{fill:none;stroke:#fff;stroke-width:3;stroke-linecap:round;opacity:.85}
+.seaw .w1{animation:sw 4s ease-in-out infinite}.seaw .w2{animation:sw 5.5s ease-in-out infinite reverse;opacity:.5}
+@keyframes sw{50%{transform:translateX(-18px)}}
+.settings{background:var(--card);border:2px solid var(--line);border-radius:16px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.set-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:calc(14px*var(--fz))}
+.set-row .lbl{min-width:6.5em;font-weight:700}
+.seg{display:flex;border:2px solid var(--line);border-radius:12px;overflow:hidden}
+.seg button{border:none;background:#fff;padding:6px 12px;font-size:calc(14px*var(--fz));font-weight:700;color:var(--mute)}
+.seg button.on{background:var(--sea);color:#fff}
+.disc{font-size:calc(12px*var(--fz));color:var(--mute);line-height:1.75;border-top:2px solid var(--line);padding-top:12px}
+.note{background:#fff8e6;border:2px solid #f4dfb0;border-radius:14px;padding:10px 12px;font-size:calc(13px*var(--fz));line-height:1.75;color:#7a5a20}
+/* ---- menu ---- */
+#menu{gap:12px}
+.stagehead{display:flex;align-items:baseline;gap:8px;margin-top:6px}
+.stagehead h3{font-size:calc(18px*var(--fz))}
+.stagehead span{font-size:calc(12.5px*var(--fz));color:var(--mute)}
+.cases{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.case{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:0;text-align:left;overflow:hidden;box-shadow:0 4px 0 var(--line);display:flex;flex-direction:column}
+.case:active{transform:translateY(2px)}
+.case[disabled]{opacity:.62;cursor:default}
+.case .thumb{height:96px;display:block;width:100%}
+.case .body{padding:10px 12px 12px}
+.case .no{font-size:11px;color:var(--sea);font-weight:800;letter-spacing:.08em}
+.case h3{font-size:calc(17px*var(--fz));margin:2px 0 4px;line-height:1.5}
+.case p{margin:0;font-size:calc(13px*var(--fz));line-height:1.7;color:#5f5650}
+.stars{color:#e8a317;letter-spacing:1px;font-size:13px}
+.tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+.tag{font-size:11px;border-radius:99px;padding:2px 8px;background:#f4ece2;color:#7a6c60;font-weight:700}
+.tag.x{background:#e2f2fb;color:#1f6f99}
+.tag.wip{background:#eee;color:#888}
+.badge{float:right;font-weight:800;font-size:20px;line-height:1}
+.badge.S{color:#e7b416}.badge.A{color:var(--good)}.badge.B{color:var(--blue)}.badge.C{color:var(--mute)}.badge.X{color:#3a3330;font-size:14px}
+/* ---- play ---- */
+#play{padding:0;max-width:760px;height:100dvh;min-height:0;overflow:hidden;position:relative;user-select:none;-webkit-user-select:none;transition:background .8s}
+.stage{position:relative;flex:none;height:calc(min(62.5vw,475px,50vh) + env(safe-area-inset-top));padding-top:env(safe-area-inset-top);overflow:hidden;background:#cfe6f5}
+.stage svg.sc{position:absolute;inset:0;width:100%;height:100%;display:block}
+.stage svg.sc{top:env(safe-area-inset-top)!important;height:calc(100% - env(safe-area-inset-top))!important}
+.hud{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:flex-start;padding:calc(10px + env(safe-area-inset-top)) 12px 0;z-index:6;pointer-events:none}
+.pill{background:#ffffffe6;border-radius:99px;padding:5px 12px;font-size:12px;font-weight:700;box-shadow:0 2px 6px #0001;max-width:58%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pill b{color:var(--sea)}
+.clock{background:#ffffffe6;border-radius:14px;padding:4px 10px;text-align:right;box-shadow:0 2px 6px #0001;font-weight:800;font-size:20px;font-variant-numeric:tabular-nums;line-height:1.1;transition:background .8s,color .8s}
+.clock small{display:block;font-size:10px;color:var(--mute);font-weight:700}
+.clock.tick{animation:tick .6s}
+.clock.el{background:#2b3440e8;color:#fff}.clock.el small{color:#ffcf9a}
+@keyframes tick{0%{transform:scale(1.15)}100%{transform:none}}
+.topbtns{position:absolute;top:calc(56px + env(safe-area-inset-top));right:12px;z-index:7;display:flex;gap:6px}
+.topbtns button{background:#ffffffd0;border:none;border-radius:99px;width:36px;height:36px;font-size:15px;box-shadow:0 2px 6px #0001}
+/* FX overlays */
+.fxl{position:absolute;inset:0;pointer-events:none;z-index:4;opacity:0;transition:opacity .8s}
+#fxRed{background:radial-gradient(ellipse at center,transparent 45%,#ff3b2f66 100%);animation:pulse 1.6s infinite}
+@keyframes pulse{50%{filter:brightness(1.4)}}
+#fxSmoke{background:linear-gradient(0deg,#7d7d7d00,#6d6a6acc 70%)}
+#fxSmoke:before,#fxSmoke:after{content:'';position:absolute;left:-20%;right:-20%;height:60%;top:10%;background:radial-gradient(circle at 30% 50%,#8888 0,transparent 40%),radial-gradient(circle at 70% 40%,#7779 0,transparent 45%);animation:drift 6s linear infinite alternate}
+#fxSmoke:after{top:30%;animation-duration:9s;animation-direction:reverse}
+@keyframes drift{from{transform:translateX(-8%)}to{transform:translateX(8%)}}
+#fxDust{background:linear-gradient(0deg,#c9b79a99,#d8cbb455 60%,transparent)}
+#fxDim{background:#10141cc4}
+#fxNight{background:#14224fa0}
+#fxDusk{background:linear-gradient(180deg,#2c3a4fb0,#55607066)}
+#fxSiren{background:linear-gradient(90deg,#ff3b3b55,transparent 40%,transparent 60%,#3b6bff55);animation:siren .7s steps(2) infinite}
+@keyframes siren{50%{background:linear-gradient(90deg,#3b6bff55,transparent 40%,transparent 60%,#ff3b3b55)}}
+#fxFlash{background:#fff}
+#fxBlack{background:#000;transition:opacity 1.6s}
+.fxl.on{opacity:1}
+.stage.shake{animation:shake .45s}
+.stage.quake{animation:shake .3s 6}
+.stage.bigquake{animation:bigq 2.4s infinite}
+@keyframes shake{0%,100%{transform:none}20%{transform:translate(-6px,2px)}40%{transform:translate(5px,-3px)}60%{transform:translate(-4px,3px)}80%{transform:translate(3px,-2px)}}
+@keyframes bigq{0%{transform:none}5%{transform:translate(-9px,3px) rotate(-.6deg)}10%{transform:translate(8px,-4px)}15%{transform:translate(-7px,4px) rotate(.5deg)}20%{transform:translate(9px,-2px)}25%{transform:translate(-5px,3px)}30%{transform:translate(4px,-2px)}38%{transform:translate(-3px,1px)}46%{transform:translate(3px,-1px)}55%{transform:translate(-8px,3px) rotate(-.5deg)}60%{transform:translate(10px,-4px)}65%{transform:translate(-9px,4px) rotate(.6deg)}70%{transform:translate(7px,-3px)}78%{transform:translate(-4px,2px)}86%{transform:translate(3px,-2px)}100%{transform:none}}
+/* actors */
+.actor{transition:opacity .5s}
+.actor .bd{transform-box:fill-box;transform-origin:50% 100%;transition:transform .7s cubic-bezier(.5,1.6,.6,1)}
+.actor.idle .bob{animation:bob 2.6s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 100%}
+@keyframes bob{50%{transform:translateY(-1.5px) scaleY(1.01)}}
+.actor[data-p="sit"] .bd{transform:translateY(14%) scaleY(.82)}
+.actor[data-p="slump"] .bd{transform:translateY(14%) scaleY(.8) rotate(-9deg)}
+.actor[data-p="crouch"] .bd{transform:scaleY(.68) rotate(6deg)}
+.actor[data-p="duck"] .bd{transform:translateY(6%) scaleY(.6)}
+.actor[data-p="down"] .bd{transform:rotate(-88deg) translateX(-8%)}
+.actor[data-p="downr"] .bd{transform:rotate(88deg) translateX(8%)}
+.actor[data-p="lean"] .bd{transform:rotate(-8deg)}
+.actor[data-p="run"] .bd{transform:rotate(-10deg)}
+.actor[data-p="run"] .bob{animation:runb .35s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 100%}
+@keyframes runb{50%{transform:translateY(-3px)}}
+.actor .arm{transform-box:fill-box;transform-origin:50% 8%;transition:transform .5s}
+.actor[data-arm="neck"] .arm.l{transform:rotate(150deg) translate(0,-2px)}
+.actor[data-arm="neck"] .arm.r{transform:rotate(-150deg) translate(0,-2px)}
+.actor[data-arm="head"] .arm.l{transform:rotate(160deg)} .actor[data-arm="head"] .arm.r{transform:rotate(-160deg)}
+.actor[data-arm="chest"] .arm.r{transform:rotate(-125deg)}
+.actor[data-arm="point"] .arm.r{transform:rotate(-100deg)}
+.actor[data-arm="up"] .arm.l{transform:rotate(165deg)} .actor[data-arm="up"] .arm.r{transform:rotate(-165deg)}
+.actor[data-arm="wave"] .arm.r{animation:wave .6s infinite alternate}
+@keyframes wave{from{transform:rotate(-150deg)}to{transform:rotate(-175deg)}}
+.actor .fc{display:none}
+.actor[data-f="normal"] .fc.normal,.actor[data-f="smile"] .fc.smile,.actor[data-f="pain"] .fc.pain,.actor[data-f="weak"] .fc.weak,.actor[data-f="closed"] .fc.closed,.actor[data-f="shock"] .fc.shock,.actor[data-f="droop"] .fc.droop,.actor[data-f="cry"] .fc.cry{display:inline}
+.actor .tint{opacity:0;transition:opacity .8s}
+.actor[data-t="pale"] .tint{opacity:.55;fill:#e6eef2}
+.emote{animation:pop .35s cubic-bezier(.4,2,.6,1)}
+@keyframes pop{from{transform:scale(0)}to{transform:scale(1)}}
+.emote{transform-box:fill-box;transform-origin:50% 100%}
+.wave{animation:wv 3s ease-in-out infinite}
+@keyframes wv{50%{transform:translateX(-12px)}}
+.surge{animation:surge 9s ease-in forwards}
+@keyframes surge{from{transform:translateX(0)}to{transform:translateX(-260px)}}
+.flood{transition:transform 4s ease-out}
+.rain line{animation:fall .6s linear infinite}
+@keyframes fall{from{transform:translateY(-20px)}to{transform:translateY(270px)}}
+/* dialog box */
+.box{position:relative;flex:1 1 auto;overflow:visible;background:var(--card);border-top:3px solid #bfe3f2;padding:14px 18px calc(16px + env(safe-area-inset-bottom));min-height:150px;cursor:pointer;z-index:5;transition:background .8s,color .8s,border-color .8s}
+.name{position:absolute;top:-17px;left:16px;background:var(--sea);color:#fff;border-radius:99px;padding:3px 14px;font-weight:800;font-size:calc(14px*var(--fz));box-shadow:0 3px 0 #1b6b93;z-index:6}
+.name.voice{background:var(--blue);box-shadow:0 3px 0 #3a73b8}
+.name.sys{background:var(--acc2);box-shadow:0 3px 0 #e0892a}
+.name.radio{background:#5a5f66;box-shadow:0 3px 0 #3a3e44}
+.name.me{background:var(--acc);box-shadow:0 3px 0 #d94436}
+.txt{font-size:calc(17.5px*var(--fz));line-height:1.95;min-height:3.6em;white-space:pre-wrap;max-height:calc(100dvh - min(62.5vw,475px,50vh) - 90px);overflow:auto}
+body:not(.nofuri) .txt{line-height:2.15}
+.txt.narr{color:#4e4540}
+.txt.sys{font-size:calc(14.5px*var(--fz));color:#a2622a}
+.txt.radio{letter-spacing:.06em;color:#4a4f56;animation:flick 2.2s infinite}
+.txt.radio .echo{opacity:.38;filter:blur(.4px)}
+@keyframes flick{0%,100%{opacity:1}47%{opacity:1}50%{opacity:.55}53%{opacity:1}80%{opacity:.8}}
+.txt .hid{color:#9aa3ad;letter-spacing:.05em}
+.txt .gb{display:inline-block;filter:blur(.6px);transform:skewX(-8deg);color:#8a8f96}
+.next{position:absolute;right:16px;bottom:calc(10px + env(safe-area-inset-bottom));color:var(--sea);font-size:14px;animation:nb 1s infinite}
+@keyframes nb{50%{transform:translateY(3px)}}
+/* modes */
+#play.m-tense{background:#18202a}
+#play.m-tense .box{background:#222c38;color:#eef3f7;border-top-color:#ff6b5b}
+#play.m-tense .txt.narr{color:#dfe6ec}
+#play.m-tense .txt.radio{color:#cfd6dd}
+#play.m-tense .next{color:#ffb4a8}
+#play.m-night{background:#121a33}
+#play.m-night .box{background:#1d2747;color:#e9edf8;border-top-color:#8fa6ff}
+#play.m-night .txt.narr{color:#d9def0}
+#play.m-night .next{color:#b5c3ff}
+/* choice sheet */
+.sheet{position:absolute;left:0;right:0;bottom:0;top:calc(min(62.5vw,475px,50vh) + env(safe-area-inset-top));overflow:auto;background:var(--card);border-radius:22px 22px 0 0;box-shadow:0 -6px 20px #0002;padding:14px 14px calc(16px + env(safe-area-inset-bottom));transform:translateY(105%);transition:transform .35s cubic-bezier(.3,1.2,.5,1);z-index:8}
+.sheet.on{transform:none}
+.sheet .q{font-weight:800;font-size:calc(17px*var(--fz));margin:2px 4px 10px;line-height:1.7}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 2px 10px}
+.chip{background:#eef6ff;color:#2d5f9a;border-radius:10px;padding:4px 9px;font-size:calc(12.5px*var(--fz));line-height:1.6}
+.chip b{color:#6a8bb3;font-weight:700;margin-right:4px}
+.choices{display:flex;flex-direction:column;gap:9px}
+.timer{height:8px;background:#f2e8de;border-radius:99px;overflow:hidden;margin:0 2px 10px;display:none}
+.timer.on{display:block}
+.timer i{display:block;height:100%;background:linear-gradient(90deg,var(--acc),var(--acc2));width:100%}
+/* cpr */
+.cpr{display:flex;flex-direction:column;align-items:center;gap:10px}
+.pad{width:170px;height:170px;border-radius:50%;background:radial-gradient(circle,#ffe1d9,#ffb4a3);border:5px solid var(--acc);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:22px;color:#c23f30;touch-action:manipulation;position:relative;transition:transform .06s}
+.pad.hit{transform:scale(.92)}
+.pad .guide{position:absolute;inset:-14px;border-radius:50%;border:3px solid #ff6b5b88;opacity:0}
+.pad .guide.go{animation:beat .545s infinite}
+@keyframes beat{0%{opacity:1;transform:scale(1)}70%{opacity:0;transform:scale(1.15)}100%{opacity:0}}
+.bpm{font-size:36px;font-weight:800;font-variant-numeric:tabular-nums}
+.bpm.in{color:var(--good)}.bpm.out{color:var(--ok)}
+.meter{width:100%;max-width:320px;height:12px;background:#f2e8de;border-radius:99px;position:relative;overflow:hidden}
+.meter .band{position:absolute;top:0;bottom:0;background:#bfe9cf}
+.meter .needle{position:absolute;top:-2px;bottom:-2px;width:5px;background:var(--ink);border-radius:3px;transition:left .15s}
+/* result / debrief */
+#out,#deb,#src,#msg{gap:14px}
+.res-card{background:var(--card);border:2px solid var(--line);border-radius:22px;padding:18px;box-shadow:0 5px 0 var(--line)}
+.grade{font-size:72px;font-weight:800;line-height:1}
+.grade.S{color:#e7b416}.grade.A{color:var(--good)}.grade.B{color:var(--blue)}.grade.C{color:var(--mute)}.grade.X{color:#3a3330;font-size:46px}
+.lesson{background:#eef8fc;border:2px solid #cfe8f3;border-radius:16px;padding:12px 14px;font-size:calc(14.5px*var(--fz));line-height:1.85}
+.lesson h4{margin:0 0 4px;font-size:calc(14px*var(--fz));color:#1f6f99}
+.lesson ul{margin:0;padding-left:1.2em}
+.lesson .src{font-size:calc(12px*var(--fz));color:var(--mute);margin-top:6px}
+.rv{background:var(--card);border:2px solid var(--line);border-radius:16px;padding:12px 14px;font-size:calc(14px*var(--fz));line-height:1.8}
+.rv .h{display:flex;gap:10px;align-items:flex-start;font-weight:800;margin-bottom:4px}
+.mk{flex:none;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;font-weight:800}
+.mk.best{background:var(--good)}.mk.ok{background:var(--ok)}.mk.bad{background:var(--bad)}.mk.fatal{background:#3a3330}
+.rv .you{color:var(--blue);font-weight:700}
+.rv .bt{margin-top:8px;padding-top:8px;border-top:2px dashed var(--line);color:#2f7a52}
+.sec{background:var(--card);border:2px solid var(--line);border-radius:16px;padding:14px 16px;line-height:1.9;font-size:calc(15px*var(--fz))}
+.sec h3{font-size:calc(16px*var(--fz));margin-bottom:6px;color:#1f6f99}
+.sec ul{margin:0;padding-left:1.2em}
+.sec p{margin:0 0 6px}
+.sec a{color:#1f6f99;word-break:break-all}
+.heard{display:flex;flex-direction:column;gap:8px}
+.heard div{border-left:4px solid #cfe8f3;padding-left:10px}
+.heard .s{color:var(--mute)}
+details.deep{background:#eef5ff;border:2px solid #d3e3f7;border-radius:16px;padding:2px 16px;font-size:calc(14px*var(--fz));line-height:1.85}
+details.deep summary{padding:10px 0;font-weight:800;color:#2d5f9a;cursor:pointer}
+.row{display:flex;gap:10px}
+.letter{background:#fffdf7;border:2px solid #eadfc6;border-radius:18px;padding:20px 18px;line-height:2.1;font-size:calc(16px*var(--fz));white-space:pre-wrap}
+</style>
+</head>
+<body>
+
+<section id="title" class="screen on">
+  <div class="logo">
+    <div class="kicker">四万十・幡多　防災ストーリーゲーム</div>
+    <h1>この美しいまちに<br>住む、あなたへ<small>― 南海トラフ地震</small></h1>
+    <svg class="seaw" viewBox="0 0 400 36" preserveAspectRatio="none"><path class="w1" d="M-40 18 q20 -12 40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0"/><path class="w2" d="M-40 28 q20 -10 40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0"/></svg>
+    <div class="lead" id="titleLead"></div>
+  </div>
+  <div class="settings" id="settings"></div>
+  <button class="btn primary" id="toMenu">はじめる</button>
+  <div class="row"><button class="btn" id="toMsg" style="text-align:center">作者からのメッセージ</button><button class="btn" id="toSrc" style="text-align:center">出典・資料</button></div>
+  <div class="disc" id="titleDisc"></div>
+</section>
+
+<section id="menu" class="screen">
+  <div class="row" style="justify-content:space-between;align-items:center"><h2 style="font-size:24px">8人の物語</h2><button class="btn ghost small" id="menuBack" style="width:auto;padding:4px 8px">設定</button></div>
+  <div class="small mute" style="line-height:1.8" id="menuLead"></div>
+  <div id="stories"></div>
+  <div class="disc" id="menuDisc"></div>
+</section>
+
+<section id="play" class="screen">
+  <div class="stage" id="stage">
+    <svg class="sc" id="sc" viewBox="0 0 400 250" preserveAspectRatio="xMidYMax slice"></svg>
+    <div class="fxl" id="fxNight"></div><div class="fxl" id="fxDusk"></div><div class="fxl" id="fxDust"></div><div class="fxl" id="fxSmoke"></div><div class="fxl" id="fxRed"></div><div class="fxl" id="fxSiren"></div><div class="fxl" id="fxDim"></div><div class="fxl" id="fxFlash"></div><div class="fxl" id="fxBlack"></div>
+    <div class="hud"><div class="pill"><b id="hudNo"></b>　<span id="hudTitle"></span></div><div class="clock" id="clock"><small id="day"></small><span id="hm">--:--</span></div></div>
+    <div class="topbtns"><button id="snd" title="音">🔊</button><button id="quit" title="一覧へ">✕</button></div>
+  </div>
+  <div class="box" id="box"><div class="name" id="name" style="display:none"></div><div class="txt" id="txt"></div><div class="next" id="nextI">▼</div></div>
+  <div class="sheet" id="sheet">
+    <div class="timer" id="timer"><i id="timerBar"></i></div>
+    <div class="chips" id="chips"></div>
+    <div class="q" id="q"></div>
+    <div class="choices" id="choices"></div>
+    <div id="cpr" class="cpr" style="display:none">
+      <div class="small" id="cprMsg" style="text-align:center;line-height:1.7"></div>
+      <div class="bpm" id="bpm">--</div>
+      <div class="meter"><div class="band" id="band"></div><div class="needle" id="needle"></div></div>
+      <div class="pad" id="pad"><div class="guide" id="guide"></div>押す</div>
+      <label class="small"><input type="checkbox" id="guideOn"> テンポの目安を表示（110回/分）</label>
+      <div id="cprLeft" class="small mute">あと 10.0 秒</div>
+      <button class="btn primary" id="cprDone" style="display:none">続ける</button>
+    </div>
+  </div>
+</section>
+
+<section id="out" class="screen">
+  <div class="res-card">
+    <div class="mute small" id="outCase"></div>
+    <div class="row" style="align-items:flex-end;gap:14px;margin-top:6px"><div class="grade" id="outGrade"></div><div><div class="mute small" id="outGradeLbl"></div><h2 id="outTitle" style="font-size:21px;line-height:1.6"></h2></div></div>
+    <div id="outText" style="margin-top:10px;line-height:1.9;font-size:calc(15.5px*var(--fz))"></div>
+  </div>
+  <div id="outLesson" style="display:flex;flex-direction:column;gap:10px"></div>
+  <button class="btn primary" id="toDeb">振り返りと解説を見る</button>
+  <button class="btn" id="retryNode" style="display:none;text-align:center">この判断の直前からやり直す</button>
+  <button class="btn ghost" id="outMenu">物語の一覧へ</button>
+</section>
+
+<section id="deb" class="screen">
+  <h2 style="font-size:24px">振り返り</h2>
+  <div class="mute small" id="debCase"></div>
+  <h3 style="font-size:16px;margin-top:4px">あなたの判断</h3>
+  <div id="debLog" style="display:flex;flex-direction:column;gap:10px"></div>
+  <h3 style="font-size:16px;margin-top:8px">解説</h3>
+  <div id="debSecs" style="display:flex;flex-direction:column;gap:10px"></div>
+  <details class="deep" id="debDeep"><summary>もっと深く ― 医療者・指導者向け</summary><div id="debDeepBody"></div></details>
+  <button class="btn primary" id="debRetry">もう一度プレイする</button>
+  <button class="btn ghost" id="debMenu">物語の一覧へ</button>
+  <div class="disc" id="debDisc"></div>
+</section>
+
+<section id="src" class="screen">
+  <h2 style="font-size:24px">出典・資料</h2>
+  <div id="srcBody" style="display:flex;flex-direction:column;gap:10px"></div>
+  <button class="btn ghost" id="srcBack">もどる</button>
+</section>
+
+<section id="msg" class="screen">
+  <h2 style="font-size:24px">作者からのメッセージ</h2>
+  <div class="letter" id="msgBody"></div>
+  <button class="btn ghost" id="msgBack">もどる</button>
+</section>
