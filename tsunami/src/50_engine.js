@@ -34,6 +34,7 @@ function plainTokens(s,out){
   const keys=rubyKeys(); let i=0;
   while(i<s.length){
     const ch=s[i];
+    if(ch==='人'&&i>0&&/[0-9０-９何数]/.test(s[i-1])){ out.push(rb('人','にん')); i++; continue; }
     if(KANJI.test(ch)){
       let hit=null; for(const k of keys){ if(s.startsWith(k,i)){ hit=k; break; } }
       if(hit){ const mm=hit.match(/^([\u4e00-\u9fff々]+)([^\u4e00-\u9fff々]+)$/); out.push(mm?rb(mm[1],RUBY[hit])+esc(mm[2]):rb(hit,RUBY[hit])); i+=hit.length; continue; }
@@ -44,7 +45,7 @@ function plainTokens(s,out){
 }
 /** 整形してトークン列（1トークン＝文字送りの1単位）を返す。heardに聞き取れなかった言葉を集める */
 function tokens(src,heard){
-  const out=[]; const re=/\{([^|{}]+)\|([^{}]+)\}|\[\[([^|\]]*)\|([^|\]]*)(?:\|([^\]]*))?\]\]|⟪([^⟫]*)⟫|《([^》]*)》/g;
+  const out=[]; const re=/\{([^|{}]+)\|([^{}]+)\}|\[\[([^|\]]*)\|([^|\]]*)(?:\|([^\]]*))?\]\]|⟪([^⟫]*)⟫|《([^》]*)》|⟦([^⟧]*)⟧/g;
   let last=0,m;
   while((m=re.exec(src))){
     plainTokens(src.slice(last,m.index),out);
@@ -52,6 +53,7 @@ function tokens(src,heard){
     else if(m[3]!==undefined){ out.push(`<span class="gb">${esc(m[3])}</span>`); if(heard) heard.push({s:m[3],r:m[4],t:m[5]||''}); }
     else if(m[6]!==undefined){ out.push(`<span class="hid">${'〇'.repeat([...m[6]].length)}</span>`); if(heard) heard.push({s:'〇'.repeat([...m[6]].length),r:m[6],t:''}); }
     else if(m[7]!==undefined){ const t=[]; plainTokens(m[7],t); out.push(`<span class="echo">${t.join('')}</span>`); }
+    else if(m[8]!==undefined){ const w=m[8]; if(S&&S.learn&&S.learn.includes(w)) out.push(`<b class="lrn">${esc(w)}</b>`); else { out.push(`<span class="hid">${'〇'.repeat([...w].length)}</span>`); if(heard) heard.push({s:'〇'.repeat([...w].length),r:w,t:''}); } }
     last=re.lastIndex;
   }
   plainTokens(src.slice(last),out);
@@ -132,6 +134,7 @@ function doAction(it){
   if(it.v){ Object.assign(S.view,it.v); render(); }
   if(it.mode!==undefined) setMode(it.mode);
   if(it.set){ Object.assign(S.flags,it.set); }
+  if(it.learn){ (Array.isArray(it.learn)?it.learn:[it.learn]).forEach(w=>{ if(!S.learn.includes(w)) S.learn.push(w); }); sfx('ok'); }
   if(it.fx){
     const k=it.fx;
     if(k==='shake'||k==='quake'){ stageFx(k); if(k==='quake') sfx('quake'); }
@@ -142,6 +145,7 @@ function doAction(it){
     else if(k.startsWith('no')){ S.view.fx[k.slice(2)]=false; render(); }
     else { S.view.fx[k]=true; render(); if(k==='siren') sfx('siren'); }
   }
+  if(it.sc) S.score+=it.sc;
   if(it.se) sfx(it.se);
   if(it.bgm!==undefined) music(it.bgm);
 }
@@ -182,7 +186,7 @@ function gradeOf(sc,max){ const r=sc/max; return r>=.85?'S':r>=.6?'A':r>=.3?'B':
 function startCase(i){
   C=STORIES[i]; C.max=C.max||computeMax(C);
   const actors={}; for(const [id,c] of Object.entries(C.cast)) if(c.look) actors[id]={x:c.x||200,y:c.y,p:c.p||'stand',f:c.f||'normal',show:c.show!==false};
-  S={flags:{},x:{},heard:[],score:0,clock:0,q0:null,day:'',mode:'',log:[],node:null,snap:null,view:{scene:C.scene,actors,fx:{}}};
+  S={flags:{},x:{},heard:[],learn:(C.learn0||[]).slice(),score:0,clock:0,q0:null,day:'',mode:'',log:[],node:null,snap:null,view:{scene:C.scene,actors,fx:{}}};
   $('hudNo').textContent=C.who; $('hudTitle').textContent=C.title;
   $('hm').textContent='--:--'; $('day').textContent=''; $('clock').classList.remove('el'); $('txt').textContent=''; $('name').style.display='none';
   setMode(''); bigQuake(false);
@@ -196,7 +200,7 @@ function enterNode(id){
   const lines=typeof n.lines==='function'?n.lines(S):n.lines;
   play(lines||[],()=>{
     if(n.fatal) return fail('fatal',typeof n.fatal==='function'?n.fatal(S):n.fatal);
-    if(n.go) return enterNode(typeof n.go==='function'?n.go(S):n.go);
+    if(n.go){ const g=typeof n.go==='function'?n.go(S):n.go; if(g) return enterNode(g); }
     if(!n.choices) return ending();
     S.snap=JSON.stringify({...S,snap:null});
     openChoices(n);
@@ -210,7 +214,7 @@ function openChoices(n){
   $('q').innerHTML=fmt(n.q||'どうする？');
   const box=$('choices'); box.innerHTML='';
   const list=n.choices.filter(c=>!c.need||c.need(S));
-  (n.fixed?list:shuffle(list)).forEach(c=>{ const b=document.createElement('button'); b.className='btn'; b.innerHTML=fmt(c.t); b.onclick=()=>choose(n,c); box.appendChild(b); });
+  (n.fixed?list:shuffle(list)).forEach(c=>{ const b=document.createElement('button'); b.className='btn'; b.innerHTML=fmt(typeof c.t==='function'?c.t(S):c.t); b.onclick=()=>choose(n,c); box.appendChild(b); });
   $('sheet').classList.add('on'); $('sheet').scrollTop=0; sfx('msg');
   clearInterval(tmr); $('timer').classList.remove('on');
 }
@@ -218,7 +222,8 @@ function closeSheet(){ $('sheet').classList.remove('on'); clearInterval(tmr); }
 function choose(n,c,timedOut){
   closeSheet(); sfx(timedOut?'back':'ok');
   const best=n.choices.find(x=>x.g==='best'&&(!x.need||x.need(S)));
-  S.log.push({q:n.q||'どうする？',you:c.t,g:c.g,why:c.why||'',best:best&&best!==c?best.t:null,bestWhy:best&&best!==c?best.why:null});
+  const T=x=>typeof x.t==='function'?x.t(S):x.t;
+  S.log.push({q:n.q||'どうする？',you:T(c),g:c.g,why:c.why||'',best:best&&best!==c?T(best):null,bestWhy:best&&best!==c?best.why:null});
   S.score+=(c.sc||0); if(c.flag) S.flags[c.flag]=true; if(c.x) Object.assign(S.x,c.x);
   if(c.dt){ S.clock+=c.dt; setClock(); }
   const res=typeof c.res==='function'?c.res(S):(c.res||[]);
@@ -294,7 +299,7 @@ function renderMenu(){
   for(const ar of AREAS){
     h+=`<div class="stagehead"><h3>${fmt(ar.name)}</h3><span>${fmt(ar.sub)}</span></div><div class="cases">`;
     STORIES.forEach((c,i)=>{ if(c.area!==ar.id) return;
-      const r=REC[c.id];
+      const r=REC[c.id]; if(c.readyFn) c.ready=c.readyFn();
       const actors={};
       for(const [id,a] of Object.entries(c.cast)){ if(!a.look||a.thumb===false) continue; if(a.show===false&&!a.thumb) continue; actors[id]={x:a.tx||a.x||200,y:a.ty||a.y,p:a.tp||a.p||'stand',f:a.tf||'normal',show:true}; }
       const svg=sceneSvg({scene:c.scene,actors,fx:{}},c.cast,true);

@@ -5,7 +5,8 @@ const STORIES=[];
 const AREAS=[
   {id:'irino',name:'入野の浜（黒潮町）',sub:'津波が一番早く来る'},
   {id:'shimoda',name:'下田（四万十川の河口）',sub:'約18分で津波。言葉と役目'},
-  {id:'nakamura',name:'中村・具同・古津賀',sub:'その場は安全。でも家族は低い所に'}
+  {id:'nakamura',name:'中村・具同・古津賀',sub:'その場は安全。でも家族は低い所に'},
+  {id:'epi',name:'エピローグ',sub:'8人の物語を、すべて終えると開く'}
 ];
 const TITLE_LEAD='四万十川が海に出会う、この美しいまちで。<br>その日、大地が三分間ゆれ続けたら。<br>あなたは、生き延びる判断ができるだろうか。';
 const DISC_TITLE='この物語に出てくる人物と出来事は架空です。場所は実在しますが、学校・病院・お店・消防団の実際の避難計画や対応とは関係ありません。津波の時間と高さは、高知県・四万十市・黒潮町の公表資料（2025年度の想定など）をもとにしています。想定は目安です。実際の地震では、想定より早く、高い津波が来ることもあります。';
@@ -34,17 +35,9 @@ const SOURCES=[
     ['内閣府「熊本地震の被害の状況」（2019年）','https://www.bousai.go.jp/taisaku/kyuujo/pdf/r01kaigi/siryo8.pdf']]}
 ];
 
-/* ---------- まだ書いていない物語（一覧に「準備中」で出す） ---------- */
-const STUB=(o)=>STORIES.push(Object.assign({ready:false,nodes:{},start:null,debrief:[],outcome:()=>({})},o));
+/* ---------- 複数の物語で使う人物 ---------- */
 LOOK.nanami={k:'child',skin:'#fbd9bd',hair:'#5a3a2a',hs:'pony',top:'#7ec8e3',bot:'#f48fb1'};
 LOOK.daichi={k:'adult',skin:'#d9a27a',hair:'#3a2a22',hs:'spiky',top:'#26a69a',bot:'#26a69a'};
 LOOK.keiko={k:'adult',skin:'#f6d3b5',hair:'#5a3a2a',hs:'bob',top:'#ce93d8',bot:'#58607a'};
 LOOK.sumiko={k:'old',skin:'#f3d0b1',hair:'#d8d3cf',hs:'bun',top:'#9fa8da',bot:'#6d6a8a',x:'cardigan'};
 LOOK.genichi={k:'old',skin:'#efc8a5',hair:'#d9d6d0',hs:'old',top:'#bcd6e6',bot:'#bcd6e6'};
-STUB({id:'nanami',area:'irino',who:'少女（10歳）',title:'ことばの分からない浜で',place:'SUNLIFE COFFEE WAVES.',stars:4,scene:'irino',blurb:'県外からの家族旅行。お母さんたちとはぐれて、一人でカフェにいる。',xs:['X1','X2'],cast:{n:{look:'nanami',x:200}}});
-STUB({id:'surfer',area:'irino',who:'サーファー（20歳）',title:'海の上では揺れない',place:'入野の浜',stars:5,scene:'irino',blurb:'沖で波を待っている。海の上では、揺れがよく分からない。',xs:['X1','X2'],cast:{n:{look:'daichi',x:200}}});
-STUB({id:'luis',area:'shimoda',who:'技能実習生（30歳）',title:'にげる／ひなんじょ',place:'下田の加工場',stars:4,scene:'port',blurb:'フィリピンから来て3年目。日本語は、ほとんど分からない。',xs:['X4','X5','X6'],cast:{n:{look:'luis',x:200}}});
-STUB({id:'fire',area:'shimoda',who:'消防団員（60歳）',title:'閉めに行くか',place:'下田分団',stars:5,scene:'port',blurb:'地震の時は、水門を閉めに行く役目がある。',xs:['X3','X4'],cast:{n:{look:'hamada',x:200}}});
-STUB({id:'keiko',area:'nakamura',who:'主婦（50歳）',title:'赤鉄橋の向こう',place:'マルナカ（具同）',stars:3,scene:'mart',blurb:'買い物中に地震。古津賀の家には、熱で休んだ中学生の息子がいる。',xs:['X7'],cast:{n:{look:'keiko',x:200}}});
-STUB({id:'sumiko',area:'nakamura',who:'外来患者（70歳）',title:'お父さんが家におる',place:'四万十市立市民病院',stars:2,scene:'hosp',blurb:'内科の順番待ちの最中に地震。古津賀の家には、足の悪い夫がいる。',xs:['X7','X8'],cast:{n:{look:'sumiko',x:200}}});
-STUB({id:'genichi',area:'nakamura',who:'入院患者（80歳）',title:'わしはもうええけん',place:'四万十市立市民病院',stars:3,scene:'hosp',blurb:'昭和南海地震の年に生まれた。足が弱く、自分では速く動けない。',xs:['X8'],cast:{n:{look:'genichi',x:200}}});
