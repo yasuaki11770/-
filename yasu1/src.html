@@ -208,6 +208,7 @@ h1,h2,h3{margin:0;text-wrap:balance;line-height:1.25}
 
 <div id="app"></div>
 <script type="application/json" id="gd">/*__DATA__*/</script>
+<script type="application/json" id="aud">/*__AUD__*/</script>
 <script>
 "use strict";
 const D=JSON.parse(document.getElementById('gd').textContent);
@@ -237,10 +238,10 @@ const xpNeed=()=>100+S.lv*40;
 /* ---------- skills (all of them are real phrases you say) ---------- */
 const SKILLS=[
  {id:'again',lv:1,uses:2,en:"Sorry, could you say that again?",jp:"もう一度言ってもらえますか？",eff:"もう一度聞く",reply:["Sure!","Oh, sure.","No problem."]},
- {id:'think',lv:1,uses:1,en:"Let me think for a second.",jp:"ちょっと考えさせてください。",eff:"6秒、待ってもらえる",reply:["Take your time.","Sure, no rush.","Of course."]},
- {id:'slow',lv:3,uses:1,en:"Could you speak a little more slowly?",jp:"もう少しゆっくり話してもらえますか？",eff:"ゆっくり聞く＋この問いは待ってもらいやすい",reply:["Oh, sorry! Sure.","Of course."]},
- {id:'spell',lv:5,uses:1,en:"Sorry, could you write that down?",jp:"書いてもらえますか？",eff:"聞き取りの字幕を出す／次の一語を教わる",reply:["Here you go.","Sure, let me write it."]},
- {id:'mean',lv:8,uses:1,en:"Sorry, what do you mean?",jp:"どういう意味ですか？",eff:"違う選択肢・ダミーの語を消す",reply:["Oh, I mean…","Let me put it another way."]}
+ {id:'think',lv:1,uses:1,en:"Let me think about that for a second.",jp:"ちょっと考えさせてください。",eff:"6秒、待ってもらえる",reply:["Take your time.","Sure, no rush.","Of course."]},
+ {id:'slow',lv:3,uses:1,en:"Could you speak a little more slowly, please?",jp:"もう少しゆっくり話してもらえますか？",eff:"ゆっくり聞く＋この問いは待ってもらいやすい",reply:["Oh, sorry! Sure.","Of course."]},
+ {id:'spell',lv:5,uses:1,en:"Could you write that down for me?",jp:"書いてもらえますか？",eff:"聞き取りの字幕を出す／次の一語を教わる",reply:["Here you go.","Sure, let me write it."]},
+ {id:'mean',lv:8,uses:1,en:"What do you mean by that?",jp:"どういう意味ですか？",eff:"違う選択肢・ダミーの語を消す",reply:["Oh, I mean…","Let me put it another way."]}
 ];
 const ITEMS={
  tea:{n:"スイートティー",en:"Sweet tea",price:5,d:"会話中に飲む。相手の待ち時間 +30。",use:'battle'},
@@ -259,7 +260,57 @@ function pickVoice(g,name){
   let pool=vs.filter(v=>(g==='m'?MAL:FEM).test(v.name));if(!pool.length)pool=vs;
   return pool[hash(name)%pool.length];
 }
-function speak(text,who,opt={}){
+/* recorded voices (The Magic City, made offline with the Kokoro neural TTS): packs of mp3 + an index text -> [pack, start, dur] */
+const AUDJ=JSON.parse(document.getElementById('aud').textContent||'{"packs":{},"idx":{}}');
+const normKey=s=>String(s||'').toLowerCase().replace(/[’‘]/g,"'").replace(/[“”]/g,'"').replace(/\s+/g,' ').trim();
+const PK=new Map();let CLIP=null,SAYTOK=0;
+function prefsOf(who){if(who==='me')return['me'];if(!who)return[];return[].concat(who.p||[])}
+function clipFor(text,who){const n=normKey(text);for(const p of prefsOf(who)){const c=AUDJ.idx[p+'|'+n];if(c)return c}return null}
+const decodeWith=(C,ab)=>new Promise((ok,ng)=>{try{const pr=C.decodeAudioData(ab,ok,ng);if(pr&&pr.catch)pr.catch(ng)}catch(er){ng(er)}});
+function decodeLow(ab){const O=window.OfflineAudioContext||window.webkitOfflineAudioContext;if(!O)return Promise.reject(0);let c;try{c=new O(1,1,24000)}catch(er){return Promise.reject(er)}return decodeWith(c,ab)}
+function packLoad(pk){
+  const url=AUDJ.packs[pk];if(!url||!actx())return Promise.resolve(null);
+  let e=PK.get(pk);if(e){e.t=performance.now();return e.p}
+  e={t:performance.now(),buf:null};PK.set(pk,e);
+  e.p=fetch(url).then(r=>{if(!r.ok)throw new Error('http '+r.status);return r.arrayBuffer()})
+    .then(ab=>decodeLow(ab.slice(0)).catch(()=>decodeWith(AU.ctx,ab)))
+    .then(b=>{e.buf=b;while(PK.size>10){let old=null;for(const[k,v]of PK)if(k!==pk&&(!old||v.t<PK.get(old).t))old=k;if(!old)break;PK.delete(old)}return b},()=>{PK.delete(pk);return null});
+  return e.p;
+}
+function preloadTexts(list){const seen=new Set();for(const[t,w]of list){const c=clipFor(t,w);if(c&&!seen.has(c[0])){seen.add(c[0]);packLoad(c[0])}}}
+function stretch(buf,st,du,r){
+  const sr=buf.sampleRate,all=buf.getChannelData(0),s0=Math.floor(st*sr),n=Math.min(all.length-s0,Math.floor(du*sr));
+  const x=all.subarray(s0,s0+n),W=Math.round(sr*.032)&~1,H=W>>1,tol=Math.round(sr*.012);
+  const out=Math.ceil(n/r)+W,y=new Float32Array(out),win=new Float32Array(W);
+  for(let i=0;i<W;i++)win[i]=.5-.5*Math.cos(2*Math.PI*i/W);
+  let prev=0,o=0;
+  for(;;o+=H){const t=Math.round(o*r);if(t+W>n||o+W>out)break;let best=t;
+    if(o){const nat=prev+H;if(nat+W<=n){let bc=-Infinity;for(let d=-tol;d<=tol;d+=2){const p=t+d;if(p<0||p+W>n)continue;let c=0;for(let i=0;i<W;i+=6)c+=x[p+i]*x[nat+i];if(c>bc){bc=c;best=p}}}}
+    for(let i=0;i<W;i++)y[o+i]+=x[best+i]*win[i];prev=best}
+  const len=Math.max(1,Math.min(out,o+H)),b=AU.ctx.createBuffer(1,len,sr);b.getChannelData(0).set(y.subarray(0,len));return b;
+}
+function stopClip(){const c=CLIP;CLIP=null;if(c){try{c.src.onended=null;c.src.stop()}catch(e){}c.fin()}}
+function stopVoice(){SAYTOK++;stopClip();try{AU.ok&&speechSynthesis.cancel()}catch(e){}}
+async function playClip(c,rate,tok){
+  const ctx=actx();if(!ctx)return false;
+  const buf=await Promise.race([packLoad(c[0]),new Promise(r=>setTimeout(()=>r(null),9000))]);
+  if(!buf||tok!==SAYTOK)return !!buf;
+  return new Promise(res=>{
+    const src=ctx.createBufferSource(),g=ctx.createGain();g.gain.value=1;src.connect(g).connect(ctx.destination);
+    let done=false;const fin=()=>{if(!done){done=true;res(true)}};
+    CLIP={src,fin};src.onended=()=>{if(CLIP&&CLIP.src===src)CLIP=null;fin()};
+    if(Math.abs(rate-1)>.04){src.buffer=stretch(buf,c[1],c[2],rate);src.start(0)}else{src.buffer=buf;src.start(0,c[1],c[2])}
+  });
+}
+const RATE=()=>S.set.rate<.9?.8:S.set.rate>1?1.1:1;
+async function speak(text,who,opt={}){
+  stopVoice();const tok=SAYTOK;
+  const c=clipFor(text,who);
+  if(c){const ok=await playClip(c,opt.slow?.72:RATE(),tok);if(ok||tok!==SAYTOK)return}
+  if(tok!==SAYTOK)return;
+  return deviceSpeak(text,who,opt);
+}
+function deviceSpeak(text,who,opt={}){
   return new Promise(res=>{
     const fallback=setTimeout(res,600+String(text).length*(opt.slow?95:70));
     if(!AU.ok){return}
@@ -268,7 +319,7 @@ function speak(text,who,opt={}){
       const v=who==='me'?pickVoice('m','yasu-me'):pickVoice(who?.g||'f',who?.n||'x');if(v)u.voice=v;
       u.rate=(opt.slow?.68:S.set.rate)*(who==='me'?1:1);u.pitch=who==='me'?.9:1;
       u.onend=()=>{clearTimeout(fallback);res()};u.onerror=()=>{clearTimeout(fallback);res()};
-      speechSynthesis.cancel();speechSynthesis.speak(u);
+      speechSynthesis.speak(u);
     }catch(e){}
   });
 }
@@ -427,13 +478,13 @@ function rTitle(){
     <div class="row"><span class="small" style="width:7em">話す速さ</span><div class="seg" id="rate">${[[.8,'ゆっくり'],[.95,'ふつう'],[1.1,'ネイティブ']].map(([v,l])=>`<button data-v="${v}" class="${S.set.rate==v?'on':''}">${l}</button>`).join('')}</div></div>
     <div class="row"><span class="small" style="width:7em">聞き取りの字幕</span><div class="seg" id="subs">${[['after','答えたあと'],['always','最初から']].map(([v,l])=>`<button data-v="${v}" class="${S.set.subs===v?'on':''}">${l}</button>`).join('')}</div></div>
     <div class="row"><span class="small" style="width:7em">効果音</span><div class="seg" id="sfx">${[[1,'あり'],[0,'なし']].map(([v,l])=>`<button data-v="${v}" class="${(S.set.sfx?1:0)===v?'on':''}">${l}</button>`).join('')}</div></div>
-    ${AU.ok?'':'<p class="note">この環境では英語の読み上げが使えません。聞き取りは字幕つきになります。</p>'}
+    
     ${cont?'<button class="btn ghost sm" id="reset" style="justify-self:start">最初からやり直す</button>':''}
   </div>
-  <p class="small muted">英文はThe Magic Cityシリーズの365場面から。音声はブラウザの読み上げです。記録はこの端末に保存されます。</p>`;
+  <p class="small muted">英文と音声はThe Magic Cityシリーズの365場面から。登場人物それぞれの収録音声で話します。記録はこの端末に保存されます。</p>`;
   document.getElementById('go').onclick=()=>{actx();speak(' ',null);S.started=true;save();go(S.week>=WEEKS.length?'end':'week')};
   const b=document.getElementById('book');if(b)b.onclick=()=>go('book',{back:'title'});
-  document.querySelectorAll('#rate button').forEach(b=>b.onclick=()=>{S.set.rate=+b.dataset.v;save();rTitle();speak("Hi, I'm Yasu. It's great to meet you.",'me')});
+  document.querySelectorAll('#rate button').forEach(b=>b.onclick=()=>{actx();S.set.rate=+b.dataset.v;save();rTitle();speak("Hi, I'm Yasu. It's great to meet you.",'me')});
   document.querySelectorAll('#subs button').forEach(b=>b.onclick=()=>{S.set.subs=b.dataset.v;save();rTitle()});
   document.querySelectorAll('#sfx button').forEach(b=>b.onclick=()=>{S.set.sfx=!!+b.dataset.v;save();rTitle();SFX.ok()});
   const r=document.getElementById('reset');if(r)r.onclick=()=>{if(r.dataset.c){S=NEWSAVE();save();rTitle()}else{r.dataset.c=1;r.textContent='もう一度押すと全部消えます'}};
@@ -488,6 +539,7 @@ function rBrief(){
   <button class="btn pri wide" id="start">${m.who.n}に話しかける</button>`;
   document.getElementById('back').onclick=()=>go('week');
   document.getElementById('start').onclick=()=>{actx();startBattle(c)};
+  const w={p:'n'+m.id};preloadTexts([[m.open,w],...m.ear.map(e=>[e[0],w]),...m.keys.map(k=>[k[1],'me'])]);
 }
 
 /* ---------- battle engine ---------- */
@@ -496,7 +548,7 @@ function startBattle(c,review){
   const m=c?MOM.get(c.m):null;
   B={c,m,boss:!!c?.boss,review:!!review,rounds:review?review.rounds:makeRounds(m,c.boss),ri:-1,pat:100,state:'npc',res:[],combo:0,best:0,score:0,
      uses:Object.fromEntries(SKILLS.map(s=>[s.id,S.lv>=s.lv?s.uses:0])),freeze:0,slowR:false,mood:'happy',mistakes:0,learned:[],t0:0,lastT:0,
-     who:m?m.who:{n:'Review',g:'f'},items:{tea:false,coffee:false},log:[]};
+     who:m?{...m.who,p:'n'+m.id}:{n:'Review',g:'f'},items:{tea:false,coffee:false},log:[]};
   S.stats.battles+=review?0:1;
   V={scr:review?'review':'battle'};
   if(!review&&m){B.log.push({who:'npc',en:m.open,jp:'',ri:0});}
@@ -507,7 +559,7 @@ function cur(){return B.rounds[B.ri]}
 function nextRound(){
   B.ri++;B.slowR=false;B.freeze=0;
   if(B.ri>=B.rounds.length)return endBattle(true);
-  const r=cur();r.done=false;r.mist=0;r.picked=null;r.ptr=0;r.shown=S.set.subs==='always'||!AU.ok||!AU.voices.length;
+  const r=cur();r.done=false;r.mist=0;r.picked=null;r.ptr=0;r.shown=S.set.subs==='always'||(!clipFor(r.line,r.who||B.who)&&(!AU.ok||!AU.voices.length));
   B.state='npc';rBattle();
   speak(r.line,r.who||B.who).then(()=>{if(B&&cur()===r&&!r.done){B.state='input';r.t0=performance.now();loop();rBattle()}});
 }
@@ -561,13 +613,14 @@ function useSkill(id){
   speak(sk.en,'me').then(()=>{
     if(!B||cur()!==r)return;
     const rep=rnd(sk.reply);
-    const back=()=>{B.state='input';r.t0+=0;loop();rBattle()};
+    const back=()=>{B.state='input';loop();rBattle()};
     const W=r.who||B.who;
-    if(id==='again')speak(rep+' '+r.line,W).then(back);
+    B.log.push({who:'npc',en:rep,jp:'',ri:B.ri,wn:W.n});rBattle();
+    if(id==='again')speak(r.line,W).then(back);
     else if(id==='slow'){B.slowR=true;speak(r.line,W,{slow:1}).then(back)}
-    else if(id==='think'){speak(rep,W).then(()=>{B.freeze=6;back()})}
-    else if(id==='spell'){r.helped=true;if(r.type==='build'){const want=r.chunks[r.ptr];const t=r.tiles.find(t=>!t.used&&t.c===want);if(t)t.hint=true}else r.shown=true;speak(rep,W).then(back)}
-    else if(id==='mean'){r.helped=true;if(r.type==='build'){r.tiles.forEach(t=>{if(!t.real)t.used=true})}else{const wrongs=r.opts.filter(o=>o!==r.correct&&!(r.cut||[]).includes(o));r.cut=[...(r.cut||[]),wrongs[0]]}speak(rep,W).then(back)}
+    else if(id==='think'){B.freeze=6;back()}
+    else if(id==='spell'){r.helped=true;if(r.type==='build'){const want=r.chunks[r.ptr];const t=r.tiles.find(t=>!t.used&&t.c===want);if(t)t.hint=true}else r.shown=true;back()}
+    else if(id==='mean'){r.helped=true;if(r.type==='build'){r.tiles.forEach(t=>{if(!t.real)t.used=true})}else{const wrongs=r.opts.filter(o=>o!==r.correct&&!(r.cut||[]).includes(o));r.cut=[...(r.cut||[]),wrongs[0]]}back()}
   });
 }
 function useItem(k){
@@ -620,7 +673,7 @@ function rBattle(){
       <div class="small" id="frz" style="color:var(--sky);font-weight:700" ${B.freeze>0?'':'hidden'}>Take your time. — 待ってくれている</div>
     </div>
   </div>
-  ${B.log.slice(-1).filter(l=>l.ri===Math.max(0,B.ri)).map(l=>`<div class="bubble ${l.who==='me'?'me':''}"><div class="who">${l.who==='me'?'ヤス':esc(B.who.n)}</div><div class="line">${esc(l.en)}</div>${l.jp?`<div class="jp" style="${l.who==='me'?'color:inherit;opacity:.8':''}">${esc(l.jp)}</div>`:''}</div>`).join('')}
+  ${B.log.slice(-1).filter(l=>l.ri===Math.max(0,B.ri)).map(l=>`<div class="bubble ${l.who==='me'?'me':''}"><div class="who">${l.who==='me'?'ヤス':esc(l.wn||B.who.n)}</div><div class="line">${esc(l.en)}</div>${l.jp?`<div class="jp" style="${l.who==='me'?'color:inherit;opacity:.8':''}">${esc(l.jp)}</div>`:''}</div>`).join('')}
   ${bub}
   ${task}
   ${r&&r.done?`<button class="btn pri wide" id="next">${B.ri+1<B.rounds.length?'次へ':'会話を終える'}</button>`:''}
@@ -648,7 +701,7 @@ function rBattle(){
   });
   document.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>useSkill(b.dataset.s));
   document.querySelectorAll('[data-item]').forEach(b=>b.onclick=()=>useItem(b.dataset.item));
-  const nx=document.getElementById('next');if(nx)nx.onclick=()=>{speechSynthesis?.cancel?.();nextRound()};
+  const nx=document.getElementById('next');if(nx)nx.onclick=()=>{stopVoice();nextRound()};
   updPat();
 }
 let quitArm=0;
@@ -660,7 +713,7 @@ function fbBox(r){
   return `<div class="fb ${clean?'ok':'ng'}"><span class="h">${clean?'通じた！':'通じた。次はノーミスで'}</span><span class="en">“${esc(r.answer)}”</span><span class="muted small">相手：${esc(r.line)}</span></div>`;
 }
 function endBattle(win,why){
-  cancelAnimationFrame(raf);try{speechSynthesis.cancel()}catch(e){}
+  cancelAnimationFrame(raf);stopVoice();
   const b=B;B=null;
   if(b.review){
     // review: rounds done count
@@ -722,7 +775,7 @@ function rWeekend(){
   <div class="card pad"><h3 style="font-size:15px">お店</h3><div class="shop">${Object.entries(ITEMS).map(([k,it])=>`<div class="item"><div><b>${esc(it.n)}</b> <span class="en small muted">${esc(it.en)}</span><p>${esc(it.d)}</p></div><span class="small muted tab">×${S.items[k]}</span><button class="btn sm" data-buy="${k}" ${S.money<it.price?'disabled':''}>$${it.price}</button></div>`).join('')}</div></div>
   <button class="btn pri wide" id="nextw">${w+1>=WEEKS.length?'1年をしめくくる →':'次の週へ →'}</button>`;
   document.getElementById('back').onclick=()=>go('week');
-  document.getElementById('rev').onclick=()=>{const ids=due.slice(0,8);const rounds=shuffle(ids).map(id=>{const it=itemOf(id);if(!it)return null;const who=it.m.who;if(it.t==='k')return prep({type:'build',line:it.k[2],prompt:it.k[0],answer:it.k[1],id,who},false);
+  document.getElementById('rev').onclick=()=>{const ids=due.slice(0,8);const rounds=shuffle(ids).map(id=>{const it=itemOf(id);if(!it)return null;const who={...it.m.who,p:'n'+it.m.id};if(it.t==='k')return prep({type:'build',line:it.k[2],prompt:it.k[0],answer:it.k[1],id,who},false);
       const e=it.e;return e[2].startsWith('返し方：')&&Math.random()<.5?prep({type:'reply',line:e[0],jp:e[1],answer:e[2].slice(4).trim(),id,who},false):prep({type:'listen',line:e[0],jp:e[1],note:e[2],id,who},false)}).filter(Boolean);
     startBattle(null,{rounds})};
   document.getElementById('walk').onclick=()=>{st.walk=true;save();go('street',{enc:rnd(D.c),slang:rnd(D.s),step:0})};
@@ -733,7 +786,7 @@ function rWeekend(){
 /* street walk: one encounter + one southern word */
 function rStreet(){
   const{enc,slang,step,pick,spick}=V;
-  const who={n:enc.name,g:enc.g};
+  const who={n:enc.name,g:enc.g,p:'x'+enc.id};const swho={n:'nb',g:'m',p:['wf','wm']};
   let body='';
   if(step===0){
     const ch=enc.ch;
@@ -752,10 +805,10 @@ function rStreet(){
   }
   $app.innerHTML=`<div class="topbar"><span class="t">街を歩く</span></div>${body}`;
   const rp=document.getElementById('replay');if(rp)rp.onclick=()=>speak(enc.line[0],who);
-  const rp2=document.getElementById('replay2');if(rp2)rp2.onclick=()=>speak(slang[3],{n:'nb',g:'m'});
+  const rp2=document.getElementById('replay2');if(rp2)rp2.onclick=()=>speak(slang[3],swho);
   if(step===0&&pick==null&&!V.spoke){V.spoke=1;speak(enc.line[0],who)}
-  if(step===1&&spick==null&&!V.spoke2){V.spoke2=1;speak(slang[3],{n:'nb',g:'m'})}
-  document.querySelectorAll('[data-i]').forEach(b=>b.onclick=()=>{const i=+b.dataset.i,c=enc.ch[i];V.pick=i;if(c.ok){SFX.ok();S.money+=10;gainXP(30);if(c.r)speak(c.r[0],who)}else{SFX.ng();gainXP(10)}save();rStreet()});
+  if(step===1&&spick==null&&!V.spoke2){V.spoke2=1;speak(slang[3],swho)}
+  document.querySelectorAll('[data-i]').forEach(b=>b.onclick=()=>{const i=+b.dataset.i,c=enc.ch[i];V.pick=i;if(c.ok){SFX.ok();S.money+=10;gainXP(30)}else{SFX.ng();gainXP(10)}save();rStreet();speak(c.en,'me').then(()=>{if(c.ok&&c.r&&V.scr==='street')speak(c.r[0],who)})});
   document.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{const i=+b.dataset.s;V.spick=i;if(V.sopts[i]===slang[1]){SFX.ok();gainXP(20);S.money+=5}else SFX.ng();save();rStreet()});
   const nx=document.getElementById('nx');if(nx)nx.onclick=()=>{V.step=1;rStreet()};
   const nx2=document.getElementById('nx2');if(nx2)nx2.onclick=()=>go('weekend');
