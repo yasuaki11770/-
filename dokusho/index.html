@@ -88,6 +88,7 @@ h1,h2,h3{margin:0}
 .ln.teach .who{display:block;font-size:11.5px;font-weight:900;color:#a77a1f}
 .ln b{color:var(--acc)}
 #foot{flex:none;padding:8px 14px calc(14px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:8px;max-height:58dvh;overflow-y:auto}
+#play.asking #foot{max-height:72dvh}
 .tap{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;opacity:.6;padding:2px 4px}
 .tap span{animation:blink 1.2s infinite}
 @keyframes blink{50%{opacity:.25}}
@@ -130,15 +131,28 @@ body[data-world=book] .bar{border-bottom-color:#5b3a1e22}
 .k-bad{color:#5d6b8a}.k-miss{color:#c27a14}.k-good{color:#3c8f6a}.k-true{color:var(--acc)}
 .shiori{margin:auto;display:flex;flex-direction:column;align-items:center;gap:14px;color:#f3ead8;text-align:center;max-width:420px}
 .shiori .head{font-size:13px;letter-spacing:.3em;color:var(--lamp);font-weight:700;margin-bottom:22px}
-.card{position:relative;width:150px;min-height:330px;background:linear-gradient(#fbf4e4,#efe1bf);border-radius:4px;padding:34px 0 22px;display:flex;justify-content:center;box-shadow:0 12px 30px #0009;animation:drop .7s cubic-bezier(.2,1.4,.4,1)}
+.card{position:relative;min-width:150px;max-width:92vw;min-height:330px;background:linear-gradient(#fbf4e4,#efe1bf);border-radius:4px;padding:36px 26px 30px;display:flex;justify-content:center;box-shadow:0 12px 30px #0009;animation:drop .7s cubic-bezier(.2,1.4,.4,1)}
 @keyframes drop{from{transform:translateY(-40px) rotate(-6deg);opacity:0}}
 .card::before{content:'';position:absolute;top:10px;left:50%;width:12px;height:12px;margin-left:-6px;border-radius:50%;background:#3a2b1a;box-shadow:inset 0 2px 2px #0006}
 .card::after{content:'';position:absolute;top:14px;left:50%;width:3px;height:44px;margin-left:-1.5px;background:var(--acc);transform-origin:top;transform:translateY(-44px) rotate(10deg);border-radius:2px}
-.card .v{writing-mode:vertical-rl;font-family:var(--mincho);font-weight:800;font-size:18px;line-height:1.75;letter-spacing:.1em;color:#3b2a18;max-height:296px}
+.card .v{writing-mode:vertical-rl;font-family:var(--mincho);font-weight:800;font-size:18px;line-height:1.75;letter-spacing:.1em;color:#3b2a18;height:290px}
 .card .v span{display:block;text-align:start;text-indent:0}
 .card .src{position:absolute;bottom:8px;left:0;right:0;font-size:10px;color:#8a6f4a;font-family:var(--mincho)}
 .shiori ul{text-align:left;margin:0;padding-left:20px;font-size:14px;line-height:1.85}
 .shiori .btn{max-width:320px}
+.shiori .quote{margin:0;font-family:var(--mincho);font-size:15px;line-height:1.8;opacity:.9}
+.shiori .quote span{display:block;font-size:11.5px;opacity:.7}
+.pick{display:flex;gap:12px;align-items:flex-start}
+.pick .box{flex:none;width:22px;height:22px;border-radius:6px;border:2px solid currentColor;opacity:.55;margin-top:3px;position:relative}
+.pick.on{border-color:var(--gold)!important;background:#d9a44129!important}
+.pick.on .box{opacity:1;background:var(--gold);border-color:var(--gold)}
+.pick.on .box::after{content:'';position:absolute;left:6px;top:1px;width:6px;height:12px;border:solid #2a1d05;border-width:0 3px 3px 0;transform:rotate(45deg)}
+.pick .whom{display:block;font-size:11.5px;opacity:.6;margin-top:2px}
+#note{width:100%;font:inherit;font-size:16px;line-height:1.6;border-radius:12px;border:2px dashed #ffffff4d;background:#ffffff12;color:inherit;padding:10px 12px;resize:none}
+#note:focus{outline:none;border-color:var(--gold)}
+.sec.mine{background:#fff;border-color:#d9a441}
+.sec .note{font-family:var(--mincho);font-weight:800;font-size:17px;line-height:1.8;color:#3b2a18;white-space:pre-line}
+.sec ul{margin:0 0 6px;padding-left:20px}
 
 /* ---------- book page ---------- */
 #book{background:var(--paper);color:#3b2a18;gap:14px;font-family:var(--gothic)}
@@ -159,16 +173,16 @@ body[data-world=book] .bar{border-bottom-color:#5b3a1e22}
 .row .btn{text-align:center}
 </style>
 </head>
-<body data-world="now">
+<body data-world="menu">
 
 <section class="screen on" id="title">
   <div id="titleOwl"></div>
   <div class="kicker">読書百選 × やりなおし</div>
   <h1>やりなおし<br>図書館</h1>
-  <div class="tag">「知らなかった」で、終わらせない。</div>
-  <p class="lead">後悔した人の前にだけ、その扉は開く。<br>ふくろうの司書・ミネル先生が、あなたを一冊の本の中へ連れていく。<br>本の主人公が「あの時」どうしたかを知れば、<br>まだ見えていなかった選択肢が、見えてくる。</p>
+  <div class="tag">読めなくても、入ればいい。</div>
+  <p class="lead">名作の主人公になって、名場面を生きてみる。<br>本を閉じたら、ふくろうの司書・ミネル先生が<br>「なぜ名作なのか」を語り、あなたに問いかける。<br>――いまのあなたは、こんな自分になっていないか。</p>
   <button class="btn primary" id="enter">図書館に入る</button>
-  <p class="small" style="opacity:.55;margin:0">試作版　収録：走れメロス／三国志／星の王子さま</p>
+  <p class="small" style="opacity:.55;margin:0">試作版　収録：走れメロス／三国志／星の王子さま（各15〜20分）</p>
 </section>
 
 <section class="screen" id="shelf">
@@ -193,7 +207,6 @@ body[data-world=book] .bar{border-bottom-color:#5b3a1e22}
 
 <section class="screen" id="book"></section>
 
-<div class="ov" id="endOv"><div class="endcard" id="endCard"></div></div>
 <div class="ov" id="lessonOv"><div class="shiori" id="lessonBox"></div></div>
 <div class="toast" id="toast"></div>
 
