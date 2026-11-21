@@ -16,6 +16,9 @@ const NUM = ['一','二','三','四','五','六'];
 
 const OWL = `<svg viewBox="0 0 100 100" aria-hidden="true"><ellipse cx="50" cy="60" rx="34" ry="36" fill="#8a6a4a"/><ellipse cx="50" cy="68" rx="22" ry="24" fill="#e9d7b5"/><path d="M38 70q12 6 24 0M40 79q10 5 20 0" stroke="#b89a70" stroke-width="2" fill="none"/><path d="M18 32l14 12M82 32l-14 12" stroke="#6b4f33" stroke-width="7" stroke-linecap="round"/><circle cx="36" cy="46" r="13" fill="#fff"/><circle cx="64" cy="46" r="13" fill="#fff"/><circle cx="36" cy="47" r="6" fill="#2b1d10"/><circle cx="64" cy="47" r="6" fill="#2b1d10"/><circle cx="38" cy="45" r="2" fill="#fff"/><circle cx="66" cy="45" r="2" fill="#fff"/><circle cx="36" cy="46" r="15" fill="none" stroke="#d9a441" stroke-width="2.5"/><circle cx="64" cy="46" r="15" fill="none" stroke="#d9a441" stroke-width="2.5"/><path d="M51 46h-2" stroke="#d9a441" stroke-width="2.5"/><path d="M50 52l-5 7h10z" fill="#e0a03a"/><path d="M30 95l6-8 6 8M58 95l6-8 6 8" stroke="#e0a03a" stroke-width="3" fill="none"/></svg>`;
 
+/* 本棚の並びを、読書百選の一覧（books.js）の順にそろえる */
+EPS.sort((a, b) => BOOKS.findIndex(x => x[0] === a.title) - BOOKS.findIndex(x => x[0] === b.title));
+
 let REC = {};
 try { REC = JSON.parse(localStorage.getItem('yrt_rec2') || '{}') || {}; } catch (e) {}
 const save = () => { try { localStorage.setItem('yrt_rec2', JSON.stringify(REC)); } catch (e) {} };
@@ -283,6 +286,7 @@ function openShelf() {
   else if (done) msg = 'おかえり。本にはさんだ栞は、いつでも読み返せる。<b>しばらくたってから、同じ問いかけにもう一度答えてみる</b>のもいいものじゃよ。';
   else msg = 'ようこそ、夜の図書館へ。わしは司書のミネル。<br>本が読めなくても、かまわん。<b>本の中に入って、主人公になってみればいい。</b>まずは光っている本を一冊、選んでごらん。';
   $('shelfMsg').innerHTML = OWL + `<p>${msg}</p>`;
+  $('featn').textContent = EPS.length + '冊';
   $('feat').innerHTML = EPS.map(e => coverHTML(e, 'button')).join('');
   $('feat').querySelectorAll('.cover').forEach(b => b.onclick = () => openBook(EPS.find(e => e.id === b.dataset.ep)));
   renderRacks();
