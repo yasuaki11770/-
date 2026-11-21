@@ -43,8 +43,12 @@ function buildTalk(ep) {
   sc.mirror = { world:'lib', place:'問いかけ　その一', ask:'mirror', lines: [
     [TEACHER, ep.mirror.intro],
     ['!', 'いまのあなたは、\nこんな自分になっていないか？'],
-    ['', '当てはまるものを、**いくつでも**選んでください。選ぶと「✓」がつきます。'],
+    ['', '当てはまるものを、**いくつでも**選んでください。選ぶと光ります。'],
   ]};
+  sc.mirrorReply = { world:'lib', place:'問いかけ　その一', lines: S => S.mirror.length
+      ? [...S.mirror.flatMap(i => [['<', ep.mirror.items[i].t], [TEACHER, ep.mirror.items[i].r]]), ...(ep.mirror.after ? [[TEACHER, ep.mirror.after]] : [])]
+      : [['<', 'どれも当てはまらない'], [TEACHER, ep.mirror.none]],
+    next:'resolve', nextLabel:'次の問いかけ ▶' };
   sc.resolve = { world:'lib', place:'問いかけ　その二', ask:'resolve', lines: [
     [TEACHER, ep.resolve.intro],
     ['!', `『${ep.title}』から学べることで、\n改めたいことはないか？`],
@@ -148,7 +152,7 @@ function choose(c, i) {
 }
 
 /* ---------- 問いかけ ---------- */
-/* 選択リスト。multi=true で複数選択、false でひとつだけ。選んだ項目は色と「✓」の文字の両方で示す */
+/* 選択リスト。multi=true で複数選択、false でひとつだけ。選んだ項目は光る */
 function checkList(items, picked, multi, onChange) {
   const box = $('choices'); box.innerHTML = '';
   const btns = items.map((it, i) => {
@@ -156,7 +160,7 @@ function checkList(items, picked, multi, onChange) {
     b.type = 'button';
     b.className = 'btn ch pick' + (multi ? '' : ' radio');
     b.style.animationDelay = (i * 50) + 'ms';
-    b.innerHTML = `<span class="box"></span><span class="pt">${fmt(it.t)}${it.who ? `<span class="whom">${esc(it.who)}</span>` : ''}</span>`;
+    b.innerHTML = `<span class="pt">${fmt(it.t)}${it.who ? `<span class="whom">${esc(it.who)}</span>` : ''}</span>`;
     b.onclick = () => {
       const on = !b.classList.contains('on');
       if (!multi) btns.forEach(x => mark(x, false));
@@ -169,7 +173,6 @@ function checkList(items, picked, multi, onChange) {
   function mark(b, on) {
     b.classList.toggle('on', on);
     b.setAttribute('aria-pressed', on ? 'true' : 'false');
-    b.querySelector('.box').textContent = on ? '✓' : '';
   }
   function get() { return btns.map((b, i) => b.classList.contains('on') ? i : -1).filter(i => i >= 0); }
   btns.forEach((b, i) => mark(b, picked.includes(i)));
@@ -184,17 +187,8 @@ function askMirror() {
   go2.className = 'btn primary ch';
   label(get());
   go2.onclick = () => {
-    const sel = get();
-    S.mirror = sel;
-    $('choices').innerHTML = '';
-    if (sel.length) {
-      sel.forEach(i => { addLine(['<', M.items[i].t]); addLine([TEACHER, M.items[i].r]); });
-      if (M.after) addLine([TEACHER, M.after]);
-    } else {
-      addLine(['<', 'どれも当てはまらない']);
-      addLine([TEACHER, M.none]);
-    }
-    nextButton('次の問いかけ ▶', () => go('resolve'));
+    S.mirror = get();
+    go('mirrorReply');
   };
   $('choices').appendChild(go2);
 }
