@@ -1,5 +1,5 @@
 'use strict';
-/* やりなおし図書館 ― 進行エンジン
+/* 名作のなかへ ― 進行エンジン
    流れ：図書館（本の紹介）→ 本の世界（名場面を主人公として体験）→ 名作のわけ（先生の講義）
         → 問いかけ「いまのあなたは、こんな自分になっていないか」→ 問いかけ「この名作から、改めたいことは」→ 自分の栞
    エピソードは ep_*.js で window.EPS に登録する。
@@ -43,12 +43,13 @@ function buildTalk(ep) {
   sc.mirror = { world:'lib', place:'問いかけ　その一', ask:'mirror', lines: [
     [TEACHER, ep.mirror.intro],
     ['!', 'いまのあなたは、\nこんな自分になっていないか？'],
-    ['', '当てはまるものを、いくつでも選んでください。'],
+    ['', '当てはまるものを、**いくつでも**選んでください。選ぶと「✓」がつきます。'],
   ]};
   sc.resolve = { world:'lib', place:'問いかけ　その二', ask:'resolve', lines: [
     [TEACHER, ep.resolve.intro],
     ['!', `『${ep.title}』から学べることで、\n改めたいことはないか？`],
-    ['', '選んでも、自分の言葉で書いても、両方でもかまいません。'],
+    [TEACHER, 'ただし、栞にはさめる言葉は**ひとつだけ**じゃ。たくさんはさむと、どれも読み返さなくなるからの。いちばん胸に残ったものを、ひとつ選びなされ。'],
+    ['', '下から**ひとつだけ**選ぶか、「自分の言葉で書く」を選んで書いてください。'],
   ]};
 }
 
@@ -147,24 +148,41 @@ function choose(c, i) {
 }
 
 /* ---------- 問いかけ ---------- */
-function checkList(items, picked) {
+/* 選択リスト。multi=true で複数選択、false でひとつだけ。選んだ項目は色と「✓」の文字の両方で示す */
+function checkList(items, picked, multi, onChange) {
   const box = $('choices'); box.innerHTML = '';
-  items.forEach((it, i) => {
+  const btns = items.map((it, i) => {
     const b = document.createElement('button');
-    b.className = 'btn ch pick' + (picked.includes(i) ? ' on' : '');
+    b.type = 'button';
+    b.className = 'btn ch pick' + (multi ? '' : ' radio');
     b.style.animationDelay = (i * 50) + 'ms';
-    b.innerHTML = `<span class="box"></span><span>${fmt(it.t)}${it.who ? `<span class="whom">${esc(it.who)}</span>` : ''}</span>`;
-    b.onclick = () => { b.classList.toggle('on'); };
+    b.innerHTML = `<span class="box"></span><span class="pt">${fmt(it.t)}${it.who ? `<span class="whom">${esc(it.who)}</span>` : ''}</span>`;
+    b.onclick = () => {
+      const on = !b.classList.contains('on');
+      if (!multi) btns.forEach(x => mark(x, false));
+      mark(b, multi ? on : true);
+      if (onChange) onChange(get());
+    };
     box.appendChild(b);
+    return b;
   });
-  return () => [...box.querySelectorAll('.pick')].map((b, i) => b.classList.contains('on') ? i : -1).filter(i => i >= 0);
+  function mark(b, on) {
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    b.querySelector('.box').textContent = on ? '✓' : '';
+  }
+  function get() { return btns.map((b, i) => b.classList.contains('on') ? i : -1).filter(i => i >= 0); }
+  btns.forEach((b, i) => mark(b, picked.includes(i)));
+  return get;
 }
 
 function askMirror() {
   const M = EP.mirror;
-  const get = checkList(M.items, rec(EP.id).mirror || []);
   const go2 = document.createElement('button');
-  go2.className = 'btn primary ch'; go2.textContent = 'これが、いまのわたし';
+  const label = sel => { go2.textContent = sel.length ? `これが、いまのわたし（${sel.length}つ）` : 'どれも当てはまらない'; };
+  const get = checkList(M.items, rec(EP.id).mirror || [], true, label);
+  go2.className = 'btn primary ch';
+  label(get());
   go2.onclick = () => {
     const sel = get();
     S.mirror = sel;
@@ -183,20 +201,37 @@ function askMirror() {
 
 function askResolve() {
   const R = EP.resolve, r = rec(EP.id);
-  const get = checkList(R.items, r.resolve || []);
+  const OWN = R.items.length;                       // 最後の項目＝「自分の言葉で書く」
+  const items = R.items.concat([{t: '自分の言葉で書く'}]);
   const ta = document.createElement('textarea');
-  ta.id = 'note'; ta.maxLength = 48; ta.rows = 2; ta.style.animationDelay = '300ms'; ta.className = 'ch';
-  ta.placeholder = '自分の言葉で、一行だけ（なくてもかまいません）';
+  ta.id = 'note'; ta.maxLength = 48; ta.rows = 2;
+  ta.placeholder = '栞にはさむ言葉を、ひとつだけ';
   ta.value = r.note || '';
   const go2 = document.createElement('button');
-  go2.className = 'btn primary ch'; go2.textContent = '栞に書く';
+  go2.className = 'btn primary ch';
+  const update = sel => {
+    const own = sel[0] === OWN;
+    ta.style.display = own ? '' : 'none';
+    go2.textContent = sel.length ? 'この言葉を、栞に書く' : 'ひとつ選んでください';
+    go2.disabled = !sel.length;
+    if (own) setTimeout(() => ta.focus(), 50);
+  };
+  const prev = r.note ? [OWN] : (r.resolve || []).slice(0, 1);
+  const get = checkList(items, prev, false, update);
+  update(get());
   go2.onclick = () => {
-    const sel = get(), note = ta.value.split('\n').map(x => x.trim().replace(/\s+/g, ' ')).filter(Boolean).slice(0, 4).join('\n');
-    if (!sel.length && !note) { toast('ひとつ選ぶか、一行書いてみてください'); return; }
-    S.resolve = sel; S.note = note;
+    const sel = get();
+    if (!sel.length) return;
+    if (sel[0] === OWN) {
+      const note = ta.value.split('\n').map(x => x.trim().replace(/\s+/g, ' ')).filter(Boolean).slice(0, 4).join('\n');
+      if (!note) { toast('栞にはさむ言葉を、書いてみてください'); ta.focus(); return; }
+      S.resolve = []; S.note = note;
+    } else { S.resolve = sel; S.note = ''; }
     finish();
   };
-  $('choices').append(ta, go2);
+  // 書く欄は「自分の言葉で書く」のすぐ下に出す
+  $('choices').lastChild.after(ta);
+  $('choices').append(go2);
 }
 
 function today() { const d = new Date(); return [d.getFullYear(), d.getMonth() + 1, d.getDate()]; }
@@ -235,7 +270,7 @@ function openShelf() {
   let msg;
   if (done === EPS.length) msg = 'ミネルヴァのふくろうは、黄昏に飛び立つ――という言葉がある。知恵はいつも、事が終わったあとにやってくる、という意味じゃ。<br>だから人は本を読む。<b>他人の人生で、先に一度、学んでおくために。</b><br>……残りの155冊は、まだ書架の奥で眠っておる。また来なさい。';
   else if (done) msg = 'おかえり。本にはさんだ栞は、いつでも読み返せる。<b>しばらくたってから、同じ問いかけにもう一度答えてみる</b>のもいいものじゃよ。';
-  else msg = 'ようこそ、やりなおし図書館へ。わしは司書のミネル。<br>本が読めなくても、かまわん。<b>本の中に入って、主人公になってみればいい。</b>まずは光っている本を一冊、選んでごらん。';
+  else msg = 'ようこそ、夜の図書館へ。わしは司書のミネル。<br>本が読めなくても、かまわん。<b>本の中に入って、主人公になってみればいい。</b>まずは光っている本を一冊、選んでごらん。';
   $('shelfMsg').innerHTML = OWL + `<p>${msg}</p>`;
   $('feat').innerHTML = EPS.map(e => coverHTML(e, 'button')).join('');
   $('feat').querySelectorAll('.cover').forEach(b => b.onclick = () => openBook(EPS.find(e => e.id === b.dataset.ep)));
