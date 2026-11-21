@@ -52,9 +52,40 @@ h1,h2,h3{margin:0}
 .minel p{margin:0}
 .racks h3{font-family:var(--mincho);font-size:15px;color:var(--lamp);margin:14px 0 6px;font-weight:700}
 .rack{display:flex;flex-wrap:wrap;gap:3px 2px;align-items:flex-end;padding:6px 6px 0;background:linear-gradient(#0000 calc(100% - 8px),#5a3d22 calc(100% - 8px));border-radius:4px}
-.spine{border:none;padding:6px 0;width:27px;height:128px;writing-mode:vertical-rl;font-family:var(--mincho);font-size:11.5px;line-height:27px;letter-spacing:.04em;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;border-radius:2px 2px 0 0;color:#ffffff8c;background:#3a3f55;margin-bottom:8px}
-.spine:nth-child(3n){background:#43394a;height:118px}.spine:nth-child(4n){background:#3b4a44;height:136px}.spine:nth-child(5n){background:#4a4135;height:122px}
+.spine{position:relative;border:none;padding:7px 0 4px;width:27px;height:132px;display:flex;flex-direction:column;align-items:center;gap:4px;border-radius:2px 2px 0 0;color:#ffffff8c;background:#3a3f55;margin-bottom:8px;overflow:hidden}
+.spine .st{flex:1;min-height:0;writing-mode:vertical-rl;font-family:var(--mincho);font-size:11.5px;line-height:1;letter-spacing:.04em;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.spine .bd{font-size:9.5px;padding:1px 2px;border-radius:3px}
+.spine:nth-child(3n){background:#43394a;height:122px}.spine:nth-child(4n){background:#3b4a44;height:140px}.spine:nth-child(5n){background:#4a4135;height:126px}
 .spine.live{color:#fff;font-weight:800;box-shadow:0 0 0 2px var(--lamp),0 0 14px #ffcf7a88}
+.spine.own{color:#fff}
+.spine.own::before,.ribbon{content:'';position:absolute;top:0;right:2px;width:7px;height:15px;background:var(--lamp);clip-path:polygon(0 0,100% 0,100% 100%,50% 72%,0 100%)}
+.ribbon{position:relative;display:inline-block;top:3px;right:0;margin-right:2px}
+.spine.own .st{padding-top:6px}
+.bd{display:inline-block;font-family:var(--gothic);font-size:10.5px;font-weight:900;border-radius:4px;padding:1px 5px;line-height:1.35;color:#fff;vertical-align:1px}
+.bd-j{background:#3f7fd0}.bd-h{background:#c8452f}.bd-both{background:#d9a441;color:#2a1d05}
+.cover .bd{margin-left:4px}.cover .cs+.cs{margin-left:4px}.cover .cs,.cover .bd{white-space:nowrap;display:inline-block;margin-top:3px}
+.shelfh{font-family:var(--mincho);font-size:17px;color:#f3ead8;margin:10px 0 0}
+.tabs{display:flex;gap:6px}
+.tabs button{flex:1;border:1px solid #ffffff2e;background:#ffffff0d;color:#f3ead8;border-radius:10px;padding:9px 6px;font-size:13.5px;font-weight:700}
+.tabs button.on{background:var(--gold);color:#2a1d05;border-color:var(--gold)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{border:1px solid #ffffff2e;background:transparent;color:#f3ead8cc;border-radius:99px;padding:5px 11px;font-size:12.5px}
+.chips button.on{background:#ffd98a2e;border-color:#ffd98a;color:#fff8e6;box-shadow:0 0 10px #ffcf7a55}
+.legend{font-size:12px;opacity:.8;display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center}
+.llist{border-top:1px solid #ffffff14}
+.lrow{display:flex;align-items:center;gap:10px;padding:10px 6px;border-bottom:1px solid #ffffff14;cursor:pointer;-webkit-user-select:none;user-select:none}
+.lrow .ck{flex:none;width:26px;height:26px;border-radius:7px;border:2px solid #ffffff59;color:#2a1d05;font-weight:900;font-size:16px;display:flex;align-items:center;justify-content:center}
+.lrow.own{background:#ffd98a14}
+.lrow.own .ck{background:var(--gold);border-color:var(--gold);box-shadow:0 0 10px #ffcf7a88}
+.lrow .lt{flex:1;min-width:0;line-height:1.45}
+.lrow .lt b{font-family:var(--mincho);font-size:15px;display:block}
+.lrow .lt small{font-size:11.5px;opacity:.65;display:block}
+.lrow .go{flex:none;border:1px solid var(--lamp);background:transparent;color:var(--lamp);border-radius:99px;padding:4px 10px;font-size:12px;font-weight:700}
+.sheet{margin:auto;width:100%;max-width:400px;background:#fffdf8;color:#3b2a18;border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:8px;box-shadow:0 20px 50px #0008}
+.sheet h3{font-family:var(--mincho);font-size:24px;line-height:1.35}
+.sheet p{margin:0;line-height:1.7}
+.btn.owntg{text-align:center;font-weight:800}
+.btn.owntg.on{background:#fff3d6;border-color:var(--gold);box-shadow:0 0 0 1px var(--gold),0 0 14px #ffcf7a88}
 .toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#000c;color:#fff;padding:10px 16px;border-radius:99px;font-size:13.5px;z-index:50;max-width:90vw;text-align:center;pointer-events:none;opacity:0;transition:opacity .25s}
 .toast.on{opacity:1}
 
@@ -190,12 +221,16 @@ body[data-world=book] .bar{border-bottom-color:#5b3a1e22}
 <section class="screen" id="shelf">
   <div class="shead">
     <h2>名作のなかへ</h2>
-    <div class="count">読了<br><b id="cnt">0</b> / 158</div>
+    <div class="count">読了 <b id="cnt">0</b><br>持っている <b id="ownc">0</b> / 158</div>
   </div>
   <div class="minel" id="shelfMsg"></div>
   <div class="feat" id="feat"></div>
+  <h3 class="shelfh">読書百選　158冊</h3>
+  <div class="tabs" id="tabs"></div>
+  <div class="chips" id="chips"></div>
+  <div class="legend"><span><span class="bd bd-j">中</span> 中等部のみ</span><span><span class="bd bd-h">高</span> 高等部のみ</span><span><span class="bd bd-both">両</span> 両方</span><span><span class="ribbon"></span> 持っている</span></div>
   <div class="racks" id="racks"></div>
-  <p class="small" style="opacity:.5;text-align:center;line-height:1.8">中等部・高等部「読書100選」を合わせた158冊。光っている本に入れます。</p>
+  <p class="small" style="opacity:.5;text-align:center;line-height:1.8">中等部・高等部「読書100選」を合わせた158冊。光っている本に入れます。<br>背表紙をタップすると、持っている本にチェックできます。</p>
 </section>
 
 <section class="screen" id="play">
@@ -210,18 +245,19 @@ body[data-world=book] .bar{border-bottom-color:#5b3a1e22}
 <section class="screen" id="book"></section>
 
 <div class="ov" id="lessonOv"><div class="shiori" id="lessonBox"></div></div>
+<div class="ov" id="sheetOv"><div class="sheet" id="sheet"></div></div>
 <div class="toast" id="toast"></div>
 
 <script>window.EPS=[]; var TEACHER='ミネル';</script>
-<script src="books.js?v=6"></script>
-<script src="ep_melos.js?v=6"></script>
-<script src="ep_sangoku.js?v=6"></script>
-<script src="ep_prince.js?v=6"></script>
-<script src="ep_kokoro.js?v=6"></script>
-<script src="ep_ginga.js?v=6"></script>
-<script src="ep_takasebune.js?v=6"></script>
-<script src="ep_tsumi.js?v=6"></script>
-<script src="ep_miserables.js?v=6"></script>
-<script src="engine.js?v=6"></script>
+<script src="books.js?v=8"></script>
+<script src="ep_melos.js?v=8"></script>
+<script src="ep_sangoku.js?v=8"></script>
+<script src="ep_prince.js?v=8"></script>
+<script src="ep_kokoro.js?v=8"></script>
+<script src="ep_ginga.js?v=8"></script>
+<script src="ep_takasebune.js?v=8"></script>
+<script src="ep_tsumi.js?v=8"></script>
+<script src="ep_miserables.js?v=8"></script>
+<script src="engine.js?v=8"></script>
 </body>
 </html>

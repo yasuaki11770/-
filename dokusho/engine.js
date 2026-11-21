@@ -249,12 +249,29 @@ function finish() {
 }
 
 /* ---------- 本棚 ---------- */
+/* ---------- 掲載（中等部・高等部）と、持っている本 ---------- */
+let OWN = {};
+try { OWN = JSON.parse(localStorage.getItem('yrt_own') || '{}') || {}; } catch (e) {}
+const saveOwn = () => { try { localStorage.setItem('yrt_own', JSON.stringify(OWN)); } catch (e) {} };
+let VIEW = {mode: 'rack', filter: 'all'};
+try { Object.assign(VIEW, JSON.parse(localStorage.getItem('yrt_view') || '{}')); } catch (e) {}
+const saveView = () => { try { localStorage.setItem('yrt_view', JSON.stringify(VIEW)); } catch (e) {} };
+
+const BOOK = t => BOOKS.find(b => b[0] === t);
+const memb = l => /中/.test(l) && /高/.test(l) ? 'both' : /中/.test(l) ? 'j' : 'h';
+const MEMB = {both: ['両', '中等部・高等部の両方'], j: ['中', '中等部のみ'], h: ['高', '高等部のみ']};
+const badge = (l, long) => `<span class="bd bd-${memb(l)}">${MEMB[memb(l)][long ? 1 : 0]}</span>`;
+const fmtLists = l => l.split('・').map(x => x.replace(/^中日(\d+)/, '中等部（日本）$1番').replace(/^中海(\d+)/, '中等部（海外）$1番').replace(/^高(\d+)/, '高等部 $1番')).join('／');
+const liveMap = () => Object.fromEntries(EPS.map(e => [e.title, e.id]));
+function toggleOwn(t) { if (OWN[t]) delete OWN[t]; else OWN[t] = 1; saveOwn(); return !!OWN[t]; }
+const ownLabel = on => on ? '✓　持っている' : '□　この本を持っている';
+
 function coverHTML(ep, tag) {
-  const r = rec(ep.id);
+  const r = rec(ep.id), bk = BOOK(ep.title);
   return `<${tag} class="cover" data-ep="${ep.id}" style="background:${ep.cover[0]};color:${ep.cover[1]}">
     ${r.date ? `<span class="stamp">読了</span>` : ''}
     <span class="ct">${esc(ep.title)}</span>
-    <span><span class="ca">${esc(ep.author)}</span><br><span class="cs">${r.date ? '栞あり' : '未読'}</span></span></${tag}>`;
+    <span><span class="ca">${esc(ep.author)}</span><br><span class="cs">${r.date ? '栞あり' : '未読'}</span>${bk ? badge(bk[3]) : ''}${bk && OWN[bk[0]] ? '<span class="cs">所持</span>' : ''}</span></${tag}>`;
 }
 
 function openShelf() {
@@ -262,33 +279,86 @@ function openShelf() {
   const done = EPS.filter(e => rec(e.id).date).length;
   $('cnt').textContent = done;
   let msg;
-  if (done === EPS.length) msg = 'ミネルヴァのふくろうは、黄昏に飛び立つ――という言葉がある。知恵はいつも、事が終わったあとにやってくる、という意味じゃ。<br>だから人は本を読む。<b>他人の人生で、先に一度、学んでおくために。</b><br>……残りの155冊は、まだ書架の奥で眠っておる。また来なさい。';
+  if (done === EPS.length) msg = 'ミネルヴァのふくろうは、黄昏に飛び立つ――という言葉がある。知恵はいつも、事が終わったあとにやってくる、という意味じゃ。<br>だから人は本を読む。<b>他人の人生で、先に一度、学んでおくために。</b><br>……残りの本は、まだ書架の奥で眠っておる。また来なさい。';
   else if (done) msg = 'おかえり。本にはさんだ栞は、いつでも読み返せる。<b>しばらくたってから、同じ問いかけにもう一度答えてみる</b>のもいいものじゃよ。';
   else msg = 'ようこそ、夜の図書館へ。わしは司書のミネル。<br>本が読めなくても、かまわん。<b>本の中に入って、主人公になってみればいい。</b>まずは光っている本を一冊、選んでごらん。';
   $('shelfMsg').innerHTML = OWL + `<p>${msg}</p>`;
   $('feat').innerHTML = EPS.map(e => coverHTML(e, 'button')).join('');
   $('feat').querySelectorAll('.cover').forEach(b => b.onclick = () => openBook(EPS.find(e => e.id === b.dataset.ep)));
-  const live = Object.fromEntries(EPS.map(e => [e.title, e.id]));
-  const groups = {};
-  BOOKS.forEach(b => (groups[b[2]] = groups[b[2]] || []).push(b));
-  $('racks').innerHTML = Object.entries(groups).map(([g, list]) =>
-    `<h3>${g}（${list.length}冊）</h3><div class="rack">${list.map(b =>
-      `<button class="spine${live[b[0]] ? ' live' : ''}" data-t="${esc(b[0])}" title="${esc(b[0])}／${esc(b[1] || '')}">${esc(b[0])}</button>`).join('')}</div>`).join('');
-  $('racks').querySelectorAll('.spine').forEach(s => s.onclick = () => {
-    const id = live[s.dataset.t];
-    if (id) openBook(EPS.find(e => e.id === id));
-    else { const b = BOOKS.find(x => x[0] === s.dataset.t); toast(`『${b[0]}』${b[1] ? '（' + b[1] + '）' : ''}…まだ書架の奥。準備中です`); }
-  });
+  renderRacks();
 }
 
+function renderRacks() {
+  const live = liveMap();
+  $('ownc').textContent = BOOKS.filter(b => OWN[b[0]]).length;
+  const FILTERS = [
+    ['all', 'すべて', () => true],
+    ['j', '中等部', b => /中/.test(b[3])],
+    ['h', '高等部', b => /高/.test(b[3])],
+    ['both', '両方', b => memb(b[3]) === 'both'],
+    ['own', '持っている', b => OWN[b[0]]],
+    ['notown', '持っていない', b => !OWN[b[0]]],
+    ['live', '遊べる', b => live[b[0]]],
+  ];
+  if (!FILTERS.some(f => f[0] === VIEW.filter)) VIEW.filter = 'all';
+  $('tabs').innerHTML = [['rack', '背表紙で見る'], ['list', 'リストでチェック']].map(([k, t]) => `<button data-v="${k}" class="${VIEW.mode === k ? 'on' : ''}">${t}</button>`).join('');
+  $('chips').innerHTML = FILTERS.map(([k, t, f]) => `<button data-f="${k}" class="${VIEW.filter === k ? 'on' : ''}">${t} ${BOOKS.filter(f).length}</button>`).join('');
+  $('tabs').querySelectorAll('button').forEach(b => b.onclick = () => { VIEW.mode = b.dataset.v; saveView(); renderRacks(); });
+  $('chips').querySelectorAll('button').forEach(b => b.onclick = () => { VIEW.filter = b.dataset.f; saveView(); renderRacks(); });
+  const list = BOOKS.filter(FILTERS.find(f => f[0] === VIEW.filter)[2]);
+  if (!list.length) { $('racks').innerHTML = '<p class="small" style="opacity:.6;text-align:center;padding:20px 0">あてはまる本は、まだありません。</p>'; return; }
+  if (VIEW.mode === 'rack') {
+    const groups = {};
+    list.forEach(b => (groups[b[2]] = groups[b[2]] || []).push(b));
+    $('racks').innerHTML = Object.entries(groups).map(([g, l]) =>
+      `<h3>${g}（${l.length}冊）</h3><div class="rack">${l.map(b =>
+        `<button class="spine${live[b[0]] ? ' live' : ''}${OWN[b[0]] ? ' own' : ''}" data-t="${esc(b[0])}" title="${esc(b[0])}／${esc(b[1] || '')}"><span class="st">${esc(b[0])}</span>${badge(b[3])}</button>`).join('')}</div>`).join('');
+    $('racks').querySelectorAll('.spine').forEach(s => s.onclick = () => openSheet(s.dataset.t));
+  } else {
+    $('racks').innerHTML = `<div class="llist">${list.map(b => `
+      <div class="lrow${OWN[b[0]] ? ' own' : ''}" data-t="${esc(b[0])}" role="button" aria-pressed="${OWN[b[0]] ? 'true' : 'false'}">
+        <span class="ck">${OWN[b[0]] ? '✓' : ''}</span>
+        <span class="lt"><b>${esc(b[0])}</b><small>${esc(b[1] || '―')}　${esc(fmtLists(b[3]))}</small></span>
+        ${badge(b[3])}${live[b[0]] ? `<button class="go" data-ep="${live[b[0]]}">ひらく</button>` : ''}
+      </div>`).join('')}</div>`;
+    $('racks').querySelectorAll('.lrow').forEach(r => r.onclick = e => {
+      if (e.target.closest('.go')) { openBook(EPS.find(x => x.id === e.target.closest('.go').dataset.ep)); return; }
+      const on = toggleOwn(r.dataset.t);
+      r.classList.toggle('own', on); r.setAttribute('aria-pressed', on);
+      r.querySelector('.ck').textContent = on ? '✓' : '';
+      $('ownc').textContent = BOOKS.filter(b => OWN[b[0]]).length;
+    });
+  }
+}
+
+/* 背表紙をタップしたときの小さなカード */
+function openSheet(title) {
+  const b = BOOK(title), id = liveMap()[title];
+  $('sheet').innerHTML = `
+    <span class="small mute">${esc(b[2])}</span>
+    <h3>${esc(b[0])}</h3>
+    <p>${esc(b[1] || '著者不詳')}</p>
+    <p>${badge(b[3], true)}</p>
+    <p class="small">${esc(fmtLists(b[3]))}</p>
+    <button class="btn owntg${OWN[title] ? ' on' : ''}" id="shOwn">${ownLabel(OWN[title])}</button>
+    ${id ? '<button class="btn primary" id="shGo">この本の扉をひらく</button>' : '<p class="small mute">この本の物語は、まだ書架の奥で準備中です。</p>'}
+    <button class="btn ghost" id="shClose">とじる</button>`;
+  $('sheetOv').classList.add('on');
+  $('shOwn').onclick = () => { const on = toggleOwn(title); $('shOwn').classList.toggle('on', on); $('shOwn').textContent = ownLabel(on); };
+  $('shClose').onclick = closeSheet;
+  if (id) $('shGo').onclick = () => { closeSheet(); openBook(EPS.find(e => e.id === id)); };
+}
+function closeSheet() { $('sheetOv').classList.remove('on'); if ($('shelf').classList.contains('on')) { renderRacks(); $('feat').innerHTML = EPS.map(e => coverHTML(e, 'button')).join(''); $('feat').querySelectorAll('.cover').forEach(b => b.onclick = () => openBook(EPS.find(e => e.id === b.dataset.ep))); } }
+
 function openBook(ep, justDone) {
-  const r = rec(ep.id), d = r.date;
+  const r = rec(ep.id), d = r.date, bk = BOOK(ep.title);
   const el = $('book');
   el.innerHTML = `
     <div class="bk-top">
       ${coverHTML(ep, 'div')}
       <div class="bk-meta">
-        <span class="small mute">${esc(ep.lists)}</span>
+        <span>${bk ? badge(bk[3], true) : ''}</span>
+        <span class="small mute">${bk ? esc(fmtLists(bk[3])) : esc(ep.lists)}</span>
         <h2>${esc(ep.title)}</h2>
         <span>${esc(ep.author)}（${esc(ep.year)}）</span>
         <span class="small">${esc(ep.blurb)}</span>
@@ -305,6 +375,7 @@ function openBook(ep, justDone) {
     <div class="sec"><h3>本物を読んでみるなら</h3><p>${fmt(ep.read)}</p></div>`
     : `<div class="sec"><h3>この本でできること</h3><p>主人公になって名場面を体験し、ミネル先生から「なぜ名作なのか」を聞く。最後に、ふたつの問いかけに答えて、自分の栞を書く。</p><p class="small mute">所要時間　約${ep.minutes}分</p></div>`}
     <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
+      <button class="btn owntg${OWN[ep.title] ? ' on' : ''}" id="bkOwn">${ownLabel(OWN[ep.title])}</button>
       <button class="btn primary" id="bkStart">${d ? 'もう一度、本の中へ' : 'この本の扉をひらく'}</button>
       ${d ? `<button class="btn" id="bkAsk" style="text-align:center">問いかけに、もう一度答える</button>` : ''}
       <button class="btn ghost" id="bkBack">本棚へもどる</button>
@@ -313,11 +384,13 @@ function openBook(ep, justDone) {
   $('bkStart').onclick = () => startEp(ep);
   if ($('bkAsk')) $('bkAsk').onclick = () => startEp(ep, 'mirror');
   $('bkBack').onclick = openShelf;
+  $('bkOwn').onclick = () => { const on = toggleOwn(ep.title); $('bkOwn').classList.toggle('on', on); $('bkOwn').textContent = ownLabel(on); };
 }
 
 /* ---------- wiring ---------- */
 $('titleOwl').innerHTML = OWL.replace('<svg', '<svg class="owl"');
 $('enter').onclick = openShelf;
+$('sheetOv').onclick = e => { if (e.target.id === 'sheetOv') closeSheet(); };
 $('log').onclick = () => { if (LI < LINES.length) step(); };
 $('tap').onclick = e => { if (e.target.id !== 'skip' && LI < LINES.length) step(); };
 $('skip').onclick = flush;
