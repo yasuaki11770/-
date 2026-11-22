@@ -81,6 +81,20 @@ h1,h2,h3{margin:0}
 .lrow .lt b{font-family:var(--mincho);font-size:15px;display:block}
 .lrow .lt small{font-size:11.5px;opacity:.65;display:block}
 .lrow .go{flex:none;border:1px solid var(--lamp);background:transparent;color:var(--lamp);border-radius:99px;padding:4px 10px;font-size:12px;font-weight:700}
+.sortsel{display:flex;align-items:center;gap:8px;font-size:13px;color:#f3ead8cc}
+.sortsel select{flex:1;font:inherit;font-size:14px;padding:7px 10px;border-radius:10px;border:1px solid #ffffff33;background:#ffffff12;color:#f3ead8}
+.sortsel select option{color:#2a2418}
+.rates{display:flex;flex-direction:column;gap:5px;font-size:13.5px}
+.rates .rt{display:flex;align-items:center;gap:10px}
+.rates .rt>span:first-child{flex:none;width:5.5em;color:#8b5a22;font-weight:700;font-size:12.5px}
+.stars{color:#d9a441;letter-spacing:.08em;font-size:15px}.stars .off{color:#d9a44133}
+.mood{display:inline-flex;align-items:center;gap:4px;flex-wrap:wrap}
+.mood small{font-size:10.5px;opacity:.7}
+.mood i{width:11px;height:11px;border-radius:50%;background:#c8b89a55;display:inline-block}
+.mood i.on{background:#6a4a8a;box-shadow:0 0 0 2px #6a4a8a33}
+.mood b{margin-left:6px;font-size:13px;color:#4a3a6a}
+.rnote{margin:4px 0 0!important;font-size:11px!important;opacity:.6}
+.rmini{display:block;font-size:11px;opacity:.75;margin-top:2px;line-height:1.5;color:#ffd98a}
 .sheet{margin:auto;width:100%;max-width:400px;background:#fffdf8;color:#3b2a18;border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:8px;box-shadow:0 20px 50px #0008}
 .sheet h3{font-family:var(--mincho);font-size:24px;line-height:1.35}
 .sheet p{margin:0;line-height:1.7}
@@ -230,6 +244,7 @@ body[data-world=book] .bar{border-bottom-color:#5b3a1e22}
   <h3 class="shelfh">読書百選　158冊</h3>
   <div class="tabs" id="tabs"></div>
   <div class="chips" id="chips"></div>
+  <label class="sortsel">並べかえ <select id="sort"></select></label>
   <div class="legend"><span><span class="bd bd-j">中</span> 中等部のみ</span><span><span class="bd bd-h">高</span> 高等部のみ</span><span><span class="bd bd-both">両</span> 両方</span><span><span class="ribbon"></span> 持っている</span></div>
   <div class="racks" id="racks"></div>
   <p class="small" style="opacity:.5;text-align:center;line-height:1.8">中等部・高等部「読書100選」を合わせた158冊。光っている本に入れます。<br>背表紙をタップすると、持っている本にチェックできます。</p>
@@ -251,50 +266,50 @@ body[data-world=book] .bar{border-bottom-color:#5b3a1e22}
 <div class="toast" id="toast"></div>
 
 <script>window.EPS=[]; var TEACHER='ミネル';</script>
-<script src="books.js?v=16"></script>
-<script src="ep_aokiokami.js?v=16"></script>
-<script src="ep_aq.js?v=16"></script>
-<script src="ep_bulba.js?v=16"></script>
-<script src="ep_curie.js?v=16"></script>
-<script src="ep_daichi.js?v=16"></script>
-<script src="ep_daihyo.js?v=16"></script>
-<script src="ep_eien.js?v=16"></script>
-<script src="ep_fukuo.js?v=16"></script>
-<script src="ep_ginga.js?v=16"></script>
-<script src="ep_hakai.js?v=16"></script>
-<script src="ep_hikawa.js?v=16"></script>
-<script src="ep_hitomi.js?v=16"></script>
-<script src="ep_ichiaku.js?v=16"></script>
-<script src="ep_ikari.js?v=16"></script>
-<script src="ep_izu.js?v=16"></script>
-<script src="ep_jiro.js?v=16"></script>
-<script src="ep_kaze.js?v=16"></script>
-<script src="ep_kodai.js?v=16"></script>
-<script src="ep_kokoro.js?v=16"></script>
-<script src="ep_kuroiame.js?v=16"></script>
-<script src="ep_kusanoha.js?v=16"></script>
-<script src="ep_melos.js?v=16"></script>
-<script src="ep_miserables.js?v=16"></script>
-<script src="ep_montecristo.js?v=16"></script>
-<script src="ep_musashi.js?v=16"></script>
-<script src="ep_napoleon.js?v=16"></script>
-<script src="ep_nito.js?v=16"></script>
-<script src="ep_prince.js?v=16"></script>
-<script src="ep_quijote.js?v=16"></script>
-<script src="ep_robinson.js?v=16"></script>
-<script src="ep_ryoma.js?v=16"></script>
-<script src="ep_sabu.js?v=16"></script>
-<script src="ep_sangoku.js?v=16"></script>
-<script src="ep_scaramouche.js?v=16"></script>
-<script src="ep_senso.js?v=16"></script>
-<script src="ep_sharin.js?v=16"></script>
-<script src="ep_shinkyoku.js?v=16"></script>
-<script src="ep_socrates.js?v=16"></script>
-<script src="ep_takasebune.js?v=16"></script>
-<script src="ep_tsumi.js?v=16"></script>
-<script src="ep_werther.js?v=16"></script>
-<script src="ep_yozan.js?v=16"></script>
-<script src="ep_yujo.js?v=16"></script>
-<script src="engine.js?v=16"></script>
+<script src="books.js?v=17"></script>
+<script src="ep_aokiokami.js?v=17"></script>
+<script src="ep_aq.js?v=17"></script>
+<script src="ep_bulba.js?v=17"></script>
+<script src="ep_curie.js?v=17"></script>
+<script src="ep_daichi.js?v=17"></script>
+<script src="ep_daihyo.js?v=17"></script>
+<script src="ep_eien.js?v=17"></script>
+<script src="ep_fukuo.js?v=17"></script>
+<script src="ep_ginga.js?v=17"></script>
+<script src="ep_hakai.js?v=17"></script>
+<script src="ep_hikawa.js?v=17"></script>
+<script src="ep_hitomi.js?v=17"></script>
+<script src="ep_ichiaku.js?v=17"></script>
+<script src="ep_ikari.js?v=17"></script>
+<script src="ep_izu.js?v=17"></script>
+<script src="ep_jiro.js?v=17"></script>
+<script src="ep_kaze.js?v=17"></script>
+<script src="ep_kodai.js?v=17"></script>
+<script src="ep_kokoro.js?v=17"></script>
+<script src="ep_kuroiame.js?v=17"></script>
+<script src="ep_kusanoha.js?v=17"></script>
+<script src="ep_melos.js?v=17"></script>
+<script src="ep_miserables.js?v=17"></script>
+<script src="ep_montecristo.js?v=17"></script>
+<script src="ep_musashi.js?v=17"></script>
+<script src="ep_napoleon.js?v=17"></script>
+<script src="ep_nito.js?v=17"></script>
+<script src="ep_prince.js?v=17"></script>
+<script src="ep_quijote.js?v=17"></script>
+<script src="ep_robinson.js?v=17"></script>
+<script src="ep_ryoma.js?v=17"></script>
+<script src="ep_sabu.js?v=17"></script>
+<script src="ep_sangoku.js?v=17"></script>
+<script src="ep_scaramouche.js?v=17"></script>
+<script src="ep_senso.js?v=17"></script>
+<script src="ep_sharin.js?v=17"></script>
+<script src="ep_shinkyoku.js?v=17"></script>
+<script src="ep_socrates.js?v=17"></script>
+<script src="ep_takasebune.js?v=17"></script>
+<script src="ep_tsumi.js?v=17"></script>
+<script src="ep_werther.js?v=17"></script>
+<script src="ep_yozan.js?v=17"></script>
+<script src="ep_yujo.js?v=17"></script>
+<script src="engine.js?v=17"></script>
 </body>
 </html>

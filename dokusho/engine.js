@@ -269,6 +269,38 @@ const liveMap = () => Object.fromEntries(EPS.map(e => [e.title, e.id]));
 function toggleOwn(t) { if (OWN[t]) delete OWN[t]; else OWN[t] = 1; saveOwn(); return !!OWN[t]; }
 const ownLabel = on => on ? '✓　持っている' : '□　この本を持っている';
 
+/* 評価：[4]年 [5]年の表示 [6]長さ [7]おすすめ [8]読みやすさ [9]有名度 [10]学び度 [11]読後感(1さわやか〜5ずっしり) */
+const MOOD = ['', 'さわやか', 'あたたかい', 'しみじみ', 'ほろ苦い', 'ずっしり'];
+const LEN_RANK = {S: 1, D: 2, M: 2, N: 3, P: 3, E: 3, L: 4, L2: 5, XL: 6};
+const stars = n => `<span class="stars" aria-label="5段階中${n}">${'★'.repeat(n)}<span class="off">${'★'.repeat(5 - n)}</span></span>`;
+const moodMeter = m => `<span class="mood"><small>明るい</small>${[1, 2, 3, 4, 5].map(i => `<i class="${i === m ? 'on' : ''}"></i>`).join('')}<small>重い</small><b>${MOOD[m]}</b></span>`;
+function ratesHTML(b) {
+  if (!b || b.length < 12) return '';
+  return `<div class="rates">
+    <div class="rt"><span>おすすめ度</span>${stars(b[7])}</div>
+    <div class="rt"><span>読みやすさ</span>${stars(b[8])}</div>
+    <div class="rt"><span>有名度</span>${stars(b[9])}</div>
+    <div class="rt"><span>学び度</span>${stars(b[10])}</div>
+    <div class="rt"><span>読後感</span>${moodMeter(b[11])}</div>
+    <div class="rt"><span>書かれた年</span><span>${esc(b[5])}</span></div>
+    <div class="rt"><span>長さ</span><span>${esc(BOOK_LEN[b[6]] || '')}</span></div>
+    <p class="rnote">評価は、ミネル先生のめやすです。</p>
+  </div>`;
+}
+const ratesMini = b => b.length < 12 ? '' : `<small class="rmini">おすすめ★${b[7]}・読みやすさ★${b[8]}・有名★${b[9]}・学び★${b[10]}・${MOOD[b[11]]}・${esc(b[5].replace(/（.*$/, ''))}・${esc((BOOK_LEN[b[6]] || '').split('・')[0])}</small>`;
+const SORTS = [
+  ['no', '番号順', null],
+  ['rec', 'おすすめ順', (a, b) => b[7] - a[7]],
+  ['easy', '読みやすい順', (a, b) => b[8] - a[8]],
+  ['fame', '有名な順', (a, b) => b[9] - a[9]],
+  ['learn', '学び度の高い順', (a, b) => b[10] - a[10]],
+  ['light', '読後感が明るい順', (a, b) => a[11] - b[11]],
+  ['heavy', '読後感が重い順', (a, b) => b[11] - a[11]],
+  ['new', '新しい順', (a, b) => b[4] - a[4]],
+  ['old', '古い順', (a, b) => a[4] - b[4]],
+  ['short', '短い順', (a, b) => (LEN_RANK[a[6]] || 9) - (LEN_RANK[b[6]] || 9)],
+];
+
 function coverHTML(ep, tag) {
   const r = rec(ep.id), bk = BOOK(ep.title);
   return `<${tag} class="cover" data-ep="${ep.id}" style="background:${ep.cover[0]};color:${ep.cover[1]}">
@@ -309,7 +341,12 @@ function renderRacks() {
   $('chips').innerHTML = FILTERS.map(([k, t, f]) => `<button data-f="${k}" class="${VIEW.filter === k ? 'on' : ''}">${t} ${BOOKS.filter(f).length}</button>`).join('');
   $('tabs').querySelectorAll('button').forEach(b => b.onclick = () => { VIEW.mode = b.dataset.v; saveView(); renderRacks(); });
   $('chips').querySelectorAll('button').forEach(b => b.onclick = () => { VIEW.filter = b.dataset.f; saveView(); renderRacks(); });
+  if (!SORTS.some(x => x[0] === VIEW.sort)) VIEW.sort = 'no';
+  $('sort').innerHTML = SORTS.map(([k, t]) => `<option value="${k}"${VIEW.sort === k ? ' selected' : ''}>${t}</option>`).join('');
+  $('sort').onchange = () => { VIEW.sort = $('sort').value; saveView(); renderRacks(); };
   const list = BOOKS.filter(FILTERS.find(f => f[0] === VIEW.filter)[2]);
+  const cmp = SORTS.find(x => x[0] === VIEW.sort)[2];
+  if (cmp) list.sort(cmp);   // 同じ評価のときは、もとの番号順のまま
   if (!list.length) { $('racks').innerHTML = '<p class="small" style="opacity:.6;text-align:center;padding:20px 0">あてはまる本は、まだありません。</p>'; return; }
   if (VIEW.mode === 'rack') {
     const groups = {};
@@ -322,7 +359,7 @@ function renderRacks() {
     $('racks').innerHTML = `<div class="llist">${list.map(b => `
       <div class="lrow${OWN[b[0]] ? ' own' : ''}" data-t="${esc(b[0])}" role="button" aria-pressed="${OWN[b[0]] ? 'true' : 'false'}">
         <span class="ck">${OWN[b[0]] ? '✓' : ''}</span>
-        <span class="lt"><b>${esc(b[0])}</b><small>${esc(b[1] || '―')}　${esc(fmtLists(b[3]))}</small></span>
+        <span class="lt"><b>${esc(b[0])}</b><small>${esc(b[1] || '―')}　${esc(fmtLists(b[3]))}</small>${ratesMini(b)}</span>
         ${badge(b[3])}${live[b[0]] ? `<button class="go" data-ep="${live[b[0]]}">ひらく</button>` : ''}
       </div>`).join('')}</div>`;
     $('racks').querySelectorAll('.lrow').forEach(r => r.onclick = e => {
@@ -344,6 +381,7 @@ function openSheet(title) {
     <p>${esc(b[1] || '著者不詳')}</p>
     <p>${badge(b[3], true)}</p>
     <p class="small">${esc(fmtLists(b[3]))}</p>
+    ${ratesHTML(b)}
     <button class="btn owntg${OWN[title] ? ' on' : ''}" id="shOwn">${ownLabel(OWN[title])}</button>
     ${id ? '<button class="btn primary" id="shGo">この本の扉をひらく</button>' : '<p class="small mute">この本の物語は、まだ書架の奥で準備中です。</p>'}
     <button class="btn ghost" id="shClose">とじる</button>`;
@@ -369,6 +407,7 @@ function openBook(ep, justDone) {
         <div class="done">読了日　${d ? `<b>${d[0]}</b> 年 <b>${d[1]}</b> 月 <b>${d[2]}</b> 日` : '　　 年　　 月　　 日'}</div>
       </div>
     </div>
+    ${bk ? `<div class="sec">${ratesHTML(bk)}</div>` : ''}
     ${d ? `
     <div class="sec mine"><h3>あなたの栞</h3><p class="note">${fmt(cardText(ep, r))}</p>
       ${r.resolve.length ? `<p class="small">改めたいこと</p><ul>${r.resolve.map(i => `<li>${fmt(ep.resolve.items[i].t)}</li>`).join('')}</ul>` : ''}
