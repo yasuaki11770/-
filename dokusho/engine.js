@@ -1,7 +1,9 @@
 'use strict';
 /* 名作のなかへ ― 進行エンジン
    流れ：図書館（本の紹介）→ 本の世界（名場面を主人公として体験）→ 名作のわけ（先生の講義）
-        → 問いかけ「いまのあなたは、こんな自分になっていないか」→ 問いかけ「この名作から、改めたいことは」→ 自分の栞
+        → 問いかけ「この名作から、改めたいことは」→ 自分の栞
+   （以前あった問いかけ「いまのあなたは、こんな自分になっていないか」は、栞の問いかけと重なるのでやめた。
+     ep.mirror のデータは、それに答えた古い記録を本のページで見せるためだけに残している）
    エピソードは ep_*.js で window.EPS に登録する。
    シーン: {world:'lib'|'book', place, lines:[[話者,本文],...], choices:[...], next, nextLabel, set}
    話者: '' 地の文 / '心' 心の声 / '!' 強調 / TEACHER 先生 / それ以外は登場人物（ep.chars で色指定）
@@ -44,18 +46,13 @@ function buildTalk(ep) {
   sc.why = { world:'lib', place:`名作のわけ　『${ep.title}』`, lines: [
     [TEACHER, ep.whyIntro || 'おかえり。……さて、本を閉じる前に、少しだけ話をさせておくれ。この本が、なぜ何十年、何百年と読み継がれてきたのか。'],
     ...ep.why.flatMap((w, i) => [['!', `名作のわけ　その${NUM[i]}\n${w.h}`], ...w.lines.map(l => Array.isArray(l) ? l : [TEACHER, l])]),
-  ], next:'mirror', nextLabel:'先生の問いかけ ▶' };
-  sc.mirror = { world:'lib', place:'問いかけ　その一', ask:'mirror', lines: [
-    [TEACHER, ep.mirror.intro],
-    ['!', 'いまのあなたは、\nこんな自分になっていないか？'],
-    ['', '当てはまるものを、**いくつでも**選んでください。選ぶと光ります。'],
-  ]};
-  sc.mirrorReply = { world:'lib', place:'問いかけ　その一', lines: S => S.mirror.length
-      ? [...S.mirror.flatMap(i => [['<', A(ep.mirror.items[i].t)], [TEACHER, ep.mirror.items[i].r]]), ...(ep.mirror.after ? [[TEACHER, ep.mirror.after]] : [])]
-      : [['<', 'どれも当てはまらない'], [TEACHER, ep.mirror.none]],
-    next:'resolve', nextLabel:'次の問いかけ ▶' };
-  sc.resolve = { world:'lib', place:'問いかけ　その二', ask:'resolve', lines: [
-    [TEACHER, ep.resolve.intro],
+  ], next:'resolve', nextLabel:'先生の問いかけ ▶' };
+  // 問いかけは、栞の一つだけ。データの導入文「もう一つだけ。…」は、一つめの問いかけがあったころのもの
+  const intro = !ep.resolve.intro || /^もう一つだけ/.test(ep.resolve.intro)
+    ? 'では、わしから問いかけじゃ。本を閉じたあと、あなたは、この本から何を持って帰るかの。'
+    : ep.resolve.intro;
+  sc.resolve = { world:'lib', place:'問いかけ', ask:'resolve', lines: [
+    [TEACHER, intro],
     ['!', `『${ep.title}』から学べることで、\n改めたいことはないか？`],
     [TEACHER, 'ただし、栞にはさめる言葉は**ひとつだけ**じゃ。たくさんはさむと、どれも読み返さなくなるからの。いちばん胸に残ったものを、ひとつ選びなされ。'],
     ['', '下から**ひとつだけ**選ぶか、「自分の言葉で書く」を選んで書いてください。'],
@@ -116,7 +113,6 @@ function addLine([who, text]) {
 }
 
 function after() {
-  if (SC.ask === 'mirror') return askMirror();
   if (SC.ask === 'resolve') return askResolve();
   if (SC.choices) return noChoice() ? autoChoose() : renderChoices();
   if (SC.next) nextButton(val(SC.nextLabel, S) || '次へ ▶', () => go(val(SC.next, S)));
@@ -212,20 +208,6 @@ function checkList(items, picked, multi, onChange) {
   return get;
 }
 
-function askMirror() {
-  const M = EP.mirror;
-  const go2 = document.createElement('button');
-  const label = sel => { go2.textContent = sel.length ? `これが、いまのわたし（${sel.length}つ）` : 'どれも当てはまらない'; };
-  const get = checkList(M.items, rec(EP.id).mirror || [], true, label);
-  go2.className = 'btn primary ch';
-  label(get());
-  go2.onclick = () => {
-    S.mirror = get();
-    go('mirrorReply');
-  };
-  $('choices').appendChild(go2);
-}
-
 function askResolve() {
   const R = EP.resolve, r = rec(EP.id);
   const OWN = R.items.length;                       // 最後の項目＝「自分の言葉で書く」
@@ -268,7 +250,7 @@ function finish() {
   const r = rec(EP.id), first = !r.date;
   if (first) r.n = doneCount() + 1;        // 何冊目の栞か（栞のデザインと、節目のごほうびに使う）
   r.date = r.date || today();
-  r.mirror = S.mirror; r.resolve = S.resolve; r.note = S.note || '';
+  r.resolve = S.resolve; r.note = S.note || '';      // r.mirror は、以前の問いかけの答え（そのまま残す）
   r.reads = (r.reads || 0) + 1;
   save();
   const ms = first && milestones().includes(r.n);
@@ -854,12 +836,12 @@ function openBook(ep, justDone) {
     ${d ? `
     <div class="sec mine"><h3>あなたの栞</h3>${cardHTML(ep, r, true)}
       ${r.resolve.length ? `<p class="small">改めたいこと</p><ul>${r.resolve.map(i => `<li>${fmt(A(ep.resolve.items[i].t))}</li>`).join('')}</ul>` : ''}
-      <p class="small">読んだときの自分</p>${r.mirror.length ? `<ul>${r.mirror.map(i => `<li>${fmt(A(ep.mirror.items[i].t))}</li>`).join('')}</ul>` : '<p class="small mute">どれも当てはまらない、と答えた</p>'}
+      ${r.mirror && r.mirror.length ? `<p class="small">読んだときの自分</p><ul>${r.mirror.map(i => `<li>${fmt(A(ep.mirror.items[i].t))}</li>`).join('')}</ul>` : ''}
     </div>
     <div class="sec"><h3>名作のわけ</h3>${ep.why.map((w, i) => `<p><b>その${NUM[i]}　${esc(w.h)}</b><br>${fmt(A(w.short))}</p>`).join('')}</div>
     <div class="sec"><h3>3分でわかる『${esc(ep.title)}』</h3>${ep.summary.map(p => `<p>${fmt(p)}</p>`).join('')}</div>
     <div class="sec"><h3>本物を読んでみるなら</h3><p>${fmt(A(ep.read))}</p></div>`
-    : `<div class="sec"><h3>この本でできること</h3><p>主人公になって名場面を体験し、ミネル先生から「なぜ名作なのか」を聞く。最後に、ふたつの問いかけに答えて、自分の栞を書く。</p><p class="small mute">所要時間　約${ep.minutes}分</p></div>`}
+    : `<div class="sec"><h3>この本でできること</h3><p>主人公になって名場面を体験し、ミネル先生から「なぜ名作なのか」を聞く。最後に、先生の問いかけに答えて、自分の栞を選ぶ。</p><p class="small mute">所要時間　約${ep.minutes}分</p></div>`}
     <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
       <button class="btn owntg${OWN[ep.title] ? ' on' : ''}" id="bkOwn">${ownLabel(OWN[ep.title])}</button>
       <button class="btn primary" id="bkStart">${d ? 'もう一度、本の中へ' : 'この本の扉を開く'}</button>
@@ -872,14 +854,14 @@ function openBook(ep, justDone) {
   wireLike(el.querySelector('.myrec'), ep.id);
   $('bkMemo').oninput = () => { rec(ep.id).memo = $('bkMemo').value; save(); };
   $('bkDraft').onclick = () => {
-    $('draftBox').innerHTML = `<p class="small mute" style="margin:0 0 6px">栞の言葉・読んだときの自分・感想を、一つの文章にまとめました。<b>下書き</b>なので、（　）のところを書きたして、自分の言葉で仕上げてください。</p>
+    $('draftBox').innerHTML = `<p class="small mute" style="margin:0 0 6px">栞の言葉と感想を、一つの文章にまとめました。<b>下書き</b>なので、（　）のところを書きたして、自分の言葉で仕上げてください。</p>
       <textarea id="draft" rows="14">${esc(draftText(ep))}</textarea>
       <button class="btn primary" id="draftCopy" style="margin-top:8px">コピーする</button>`;
     $('draftCopy').onclick = () => copyText($('draft').value);
     $('draft').scrollIntoView({block: 'center', behavior: 'smooth'});
   };
   $('bkStart').onclick = () => startEp(ep);
-  if ($('bkAsk')) $('bkAsk').onclick = () => startEp(ep, 'mirror');
+  if ($('bkAsk')) $('bkAsk').onclick = () => startEp(ep, 'resolve');
   $('bkBack').onclick = openShelf;
   $('bkOwn').onclick = () => {
     const on = toggleOwn(ep.title); $('bkOwn').classList.toggle('on', on); $('bkOwn').textContent = ownLabel(on);
@@ -894,7 +876,7 @@ function openCho() {
   const el = $('cho');
   el.innerHTML = `
     <div class="shead"><h2>栞帳</h2><div class="count">栞 <b>${list.length}</b> 枚<br><small>${nm ? `次の節目 ${nm}冊まで あと${nm - list.length}冊` : '全刊読破'}</small></div></div>
-    <p class="small" style="opacity:.75;margin:0;line-height:1.8">これまでに本に挟んだ栞です。読んだときの自分と、感想を見返せます。10冊・50冊・100冊・150冊…と節目をこえるごとに、栞の色が変わります。</p>
+    <p class="small" style="opacity:.75;margin:0;line-height:1.8">これまでに本に挟んだ栞です。栞の言葉と、感想を見返せます。10冊・50冊・100冊・150冊…と節目をこえるごとに、栞の色が変わります。</p>
     <button class="btn shbtn" id="choPrint">🖨　学校の読書記録用に、一覧を印刷する</button>
     ${list.length ? list.map(ep => {
       const r = REC[ep.id], d = r.date;
