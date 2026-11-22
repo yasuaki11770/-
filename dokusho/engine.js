@@ -355,6 +355,52 @@ const applyFsz = () => document.documentElement.style.setProperty('--rs', (FSZ[V
 applyFsz();
 let QUERY = '';
 
+/* ---------- 図書館のオルゴール（オリジナル曲「栞のワルツ」・tools/orgel.py で合成） ----------
+   初期値は「なし」。オンにすると、本棚でも本の中でも流れつづける。ほかのアプリに切りかえると止まる。 */
+const BGM = $('bgm');
+let bgmFade = 0, bgmWait = false;
+function bgmFadeTo(v, done) {
+  clearInterval(bgmFade);
+  bgmFade = setInterval(() => {
+    const d = v - BGM.volume, s = Math.sign(d) * Math.min(Math.abs(d), .06);
+    try { BGM.volume = Math.max(0, Math.min(1, BGM.volume + s)); } catch (e) {}
+    if (Math.abs(v - BGM.volume) < .01) { clearInterval(bgmFade); if (done) done(); }
+  }, 60);
+}
+function bgmPlay() {
+  if (!VIEW.bgm || !BGM) return;
+  if ('mediaSession' in navigator && window.MediaMetadata && !navigator.mediaSession.metadata) {
+    try { navigator.mediaSession.metadata = new MediaMetadata({title: '栞のワルツ', artist: '名作のなかへ', album: '図書館のオルゴール'}); } catch (e) {}
+  }
+  if (!BGM.paused) return bgmFadeTo(.8);
+  try { BGM.volume = 0; } catch (e) {}
+  const p = BGM.play();
+  if (p && p.then) p.then(() => bgmFadeTo(.8), bgmTap); else bgmFadeTo(.8);
+}
+/* 音は、画面にふれたあとでないと鳴らせない（ブラウザの決まり）。次にふれたときに始める */
+function bgmTap() {
+  if (bgmWait) return; bgmWait = true;
+  const go = () => { bgmWait = false; ['pointerdown', 'keydown'].forEach(t => document.removeEventListener(t, go, true)); bgmPlay(); };
+  ['pointerdown', 'keydown'].forEach(t => document.addEventListener(t, go, true));
+}
+function bgmStop() { if (BGM && !BGM.paused) bgmFadeTo(0, () => BGM.pause()); }
+function bgmUI() {
+  const b = $('bgmBtn'); if (!b) return;
+  b.setAttribute('aria-pressed', VIEW.bgm ? 'true' : 'false');
+  $('bgmTx').textContent = VIEW.bgm ? 'オルゴール　オン' : 'オルゴール　オフ';
+}
+function setBgm(on) {
+  VIEW.bgm = on; saveView(); bgmUI();
+  if (on) bgmPlay(); else bgmStop();
+  if ($('settings').innerHTML) renderSettings();
+}
+if (BGM) {
+  $('bgmBtn').onclick = e => { e.stopPropagation(); setBgm(!VIEW.bgm); toast(VIEW.bgm ? 'オルゴールを流します（音量は、端末の音量ボタンで）' : 'オルゴールを止めました'); };
+  document.addEventListener('visibilitychange', () => { if (document.hidden) { if (!BGM.paused) BGM.pause(); } else bgmPlay(); });
+  bgmUI();
+  if (VIEW.bgm) bgmPlay();
+}
+
 const BOOK = t => BOOKS.find(b => b[0] === t);
 const memb = l => /中/.test(l) && /高/.test(l) ? 'both' : /中/.test(l) ? 'j' : 'h';
 const MEMB = {both: ['両', '中等部・高等部の両方'], j: ['中', '中等部のみ'], h: ['高', '高等部のみ']};
@@ -838,11 +884,14 @@ function renderSettings() {
     <p class="small">なし：原作の流れのまま読み進め、選ぶのは、読みおえたあとのミネル先生との対話だけ。<br>あり：本の中でも、主人公の行動を自分で選ぶ（原作とちがうと、ページが波打つ）。</p>
     <div class="setrow"><span>本文の文字の大きさ</span><div class="seg dark">${Object.entries(FSZ).map(([k, [t]]) => `<button data-fz="${k}" class="${(VIEW.fsz || 'm') === k ? 'on' : ''}">${t}</button>`).join('')}</div></div>
     <p class="small fzs" style="font-family:var(--udm);font-size:calc(17.5px * var(--rs));line-height:2;opacity:.9">あなたは、本の中に入った。――この大きさで、物語が表示されます。</p>
+    <div class="setrow"><span>オルゴールの音楽</span><div class="seg dark"><button data-bgm="0" class="${VIEW.bgm ? '' : 'on'}">なし</button><button data-bgm="1" class="${VIEW.bgm ? 'on' : ''}">あり</button></div></div>
+    <p class="small">図書館に、オリジナル曲「栞のワルツ」が静かに流れます。本の中でも流れつづけ、ほかのアプリに切りかえると止まります。音量は端末の音量ボタンで。</p>
     <div class="setrow"><button class="btn" id="bkExport">記録を書き出す</button><button class="btn" id="bkImport">記録を読みこむ</button></div>
     <p class="small">読了・栞・感想・好き度・本で読んだ日・持っている本・表紙の写真を、ひとつのファイルにまとめて書き出します。機種変更のときや、別の端末で続けるときは、そのファイルを読みこんでください。<br>最後に書き出した日：${last ? ymd(last.slice(0, 10)) : 'まだ書き出していません'}</p>
     <button class="btn" id="toPrint" style="text-align:center">🖨　学校の読書記録用に、一覧を印刷する</button>`;
   $('settings').querySelectorAll('[data-ch]').forEach(b => b.onclick = () => { VIEW.choices = b.dataset.ch === '1'; saveView(); renderSettings(); toast(VIEW.choices ? '本の中でも、選びながら読みます' : '原作の流れのまま、読み進めます'); });
   $('settings').querySelectorAll('[data-fz]').forEach(b => b.onclick = () => { VIEW.fsz = b.dataset.fz; saveView(); applyFsz(); renderSettings(); });
+  $('settings').querySelectorAll('[data-bgm]').forEach(b => b.onclick = () => setBgm(b.dataset.bgm === '1'));
   $('bkExport').onclick = exportData;
   $('bkImport').onclick = importData;
   $('toPrint').onclick = () => openPrint();
