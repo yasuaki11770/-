@@ -314,11 +314,16 @@ function openShelf() {
   const done = EPS.filter(e => rec(e.id).date).length;
   $('cnt').textContent = done;
   let msg;
-  if (done === EPS.length) msg = 'ミネルヴァのふくろうは、黄昏に飛び立つ――という言葉がある。知恵はいつも、事が終わったあとにやってくる、という意味じゃ。<br>だから人は本を読む。<b>他人の人生で、先に一度、学んでおくために。</b><br>……残りの本は、まだ書架の奥で眠っておる。また来なさい。';
+  const all = EPS.length >= BOOKS.length;   // 158冊すべてに入れるようになったか
+  if (done === EPS.length) msg = 'ミネルヴァのふくろうは、黄昏に飛び立つ――という言葉がある。知恵はいつも、事が終わったあとにやってくる、という意味じゃ。<br>だから人は本を読む。<b>他人の人生で、先に一度、学んでおくために。</b><br>' + (all
+    ? '……これで、すべての本に栞がはさまった。じゃが、ほんとうの読書は、ここからじゃ。<b>栞をはさんだ本を、こんどは、紙の本で開いてごらん。</b>'
+    : '……残りの本は、まだ書架の奥で眠っておる。また来なさい。');
   else if (done) msg = 'おかえり。本にはさんだ栞は、いつでも読み返せる。<b>しばらくたってから、同じ問いかけにもう一度答えてみる</b>のもいいものじゃよ。';
   else msg = 'ようこそ、夜の図書館へ。わしは司書のミネル。<br>本が読めなくても、かまわん。<b>本の中に入って、主人公になってみればいい。</b>まずは光っている本を一冊、選んでごらん。';
   $('shelfMsg').innerHTML = OWL + `<p>${msg}</p>`;
-  $('featn').textContent = EPS.length + '冊';
+  $('featn').textContent = all ? `${EPS.length}冊` : `${EPS.length}冊（158冊のうち）`;
+  $('rackNote').innerHTML = (all ? '中等部・高等部「読書100選」を合わせた158冊。' : '中等部・高等部「読書100選」を合わせた158冊。光っている本に入れます。')
+    + '<br>背表紙をタップすると、持っている本にチェックできます。<br>表紙から選びたいときは、この下へ。';
   $('feat').innerHTML = EPS.map(e => coverHTML(e, 'button')).join('');
   $('feat').querySelectorAll('.cover').forEach(b => b.onclick = () => openBook(EPS.find(e => e.id === b.dataset.ep)));
   renderRacks();
@@ -336,6 +341,7 @@ function renderRacks() {
     ['notown', '持っていない', b => !OWN[b[0]]],
     ['live', '遊べる', b => live[b[0]]],
   ];
+  if (EPS.length >= BOOKS.length) FILTERS.pop();   // 全冊に入れるようになったら「遊べる」の絞りこみは不要
   if (!FILTERS.some(f => f[0] === VIEW.filter)) VIEW.filter = 'all';
   $('tabs').innerHTML = [['rack', '背表紙で見る'], ['list', 'リストでチェック']].map(([k, t]) => `<button data-v="${k}" class="${VIEW.mode === k ? 'on' : ''}">${t}</button>`).join('');
   $('chips').innerHTML = FILTERS.map(([k, t, f]) => `<button data-f="${k}" class="${VIEW.filter === k ? 'on' : ''}">${t} ${BOOKS.filter(f).length}</button>`).join('');
@@ -433,6 +439,9 @@ function openBook(ep, justDone) {
 /* ---------- wiring ---------- */
 $('titleOwl').innerHTML = OWL.replace('<svg', '<svg class="owl"');
 $('enter').onclick = openShelf;
+$('titleNote').textContent = EPS.length >= BOOKS.length
+  ? `収録：読書百選の158冊すべて（1冊 10〜20分）`
+  : `収録：${EPS.length}冊（読書百選158冊のうち・1冊 10〜20分）`;
 $('sheetOv').onclick = e => { if (e.target.id === 'sheetOv') closeSheet(); };
 $('log').onclick = () => { if (LI < LINES.length) step(); };
 $('tap').onclick = e => { if (e.target.id !== 'skip' && LI < LINES.length) step(); };

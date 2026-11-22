@@ -230,7 +230,7 @@ body[data-world=book] .bar{border-bottom-color:#5b3a1e22}
   <div class="tag">読めなくても、入ればいい。</div>
   <p class="lead">名作の主人公になって、名場面を生きてみる。<br>本を閉じたら、ふくろうの司書・ミネル先生が<br>「なぜ名作なのか」を語り、あなたに問いかける。<br>――いまのあなたは、こんな自分になっていないか。</p>
   <button class="btn primary" id="enter">図書館に入る</button>
-  <p class="small" style="opacity:.55;margin:0">試作版　収録：走れメロス／三国志／星の王子さま（各15〜20分）</p>
+  <p class="small" style="opacity:.55;margin:0" id="titleNote"></p>
 </section>
 
 <section class="screen" id="shelf">
@@ -239,15 +239,15 @@ body[data-world=book] .bar{border-bottom-color:#5b3a1e22}
     <div class="count">読了 <b id="cnt">0</b><br>持っている <b id="ownc">0</b> / 158</div>
   </div>
   <div class="minel" id="shelfMsg"></div>
-  <h3 class="shelfh">いま入れる本　<span id="featn"></span></h3>
-  <div class="feat" id="feat"></div>
   <h3 class="shelfh">読書百選　158冊</h3>
   <div class="tabs" id="tabs"></div>
   <div class="chips" id="chips"></div>
   <label class="sortsel">並べかえ <select id="sort"></select></label>
   <div class="legend"><span><span class="bd bd-j">中</span> 中等部のみ</span><span><span class="bd bd-h">高</span> 高等部のみ</span><span><span class="bd bd-both">両</span> 両方</span><span><span class="ribbon"></span> 持っている</span></div>
   <div class="racks" id="racks"></div>
-  <p class="small" style="opacity:.5;text-align:center;line-height:1.8">中等部・高等部「読書100選」を合わせた158冊。光っている本に入れます。<br>背表紙をタップすると、持っている本にチェックできます。</p>
+  <p class="small" style="opacity:.5;text-align:center;line-height:1.8" id="rackNote"></p>
+  <h3 class="shelfh">表紙から選ぶ　<span id="featn"></span></h3>
+  <div class="feat" id="feat"></div>
 </section>
 
 <section class="screen" id="play">
@@ -266,107 +266,107 @@ body[data-world=book] .bar{border-bottom-color:#5b3a1e22}
 <div class="toast" id="toast"></div>
 
 <script>window.EPS=[]; var TEACHER='ミネル';</script>
-<script src="books.js?v=27"></script>
-<script src="ep_algernon.js?v=27"></script>
-<script src="ep_alice.js?v=27"></script>
-<script src="ep_anne.js?v=27"></script>
-<script src="ep_anne_frank.js?v=27"></script>
-<script src="ep_aokiokami.js?v=27"></script>
-<script src="ep_aq.js?v=27"></script>
-<script src="ep_ashinaga.js?v=27"></script>
-<script src="ep_beethoven.js?v=27"></script>
-<script src="ep_biruma.js?v=27"></script>
-<script src="ep_botchan.js?v=27"></script>
-<script src="ep_budou.js?v=27"></script>
-<script src="ep_bulba.js?v=27"></script>
-<script src="ep_bushido.js?v=27"></script>
-<script src="ep_chieko.js?v=27"></script>
-<script src="ep_chinmoku.js?v=27"></script>
-<script src="ep_chips.js?v=27"></script>
-<script src="ep_chuya.js?v=27"></script>
-<script src="ep_curie.js?v=27"></script>
-<script src="ep_daichi.js?v=27"></script>
-<script src="ep_daihyo.js?v=27"></script>
-<script src="ep_doubutsu.js?v=27"></script>
-<script src="ep_eien.js?v=27"></script>
-<script src="ep_fukuo.js?v=27"></script>
-<script src="ep_fuyou.js?v=27"></script>
-<script src="ep_ged.js?v=27"></script>
-<script src="ep_genbaku.js?v=27"></script>
-<script src="ep_ginga.js?v=27"></script>
-<script src="ep_gulliver.js?v=27"></script>
-<script src="ep_hakai.js?v=27"></script>
-<script src="ep_hakkenden.js?v=27"></script>
-<script src="ep_happy.js?v=27"></script>
-<script src="ep_henshin.js?v=27"></script>
-<script src="ep_hikawa.js?v=27"></script>
-<script src="ep_hitomi.js?v=27"></script>
-<script src="ep_ichiaku.js?v=27"></script>
-<script src="ep_ichiyou.js?v=27"></script>
-<script src="ep_ikari.js?v=27"></script>
-<script src="ep_izu.js?v=27"></script>
-<script src="ep_jiro.js?v=27"></script>
-<script src="ep_jugo.js?v=27"></script>
-<script src="ep_kaze.js?v=27"></script>
-<script src="ep_kimitachi.js?v=27"></script>
-<script src="ep_king.js?v=27"></script>
-<script src="ep_kodai.js?v=27"></script>
-<script src="ep_kokoro.js?v=27"></script>
-<script src="ep_korczak.js?v=27"></script>
-<script src="ep_kozou.js?v=27"></script>
-<script src="ep_kuroiame.js?v=27"></script>
-<script src="ep_kusanoha.js?v=27"></script>
-<script src="ep_melos.js?v=27"></script>
-<script src="ep_miserables.js?v=27"></script>
-<script src="ep_misokkasu.js?v=27"></script>
-<script src="ep_misuzu.js?v=27"></script>
-<script src="ep_momo.js?v=27"></script>
-<script src="ep_montecristo.js?v=27"></script>
-<script src="ep_musashi.js?v=27"></script>
-<script src="ep_napoleon.js?v=27"></script>
-<script src="ep_ninjin.js?v=27"></script>
-<script src="ep_nito.js?v=27"></script>
-<script src="ep_nogiku.js?v=27"></script>
-<script src="ep_paradise.js?v=27"></script>
-<script src="ep_pollyanna.js?v=27"></script>
-<script src="ep_prince.js?v=27"></script>
-<script src="ep_quijote.js?v=27"></script>
-<script src="ep_raimugi.js?v=27"></script>
-<script src="ep_robinson.js?v=27"></script>
-<script src="ep_rojin.js?v=27"></script>
-<script src="ep_ryoma.js?v=27"></script>
-<script src="ep_sabu.js?v=27"></script>
-<script src="ep_saiyuki.js?v=27"></script>
-<script src="ep_sakuranosono.js?v=27"></script>
-<script src="ep_sangoku.js?v=27"></script>
-<script src="ep_scaramouche.js?v=27"></script>
-<script src="ep_sekiwan.js?v=27"></script>
-<script src="ep_senso.js?v=27"></script>
-<script src="ep_sharin.js?v=27"></script>
-<script src="ep_shinkyoku.js?v=27"></script>
-<script src="ep_shiroite.js?v=27"></script>
-<script src="ep_shoukoujo.js?v=27"></script>
-<script src="ep_socrates.js?v=27"></script>
-<script src="ep_taiyou.js?v=27"></script>
-<script src="ep_taiyounoko.js?v=27"></script>
-<script src="ep_takarajima.js?v=27"></script>
-<script src="ep_takasebune.js?v=27"></script>
-<script src="ep_takekurabe.js?v=27"></script>
-<script src="ep_tanikawa.js?v=27"></script>
-<script src="ep_tezuka.js?v=27"></script>
-<script src="ep_timemachine.js?v=27"></script>
-<script src="ep_tobu.js?v=27"></script>
-<script src="ep_tom.js?v=27"></script>
-<script src="ep_toshishun.js?v=27"></script>
-<script src="ep_tsumi.js?v=27"></script>
-<script src="ep_uncletom.js?v=27"></script>
-<script src="ep_usagi.js?v=27"></script>
-<script src="ep_venice.js?v=27"></script>
-<script src="ep_visa.js?v=27"></script>
-<script src="ep_wakakusa.js?v=27"></script>
-<script src="ep_werther.js?v=27"></script>
-<script src="ep_yozan.js?v=27"></script>
-<script src="ep_yujo.js?v=27"></script>
-<script src="engine.js?v=27"></script>
+<script src="books.js?v=28"></script>
+<script src="ep_algernon.js?v=28"></script>
+<script src="ep_alice.js?v=28"></script>
+<script src="ep_anne.js?v=28"></script>
+<script src="ep_anne_frank.js?v=28"></script>
+<script src="ep_aokiokami.js?v=28"></script>
+<script src="ep_aq.js?v=28"></script>
+<script src="ep_ashinaga.js?v=28"></script>
+<script src="ep_beethoven.js?v=28"></script>
+<script src="ep_biruma.js?v=28"></script>
+<script src="ep_botchan.js?v=28"></script>
+<script src="ep_budou.js?v=28"></script>
+<script src="ep_bulba.js?v=28"></script>
+<script src="ep_bushido.js?v=28"></script>
+<script src="ep_chieko.js?v=28"></script>
+<script src="ep_chinmoku.js?v=28"></script>
+<script src="ep_chips.js?v=28"></script>
+<script src="ep_chuya.js?v=28"></script>
+<script src="ep_curie.js?v=28"></script>
+<script src="ep_daichi.js?v=28"></script>
+<script src="ep_daihyo.js?v=28"></script>
+<script src="ep_doubutsu.js?v=28"></script>
+<script src="ep_eien.js?v=28"></script>
+<script src="ep_fukuo.js?v=28"></script>
+<script src="ep_fuyou.js?v=28"></script>
+<script src="ep_ged.js?v=28"></script>
+<script src="ep_genbaku.js?v=28"></script>
+<script src="ep_ginga.js?v=28"></script>
+<script src="ep_gulliver.js?v=28"></script>
+<script src="ep_hakai.js?v=28"></script>
+<script src="ep_hakkenden.js?v=28"></script>
+<script src="ep_happy.js?v=28"></script>
+<script src="ep_henshin.js?v=28"></script>
+<script src="ep_hikawa.js?v=28"></script>
+<script src="ep_hitomi.js?v=28"></script>
+<script src="ep_ichiaku.js?v=28"></script>
+<script src="ep_ichiyou.js?v=28"></script>
+<script src="ep_ikari.js?v=28"></script>
+<script src="ep_izu.js?v=28"></script>
+<script src="ep_jiro.js?v=28"></script>
+<script src="ep_jugo.js?v=28"></script>
+<script src="ep_kaze.js?v=28"></script>
+<script src="ep_kimitachi.js?v=28"></script>
+<script src="ep_king.js?v=28"></script>
+<script src="ep_kodai.js?v=28"></script>
+<script src="ep_kokoro.js?v=28"></script>
+<script src="ep_korczak.js?v=28"></script>
+<script src="ep_kozou.js?v=28"></script>
+<script src="ep_kuroiame.js?v=28"></script>
+<script src="ep_kusanoha.js?v=28"></script>
+<script src="ep_melos.js?v=28"></script>
+<script src="ep_miserables.js?v=28"></script>
+<script src="ep_misokkasu.js?v=28"></script>
+<script src="ep_misuzu.js?v=28"></script>
+<script src="ep_momo.js?v=28"></script>
+<script src="ep_montecristo.js?v=28"></script>
+<script src="ep_musashi.js?v=28"></script>
+<script src="ep_napoleon.js?v=28"></script>
+<script src="ep_ninjin.js?v=28"></script>
+<script src="ep_nito.js?v=28"></script>
+<script src="ep_nogiku.js?v=28"></script>
+<script src="ep_paradise.js?v=28"></script>
+<script src="ep_pollyanna.js?v=28"></script>
+<script src="ep_prince.js?v=28"></script>
+<script src="ep_quijote.js?v=28"></script>
+<script src="ep_raimugi.js?v=28"></script>
+<script src="ep_robinson.js?v=28"></script>
+<script src="ep_rojin.js?v=28"></script>
+<script src="ep_ryoma.js?v=28"></script>
+<script src="ep_sabu.js?v=28"></script>
+<script src="ep_saiyuki.js?v=28"></script>
+<script src="ep_sakuranosono.js?v=28"></script>
+<script src="ep_sangoku.js?v=28"></script>
+<script src="ep_scaramouche.js?v=28"></script>
+<script src="ep_sekiwan.js?v=28"></script>
+<script src="ep_senso.js?v=28"></script>
+<script src="ep_sharin.js?v=28"></script>
+<script src="ep_shinkyoku.js?v=28"></script>
+<script src="ep_shiroite.js?v=28"></script>
+<script src="ep_shoukoujo.js?v=28"></script>
+<script src="ep_socrates.js?v=28"></script>
+<script src="ep_taiyou.js?v=28"></script>
+<script src="ep_taiyounoko.js?v=28"></script>
+<script src="ep_takarajima.js?v=28"></script>
+<script src="ep_takasebune.js?v=28"></script>
+<script src="ep_takekurabe.js?v=28"></script>
+<script src="ep_tanikawa.js?v=28"></script>
+<script src="ep_tezuka.js?v=28"></script>
+<script src="ep_timemachine.js?v=28"></script>
+<script src="ep_tobu.js?v=28"></script>
+<script src="ep_tom.js?v=28"></script>
+<script src="ep_toshishun.js?v=28"></script>
+<script src="ep_tsumi.js?v=28"></script>
+<script src="ep_uncletom.js?v=28"></script>
+<script src="ep_usagi.js?v=28"></script>
+<script src="ep_venice.js?v=28"></script>
+<script src="ep_visa.js?v=28"></script>
+<script src="ep_wakakusa.js?v=28"></script>
+<script src="ep_werther.js?v=28"></script>
+<script src="ep_yozan.js?v=28"></script>
+<script src="ep_yujo.js?v=28"></script>
+<script src="engine.js?v=28"></script>
 </body>
 </html>
