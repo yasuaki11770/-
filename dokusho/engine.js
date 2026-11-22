@@ -132,9 +132,9 @@ function nextButton(label, fn) {
 /* 読むときの選択肢「なし」（初期値）：原作の主人公の行動を、そのまま見せて先へ進む */
 const noChoice = () => !VIEW.choices;
 const CH_RE = [
-  [/そしてときどき、\*\*詩の言葉\*\*を選んでもらう。/, ''],
-  [/ときどき選択を迫られる。/, ''],
-  [/今夜は、思いきりまちがえてよいぞ。むしろ、まちがえるのが原作どおりじゃ。/, ''],
+  [/そして時々、\*\*詩の言葉\*\*を選んでもらう。/, ''],
+  [/時々選択を迫られる。/, ''],
+  [/今夜は、思いきり間違えてよいぞ。むしろ、間違えるのが原作どおりじゃ。/, ''],
   [/今夜は、ちょっとかっこ悪い選択が、原作どおりになることが多いぞ。/, ''],
   [/[^。]*違う(?:道|言葉|もの)を選ぶと、ページが波打つから、(?:そのときは)?選び直しなされ。/, ''],
   [/さっき野原で「立ち上がる」を選んだら、ページが波打ったじゃろう。/, 'さっき野原で、メロスは、立ち上がらずに、ねころんでしまったじゃろう。'],
@@ -156,9 +156,11 @@ function autoChoose() {
 
 function renderChoices() {
   const box = $('choices'); box.innerHTML = '';
-  (val(SC.choices, S) || []).forEach((c, i) => {
+  const list = val(SC.choices, S) || [];
+  list.forEach((c, i) => {
     const b = document.createElement('button');
-    b.className = 'btn ch' + (SC._missed.has(i) ? ' crossed' : '');
+    // 道が一つだけ（「本の中へ入る」など）のときは、明るい「進む」ボタンにする
+    b.className = 'btn ch' + (list.length === 1 && !c.miss ? ' primary' : '') + (SC._missed.has(i) ? ' crossed' : '');
     b.disabled = SC._missed.has(i);
     b.style.animationDelay = (i * 60) + 'ms';
     b.innerHTML = fmt(c.t);
@@ -168,7 +170,7 @@ function renderChoices() {
 }
 
 function choose(c, i) {
-  if (c.miss) {               // 原作の主人公とちがう選択をした
+  if (c.miss) {               // 原作の主人公と違う選択をした
     SC._missed.add(i);
     $('choices').innerHTML = '';
     addLine(['<', c.t]);
@@ -183,7 +185,7 @@ function choose(c, i) {
 }
 
 /* ---------- 問いかけ ---------- */
-/* 選択リスト。multi=true で複数選択、false でひとつだけ。選んだ項目は光る */
+/* 選択リスト。multi=true で複数選択、false で一つだけ。選んだ項目は光る */
 function checkList(items, picked, multi, onChange) {
   const box = $('choices'); box.innerHTML = '';
   const btns = items.map((it, i) => {
@@ -280,7 +282,7 @@ function finish() {
       <div class="lk"><span>この本、好き？</span>${likeHTML(EP.id)}</div>
       <textarea id="ovMemo" rows="3" placeholder="感想を、自由に（あとから本のページでも書けます）">${esc(r.memo || '')}</textarea>
     </div>
-    <button class="btn primary" id="lessonOk">この栞を、本にはさむ</button>`;
+    <button class="btn primary" id="lessonOk">この栞を、本に挟む</button>`;
   $('lessonOv').classList.add('on');
   wireLike($('lessonBox'), EP.id);
   $('ovMemo').oninput = () => { rec(EP.id).memo = $('ovMemo').value; save(); };
@@ -307,7 +309,7 @@ function tierOf(n) {
 const TIER_NAME = ['', '若葉', '藍', '金', '星空'];
 function msMessage(n) {
   const T = BOOKS.length;
-  if (n >= T) return `……${T}冊、すべての本に、栞がはさまった。ここまで来た人は、そう多くはおらん。<br>お前さんの栞帳は、もう、お前さんだけの一冊の本じゃ。<b>最後の栞は、金の地に、ふくろうの紋じゃ。</b>`;
+  if (n >= T) return `……${T}冊、すべての本に、栞が挟まった。ここまで来た人は、そう多くはおらん。<br>お前さんの栞帳は、もう、お前さんだけの一冊の本じゃ。<b>最後の栞は、金の地に、ふくろうの紋じゃ。</b>`;
   if (n === 10) return '十冊目の栞じゃ。……十冊読んだ人は、もう「本を読む人」じゃよ。<b>ここからの栞は、若葉の色になる。</b>';
   if (n === 50) return '五十冊。……このあたりから、本と本が、頭の中でつながりはじめる。ある本の言葉が、別の本の場面を思い出させる。<b>ここからの栞は、藍の色になる。</b>';
   if (n === 100) return '百冊！……「百選」の百を、ひとつ読みきったのと同じじゃ。胸をはりなされ。<b>ここからの栞は、金の色になる。</b>';
@@ -356,7 +358,7 @@ applyFsz();
 let QUERY = '';
 
 /* ---------- 図書館のオルゴール（オリジナル曲。tools/orgel.py・orgel2.py で楽譜から合成） ----------
-   初期値は「なし」。オンにすると、本棚でも本の中でも流れつづける。ほかのアプリに切りかえると止まる。
+   初期値は「なし」。オンにすると、本棚でも本の中でも流れ続ける。ほかのアプリに切りかえると止まる。
    曲は「遠い日の図書館」「栞のワルツ」「交互に」から選べる。 */
 const SONGS = {
   tooi:   {src: 'orgel2.mp3?v=1', title: '遠い日の図書館', note: '映画音楽のような、なつかしくて切ない曲'},
@@ -445,7 +447,7 @@ const fmtLists = l => l.split('・').map(x => x.replace(/^中日(\d+)/, '中等�
 const liveMap = () => Object.fromEntries(EPS.map(e => [e.title, e.id]));
 const EPT = t => EPS.find(e => e.title === t);
 const recT = t => { const e = EPT(t); return (e && REC[e.id]) || {}; };
-const appDone = t => !!recT(t).date;      // アプリで読了（栞をはさんだ）
+const appDone = t => !!recT(t).date;      // アプリで読了（栞を挟んだ）
 const paperRead = t => !!recT(t).paper;   // 紙の本で読んだ
 function toggleOwn(t) { if (OWN[t]) delete OWN[t]; else OWN[t] = 1; saveOwn(); return !!OWN[t]; }
 const ownLabel = on => on ? '✓　持っている' : '□　この本を持っている';
@@ -641,9 +643,9 @@ function picksHTML() {
   const len = b => (BOOK_LEN[b[6]] || '').split('・')[0];
   return `<div class="picks">
       ${one(nx, '次の一冊', nx ? `${esc(len(nx))}・読みやすさ★${nx[8]}<br><button type="button" class="more" id="pkMore">ほかの本</button>` : '', 'pkNext')}
-      ${one(td, '今日の一冊', '日がわりで、ミネル先生がえらんだ本', 'pkToday')}
+      ${one(td, '今日の一冊', '日がわりで、ミネル先生が選んだ本', 'pkToday')}
     </div>
-    <button class="btn shbtn" id="toCho">栞帳をひらく<small>（${doneCount()}枚）</small></button>`;
+    <button class="btn shbtn" id="toCho">栞帳を開く<small>（${doneCount()}枚）</small></button>`;
 }
 function wirePicks() {
   document.querySelectorAll('#picksBox .pick').forEach(p => p.onclick = e => {
@@ -661,14 +663,14 @@ function openShelf() {
   let msg;
   const all = EPS.length >= BOOKS.length;   // 158冊すべてに入れるようになったか
   if (done >= EPS.length) msg = 'ミネルヴァのふくろうは、黄昏に飛び立つ――という言葉がある。知恵はいつも、事が終わったあとにやってくる、という意味じゃ。<br>だから人は本を読む。<b>他人の人生で、先に一度、学んでおくために。</b><br>' + (all
-    ? '……これで、すべての本に栞がはさまった。じゃが、ほんとうの読書は、ここからじゃ。<b>栞をはさんだ本を、こんどは、紙の本で開いてごらん。</b>'
+    ? '……これで、すべての本に栞が挟まった。じゃが、本当の読書は、ここからじゃ。<b>栞を挟んだ本を、今度は、紙の本で開いてごらん。</b>'
     : '……残りの本は、まだ書架の奥で眠っておる。また来なさい。');
   else if (done) {
     const nm = nextMilestone();
-    msg = 'おかえり。本にはさんだ栞は、<b>栞帳</b>で、いつでも読み返せる。' + (nm ? `<br>次の節目（${nm}冊）まで、あと<b>${nm - done}冊</b>じゃ。` : '');
+    msg = 'おかえり。本に挟んだ栞は、<b>栞帳</b>で、いつでも読み返せる。' + (nm ? `<br>次の節目（${nm}冊）まで、あと<b>${nm - done}冊</b>じゃ。` : '');
     const last = localStorage.getItem('yrt_bk');
-    if (done >= 5 && (!last || Date.now() - new Date(last).getTime() > 30 * 864e5)) msg += '<br>そうそう、<b>記録のバックアップ</b>も、ときどき、とっておきなされ（いちばん下の「記録と設定」から）。';
-  } else msg = 'ようこそ、夜の図書館へ。わしは司書のミネル。<br>本が読めなくても、かまわん。<b>本の中に入って、主人公になってみればいい。</b>迷ったら、下の「次の一冊」からはじめてごらん。';
+    if (done >= 5 && (!last || Date.now() - new Date(last).getTime() > 30 * 864e5)) msg += '<br>そうそう、<b>記録のバックアップ</b>も、時々、取っておきなされ（一番下の「記録と設定」から）。';
+  } else msg = 'ようこそ、夜の図書館へ。わしは司書のミネル。<br>本が読めなくても、かまわん。<b>本の中に入って、主人公になってみればいい。</b>迷ったら、下の「次の一冊」から初めてごらん。';
   $('shelfMsg').innerHTML = OWL + `<p>${msg}</p>`;
   $('picksBox').innerHTML = picksHTML(); wirePicks();
   $('rackNote').innerHTML = '中等部・高等部「読書100選」を合わせた158冊。古い時代の本ほど、使いこまれた姿で並んでいます。<br>背表紙をタップすると、本の紹介、「持っている」「本で読んだ」の記録ができます。';
@@ -792,7 +794,7 @@ function openSheet(title) {
       <button class="btn owntg${OWN[title] ? ' on' : ''}" id="shOwn">${ownLabel(OWN[title])}</button>
       ${id ? paperHTML(id) : ''}
       ${OWN[title] ? `<button class="btn" id="shPh" style="text-align:center">📷　${PH[title] ? '表紙の写真を撮りなおす' : '表紙を、自分の本の写真にする'}</button>` : ''}
-      ${id ? '<button class="btn primary" id="shGo">この本の扉をひらく</button>' : '<p class="small mute">この本の物語は、まだ書架の奥で準備中です。</p>'}
+      ${id ? '<button class="btn primary" id="shGo">この本の扉を開く</button>' : '<p class="small mute">この本の物語は、まだ書架の奥で準備中です。</p>'}
       <button class="btn ghost" id="shClose">とじる</button>`;
     $('shOwn').onclick = () => { toggleOwn(title); draw(); };
     if (id) wirePaper($('sheet'), id, draw);
@@ -844,7 +846,7 @@ function openBook(ep, justDone) {
       ${paperHTML(ep.id)}
       <div class="lk"><span>この本、好き？</span>${likeHTML(ep.id)}</div>
       <textarea id="bkMemo" rows="4" placeholder="感想を、自由に。読書感想文の下書きにもなります。">${esc(r.memo || '')}</textarea>
-      <button class="btn" id="bkDraft" style="text-align:center">📝　感想文の下書きをつくる</button>
+      <button class="btn" id="bkDraft" style="text-align:center">📝　感想文の下書きを作る</button>
       <div id="draftBox"></div>
     </div>
     <div class="sec"><h3>表紙</h3><div id="covsel" class="covsel">${covSelHTML(ep)}</div></div>
@@ -860,9 +862,9 @@ function openBook(ep, justDone) {
     : `<div class="sec"><h3>この本でできること</h3><p>主人公になって名場面を体験し、ミネル先生から「なぜ名作なのか」を聞く。最後に、ふたつの問いかけに答えて、自分の栞を書く。</p><p class="small mute">所要時間　約${ep.minutes}分</p></div>`}
     <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
       <button class="btn owntg${OWN[ep.title] ? ' on' : ''}" id="bkOwn">${ownLabel(OWN[ep.title])}</button>
-      <button class="btn primary" id="bkStart">${d ? 'もう一度、本の中へ' : 'この本の扉をひらく'}</button>
+      <button class="btn primary" id="bkStart">${d ? 'もう一度、本の中へ' : 'この本の扉を開く'}</button>
       ${d ? `<button class="btn" id="bkAsk" style="text-align:center">問いかけに、もう一度答える</button>` : ''}
-      <button class="btn ghost" id="bkBack">本棚へもどる</button>
+      <button class="btn ghost" id="bkBack">本棚へ戻る</button>
     </div>`;
   show('book');
   wireCovSel(ep);
@@ -870,7 +872,7 @@ function openBook(ep, justDone) {
   wireLike(el.querySelector('.myrec'), ep.id);
   $('bkMemo').oninput = () => { rec(ep.id).memo = $('bkMemo').value; save(); };
   $('bkDraft').onclick = () => {
-    $('draftBox').innerHTML = `<p class="small mute" style="margin:0 0 6px">栞の言葉・読んだときの自分・感想を、ひとつの文章にまとめました。<b>下書き</b>なので、（　）のところを書きたして、自分の言葉で仕上げてください。</p>
+    $('draftBox').innerHTML = `<p class="small mute" style="margin:0 0 6px">栞の言葉・読んだときの自分・感想を、一つの文章にまとめました。<b>下書き</b>なので、（　）のところを書きたして、自分の言葉で仕上げてください。</p>
       <textarea id="draft" rows="14">${esc(draftText(ep))}</textarea>
       <button class="btn primary" id="draftCopy" style="margin-top:8px">コピーする</button>`;
     $('draftCopy').onclick = () => copyText($('draft').value);
@@ -892,7 +894,7 @@ function openCho() {
   const el = $('cho');
   el.innerHTML = `
     <div class="shead"><h2>栞帳</h2><div class="count">栞 <b>${list.length}</b> 枚<br><small>${nm ? `次の節目 ${nm}冊まで あと${nm - list.length}冊` : '全刊読破'}</small></div></div>
-    <p class="small" style="opacity:.75;margin:0;line-height:1.8">これまでに本にはさんだ栞です。読んだときの自分と、感想を見返せます。10冊・50冊・100冊・150冊…と節目をこえるごとに、栞の色が変わります。</p>
+    <p class="small" style="opacity:.75;margin:0;line-height:1.8">これまでに本に挟んだ栞です。読んだときの自分と、感想を見返せます。10冊・50冊・100冊・150冊…と節目をこえるごとに、栞の色が変わります。</p>
     <button class="btn shbtn" id="choPrint">🖨　学校の読書記録用に、一覧を印刷する</button>
     ${list.length ? list.map(ep => {
       const r = REC[ep.id], d = r.date;
@@ -904,7 +906,7 @@ function openCho() {
           ${r.memo ? `<p class="memo">${esc(r.memo).replace(/\n/g, '<br>')}</p>` : ''}
         </div></div>`;
     }).join('') : '<p class="small" style="opacity:.6;text-align:center;padding:30px 0">まだ、栞はありません。<br>本を一冊読みおえると、ここに栞がたまっていきます。</p>'}
-    <button class="btn ghost" id="choBack">本棚へもどる</button>`;
+    <button class="btn ghost" id="choBack">本棚へ戻る</button>`;
   show('cho');
   el.querySelectorAll('.choRow').forEach(x => x.onclick = () => openBook(EPS.find(e => e.id === x.dataset.ep)));
   $('choBack').onclick = openShelf;
@@ -917,14 +919,14 @@ function renderSettings() {
   $('settings').innerHTML = `
     <h3>記録と設定</h3>
     <div class="setrow"><span>読むときの選択肢</span><div class="seg dark"><button data-ch="0" class="${VIEW.choices ? '' : 'on'}">なし</button><button data-ch="1" class="${VIEW.choices ? 'on' : ''}">あり</button></div></div>
-    <p class="small">なし：原作の流れのまま読み進め、選ぶのは、読みおえたあとのミネル先生との対話だけ。<br>あり：本の中でも、主人公の行動を自分で選ぶ（原作とちがうと、ページが波打つ）。</p>
+    <p class="small">なし：原作の流れのまま読み進め、選ぶのは、読みおえたあとのミネル先生との対話だけ。<br>あり：本の中でも、主人公の行動を自分で選ぶ（原作と違うと、ページが波打つ）。</p>
     <div class="setrow"><span>本文の文字の大きさ</span><div class="seg dark">${Object.entries(FSZ).map(([k, [t]]) => `<button data-fz="${k}" class="${(VIEW.fsz || 'm') === k ? 'on' : ''}">${t}</button>`).join('')}</div></div>
     <p class="small fzs" style="font-family:var(--udm);font-size:calc(17.5px * var(--rs));line-height:2;opacity:.9">あなたは、本の中に入った。――この大きさで、物語が表示されます。</p>
     <div class="setrow"><span>オルゴールの音楽</span><div class="seg dark"><button data-bgm="0" class="${VIEW.bgm ? '' : 'on'}">なし</button><button data-bgm="1" class="${VIEW.bgm ? 'on' : ''}">あり</button></div></div>
     <div class="songs">${[...Object.entries(SONGS), ['alt', {title: '交互に', note: '2曲を、かわるがわる'}]].map(([k, x]) => `<button data-song="${k}" class="${VIEW.song === k ? 'on' : ''}"><b>♪ ${x.title}</b><small>${x.note}</small></button>`).join('')}</div>
-    <p class="small">図書館に、オリジナルのオルゴール曲が静かに流れます。本の中でも流れつづけ、ほかのアプリに切りかえると止まります。音量は端末の音量ボタンで。</p>
+    <p class="small">図書館に、オリジナルのオルゴール曲が静かに流れます。本の中でも流れ続け、ほかのアプリに切りかえると止まります。音量は端末の音量ボタンで。</p>
     <div class="setrow"><button class="btn" id="bkExport">記録を書き出す</button><button class="btn" id="bkImport">記録を読みこむ</button></div>
-    <p class="small">読了・栞・感想・好き度・本で読んだ日・持っている本・表紙の写真を、ひとつのファイルにまとめて書き出します。機種変更のときや、別の端末で続けるときは、そのファイルを読みこんでください。<br>最後に書き出した日：${last ? ymd(last.slice(0, 10)) : 'まだ書き出していません'}</p>
+    <p class="small">読了・栞・感想・好き度・本で読んだ日・持っている本・表紙の写真を、一つのファイルにまとめて書き出します。機種変更のときや、別の端末で続けるときは、そのファイルを読みこんでください。<br>最後に書き出した日：${last ? ymd(last.slice(0, 10)) : 'まだ書き出していません'}</p>
     <button class="btn" id="toPrint" style="text-align:center">🖨　学校の読書記録用に、一覧を印刷する</button>`;
   $('settings').querySelectorAll('[data-ch]').forEach(b => b.onclick = () => { VIEW.choices = b.dataset.ch === '1'; saveView(); renderSettings(); toast(VIEW.choices ? '本の中でも、選びながら読みます' : '原作の流れのまま、読み進めます'); });
   $('settings').querySelectorAll('[data-fz]').forEach(b => b.onclick = () => { VIEW.fsz = b.dataset.fz; saveView(); applyFsz(); renderSettings(); });
@@ -964,7 +966,7 @@ function importData() {
   inp.onchange = async () => {
     const f = inp.files && inp.files[0]; if (!f) return;
     let data;
-    try { data = JSON.parse(await f.text()); } catch (e) { toast('ファイルを読みこめませんでした'); return; }
+    try { data = JSON.parse(await f.text()); } catch (e) { toast('ファイルを読み込めませんでした'); return; }
     if (!data || data.app !== 'meisaku-no-nakae' || typeof data.rec !== 'object') { toast('「名作のなかへ」の記録ファイルではないようです'); return; }
     const nd = Object.values(data.rec).filter(r => r && r.date).length, no = Object.keys(data.own || {}).length, np = Object.keys(data.photos || {}).length;
     if (!confirm(`${ymd(String(data.at || '').slice(0, 10)) || '日付不明'}に書き出した記録です。\nアプリで読了 ${nd}冊・持っている ${no}冊・写真 ${np}枚\n\nこの端末のいまの記録は、この記録に置きかわります。よろしいですか？`)) return;
@@ -991,12 +993,12 @@ function draftText(ep) {
   const when = r.paper ? `${ymd(r.paper)}に、この本を読みました。` : r.date ? `${r.date[0]}年${r.date[1]}月${r.date[2]}日に、この本の世界に入りました。` : 'この本を読みました。';
   const like = r.like >= 4 ? 'この本は、わたしにとって、大切な一冊になりました。' : r.like && r.like <= 2 ? '正直に言うと、すぐに好きになれる本ではありませんでした。けれど、考えさせられることがありました。' : '';
   P.push('　わたしは、' + when + like);
-  if (r.mirror && r.mirror.length) P.push('　読みながら、今の自分に重なるところがありました。' + r.mirror.map(i => `「${plain(A(ep.mirror.items[i].t)).replace(/。$/, '')}」`).join('、') + 'というところです。（そう思った出来事を、ひとつ書こう）');
-  else if (r.date) P.push('　読みながら、登場人物と自分をくらべてみました。（くらべて気づいたことを書こう）');
+  if (r.mirror && r.mirror.length) P.push('　読みながら、今の自分に重なるところがありました。' + r.mirror.map(i => `「${plain(A(ep.mirror.items[i].t)).replace(/。$/, '')}」`).join('、') + 'というところです。（そう思った出来事を、一つ書こう）');
+  else if (r.date) P.push('　読みながら、登場人物と自分を比べてみました。（比べて気づいたことを書こう）');
   if (r.date) P.push(`　この本から、わたしが心にとめておきたいと思ったのは、「${plain(cardText(ep, r)).replace(/\n/g, '').replace(/。$/, '')}」ということです。（なぜそう思ったのかを書こう）`);
   const memo = String(r.memo || '').split(/\n+/).map(x => x.trim()).filter(Boolean);
   if (memo.length) memo.forEach(m => P.push('　' + m));
-  else P.push('　（いちばん心に残った場面と、そのとき感じたことを書こう）');
+  else P.push('　（一番心に残った場面と、そのとき感じたことを書こう）');
   P.push('　（これから、この本から学んだことを、どんなふうに生かしていきたいかを書こう）');
   return P.join('\n');
 }
@@ -1023,7 +1025,7 @@ function openPrint() {
       <div class="seg"><button data-l="j" class="${PRINT.list === 'j' ? 'on' : ''}">中等部</button><button data-l="h" class="${PRINT.list === 'h' ? 'on' : ''}">高等部</button></div>
       <div class="seg"><button data-o="1" class="${PRINT.only ? 'on' : ''}">読んだ本だけ</button><button data-o="0" class="${PRINT.only ? '' : 'on'}">${total}冊すべて</button></div>
       <button class="btn primary" id="prGo">印刷する</button>
-      <p class="small mute" style="margin:0">「本で読んだ日」を記録した本が、番号順にならびます。iPhoneでは、印刷の画面から、PDFとして保存することもできます。</p>
+      <p class="small mute" style="margin:0">「本で読んだ日」を記録した本が、番号順に並びます。iPhoneでは、印刷の画面から、PDFとして保存することもできます。</p>
     </div>
     <div class="ptitle"><h2>読書百選　読書記録（${PRINT.list === 'j' ? '中等部' : '高等部'}）</h2>
       <p>読んだ本　${read}冊 ／ ${total}冊　　${t.getFullYear()}年${t.getMonth() + 1}月${t.getDate()}日 現在</p>
@@ -1032,7 +1034,7 @@ function openPrint() {
       const list = PRINT.only ? rs.filter(x => x.b && recT(x.b[0]).paper) : rs;
       return `<h3>${h}</h3>${list.length ? `<table class="ptab"><thead><tr><th>番号</th><th>書名</th><th>作者</th><th>読んだ日</th></tr></thead><tbody>${list.map(({no, b}) => `<tr class="${b && recT(b[0]).paper ? 'rd' : ''}"><td>${no}</td><td>${b ? esc(b[0]) : ''}</td><td>${b ? esc(b[1] || '') : ''}</td><td>${b ? dt(b) : ''}</td></tr>`).join('')}</tbody></table>` : '<p class="small mute">まだ、本で読んだ日を記録した本はありません。</p>'}`;
     }).join('')}
-    <button class="btn ghost noprint" id="prBack">もどる</button>`;
+    <button class="btn ghost noprint" id="prBack">戻る</button>`;
   show('print');
   $('print').querySelectorAll('[data-l]').forEach(b => b.onclick = () => { PRINT.list = b.dataset.l; openPrint(); });
   $('print').querySelectorAll('[data-o]').forEach(b => b.onclick = () => { PRINT.only = b.dataset.o === '1'; openPrint(); });
@@ -1052,4 +1054,4 @@ phLoadAll().then(() => { if (Object.keys(PH).length && $('shelf').classList.cont
 $('log').onclick = () => { if (LI < LINES.length) step(); };
 $('tap').onclick = e => { if (e.target.id !== 'skip' && LI < LINES.length) step(); };
 $('skip').onclick = flush;
-$('quit').onclick = () => { if (confirm('本棚へもどりますか？（この本は最初からになります）')) openShelf(); };
+$('quit').onclick = () => { if (confirm('本棚へ戻りますか？（この本は最初からになります）')) openShelf(); };
