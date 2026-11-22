@@ -342,11 +342,15 @@ const todayISO = () => { const d = new Date(); return `${d.getFullYear()}-${Stri
 let OWN = {};
 try { OWN = JSON.parse(localStorage.getItem('yrt_own') || '{}') || {}; } catch (e) {}
 const saveOwn = () => { try { localStorage.setItem('yrt_own', JSON.stringify(OWN)); } catch (e) {} };
-let VIEW = {mode: 'rack', filter: 'all', sort: 'aiu', choices: false};
+let VIEW = {mode: 'rack', filter: 'all', sort: 'aiu', choices: false, fsz: 'm'};
 try { Object.assign(VIEW, JSON.parse(localStorage.getItem('yrt_view') || '{}')); } catch (e) {}
 if ((VIEW.v || 0) < 2) { VIEW.sort = 'aiu'; VIEW.v = 2; }   // 並びの初期値を「あいうえお順」に切りかえた
 if (VIEW.v < 3) { VIEW.choices = false; VIEW.v = 3; }        // 読むときの選択肢は、初期値「なし」
 const saveView = () => { try { localStorage.setItem('yrt_view', JSON.stringify(VIEW)); } catch (e) {} };
+/* 本文の文字の大きさ（小・中・大） */
+const FSZ = {s: ['小', .9], m: ['中', 1], l: ['大', 1.15], xl: ['特大', 1.3]};
+const applyFsz = () => document.documentElement.style.setProperty('--rs', (FSZ[VIEW.fsz] || FSZ.m)[1]);
+applyFsz();
 let QUERY = '';
 
 const BOOK = t => BOOKS.find(b => b[0] === t);
@@ -375,12 +379,15 @@ function spineVars(b, e) {
   const m = matOf(b), hx = hexes(e), c = hx[1] || hx[0], h = hashN(b[0]);
   const light = lum(c) > .58;
   const tc = m === 'pb' ? (e ? e.cover[1] : '#fff') : light ? '#3a2412' : '#e9c869';
-  const base = {pb: 142, cl: 152, lt: 158}[m] + (h % 13);
+  const base = {pb: 154, cl: 162, lt: 168}[m] + (h % 13);
   const thick = .78 + ((LEN_RANK[b[6]] || 4) - 1) * .09 + (h % 7) * .012;
   const lbl = ['#5a1a14', '#1e1a16', '#2a3a24', '#3a1a2a'][h % 4];
-  const n = [...b[0]].length, avail = base - (m === 'lt' ? 61 : 50);
-  const fs = Math.max(8.4, Math.min(14, Math.floor(avail / (n * (m === 'lt' ? 1.03 : 1.07)) * 10) / 10));
-  return {m, style: `--c:${c};--tc:${tc};--lbl:${lbl};--fs:${fs}px;height:${base}px;flex-grow:${thick.toFixed(3)}`};
+  /* 題名の文字：1列で11px以上にできなければ、2列に分けて大きく見せる */
+  const n = [...b[0]].length, avail = base - (m === 'lt' ? 64 : 52);
+  let r = n, fs = Math.min(14, avail / (n * 1.06)), c2 = null;
+  if (fs < 11) { c2 = twoCols(b[0]); r = c2.r; fs = Math.min(12.5, avail / (r * 1.06)); }
+  const tk = c2 ? Math.max(thick, 1.22) : thick;
+  return {m, c2, style: `--c:${c};--tc:${tc};--lbl:${lbl};--fs:${fs.toFixed(1)}px;--r:${r};height:${base}px;flex-grow:${tk.toFixed(3)}`};
 }
 const wearOf = b => { const y = b ? b[4] : 2000; return y >= 1950 ? 0 : y >= 1900 ? 1 : y >= 1800 ? 2 : y >= 1600 ? 3 : 4; };
 
@@ -494,10 +501,27 @@ function pickPhoto(t, done) {
   inp.click();
 }
 
-/* 表紙の題簽：長い題は文字を小さくし、2行に分けるときは半分ずつにそろえる */
+/* 長い題を2列に分けるときは、「の」「・」などの切れ目で、なるべく半分ずつに分ける */
+const BRK = 'のにとをはがへ・　 ）」';
+function split2(t) {
+  const ch = [...t], n = ch.length, mid = Math.ceil(n / 2);
+  let best = mid, score = 1e9;
+  const kata = c => /[ァ-ヴー]/.test(c), kanji = c => /[一-龥]/.test(c);
+  for (let i = 2; i <= n - 2; i++) {
+    const x = ch[i - 1], y = ch[i];
+    const sc = Math.max(i, n - i) + (BRK.includes(x) ? 0 : 1.6) + (/[ー・、）」ァィゥェォャュョッ]/.test(y) ? 3 : 0)
+      + (kata(x) && kata(y) ? 5 : 0) + (kanji(x) && kanji(y) ? 1.2 : 0) + (y === '（' ? -1 : 0);
+    if (sc < score) { score = sc; best = i; }
+  }
+  return [ch.slice(0, best).join('').trim(), ch.slice(best).join('').trim()];
+}
+const twoCols = t => { const [a, b] = split2(t); return {html: `${esc(a)}<br>${esc(b)}`, r: Math.max([...a].length, [...b].length)}; };
+/* 表紙の題簽：長い題は2列に分けて、読みやすい大きさにする */
 function titleSlip(t) {
-  const n = [...t].length, rows = n <= 8 ? n : Math.ceil(n / 2);
-  return `<span class="ct${n <= 6 ? '' : n <= 8 ? ' m' : ' l'}" style="--r:${rows}">${esc(t)}</span>`;
+  const n = [...t].length;
+  if (n <= 8) return `<span class="ct${n <= 6 ? '' : ' m'}" style="--r:${n}">${esc(t)}</span>`;
+  const c = twoCols(t);
+  return `<span class="ct l" style="--r:${c.r}">${c.html}</span>`;
 }
 function coverHTML(ep, tag, onShelf) {
   const bk = BOOK(ep.title), t = ep.title;
@@ -632,7 +656,7 @@ function renderRacks() {
   } else if (VIEW.mode === 'rack') {
     const spine = b => {
       const e = EPT(b[0]), w = wearOf(b), v = spineVars(b, e);
-      return `<button class="spine m-${v.m}${appDone(b[0]) ? ' done' : ''}${w ? ' w' + w : ''}" data-t="${esc(b[0])}" title="${esc(b[0])}／${esc(b[1] || '')}" style="${v.style}"><span class="tex"></span>${w ? '<span class="wear"></span>' : ''}${ribbon(bmState(b[0]))}<span class="st">${esc(b[0])}</span>${badge(b[3])}</button>`;
+      return `<button class="spine m-${v.m}${v.c2 ? ' c2' : ''}${appDone(b[0]) ? ' done' : ''}${w ? ' w' + w : ''}" data-t="${esc(b[0])}" title="${esc(b[0])}／${esc(b[1] || '')}" style="${v.style}"><span class="tex"></span>${w ? '<span class="wear"></span>' : ''}${ribbon(bmState(b[0]))}<span class="st">${v.c2 ? v.c2.html : esc(b[0])}</span>${badge(b[3])}</button>`;
     };
     const rows = l => { const out = []; for (let k = 0; k < l.length; k += 10) out.push(l.slice(k, k + 10)); return out; };
     $('racks').innerHTML = groups.map(([g, l]) => head(g, l) + rows(l).map(r => `<div class="shelfrow">${r.map(spine).join('')}${r.length < 10 ? '<span class="bookend"></span>' : ''}</div>`).join('')).join('');
@@ -810,10 +834,13 @@ function renderSettings() {
     <h3>記録と設定</h3>
     <div class="setrow"><span>読むときの選択肢</span><div class="seg dark"><button data-ch="0" class="${VIEW.choices ? '' : 'on'}">なし</button><button data-ch="1" class="${VIEW.choices ? 'on' : ''}">あり</button></div></div>
     <p class="small">なし：原作の流れのまま読み進め、選ぶのは、読みおえたあとのミネル先生との対話だけ。<br>あり：本の中でも、主人公の行動を自分で選ぶ（原作とちがうと、ページが波打つ）。</p>
+    <div class="setrow"><span>本文の文字の大きさ</span><div class="seg dark">${Object.entries(FSZ).map(([k, [t]]) => `<button data-fz="${k}" class="${(VIEW.fsz || 'm') === k ? 'on' : ''}">${t}</button>`).join('')}</div></div>
+    <p class="small fzs" style="font-family:var(--udm);font-size:calc(17.5px * var(--rs));line-height:2;opacity:.9">あなたは、本の中に入った。――この大きさで、物語が表示されます。</p>
     <div class="setrow"><button class="btn" id="bkExport">記録を書き出す</button><button class="btn" id="bkImport">記録を読みこむ</button></div>
     <p class="small">読了・栞・感想・好き度・本で読んだ日・持っている本・表紙の写真を、ひとつのファイルにまとめて書き出します。機種変更のときや、別の端末で続けるときは、そのファイルを読みこんでください。<br>最後に書き出した日：${last ? ymd(last.slice(0, 10)) : 'まだ書き出していません'}</p>
     <button class="btn" id="toPrint" style="text-align:center">🖨　学校の読書記録用に、一覧を印刷する</button>`;
   $('settings').querySelectorAll('[data-ch]').forEach(b => b.onclick = () => { VIEW.choices = b.dataset.ch === '1'; saveView(); renderSettings(); toast(VIEW.choices ? '本の中でも、選びながら読みます' : '原作の流れのまま、読み進めます'); });
+  $('settings').querySelectorAll('[data-fz]').forEach(b => b.onclick = () => { VIEW.fsz = b.dataset.fz; saveView(); applyFsz(); renderSettings(); });
   $('bkExport').onclick = exportData;
   $('bkImport').onclick = importData;
   $('toPrint').onclick = () => openPrint();
