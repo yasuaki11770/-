@@ -256,9 +256,11 @@ function finish() {
 let OWN = {};
 try { OWN = JSON.parse(localStorage.getItem('yrt_own') || '{}') || {}; } catch (e) {}
 const saveOwn = () => { try { localStorage.setItem('yrt_own', JSON.stringify(OWN)); } catch (e) {} };
-let VIEW = {mode: 'rack', filter: 'all'};
+let VIEW = {mode: 'rack', filter: 'all', sort: 'aiu'};
 try { Object.assign(VIEW, JSON.parse(localStorage.getItem('yrt_view') || '{}')); } catch (e) {}
+if ((VIEW.v || 0) < 2) { VIEW.sort = 'aiu'; VIEW.v = 2; }   // 並びの初期値を「あいうえお順」に切りかえた
 const saveView = () => { try { localStorage.setItem('yrt_view', JSON.stringify(VIEW)); } catch (e) {} };
+let QUERY = '';
 
 const BOOK = t => BOOKS.find(b => b[0] === t);
 const memb = l => /中/.test(l) && /高/.test(l) ? 'both' : /中/.test(l) ? 'j' : 'h';
@@ -266,10 +268,15 @@ const MEMB = {both: ['両', '中等部・高等部の両方'], j: ['中', '中�
 const badge = (l, long) => `<span class="bd bd-${memb(l)}">${MEMB[memb(l)][long ? 1 : 0]}</span>`;
 const fmtLists = l => l.split('・').map(x => x.replace(/^中日(\d+)/, '中等部（日本）$1番').replace(/^中海(\d+)/, '中等部（海外）$1番').replace(/^高(\d+)/, '高等部 $1番')).join('／');
 const liveMap = () => Object.fromEntries(EPS.map(e => [e.title, e.id]));
+const EPT = t => EPS.find(e => e.title === t);
+const isRead = t => { const e = EPT(t); return !!(e && REC[e.id] && REC[e.id].date); };
 function toggleOwn(t) { if (OWN[t]) delete OWN[t]; else OWN[t] = 1; saveOwn(); return !!OWN[t]; }
 const ownLabel = on => on ? '✓　持っている' : '□　この本を持っている';
+/* しおり：持っている本は外枠だけ、読んだ本（栞をはさんだ本）は塗りつぶし */
+const bmState = t => isRead(t) ? 'read' : OWN[t] ? 'own' : '';
+const ribbon = st => st ? `<svg class="rb ${st}" viewBox="0 0 12 22" aria-label="${st === 'read' ? '読んだ' : '持っている'}"><path d="M1.5 1H10.5V20L6 15.5L1.5 20Z"/></svg>` : '';
 
-/* 評価：[4]年 [5]年の表示 [6]長さ [7]おすすめ [8]読みやすさ [9]有名度 [10]学び度 [11]読後感(1さわやか〜5ずっしり) */
+/* 評価：[4]年 [5]年の表示 [6]長さ [7]おすすめ [8]読みやすさ [9]有名度 [10]学び度 [11]読後感(1さわやか〜5ずっしり) [12]よみ */
 const MOOD = ['', 'さわやか', 'あたたかい', 'しみじみ', 'ほろ苦い', 'ずっしり'];
 const LEN_RANK = {S: 1, D: 2, M: 2, N: 3, P: 3, E: 3, L: 4, L2: 5, XL: 6};
 const stars = n => `<span class="stars" aria-label="5段階中${n}">${'★'.repeat(n)}<span class="off">${'★'.repeat(5 - n)}</span></span>`;
@@ -288,7 +295,9 @@ function ratesHTML(b) {
   </div>`;
 }
 const ratesMini = b => b.length < 12 ? '' : `<small class="rmini">おすすめ★${b[7]}・読みやすさ★${b[8]}・有名★${b[9]}・学び★${b[10]}・${MOOD[b[11]]}・${esc(b[5].replace(/（.*$/, ''))}・${esc((BOOK_LEN[b[6]] || '').split('・')[0])}</small>`;
+const yomi = b => b[12] || b[0];
 const SORTS = [
+  ['aiu', 'あいうえお順', (a, b) => yomi(a).localeCompare(yomi(b), 'ja')],
   ['no', '番号順', null],
   ['rec', 'おすすめ順', (a, b) => b[7] - a[7]],
   ['easy', '読みやすい順', (a, b) => b[8] - a[8]],
@@ -300,13 +309,95 @@ const SORTS = [
   ['old', '古い順', (a, b) => a[4] - b[4]],
   ['short', '短い順', (a, b) => (LEN_RANK[a[6]] || 9) - (LEN_RANK[b[6]] || 9)],
 ];
+/* あいうえお順のときは「あ行・か行…」、番号順のときは「日本・海外」に分けて並べる */
+const GYO = ['あいうえおゔぁぃぅぇぉ', 'かきくけこがぎぐげご', 'さしすせそざじずぜぞ', 'たちつてとだぢづでどっ', 'なにぬねの', 'はひふへほばびぶべぼぱぴぷぺぽ', 'まみむめも', 'やゆよゃゅょ', 'らりるれろ', 'わをん'];
+const gyoOf = b => { const c = yomi(b)[0], k = GYO.findIndex(g => g.includes(c)); return k < 0 ? 'その他' : GYO[k][0] + '行'; };
+function groupsOf(list) {
+  const key = VIEW.sort === 'aiu' ? gyoOf : VIEW.sort === 'no' ? (b => b[2]) : null;
+  if (!key) return [[null, list]];
+  const g = new Map();
+  list.forEach(b => { const k = key(b); if (!g.has(k)) g.set(k, []); g.get(k).push(b); });
+  return [...g.entries()];
+}
+const hira = s => s.replace(/[ァ-ヶ]/g, c => String.fromCharCode(c.charCodeAt(0) - 0x60));
+const matchQ = (b, q) => { if (!q) return true; const n = x => hira(String(x || '')).replace(/[\s・　]/g, '').toLowerCase(); const k = n(q); return n(b[0]).includes(k) || n(b[1]).includes(k) || n(yomi(b)).includes(k); };
 
+/* ---------- 表紙：絵、または、自分の本の写真 ---------- */
+const PH = {};   // 書名 → 写真のURL（IndexedDB にしまった写真）
+let CPREF = {};  // 書名 → 'art'（絵）／'photo'（写真）
+try { CPREF = JSON.parse(localStorage.getItem('yrt_cover') || '{}') || {}; } catch (e) {}
+const saveCpref = () => { try { localStorage.setItem('yrt_cover', JSON.stringify(CPREF)); } catch (e) {} };
+const usePhoto = t => !!(OWN[t] && PH[t] && CPREF[t] !== 'art');
+function idb() {
+  return new Promise((res, rej) => {
+    if (!window.indexedDB) return rej(new Error('no idb'));
+    const r = indexedDB.open('meisaku', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('photos');
+    r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+  });
+}
+async function phLoadAll() {
+  try {
+    const db = await idb();
+    await new Promise(res => {
+      const c = db.transaction('photos').objectStore('photos').openCursor();
+      c.onsuccess = () => { const cur = c.result; if (!cur) return res(); PH[cur.key] = URL.createObjectURL(cur.value); cur.continue(); };
+      c.onerror = () => res();
+    });
+  } catch (e) {}
+}
+async function phPut(t, blob) {
+  const db = await idb();
+  await new Promise((res, rej) => { const tx = db.transaction('photos', 'readwrite'); tx.objectStore('photos').put(blob, t); tx.oncomplete = res; tx.onerror = () => rej(tx.error); });
+  if (PH[t]) URL.revokeObjectURL(PH[t]);
+  PH[t] = URL.createObjectURL(blob);
+}
+async function phDel(t) {
+  const db = await idb();
+  await new Promise(res => { const tx = db.transaction('photos', 'readwrite'); tx.objectStore('photos').delete(t); tx.oncomplete = res; tx.onerror = res; });
+  if (PH[t]) URL.revokeObjectURL(PH[t]);
+  delete PH[t];
+}
+/* 写真を、表紙の形（たて2：よこ3）に切りぬいて小さくする */
+function toCoverBlob(file) {
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onload = () => {
+      const W = 480, H = 720, c = document.createElement('canvas'); c.width = W; c.height = H;
+      const s = Math.max(W / img.naturalWidth, H / img.naturalHeight), w = img.naturalWidth * s, h = img.naturalHeight * s;
+      c.getContext('2d').drawImage(img, (W - w) / 2, (H - h) / 2, w, h);
+      URL.revokeObjectURL(url);
+      c.toBlob(b => b ? res(b) : rej(new Error('blob')), 'image/jpeg', .85);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error('img')); };
+    img.src = url;
+  });
+}
+function pickPhoto(t, done) {
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = 'image/*';
+  inp.onchange = async () => {
+    const f = inp.files && inp.files[0]; if (!f) return;
+    try { await phPut(t, await toCoverBlob(f)); CPREF[t] = 'photo'; saveCpref(); toast('表紙を、あなたの本の写真にしました'); }
+    catch (e) { toast('写真を読みこめませんでした'); }
+    if (done) done();
+  };
+  inp.click();
+}
+
+/* 表紙の題簽：長い題は文字を小さくし、2行に分けるときは半分ずつにそろえる */
+function titleSlip(t) {
+  const n = [...t].length, rows = n <= 8 ? n : Math.ceil(n / 2);
+  return `<span class="ct${n <= 6 ? '' : n <= 8 ? ' m' : ' l'}" style="--r:${rows}">${esc(t)}</span>`;
+}
 function coverHTML(ep, tag) {
-  const r = rec(ep.id), bk = BOOK(ep.title);
-  return `<${tag} class="cover" data-ep="${ep.id}" style="background:${ep.cover[0]};color:${ep.cover[1]}">
-    ${r.date ? `<span class="stamp">読了</span>` : ''}
-    <span class="ct">${esc(ep.title)}</span>
-    <span><span class="ca">${esc(ep.author)}</span><br><span class="cs">${r.date ? '栞あり' : '未読'}</span>${bk ? badge(bk[3]) : ''}${bk && OWN[bk[0]] ? '<span class="cs">所持</span>' : ''}</span></${tag}>`;
+  const bk = BOOK(ep.title), t = ep.title;
+  const photo = usePhoto(t);
+  return `<${tag} class="cover${photo ? ' photo' : ''}" data-ep="${ep.id}" style="background:${ep.cover[0]};color:${ep.cover[1]}">
+    ${photo ? `<img class="ph" src="${PH[t]}" alt="">` : (window.coverArt ? coverArt(ep) : '')}
+    ${photo ? '' : titleSlip(t)}
+    ${ribbon(bmState(t))}
+    <span class="cfoot"><span class="ca">${photo ? '' : esc(ep.author)}</span>${bk ? badge(bk[3]) : ''}</span></${tag}>`;
 }
 
 function openShelf() {
@@ -319,10 +410,10 @@ function openShelf() {
     ? '……これで、すべての本に栞がはさまった。じゃが、ほんとうの読書は、ここからじゃ。<b>栞をはさんだ本を、こんどは、紙の本で開いてごらん。</b>'
     : '……残りの本は、まだ書架の奥で眠っておる。また来なさい。');
   else if (done) msg = 'おかえり。本にはさんだ栞は、いつでも読み返せる。<b>しばらくたってから、同じ問いかけにもう一度答えてみる</b>のもいいものじゃよ。';
-  else msg = 'ようこそ、夜の図書館へ。わしは司書のミネル。<br>本が読めなくても、かまわん。<b>本の中に入って、主人公になってみればいい。</b>まずは光っている本を一冊、選んでごらん。';
+  else msg = 'ようこそ、夜の図書館へ。わしは司書のミネル。<br>本が読めなくても、かまわん。<b>本の中に入って、主人公になってみればいい。</b>まずは、気になる題名の本を一冊、選んでごらん。';
   $('shelfMsg').innerHTML = OWL + `<p>${msg}</p>`;
-  $('rackNote').innerHTML = (all ? '中等部・高等部「読書100選」を合わせた158冊。' : '中等部・高等部「読書100選」を合わせた158冊。光っている本に入れます。')
-    + '<br>背表紙をタップすると、持っている本にチェックできます。';
+  $('rackNote').innerHTML = '中等部・高等部「読書100選」を合わせた158冊。<br>背表紙をタップすると、本の紹介と「持っている」のチェックができます。'
+    + '<br>持っている本は、本のページで、表紙を自分の本の写真にできます。';
   renderRacks();
 }
 
@@ -360,6 +451,7 @@ function renderRacks() {
     ['both', '両方', b => memb(b[3]) === 'both'],
     ['own', '持っている', b => OWN[b[0]]],
     ['notown', '持っていない', b => !OWN[b[0]]],
+    ['read', '読んだ', b => isRead(b[0])],
     ['live', '遊べる', b => live[b[0]]],
   ];
   if (EPS.length >= BOOKS.length) FILTERS.pop();   // 全冊に入れるようになったら「遊べる」の絞りこみは不要
@@ -369,33 +461,31 @@ function renderRacks() {
   $('chips').innerHTML = FILTERS.map(([k, t, f]) => `<button data-f="${k}" class="${VIEW.filter === k ? 'on' : ''}">${t} ${BOOKS.filter(f).length}</button>`).join('');
   $('tabs').querySelectorAll('button').forEach(b => b.onclick = () => setMode(b.dataset.v));
   $('chips').querySelectorAll('button').forEach(b => b.onclick = () => { VIEW.filter = b.dataset.f; saveView(); renderRacks(); });
-  if (!SORTS.some(x => x[0] === VIEW.sort)) VIEW.sort = 'no';
+  if (!SORTS.some(x => x[0] === VIEW.sort)) VIEW.sort = 'aiu';
   $('sort').innerHTML = SORTS.map(([k, t]) => `<option value="${k}"${VIEW.sort === k ? ' selected' : ''}>${t}</option>`).join('');
   $('sort').onchange = () => { VIEW.sort = $('sort').value; saveView(); renderRacks(); };
-  const list = BOOKS.filter(FILTERS.find(f => f[0] === VIEW.filter)[2]);
+  const list = BOOKS.filter(FILTERS.find(f => f[0] === VIEW.filter)[2]).filter(b => matchQ(b, QUERY));
   const cmp = SORTS.find(x => x[0] === VIEW.sort)[2];
   if (cmp) list.sort(cmp);   // 同じ評価のときは、もとの番号順のまま
-  if (!list.length) { $('racks').innerHTML = '<p class="small" style="opacity:.6;text-align:center;padding:20px 0">あてはまる本は、まだありません。</p>'; return; }
+  if (!list.length) { $('racks').innerHTML = `<p class="small" style="opacity:.6;text-align:center;padding:20px 0">${QUERY ? 'その言葉にあてはまる本は、見つかりませんでした。' : 'あてはまる本は、まだありません。'}</p>`; return; }
+  const head = (g, l) => g ? `<h3>${esc(g)}<small>（${l.length}冊）</small></h3>` : '';
+  const groups = groupsOf(list);
   if (VIEW.mode === 'cover') {
-    const eps = list.filter(b => live[b[0]]).map(b => EPS.find(e => e.id === live[b[0]]));
-    const rest = list.length - eps.length;
-    $('racks').innerHTML = (eps.length ? `<div class="feat">${eps.map(e => coverHTML(e, 'button')).join('')}</div>` : '')
-      + (rest ? `<p class="small" style="opacity:.6;text-align:center;padding:14px 0 0">まだ入れない本が ${rest}冊 あります。背表紙やリストで見られます。</p>` : '');
+    $('racks').innerHTML = groups.map(([g, l]) => head(g, l) + `<div class="feat">${l.map(b => live[b[0]] ? coverHTML(EPS.find(e => e.id === live[b[0]]), 'button') : '').join('')}</div>`).join('');
     $('racks').querySelectorAll('.cover').forEach(b => b.onclick = () => openBook(EPS.find(e => e.id === b.dataset.ep)));
   } else if (VIEW.mode === 'rack') {
-    const groups = {};
-    list.forEach(b => (groups[b[2]] = groups[b[2]] || []).push(b));
-    $('racks').innerHTML = Object.entries(groups).map(([g, l]) =>
-      `<h3>${g}（${l.length}冊）</h3><div class="rack">${l.map(b =>
-        `<button class="spine${live[b[0]] ? ' live' : ''}${OWN[b[0]] ? ' own' : ''}" data-t="${esc(b[0])}" title="${esc(b[0])}／${esc(b[1] || '')}"><span class="st">${esc(b[0])}</span>${badge(b[3])}</button>`).join('')}</div>`).join('');
+    $('racks').innerHTML = groups.map(([g, l]) => head(g, l) + `<div class="rack">${l.map(b => {
+      const e = EPT(b[0]), st = bmState(b[0]);
+      return `<button class="spine" data-t="${esc(b[0])}" title="${esc(b[0])}／${esc(b[1] || '')}" style="${e ? `background:${e.cover[0]};color:${e.cover[1]}` : ''}">${ribbon(st)}<span class="st">${esc(b[0])}</span>${badge(b[3])}</button>`;
+    }).join('')}</div>`).join('');
     $('racks').querySelectorAll('.spine').forEach(s => s.onclick = () => openSheet(s.dataset.t));
   } else {
-    $('racks').innerHTML = `<div class="llist">${list.map(b => `
+    $('racks').innerHTML = groups.map(([g, l]) => head(g, l) + `<div class="llist">${l.map(b => `
       <div class="lrow${OWN[b[0]] ? ' own' : ''}" data-t="${esc(b[0])}" role="button" aria-pressed="${OWN[b[0]] ? 'true' : 'false'}">
         <span class="ck">${OWN[b[0]] ? '✓' : ''}</span>
-        <span class="lt"><b>${esc(b[0])}</b><small>${esc(b[1] || '―')}　${esc(fmtLists(b[3]))}</small>${ratesMini(b)}</span>
+        <span class="lt"><b>${esc(b[0])}${isRead(b[0]) ? ribbon('read') : ''}</b><small>${esc(b[1] || '―')}　${esc(fmtLists(b[3]))}</small>${ratesMini(b)}</span>
         ${badge(b[3])}${live[b[0]] ? `<button class="go" data-ep="${live[b[0]]}">ひらく</button>` : ''}
-      </div>`).join('')}</div>`;
+      </div>`).join('')}</div>`).join('');
     $('racks').querySelectorAll('.lrow').forEach(r => r.onclick = e => {
       if (e.target.closest('.go')) { openBook(EPS.find(x => x.id === e.target.closest('.go').dataset.ep)); return; }
       const on = toggleOwn(r.dataset.t);
@@ -408,30 +498,54 @@ function renderRacks() {
 
 /* 背表紙をタップしたときの小さなカード */
 function openSheet(title) {
-  const b = BOOK(title), id = liveMap()[title];
-  $('sheet').innerHTML = `
-    <span class="small mute">${esc(b[2])}</span>
-    <h3>${esc(b[0])}</h3>
-    <p>${esc(b[1] || '著者不詳')}</p>
-    <p>${badge(b[3], true)}</p>
-    <p class="small">${esc(fmtLists(b[3]))}</p>
-    ${ratesHTML(b)}
-    <button class="btn owntg${OWN[title] ? ' on' : ''}" id="shOwn">${ownLabel(OWN[title])}</button>
-    ${id ? '<button class="btn primary" id="shGo">この本の扉をひらく</button>' : '<p class="small mute">この本の物語は、まだ書架の奥で準備中です。</p>'}
-    <button class="btn ghost" id="shClose">とじる</button>`;
+  const b = BOOK(title), id = liveMap()[title], ep = EPT(title);
+  const draw = () => {
+    $('sheet').innerHTML = `
+      <div class="shtop">${ep ? coverHTML(ep, 'div') : ''}<div>
+        <span class="small mute">${esc(b[2])}</span>
+        <h3>${esc(b[0])}</h3>
+        <p>${esc(b[1] || '著者不詳')}</p>
+        <p>${badge(b[3], true)}</p>
+        <p class="small">${esc(fmtLists(b[3]))}</p></div></div>
+      ${ratesHTML(b)}
+      <button class="btn owntg${OWN[title] ? ' on' : ''}" id="shOwn">${ownLabel(OWN[title])}</button>
+      ${OWN[title] ? `<button class="btn" id="shPh" style="text-align:center">📷　${PH[title] ? '表紙の写真を撮りなおす' : '表紙を、自分の本の写真にする'}</button>` : ''}
+      ${id ? '<button class="btn primary" id="shGo">この本の扉をひらく</button>' : '<p class="small mute">この本の物語は、まだ書架の奥で準備中です。</p>'}
+      <button class="btn ghost" id="shClose">とじる</button>`;
+    $('shOwn').onclick = () => { toggleOwn(title); draw(); };
+    if ($('shPh')) $('shPh').onclick = () => pickPhoto(title, draw);
+    $('shClose').onclick = closeSheet;
+    if (id) $('shGo').onclick = () => { closeSheet(); openBook(EPS.find(e => e.id === id)); };
+  };
+  draw();
   $('sheetOv').classList.add('on');
-  $('shOwn').onclick = () => { const on = toggleOwn(title); $('shOwn').classList.toggle('on', on); $('shOwn').textContent = ownLabel(on); };
-  $('shClose').onclick = closeSheet;
-  if (id) $('shGo').onclick = () => { closeSheet(); openBook(EPS.find(e => e.id === id)); };
 }
 function closeSheet() { $('sheetOv').classList.remove('on'); if ($('shelf').classList.contains('on')) renderRacks(); }
+
+/* 本のページの「表紙」：絵か、自分の本の写真か */
+function covSelHTML(ep) {
+  const t = ep.title;
+  if (!OWN[t]) return `<p class="small mute" style="margin:0">この本を「持っている」にすると、表紙を、あなたの本の写真にできます。</p>`;
+  const ph = !!PH[t], cur = usePhoto(t) ? 'photo' : 'art';
+  return `<div class="seg"><button data-c="art" class="${cur === 'art' ? 'on' : ''}">絵の表紙</button><button data-c="photo" class="${cur === 'photo' ? 'on' : ''}"${ph ? '' : ' disabled'}>写真の表紙</button></div>
+    <button class="btn" id="phTake" style="text-align:center">📷　${ph ? '写真を撮りなおす・選びなおす' : '自分の本の写真を撮る・選ぶ'}</button>
+    ${ph ? '<button class="btn ghost" id="phDel">写真を消す</button>' : ''}
+    <p class="small mute" style="margin:0">写真は、この端末の中だけにしまわれます。</p>`;
+}
+function wireCovSel(ep) {
+  const t = ep.title, box = $('covsel'); if (!box) return;
+  const redraw = () => { box.innerHTML = covSelHTML(ep); $('bkCover').innerHTML = coverHTML(ep, 'div'); wireCovSel(ep); };
+  box.querySelectorAll('.seg button').forEach(b => b.onclick = () => { CPREF[t] = b.dataset.c; saveCpref(); redraw(); });
+  if ($('phTake')) $('phTake').onclick = () => pickPhoto(t, redraw);
+  if ($('phDel')) $('phDel').onclick = async () => { if (!confirm('この本の表紙の写真を消しますか？')) return; await phDel(t); delete CPREF[t]; saveCpref(); redraw(); };
+}
 
 function openBook(ep, justDone) {
   const r = rec(ep.id), d = r.date, bk = BOOK(ep.title);
   const el = $('book');
   el.innerHTML = `
     <div class="bk-top">
-      ${coverHTML(ep, 'div')}
+      <div id="bkCover">${coverHTML(ep, 'div')}</div>
       <div class="bk-meta">
         <span>${bk ? badge(bk[3], true) : ''}</span>
         <span class="small mute">${bk ? esc(fmtLists(bk[3])) : esc(ep.lists)}</span>
@@ -441,6 +555,7 @@ function openBook(ep, justDone) {
         <div class="done">読了日　${d ? `<b>${d[0]}</b> 年 <b>${d[1]}</b> 月 <b>${d[2]}</b> 日` : '　　 年　　 月　　 日'}</div>
       </div>
     </div>
+    <div class="sec"><h3>表紙</h3><div id="covsel" class="covsel">${covSelHTML(ep)}</div></div>
     ${bk ? `<div class="sec">${ratesHTML(bk)}</div>` : ''}
     ${d ? `
     <div class="sec mine"><h3>あなたの栞</h3><p class="note">${fmt(cardText(ep, r))}</p>
@@ -458,10 +573,14 @@ function openBook(ep, justDone) {
       <button class="btn ghost" id="bkBack">本棚へもどる</button>
     </div>`;
   show('book');
+  wireCovSel(ep);
   $('bkStart').onclick = () => startEp(ep);
   if ($('bkAsk')) $('bkAsk').onclick = () => startEp(ep, 'mirror');
   $('bkBack').onclick = openShelf;
-  $('bkOwn').onclick = () => { const on = toggleOwn(ep.title); $('bkOwn').classList.toggle('on', on); $('bkOwn').textContent = ownLabel(on); };
+  $('bkOwn').onclick = () => {
+    const on = toggleOwn(ep.title); $('bkOwn').classList.toggle('on', on); $('bkOwn').textContent = ownLabel(on);
+    $('covsel').innerHTML = covSelHTML(ep); $('bkCover').innerHTML = coverHTML(ep, 'div'); wireCovSel(ep);
+  };
 }
 
 /* ---------- wiring ---------- */
@@ -471,6 +590,8 @@ $('titleNote').textContent = EPS.length >= BOOKS.length
   ? `収録：読書百選の158冊すべて（1冊 10〜20分）`
   : `収録：${EPS.length}冊（読書百選158冊のうち・1冊 10〜20分）`;
 $('sheetOv').onclick = e => { if (e.target.id === 'sheetOv') closeSheet(); };
+$('q').oninput = () => { QUERY = $('q').value.trim(); renderRacks(); };
+phLoadAll().then(() => { if (Object.keys(PH).length && $('shelf').classList.contains('on')) renderRacks(); });
 $('log').onclick = () => { if (LI < LINES.length) step(); };
 $('tap').onclick = e => { if (e.target.id !== 'skip' && LI < LINES.length) step(); };
 $('skip').onclick = flush;
