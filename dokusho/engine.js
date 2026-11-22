@@ -12,6 +12,8 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':
 const fmt = s => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>');
 const val = (v, ...a) => typeof v === 'function' ? v(...a) : v;
 const NUM = ['一','二','三','四','五','六'];
+/* ミネル先生の言葉・問いかけの項目を、大人の読者向けに整える（adult.js） */
+const A = s => (window.adult ? window.adult(s) : s);
 /* TEACHER（先生の話者名）は index.html で定義 */
 
 const OWL = `<svg viewBox="0 0 100 100" aria-hidden="true"><ellipse cx="50" cy="60" rx="34" ry="36" fill="#8a6a4a"/><ellipse cx="50" cy="68" rx="22" ry="24" fill="#e9d7b5"/><path d="M38 70q12 6 24 0M40 79q10 5 20 0" stroke="#b89a70" stroke-width="2" fill="none"/><path d="M18 32l14 12M82 32l-14 12" stroke="#6b4f33" stroke-width="7" stroke-linecap="round"/><circle cx="36" cy="46" r="13" fill="#fff"/><circle cx="64" cy="46" r="13" fill="#fff"/><circle cx="36" cy="47" r="6" fill="#2b1d10"/><circle cx="64" cy="47" r="6" fill="#2b1d10"/><circle cx="38" cy="45" r="2" fill="#fff"/><circle cx="66" cy="45" r="2" fill="#fff"/><circle cx="36" cy="46" r="15" fill="none" stroke="#d9a441" stroke-width="2.5"/><circle cx="64" cy="46" r="15" fill="none" stroke="#d9a441" stroke-width="2.5"/><path d="M51 46h-2" stroke="#d9a441" stroke-width="2.5"/><path d="M50 52l-5 7h10z" fill="#e0a03a"/><path d="M30 95l6-8 6 8M58 95l6-8 6 8" stroke="#e0a03a" stroke-width="3" fill="none"/></svg>`;
@@ -49,7 +51,7 @@ function buildTalk(ep) {
     ['', '当てはまるものを、**いくつでも**選んでください。選ぶと光ります。'],
   ]};
   sc.mirrorReply = { world:'lib', place:'問いかけ　その一', lines: S => S.mirror.length
-      ? [...S.mirror.flatMap(i => [['<', ep.mirror.items[i].t], [TEACHER, ep.mirror.items[i].r]]), ...(ep.mirror.after ? [[TEACHER, ep.mirror.after]] : [])]
+      ? [...S.mirror.flatMap(i => [['<', A(ep.mirror.items[i].t)], [TEACHER, ep.mirror.items[i].r]]), ...(ep.mirror.after ? [[TEACHER, ep.mirror.after]] : [])]
       : [['<', 'どれも当てはまらない'], [TEACHER, ep.mirror.none]],
     next:'resolve', nextLabel:'次の問いかけ ▶' };
   sc.resolve = { world:'lib', place:'問いかけ　その二', ask:'resolve', lines: [
@@ -102,7 +104,7 @@ function addLine([who, text]) {
   else if (who === '!') d.className = 'ln big', d.innerHTML = fmt(text);
   else if (who === '>') d.className = 'ln prev', d.innerHTML = '▷ ' + fmt(text);
   else if (who === '<') d.className = 'ln me', d.innerHTML = `<span class="tx">${fmt(text)}</span>`;
-  else if (who === TEACHER) d.className = 'ln teach', d.innerHTML = `${OWL}<span class="tx"><span class="who">ミネル先生</span>${fmt(text)}</span>`;
+  else if (who === TEACHER) d.className = 'ln teach', d.innerHTML = `${OWL}<span class="tx"><span class="who">ミネル先生</span>${fmt(A(text))}</span>`;
   else {
     const c = (EP.chars && EP.chars[who]) || '#777';
     d.className = 'ln say';
@@ -189,7 +191,7 @@ function checkList(items, picked, multi, onChange) {
     b.type = 'button';
     b.className = 'btn ch pick' + (multi ? '' : ' radio');
     b.style.animationDelay = (i * 50) + 'ms';
-    b.innerHTML = `<span class="pt">${fmt(it.t)}${it.who ? `<span class="whom">${esc(it.who)}</span>` : ''}</span>`;
+    b.innerHTML = `<span class="pt">${fmt(A(it.t))}${it.who ? `<span class="whom">${esc(it.who)}</span>` : ''}</span>`;
     b.onclick = () => {
       const on = !b.classList.contains('on');
       if (!multi) btns.forEach(x => mark(x, false));
@@ -258,7 +260,7 @@ function askResolve() {
 }
 
 function today() { const d = new Date(); return [d.getFullYear(), d.getMonth() + 1, d.getDate()]; }
-function cardText(ep, r) { return r.note || (r.resolve.length ? ep.resolve.items[r.resolve[0]].card : ep.resolve.quote); }
+function cardText(ep, r) { return r.note || (r.resolve.length ? A(ep.resolve.items[r.resolve[0]].card) : ep.resolve.quote); }
 
 function finish() {
   const r = rec(EP.id), first = !r.date;
@@ -269,10 +271,10 @@ function finish() {
   save();
   const ms = first && milestones().includes(r.n);
   $('lessonBox').innerHTML = `
-    ${ms ? `<div class="msbox">${OWL}<p><span class="mst">${r.n >= BOOKS.length ? '全刊読破' : r.n + '冊目の節目'}</span>${msMessage(r.n)}</p></div>` : ''}
+    ${ms ? `<div class="msbox">${OWL}<p><span class="mst">${r.n >= BOOKS.length ? '全刊読破' : r.n + '冊目の節目'}</span>${A(msMessage(r.n))}</p></div>` : ''}
     <div class="head">あなたの栞${r.n ? `<small>（${r.n}枚目）</small>` : ''}</div>
     ${cardHTML(EP, r)}
-    ${r.resolve.length ? `<ul>${r.resolve.map(i => `<li>${fmt(EP.resolve.items[i].t)}</li>`).join('')}</ul>` : ''}
+    ${r.resolve.length ? `<ul>${r.resolve.map(i => `<li>${fmt(A(EP.resolve.items[i].t))}</li>`).join('')}</ul>` : ''}
     <p class="quote">${fmt(EP.resolve.quote)}<span>――『${esc(EP.title)}』より</span></p>
     <div class="ovrec">
       <div class="lk"><span>この本、好き？</span>${likeHTML(EP.id)}</div>
@@ -767,12 +769,12 @@ function openBook(ep, justDone) {
     ${bk ? `<div class="sec">${ratesHTML(bk)}</div>` : ''}
     ${d ? `
     <div class="sec mine"><h3>あなたの栞</h3>${cardHTML(ep, r, true)}
-      ${r.resolve.length ? `<p class="small">改めたいこと</p><ul>${r.resolve.map(i => `<li>${fmt(ep.resolve.items[i].t)}</li>`).join('')}</ul>` : ''}
-      <p class="small">読んだときの自分</p>${r.mirror.length ? `<ul>${r.mirror.map(i => `<li>${fmt(ep.mirror.items[i].t)}</li>`).join('')}</ul>` : '<p class="small mute">どれも当てはまらない、と答えた</p>'}
+      ${r.resolve.length ? `<p class="small">改めたいこと</p><ul>${r.resolve.map(i => `<li>${fmt(A(ep.resolve.items[i].t))}</li>`).join('')}</ul>` : ''}
+      <p class="small">読んだときの自分</p>${r.mirror.length ? `<ul>${r.mirror.map(i => `<li>${fmt(A(ep.mirror.items[i].t))}</li>`).join('')}</ul>` : '<p class="small mute">どれも当てはまらない、と答えた</p>'}
     </div>
-    <div class="sec"><h3>名作のわけ</h3>${ep.why.map((w, i) => `<p><b>その${NUM[i]}　${esc(w.h)}</b><br>${fmt(w.short)}</p>`).join('')}</div>
+    <div class="sec"><h3>名作のわけ</h3>${ep.why.map((w, i) => `<p><b>その${NUM[i]}　${esc(w.h)}</b><br>${fmt(A(w.short))}</p>`).join('')}</div>
     <div class="sec"><h3>3分でわかる『${esc(ep.title)}』</h3>${ep.summary.map(p => `<p>${fmt(p)}</p>`).join('')}</div>
-    <div class="sec"><h3>本物を読んでみるなら</h3><p>${fmt(ep.read)}</p></div>`
+    <div class="sec"><h3>本物を読んでみるなら</h3><p>${fmt(A(ep.read))}</p></div>`
     : `<div class="sec"><h3>この本でできること</h3><p>主人公になって名場面を体験し、ミネル先生から「なぜ名作なのか」を聞く。最後に、ふたつの問いかけに答えて、自分の栞を書く。</p><p class="small mute">所要時間　約${ep.minutes}分</p></div>`}
     <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
       <button class="btn owntg${OWN[ep.title] ? ' on' : ''}" id="bkOwn">${ownLabel(OWN[ep.title])}</button>
@@ -902,7 +904,7 @@ function draftText(ep) {
   const when = r.paper ? `${ymd(r.paper)}に、この本を読みました。` : r.date ? `${r.date[0]}年${r.date[1]}月${r.date[2]}日に、この本の世界に入りました。` : 'この本を読みました。';
   const like = r.like >= 4 ? 'この本は、わたしにとって、大切な一冊になりました。' : r.like && r.like <= 2 ? '正直に言うと、すぐに好きになれる本ではありませんでした。けれど、考えさせられることがありました。' : '';
   P.push('　わたしは、' + when + like);
-  if (r.mirror && r.mirror.length) P.push('　読みながら、今の自分に重なるところがありました。' + r.mirror.map(i => `「${plain(ep.mirror.items[i].t).replace(/。$/, '')}」`).join('、') + 'というところです。（そう思った出来事を、ひとつ書こう）');
+  if (r.mirror && r.mirror.length) P.push('　読みながら、今の自分に重なるところがありました。' + r.mirror.map(i => `「${plain(A(ep.mirror.items[i].t)).replace(/。$/, '')}」`).join('、') + 'というところです。（そう思った出来事を、ひとつ書こう）');
   else if (r.date) P.push('　読みながら、登場人物と自分をくらべてみました。（くらべて気づいたことを書こう）');
   if (r.date) P.push(`　この本から、わたしが心にとめておきたいと思ったのは、「${plain(cardText(ep, r)).replace(/\n/g, '').replace(/。$/, '')}」ということです。（なぜそう思ったのかを書こう）`);
   const memo = String(r.memo || '').split(/\n+/).map(x => x.trim()).filter(Boolean);
