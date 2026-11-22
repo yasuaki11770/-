@@ -365,6 +365,23 @@ const ownLabel = on => on ? '✓　持っている' : '□　この本を持っ�
 const bmState = t => paperRead(t) ? 'read' : OWN[t] ? 'own' : '';
 const ribbon = st => st ? `<svg class="rb ${st}" viewBox="0 0 12 22" aria-label="${st === 'read' ? '本で読んだ' : '持っている'}"><path d="M1.5 1H10.5V20L6 15.5L1.5 20Z"/></svg>` : '';
 /* 本棚でだけ、古い本ほど使い古した感じを出す（書かれた年で5段階） */
+/* 本の素材：1950年以降は紙の本、1900年代前半は布張り、それより古い本は革装（背に「バンド」と金箔の題） */
+const matOf = b => { const y = b ? b[4] : 2000; return y >= 1950 ? 'pb' : y >= 1900 ? 'cl' : 'lt'; };
+const hashN = s => { let h = 7; for (const c of String(s)) h = (h * 31 + c.charCodeAt(0)) % 1000003; return h; };
+const hexes = ep => (ep && ep.cover[0].match(/#[0-9a-fA-F]{6}/g)) || ['#3a3f55'];
+const lum = hex => { const n = parseInt(hex.slice(1), 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255; return (r * 299 + g * 587 + b * 114) / 255000; };
+/* 背表紙の色・文字色・高さ・厚み */
+function spineVars(b, e) {
+  const m = matOf(b), hx = hexes(e), c = hx[1] || hx[0], h = hashN(b[0]);
+  const light = lum(c) > .58;
+  const tc = m === 'pb' ? (e ? e.cover[1] : '#fff') : light ? '#3a2412' : '#e9c869';
+  const base = {pb: 142, cl: 152, lt: 158}[m] + (h % 13);
+  const thick = .78 + ((LEN_RANK[b[6]] || 4) - 1) * .09 + (h % 7) * .012;
+  const lbl = ['#5a1a14', '#1e1a16', '#2a3a24', '#3a1a2a'][h % 4];
+  const n = [...b[0]].length, avail = base - (m === 'lt' ? 61 : 50);
+  const fs = Math.max(8.4, Math.min(14, Math.floor(avail / (n * (m === 'lt' ? 1.03 : 1.07)) * 10) / 10));
+  return {m, style: `--c:${c};--tc:${tc};--lbl:${lbl};--fs:${fs}px;height:${base}px;flex-grow:${thick.toFixed(3)}`};
+}
 const wearOf = b => { const y = b ? b[4] : 2000; return y >= 1950 ? 0 : y >= 1900 ? 1 : y >= 1800 ? 2 : y >= 1600 ? 3 : 4; };
 
 /* 評価：[4]年 [5]年の表示 [6]長さ [7]おすすめ [8]読みやすさ [9]有名度 [10]学び度 [11]読後感(1さわやか〜5ずっしり) [12]よみ */
@@ -485,8 +502,9 @@ function titleSlip(t) {
 function coverHTML(ep, tag, onShelf) {
   const bk = BOOK(ep.title), t = ep.title;
   const photo = usePhoto(t), w = onShelf && !photo ? wearOf(bk) : 0;
-  return `<${tag} class="cover${photo ? ' photo' : ''}${appDone(t) ? ' done' : ''}${w ? ' w' + w : ''}" data-ep="${ep.id}" style="background:${ep.cover[0]};color:${ep.cover[1]}">
+  return `<${tag} class="cover m-${matOf(bk)}${photo ? ' photo' : ''}${appDone(t) ? ' done' : ''}${w ? ' w' + w : ''}" data-ep="${ep.id}" style="background:${ep.cover[0]};color:${ep.cover[1]}">
     ${photo ? `<img class="ph" src="${PH[t]}" alt="">` : (window.coverArt ? coverArt(ep) : '')}
+    <span class="tex"></span>
     ${w ? '<span class="wear"></span>' : ''}
     ${photo ? '' : titleSlip(t)}
     ${ribbon(bmState(t))}
@@ -582,9 +600,9 @@ function renderRacks() {
     ['j', '中等部', b => /中/.test(b[3])],
     ['h', '高等部', b => /高/.test(b[3])],
     ['both', '両方', b => memb(b[3]) === 'both'],
+    ['done', 'アプリで読了', b => appDone(b[0])],
     ['own', '持っている', b => OWN[b[0]]],
     ['notown', '持っていない', b => !OWN[b[0]]],
-    ['done', 'アプリで読了', b => appDone(b[0])],
     ['paper', '本で読んだ', b => paperRead(b[0])],
   ];
   if (!FILTERS.some(f => f[0] === VIEW.filter)) VIEW.filter = 'all';
@@ -612,10 +630,12 @@ function renderRacks() {
       + groups.map(([g, l]) => head(g, l) + `<div class="feat">${l.map(b => live[b[0]] ? coverHTML(EPS.find(e => e.id === live[b[0]]), 'button', true) : '').join('')}</div>`).join('');
     $('racks').querySelectorAll('.cover').forEach(b => b.onclick = () => openBook(EPS.find(e => e.id === b.dataset.ep)));
   } else if (VIEW.mode === 'rack') {
-    $('racks').innerHTML = groups.map(([g, l]) => head(g, l) + `<div class="rack">${l.map(b => {
-      const e = EPT(b[0]), w = wearOf(b);
-      return `<button class="spine${appDone(b[0]) ? ' done' : ''}${w ? ' w' + w : ''}" data-t="${esc(b[0])}" title="${esc(b[0])}／${esc(b[1] || '')}" style="${e ? `background:${e.cover[0]};color:${e.cover[1]}` : ''}">${w ? '<span class="wear"></span>' : ''}${ribbon(bmState(b[0]))}<span class="st">${esc(b[0])}</span>${badge(b[3])}</button>`;
-    }).join('')}</div>`).join('');
+    const spine = b => {
+      const e = EPT(b[0]), w = wearOf(b), v = spineVars(b, e);
+      return `<button class="spine m-${v.m}${appDone(b[0]) ? ' done' : ''}${w ? ' w' + w : ''}" data-t="${esc(b[0])}" title="${esc(b[0])}／${esc(b[1] || '')}" style="${v.style}"><span class="tex"></span>${w ? '<span class="wear"></span>' : ''}${ribbon(bmState(b[0]))}<span class="st">${esc(b[0])}</span>${badge(b[3])}</button>`;
+    };
+    const rows = l => { const out = []; for (let k = 0; k < l.length; k += 10) out.push(l.slice(k, k + 10)); return out; };
+    $('racks').innerHTML = groups.map(([g, l]) => head(g, l) + rows(l).map(r => `<div class="shelfrow">${r.map(spine).join('')}${r.length < 10 ? '<span class="bookend"></span>' : ''}</div>`).join('')).join('');
     $('racks').querySelectorAll('.spine').forEach(s => s.onclick = () => openSheet(s.dataset.t));
   } else {
     $('racks').innerHTML = groups.map(([g, l]) => head(g, l) + `<div class="llist">${l.map(b => `
@@ -716,6 +736,8 @@ function openBook(ep, justDone) {
       ${paperHTML(ep.id)}
       <div class="lk"><span>この本、好き？</span>${likeHTML(ep.id)}</div>
       <textarea id="bkMemo" rows="4" placeholder="感想を、自由に。読書感想文の下書きにもなります。">${esc(r.memo || '')}</textarea>
+      <button class="btn" id="bkDraft" style="text-align:center">📝　感想文の下書きをつくる</button>
+      <div id="draftBox"></div>
     </div>
     <div class="sec"><h3>表紙</h3><div id="covsel" class="covsel">${covSelHTML(ep)}</div></div>
     ${bk ? `<div class="sec">${ratesHTML(bk)}</div>` : ''}
@@ -739,6 +761,13 @@ function openBook(ep, justDone) {
   wirePaper(el, ep.id, () => { $('bkCover').innerHTML = coverHTML(ep, 'div'); });
   wireLike(el.querySelector('.myrec'), ep.id);
   $('bkMemo').oninput = () => { rec(ep.id).memo = $('bkMemo').value; save(); };
+  $('bkDraft').onclick = () => {
+    $('draftBox').innerHTML = `<p class="small mute" style="margin:0 0 6px">栞の言葉・読んだときの自分・感想を、ひとつの文章にまとめました。<b>下書き</b>なので、（　）のところを書きたして、自分の言葉で仕上げてください。</p>
+      <textarea id="draft" rows="14">${esc(draftText(ep))}</textarea>
+      <button class="btn primary" id="draftCopy" style="margin-top:8px">コピーする</button>`;
+    $('draftCopy').onclick = () => copyText($('draft').value);
+    $('draft').scrollIntoView({block: 'center', behavior: 'smooth'});
+  };
   $('bkStart').onclick = () => startEp(ep);
   if ($('bkAsk')) $('bkAsk').onclick = () => startEp(ep, 'mirror');
   $('bkBack').onclick = openShelf;
@@ -756,6 +785,7 @@ function openCho() {
   el.innerHTML = `
     <div class="shead"><h2>栞帳</h2><div class="count">栞 <b>${list.length}</b> 枚<br><small>${nm ? `次の節目 ${nm}冊まで あと${nm - list.length}冊` : '全刊読破'}</small></div></div>
     <p class="small" style="opacity:.75;margin:0;line-height:1.8">これまでに本にはさんだ栞です。読んだときの自分と、感想を見返せます。10冊・50冊・100冊・150冊…と節目をこえるごとに、栞の色が変わります。</p>
+    <button class="btn shbtn" id="choPrint">🖨　学校の読書記録用に、一覧を印刷する</button>
     ${list.length ? list.map(ep => {
       const r = REC[ep.id], d = r.date;
       return `<div class="choRow" data-ep="${ep.id}">${cardHTML(ep, r, true)}
@@ -770,6 +800,7 @@ function openCho() {
   show('cho');
   el.querySelectorAll('.choRow').forEach(x => x.onclick = () => openBook(EPS.find(e => e.id === x.dataset.ep)));
   $('choBack').onclick = openShelf;
+  $('choPrint').onclick = () => openPrint();
 }
 
 /* ---------- 記録と設定：読むときの選択肢、バックアップ ---------- */
@@ -780,10 +811,12 @@ function renderSettings() {
     <div class="setrow"><span>読むときの選択肢</span><div class="seg dark"><button data-ch="0" class="${VIEW.choices ? '' : 'on'}">なし</button><button data-ch="1" class="${VIEW.choices ? 'on' : ''}">あり</button></div></div>
     <p class="small">なし：原作の流れのまま読み進め、選ぶのは、読みおえたあとのミネル先生との対話だけ。<br>あり：本の中でも、主人公の行動を自分で選ぶ（原作とちがうと、ページが波打つ）。</p>
     <div class="setrow"><button class="btn" id="bkExport">記録を書き出す</button><button class="btn" id="bkImport">記録を読みこむ</button></div>
-    <p class="small">読了・栞・感想・好き度・本で読んだ日・持っている本・表紙の写真を、ひとつのファイルにまとめて書き出します。機種変更のときや、別の端末で続けるときは、そのファイルを読みこんでください。<br>最後に書き出した日：${last ? ymd(last.slice(0, 10)) : 'まだ書き出していません'}</p>`;
+    <p class="small">読了・栞・感想・好き度・本で読んだ日・持っている本・表紙の写真を、ひとつのファイルにまとめて書き出します。機種変更のときや、別の端末で続けるときは、そのファイルを読みこんでください。<br>最後に書き出した日：${last ? ymd(last.slice(0, 10)) : 'まだ書き出していません'}</p>
+    <button class="btn" id="toPrint" style="text-align:center">🖨　学校の読書記録用に、一覧を印刷する</button>`;
   $('settings').querySelectorAll('[data-ch]').forEach(b => b.onclick = () => { VIEW.choices = b.dataset.ch === '1'; saveView(); renderSettings(); toast(VIEW.choices ? '本の中でも、選びながら読みます' : '原作の流れのまま、読み進めます'); });
   $('bkExport').onclick = exportData;
   $('bkImport').onclick = importData;
+  $('toPrint').onclick = () => openPrint();
 }
 const blobToURL = b => new Promise((res, rej) => { const f = new FileReader(); f.onload = () => res(f.result); f.onerror = rej; f.readAsDataURL(b); });
 async function exportData() {
@@ -832,6 +865,63 @@ function importData() {
     toast('記録を読みこみました'); openShelf();
   };
   inp.click();
+}
+
+/* ---------- 感想文の下書き：自分の記録（栞・読んだときの自分・感想）を、ひとつの文章にまとめる ---------- */
+const plain = s => String(s || '').replace(/\*\*/g, '');
+function draftText(ep) {
+  const r = REC[ep.id] || {}, P = [];
+  P.push(`『${ep.title}』（${ep.author}）を読んで`, '');
+  const when = r.paper ? `${ymd(r.paper)}に、この本を読みました。` : r.date ? `${r.date[0]}年${r.date[1]}月${r.date[2]}日に、この本の世界に入りました。` : 'この本を読みました。';
+  const like = r.like >= 4 ? 'この本は、わたしにとって、大切な一冊になりました。' : r.like && r.like <= 2 ? '正直に言うと、すぐに好きになれる本ではありませんでした。けれど、考えさせられることがありました。' : '';
+  P.push('　わたしは、' + when + like);
+  if (r.mirror && r.mirror.length) P.push('　読みながら、今の自分に重なるところがありました。' + r.mirror.map(i => `「${plain(ep.mirror.items[i].t).replace(/。$/, '')}」`).join('、') + 'というところです。（そう思った出来事を、ひとつ書こう）');
+  else if (r.date) P.push('　読みながら、登場人物と自分をくらべてみました。（くらべて気づいたことを書こう）');
+  if (r.date) P.push(`　この本から、わたしが心にとめておきたいと思ったのは、「${plain(cardText(ep, r)).replace(/\n/g, '').replace(/。$/, '')}」ということです。（なぜそう思ったのかを書こう）`);
+  const memo = String(r.memo || '').split(/\n+/).map(x => x.trim()).filter(Boolean);
+  if (memo.length) memo.forEach(m => P.push('　' + m));
+  else P.push('　（いちばん心に残った場面と、そのとき感じたことを書こう）');
+  P.push('　（これから、この本から学んだことを、どんなふうに生かしていきたいかを書こう）');
+  return P.join('\n');
+}
+async function copyText(t) {
+  try { await navigator.clipboard.writeText(t); toast('コピーしました'); return; } catch (e) {}
+  const ta = document.createElement('textarea'); ta.value = t; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); toast('コピーしました'); } catch (e) { toast('コピーできませんでした。文章を長押しして、コピーしてください'); }
+  ta.remove();
+}
+
+/* ---------- 学校の読書記録用の一覧（印刷） ---------- */
+let PRINT = {list: 'j', only: true};
+function openPrint() {
+  const rowsOf = (key, n) => Array.from({length: n}, (_, k) => {
+    const no = k + 1, b = BOOKS.find(x => x[3].split('・').includes(key + no));
+    return {no, b};
+  });
+  const secs = PRINT.list === 'j' ? [['中等部　日本の本', rowsOf('中日', 50)], ['中等部　海外の本', rowsOf('中海', 50)]] : [['高等部', rowsOf('高', 100)]];
+  const dt = b => { const r = recT(b[0]); return r.paper ? ymd(r.paper) : ''; };
+  const total = secs.reduce((a, [, rs]) => a + rs.length, 0), read = secs.reduce((a, [, rs]) => a + rs.filter(x => x.b && recT(x.b[0]).paper).length, 0);
+  const t = new Date();
+  $('print').innerHTML = `
+    <div class="noprint pctl">
+      <div class="seg"><button data-l="j" class="${PRINT.list === 'j' ? 'on' : ''}">中等部</button><button data-l="h" class="${PRINT.list === 'h' ? 'on' : ''}">高等部</button></div>
+      <div class="seg"><button data-o="1" class="${PRINT.only ? 'on' : ''}">読んだ本だけ</button><button data-o="0" class="${PRINT.only ? '' : 'on'}">${total}冊すべて</button></div>
+      <button class="btn primary" id="prGo">印刷する</button>
+      <p class="small mute" style="margin:0">「本で読んだ日」を記録した本が、番号順にならびます。iPhoneでは、印刷の画面から、PDFとして保存することもできます。</p>
+    </div>
+    <div class="ptitle"><h2>読書百選　読書記録（${PRINT.list === 'j' ? '中等部' : '高等部'}）</h2>
+      <p>読んだ本　${read}冊 ／ ${total}冊　　${t.getFullYear()}年${t.getMonth() + 1}月${t.getDate()}日 現在</p>
+      <p class="pname">名前　＿＿＿＿＿＿＿＿＿＿＿＿</p></div>
+    ${secs.map(([h, rs]) => {
+      const list = PRINT.only ? rs.filter(x => x.b && recT(x.b[0]).paper) : rs;
+      return `<h3>${h}</h3>${list.length ? `<table class="ptab"><thead><tr><th>番号</th><th>書名</th><th>作者</th><th>読んだ日</th></tr></thead><tbody>${list.map(({no, b}) => `<tr class="${b && recT(b[0]).paper ? 'rd' : ''}"><td>${no}</td><td>${b ? esc(b[0]) : ''}</td><td>${b ? esc(b[1] || '') : ''}</td><td>${b ? dt(b) : ''}</td></tr>`).join('')}</tbody></table>` : '<p class="small mute">まだ、本で読んだ日を記録した本はありません。</p>'}`;
+    }).join('')}
+    <button class="btn ghost noprint" id="prBack">もどる</button>`;
+  show('print');
+  $('print').querySelectorAll('[data-l]').forEach(b => b.onclick = () => { PRINT.list = b.dataset.l; openPrint(); });
+  $('print').querySelectorAll('[data-o]').forEach(b => b.onclick = () => { PRINT.only = b.dataset.o === '1'; openPrint(); });
+  $('prGo').onclick = () => window.print();
+  $('prBack').onclick = openShelf;
 }
 
 /* ---------- wiring ---------- */
