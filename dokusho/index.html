@@ -39,7 +39,7 @@ h1,h2,h3{margin:0}
 .shead{display:flex;justify-content:space-between;align-items:flex-end;gap:10px}
 .shead h2{font-family:var(--mincho);font-size:26px;letter-spacing:.06em}
 .count{font-family:var(--mincho);font-size:14px;color:var(--lamp);text-align:right;line-height:1.3}
-.count b{font-size:30px}
+.count b{font-size:21px}
 .feat{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px}
 .racks{touch-action:pan-y}
 .racks.sw-l{animation:swl .28s ease-out}
@@ -244,6 +244,91 @@ body[data-world=book] .bar{border-bottom-color:#5b3a1e22}
 .ends{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .end-slot{border:1.5px solid #e2d3b0;border-radius:10px;padding:6px 9px;font-size:12.5px;line-height:1.45;background:#fff}
 .end-slot .kind{font-size:10px;font-weight:900;letter-spacing:.15em;display:block}
+/* ---------- 読了の外枠・使用感・おすすめ・記録 ---------- */
+.spine.done,.cover.done{outline:2.5px solid var(--lamp);outline-offset:-2.5px}
+.lgdone{display:inline-block;width:12px;height:17px;border:2px solid var(--lamp);border-radius:2px;vertical-align:-4px;margin-right:4px}
+.spine .st,.spine .bd{position:relative;z-index:2}
+.wear{position:absolute;inset:0;z-index:1;pointer-events:none}
+.wear::after{content:'';position:absolute;inset:0;mix-blend-mode:screen}
+.racks .w1{filter:sepia(.14) saturate(.9)}
+.racks .w2{filter:sepia(.28) saturate(.8) brightness(.96)}
+.racks .w3{filter:sepia(.42) saturate(.68) brightness(.91) contrast(.95)}
+.racks .w4{filter:sepia(.56) saturate(.55) brightness(.86) contrast(.92)}
+.w1 .wear{box-shadow:inset 0 0 6px #3a240c55}
+.w2 .wear{box-shadow:inset 0 0 9px #3a240c88;background:radial-gradient(circle at 30% 72%,#5a3a1a30 0 7%,#0000 9%)}
+.w3 .wear{box-shadow:inset 0 0 12px #2a1806aa;background:radial-gradient(circle at 70% 30%,#5a3a1a3a 0 8%,#0000 10%),radial-gradient(ellipse at 25% 80%,#5a3a1a40 0 10%,#0000 13%)}
+.w3 .wear::after{background:repeating-linear-gradient(104deg,#0000 0 23px,#ffffff1c 23px 24px)}
+.w4 .wear{box-shadow:inset 0 0 16px #1e1004cc;background:radial-gradient(circle at 70% 24%,#5a3a1a4a 0 9%,#0000 11%),radial-gradient(ellipse at 30% 66%,#5a3a1a55 0 12%,#0000 15%),radial-gradient(circle at 60% 90%,#3a240c40 0 6%,#0000 8%)}
+.w4 .wear::after{background:repeating-linear-gradient(98deg,#0000 0 17px,#ffffff22 17px 18px),repeating-linear-gradient(8deg,#0000 0 41px,#ffffff14 41px 42px)}
+.racks .spine.w3{border-radius:5px 2px 0 0}
+.racks .spine.w4{border-radius:6px 3px 0 0;clip-path:polygon(0 3px,22% 0,48% 2px,76% 0,100% 3px,100% 100%,0 100%)}
+.racks .w3 .st,.racks .w4 .st{opacity:.86}
+.picks{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pick{display:flex;gap:9px;align-items:flex-start;background:#ffffff0d;border:1px solid #ffffff1f;border-radius:12px;padding:9px;cursor:pointer;min-width:0}
+.pick .cover{width:54px;flex:none;box-shadow:0 3px 8px #0006}
+.pick .cover .ct,.pick .cover .cfoot,.pick .cover .rb{display:none}
+.pi{display:flex;flex-direction:column;gap:3px;min-width:0;font-size:11.5px;line-height:1.45;color:#f3ead8bb}
+.pi small{color:var(--lamp);font-weight:800;font-size:11px;letter-spacing:.05em}
+.pi b{font-family:var(--mincho);font-size:14.5px;color:#fff;line-height:1.35}
+.pi .more{margin-top:5px;border:1px solid #ffffff40;background:transparent;color:#f3ead8;border-radius:99px;padding:3px 10px;font-size:11px}
+.btn.shbtn{background:#ffffff12;border-color:#ffffff2e;color:#f3ead8;box-shadow:none;text-align:center;font-weight:800;margin-top:10px}
+.btn.shbtn small{font-weight:500;opacity:.75;margin-left:4px}
+.like{display:inline-flex;gap:1px}
+.like button{border:none;background:none;font-size:25px;line-height:1;color:#cdbb9a;padding:2px 3px}
+.like button.on{color:#e0533f}
+.lk{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.lk>span:first-child{font-weight:800;font-size:13.5px}
+.myrec{display:flex;flex-direction:column;gap:10px}
+.myrec textarea,.ovrec textarea{width:100%;font:inherit;font-size:16px;line-height:1.7;padding:10px 12px;border-radius:12px;border:2px solid #d8c7a2;background:#fffdf8;color:#3b2a18;resize:vertical}
+.ovrec{width:100%;max-width:340px;display:flex;flex-direction:column;gap:8px;text-align:left}
+.ovrec .lk>span:first-child{color:#f3ead8}
+.paper{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.paper .pl{font-weight:800;font-size:13.5px}
+.paper input{font:inherit;font-size:15px;padding:6px 8px;border-radius:10px;border:2px solid #d8c7a2;background:#fffdf8;color:#3b2a18}
+.paper .pt{border:2px solid var(--gold);background:#fff3d6;color:#5a3d10;border-radius:10px;padding:6px 10px;font-weight:800;font-size:13px}
+.appd{font-style:normal;font-size:10.5px;font-weight:800;color:#b07a1a;border:1.5px solid var(--gold);border-radius:4px;padding:0 4px;margin-left:6px;vertical-align:2px;white-space:nowrap}
+.lrow .appd{color:var(--lamp)}
+.lkm{color:#e0533f;font-style:normal;font-size:12px;letter-spacing:1px;margin-left:6px}
+.mineh{margin:6px 0 10px;font-family:var(--mincho);font-size:17px;color:var(--lamp);line-height:1.6}
+.mineh small{font-size:12px;margin-left:6px;opacity:.8}
+.mineh span{font-size:12px;color:#f3ead8aa;font-family:var(--gothic)}
+.setbox{margin-top:10px;border-top:1px solid #ffffff1f;padding-top:16px;display:flex;flex-direction:column;gap:10px}
+.setbox h3{font-family:var(--mincho);font-size:16px;color:var(--lamp)}
+.setrow{display:flex;gap:8px;align-items:center;justify-content:space-between}
+.setrow>span{font-weight:700;font-size:14px}
+.setrow .btn{background:#ffffff12;border-color:#ffffff2e;color:#f3ead8;box-shadow:none;text-align:center;font-size:14px;padding:10px 8px}
+.setbox p{margin:0;opacity:.68;line-height:1.75}
+.seg.dark{border-color:#ffffff40;min-width:150px}
+.seg.dark button{background:transparent;color:#f3ead8}
+.seg.dark button.on{background:var(--gold);color:#2a1d05}
+.msbox{display:flex;gap:10px;align-items:flex-start;background:#ffd98a1f;border:1px solid var(--gold);border-radius:14px;padding:12px;text-align:left;font-size:14px;line-height:1.85;margin-bottom:6px}
+.msbox svg{flex:none;width:48px;height:48px}
+.msbox p{margin:0}
+.mst{display:block;font-family:var(--mincho);font-weight:800;color:var(--lamp);font-size:17px}
+.shiori .head small{letter-spacing:0;margin-left:4px;opacity:.8}
+.card.t1{background:linear-gradient(#f1f8df,#cfe4a6)}.card.t1::after{background:#5f9a4e}
+.card.t2{background:linear-gradient(#e6edf8,#aebfdd)}.card.t2::after{background:#2a3f7a}.card.t2 .v{color:#1e2a48}.card.t2 .src{color:#46598a}
+.card.t3{background:linear-gradient(#fff6d2,#e9c566);box-shadow:inset 0 0 0 2px #c8962a,0 12px 30px #0009}.card.t3::after{background:#a8741a}
+.card.t4{background:radial-gradient(circle,#fff 0 .8px,#0000 1.4px) 3px 5px/23px 27px,radial-gradient(circle,#ffe9a0 0 .9px,#0000 1.5px) 11px 14px/31px 23px,linear-gradient(#2a3460,#121834)}.card.t4 .v{color:#f4ecd8}.card.t4 .src{color:#c8b88a}.card.t4::after{background:var(--lamp)}
+.card.tall{background:linear-gradient(#ffe8a0,#d9a441);box-shadow:inset 0 0 0 3px #8a5a12,0 12px 30px #0009}.card.tall::after{background:#7a2a1a}
+.card .crest{position:absolute;right:8px;bottom:20px;width:40px;opacity:.3}
+.card.sm{min-width:92px;min-height:0;padding:24px 14px 22px;animation:none;box-shadow:0 6px 14px #0006;flex:none}
+.card.sm.t3{box-shadow:inset 0 0 0 2px #c8962a,0 6px 14px #0006}.card.sm.tall{box-shadow:inset 0 0 0 3px #8a5a12,0 6px 14px #0006}
+.card.sm .v{height:150px;font-size:14px;line-height:1.7}
+.card.sm::after{height:30px;transform:translateY(-30px) rotate(10deg)}
+.card.sm .src{font-size:8.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 5px}
+.card.sm .crest{width:24px;bottom:16px}
+.sec.mine .card{margin:4px auto 8px}
+#cho{color:#f3ead8;gap:14px;background:var(--night)}
+.choRow{display:flex;gap:14px;align-items:flex-start;padding:14px 0;border-bottom:1px solid #ffffff14;cursor:pointer}
+.choI{display:flex;flex-direction:column;gap:3px;min-width:0;font-size:12.5px;line-height:1.6}
+.choI small{color:var(--lamp);font-weight:700}
+.choI b{font-family:var(--mincho);font-size:17px}
+.choI .lkm{margin-left:0}
+.choI .memo{margin:4px 0 0;font-size:13px;line-height:1.75;background:#ffffff0d;border-radius:10px;padding:8px 10px}
+.done small{font-size:11px;margin-left:4px;opacity:.75}
+.tabs button{padding:9px 3px;font-size:13px}
+
 .end-slot.no{opacity:.5;background:transparent}
 .row{display:flex;gap:8px}
 .row .btn{text-align:center}
@@ -264,18 +349,20 @@ body[data-world=book] .bar{border-bottom-color:#5b3a1e22}
 <section class="screen" id="shelf">
   <div class="shead">
     <h2>名作のなかへ</h2>
-    <div class="count">読了 <b id="cnt">0</b><br>持っている <b id="ownc">0</b> / 158</div>
+    <div class="count">アプリで読了 <b id="cnt">0</b><br>本で読んだ <b id="papc">0</b><br>持っている <b id="ownc">0</b> / 158</div>
   </div>
   <div class="minel" id="shelfMsg"></div>
+  <div id="picksBox"></div>
   <h3 class="shelfh">読書百選　158冊</h3>
   <div class="tabs" id="tabs"></div>
   <p class="swhint">← 左右にスワイプしても切り替えられます →</p>
   <label class="qbox"><input id="q" type="search" placeholder="書名・作者でさがす（ひらがなでも）" autocomplete="off"></label>
   <div class="chips" id="chips"></div>
   <label class="sortsel">並べかえ <select id="sort"></select></label>
-  <div class="legend"><span><span class="bd bd-j">中</span> 中等部のみ</span><span><span class="bd bd-h">高</span> 高等部のみ</span><span><span class="bd bd-both">両</span> 両方</span><span><svg class="rb" viewBox="0 0 12 22"><path d="M1.5 1H10.5V20L6 15.5L1.5 20Z"/></svg>持っている</span><span><svg class="rb read" viewBox="0 0 12 22"><path d="M1.5 1H10.5V20L6 15.5L1.5 20Z"/></svg>読んだ</span></div>
+  <div class="legend"><span><span class="bd bd-j">中</span> 中等部のみ</span><span><span class="bd bd-h">高</span> 高等部のみ</span><span><span class="bd bd-both">両</span> 両方</span><span><svg class="rb" viewBox="0 0 12 22"><path d="M1.5 1H10.5V20L6 15.5L1.5 20Z"/></svg>持っている</span><span><svg class="rb read" viewBox="0 0 12 22"><path d="M1.5 1H10.5V20L6 15.5L1.5 20Z"/></svg>本で読んだ</span><span><i class="lgdone"></i>アプリで読了</span></div>
   <div class="racks" id="racks"></div>
   <p class="small" style="opacity:.5;text-align:center;line-height:1.8" id="rackNote"></p>
+  <div class="setbox" id="settings"></div>
 </section>
 
 <section class="screen" id="play">
@@ -289,171 +376,173 @@ body[data-world=book] .bar{border-bottom-color:#5b3a1e22}
 
 <section class="screen" id="book"></section>
 
+<section class="screen" id="cho"></section>
+
 <div class="ov" id="lessonOv"><div class="shiori" id="lessonBox"></div></div>
 <div class="ov" id="sheetOv"><div class="sheet" id="sheet"></div></div>
 <div class="toast" id="toast"></div>
 
 <script>window.EPS=[]; var TEACHER='ミネル';</script>
-<script src="books.js?v=42"></script>
-<script src="ep_aeneid.js?v=42"></script>
-<script src="ep_ainoyousei.js?v=42"></script>
-<script src="ep_algernon.js?v=42"></script>
-<script src="ep_alice.js?v=42"></script>
-<script src="ep_anne.js?v=42"></script>
-<script src="ep_anne_frank.js?v=42"></script>
-<script src="ep_aokiokami.js?v=42"></script>
-<script src="ep_aq.js?v=42"></script>
-<script src="ep_arashi.js?v=42"></script>
-<script src="ep_ashinaga.js?v=42"></script>
-<script src="ep_bansui.js?v=42"></script>
-<script src="ep_beethoven.js?v=42"></script>
-<script src="ep_biruma.js?v=42"></script>
-<script src="ep_botchan.js?v=42"></script>
-<script src="ep_budou.js?v=42"></script>
-<script src="ep_buki.js?v=42"></script>
-<script src="ep_bulba.js?v=42"></script>
-<script src="ep_bushido.js?v=42"></script>
-<script src="ep_byron.js?v=42"></script>
-<script src="ep_chichitoko.js?v=42"></script>
-<script src="ep_chieko.js?v=42"></script>
-<script src="ep_chinmoku.js?v=42"></script>
-<script src="ep_chinmoku_endo.js?v=42"></script>
-<script src="ep_chips.js?v=42"></script>
-<script src="ep_christophe.js?v=42"></script>
-<script src="ep_chuya.js?v=42"></script>
-<script src="ep_cosmos.js?v=42"></script>
-<script src="ep_curie.js?v=42"></script>
-<script src="ep_daichi.js?v=42"></script>
-<script src="ep_daihyo.js?v=42"></script>
-<script src="ep_donzoko.js?v=42"></script>
-<script src="ep_doubutsu.js?v=42"></script>
-<script src="ep_eien.js?v=42"></script>
-<script src="ep_emerson.js?v=42"></script>
-<script src="ep_emile.js?v=42"></script>
-<script src="ep_essais.js?v=42"></script>
-<script src="ep_franklin.js?v=42"></script>
-<script src="ep_fukuo.js?v=42"></script>
-<script src="ep_fuyou.js?v=42"></script>
-<script src="ep_gandhi.js?v=42"></script>
-<script src="ep_ged.js?v=42"></script>
-<script src="ep_genbaku.js?v=42"></script>
-<script src="ep_ginga.js?v=42"></script>
-<script src="ep_gitanjali.js?v=42"></script>
-<script src="ep_gulliver.js?v=42"></script>
-<script src="ep_hakai.js?v=42"></script>
-<script src="ep_hakkenden.js?v=42"></script>
-<script src="ep_hamlet.js?v=42"></script>
-<script src="ep_happy.js?v=42"></script>
-<script src="ep_henshin.js?v=42"></script>
-<script src="ep_hikawa.js?v=42"></script>
-<script src="ep_hitomi.js?v=42"></script>
-<script src="ep_honkai.js?v=42"></script>
-<script src="ep_ichiaku.js?v=42"></script>
-<script src="ep_ichinen.js?v=42"></script>
-<script src="ep_ichiyou.js?v=42"></script>
-<script src="ep_ie.js?v=42"></script>
-<script src="ep_ikari.js?v=42"></script>
-<script src="ep_iliad.js?v=42"></script>
-<script src="ep_inja.js?v=42"></script>
-<script src="ep_izakaya.js?v=42"></script>
-<script src="ep_izu.js?v=42"></script>
-<script src="ep_jiro.js?v=42"></script>
-<script src="ep_jiyuu.js?v=42"></script>
-<script src="ep_jugo.js?v=42"></script>
-<script src="ep_juhasshi.js?v=42"></script>
-<script src="ep_karamazov.js?v=42"></script>
-<script src="ep_kaze.js?v=42"></script>
-<script src="ep_kimitachi.js?v=42"></script>
-<script src="ep_king.js?v=42"></script>
-<script src="ep_kobayashi.js?v=42"></script>
-<script src="ep_kodai.js?v=42"></script>
-<script src="ep_kokoro.js?v=42"></script>
-<script src="ep_korczak.js?v=42"></script>
-<script src="ep_kozou.js?v=42"></script>
-<script src="ep_kumo.js?v=42"></script>
-<script src="ep_kuroiame.js?v=42"></script>
-<script src="ep_kusanoha.js?v=42"></script>
-<script src="ep_kyujusan.js?v=42"></script>
-<script src="ep_lincoln.js?v=42"></script>
-<script src="ep_manoyama.js?v=42"></script>
-<script src="ep_marti.js?v=42"></script>
-<script src="ep_melos.js?v=42"></script>
-<script src="ep_mihatenu.js?v=42"></script>
-<script src="ep_miserables.js?v=42"></script>
-<script src="ep_misokkasu.js?v=42"></script>
-<script src="ep_misuzu.js?v=42"></script>
-<script src="ep_momi.js?v=42"></script>
-<script src="ep_momo.js?v=42"></script>
-<script src="ep_montecristo.js?v=42"></script>
-<script src="ep_musashi.js?v=42"></script>
-<script src="ep_musashino.js?v=42"></script>
-<script src="ep_napoleon.js?v=42"></script>
-<script src="ep_ningyou.js?v=42"></script>
-<script src="ep_ninjin.js?v=42"></script>
-<script src="ep_nito.js?v=42"></script>
-<script src="ep_nogiku.js?v=42"></script>
-<script src="ep_paradise.js?v=42"></script>
-<script src="ep_pensees.js?v=42"></script>
-<script src="ep_plutarch.js?v=42"></script>
-<script src="ep_pollyanna.js?v=42"></script>
-<script src="ep_pompeii.js?v=42"></script>
-<script src="ep_prince.js?v=42"></script>
-<script src="ep_prometheus.js?v=42"></script>
-<script src="ep_quijote.js?v=42"></script>
-<script src="ep_raimugi.js?v=42"></script>
-<script src="ep_riryou.js?v=42"></script>
-<script src="ep_robinson.js?v=42"></script>
-<script src="ep_robou.js?v=42"></script>
-<script src="ep_rojin.js?v=42"></script>
-<script src="ep_ryoma.js?v=42"></script>
-<script src="ep_sabu.js?v=42"></script>
-<script src="ep_saiyuki.js?v=42"></script>
-<script src="ep_sakuranosono.js?v=42"></script>
-<script src="ep_sangoku.js?v=42"></script>
-<script src="ep_scaramouche.js?v=42"></script>
-<script src="ep_seibusensen.js?v=42"></script>
-<script src="ep_sekiwan.js?v=42"></script>
-<script src="ep_senso.js?v=42"></script>
-<script src="ep_shakai.js?v=42"></script>
-<script src="ep_sharin.js?v=42"></script>
-<script src="ep_shiki.js?v=42"></script>
-<script src="ep_shimin.js?v=42"></script>
-<script src="ep_shinkyoku.js?v=42"></script>
-<script src="ep_shiroite.js?v=42"></script>
-<script src="ep_shitsurakuen.js?v=42"></script>
-<script src="ep_shizen.js?v=42"></script>
-<script src="ep_shoukoujo.js?v=42"></script>
-<script src="ep_socrates.js?v=42"></script>
-<script src="ep_sokkyou.js?v=42"></script>
-<script src="ep_sora.js?v=42"></script>
-<script src="ep_suikoden.js?v=42"></script>
-<script src="ep_taii.js?v=42"></script>
-<script src="ep_taiyou.js?v=42"></script>
-<script src="ep_taiyounoko.js?v=42"></script>
-<script src="ep_takarajima.js?v=42"></script>
-<script src="ep_takasebune.js?v=42"></script>
-<script src="ep_takekurabe.js?v=42"></script>
-<script src="ep_tanikawa.js?v=42"></script>
-<script src="ep_tell.js?v=42"></script>
-<script src="ep_tezuka.js?v=42"></script>
-<script src="ep_timemachine.js?v=42"></script>
-<script src="ep_tobu.js?v=42"></script>
-<script src="ep_tom.js?v=42"></script>
-<script src="ep_tonkou.js?v=42"></script>
-<script src="ep_toshishun.js?v=42"></script>
-<script src="ep_tsumi.js?v=42"></script>
-<script src="ep_uncletom.js?v=42"></script>
-<script src="ep_usagi.js?v=42"></script>
-<script src="ep_venice.js?v=42"></script>
-<script src="ep_visa.js?v=42"></script>
-<script src="ep_wakakusa.js?v=42"></script>
-<script src="ep_werther.js?v=42"></script>
-<script src="ep_yakan.js?v=42"></script>
-<script src="ep_yoru.js?v=42"></script>
-<script src="ep_yozan.js?v=42"></script>
-<script src="ep_yujo.js?v=42"></script>
-<script src="ep_zhivago.js?v=42"></script>
-<script src="art.js?v=42"></script>
-<script src="engine.js?v=42"></script>
+<script src="books.js?v=44"></script>
+<script src="ep_aeneid.js?v=44"></script>
+<script src="ep_ainoyousei.js?v=44"></script>
+<script src="ep_algernon.js?v=44"></script>
+<script src="ep_alice.js?v=44"></script>
+<script src="ep_anne.js?v=44"></script>
+<script src="ep_anne_frank.js?v=44"></script>
+<script src="ep_aokiokami.js?v=44"></script>
+<script src="ep_aq.js?v=44"></script>
+<script src="ep_arashi.js?v=44"></script>
+<script src="ep_ashinaga.js?v=44"></script>
+<script src="ep_bansui.js?v=44"></script>
+<script src="ep_beethoven.js?v=44"></script>
+<script src="ep_biruma.js?v=44"></script>
+<script src="ep_botchan.js?v=44"></script>
+<script src="ep_budou.js?v=44"></script>
+<script src="ep_buki.js?v=44"></script>
+<script src="ep_bulba.js?v=44"></script>
+<script src="ep_bushido.js?v=44"></script>
+<script src="ep_byron.js?v=44"></script>
+<script src="ep_chichitoko.js?v=44"></script>
+<script src="ep_chieko.js?v=44"></script>
+<script src="ep_chinmoku.js?v=44"></script>
+<script src="ep_chinmoku_endo.js?v=44"></script>
+<script src="ep_chips.js?v=44"></script>
+<script src="ep_christophe.js?v=44"></script>
+<script src="ep_chuya.js?v=44"></script>
+<script src="ep_cosmos.js?v=44"></script>
+<script src="ep_curie.js?v=44"></script>
+<script src="ep_daichi.js?v=44"></script>
+<script src="ep_daihyo.js?v=44"></script>
+<script src="ep_donzoko.js?v=44"></script>
+<script src="ep_doubutsu.js?v=44"></script>
+<script src="ep_eien.js?v=44"></script>
+<script src="ep_emerson.js?v=44"></script>
+<script src="ep_emile.js?v=44"></script>
+<script src="ep_essais.js?v=44"></script>
+<script src="ep_franklin.js?v=44"></script>
+<script src="ep_fukuo.js?v=44"></script>
+<script src="ep_fuyou.js?v=44"></script>
+<script src="ep_gandhi.js?v=44"></script>
+<script src="ep_ged.js?v=44"></script>
+<script src="ep_genbaku.js?v=44"></script>
+<script src="ep_ginga.js?v=44"></script>
+<script src="ep_gitanjali.js?v=44"></script>
+<script src="ep_gulliver.js?v=44"></script>
+<script src="ep_hakai.js?v=44"></script>
+<script src="ep_hakkenden.js?v=44"></script>
+<script src="ep_hamlet.js?v=44"></script>
+<script src="ep_happy.js?v=44"></script>
+<script src="ep_henshin.js?v=44"></script>
+<script src="ep_hikawa.js?v=44"></script>
+<script src="ep_hitomi.js?v=44"></script>
+<script src="ep_honkai.js?v=44"></script>
+<script src="ep_ichiaku.js?v=44"></script>
+<script src="ep_ichinen.js?v=44"></script>
+<script src="ep_ichiyou.js?v=44"></script>
+<script src="ep_ie.js?v=44"></script>
+<script src="ep_ikari.js?v=44"></script>
+<script src="ep_iliad.js?v=44"></script>
+<script src="ep_inja.js?v=44"></script>
+<script src="ep_izakaya.js?v=44"></script>
+<script src="ep_izu.js?v=44"></script>
+<script src="ep_jiro.js?v=44"></script>
+<script src="ep_jiyuu.js?v=44"></script>
+<script src="ep_jugo.js?v=44"></script>
+<script src="ep_juhasshi.js?v=44"></script>
+<script src="ep_karamazov.js?v=44"></script>
+<script src="ep_kaze.js?v=44"></script>
+<script src="ep_kimitachi.js?v=44"></script>
+<script src="ep_king.js?v=44"></script>
+<script src="ep_kobayashi.js?v=44"></script>
+<script src="ep_kodai.js?v=44"></script>
+<script src="ep_kokoro.js?v=44"></script>
+<script src="ep_korczak.js?v=44"></script>
+<script src="ep_kozou.js?v=44"></script>
+<script src="ep_kumo.js?v=44"></script>
+<script src="ep_kuroiame.js?v=44"></script>
+<script src="ep_kusanoha.js?v=44"></script>
+<script src="ep_kyujusan.js?v=44"></script>
+<script src="ep_lincoln.js?v=44"></script>
+<script src="ep_manoyama.js?v=44"></script>
+<script src="ep_marti.js?v=44"></script>
+<script src="ep_melos.js?v=44"></script>
+<script src="ep_mihatenu.js?v=44"></script>
+<script src="ep_miserables.js?v=44"></script>
+<script src="ep_misokkasu.js?v=44"></script>
+<script src="ep_misuzu.js?v=44"></script>
+<script src="ep_momi.js?v=44"></script>
+<script src="ep_momo.js?v=44"></script>
+<script src="ep_montecristo.js?v=44"></script>
+<script src="ep_musashi.js?v=44"></script>
+<script src="ep_musashino.js?v=44"></script>
+<script src="ep_napoleon.js?v=44"></script>
+<script src="ep_ningyou.js?v=44"></script>
+<script src="ep_ninjin.js?v=44"></script>
+<script src="ep_nito.js?v=44"></script>
+<script src="ep_nogiku.js?v=44"></script>
+<script src="ep_paradise.js?v=44"></script>
+<script src="ep_pensees.js?v=44"></script>
+<script src="ep_plutarch.js?v=44"></script>
+<script src="ep_pollyanna.js?v=44"></script>
+<script src="ep_pompeii.js?v=44"></script>
+<script src="ep_prince.js?v=44"></script>
+<script src="ep_prometheus.js?v=44"></script>
+<script src="ep_quijote.js?v=44"></script>
+<script src="ep_raimugi.js?v=44"></script>
+<script src="ep_riryou.js?v=44"></script>
+<script src="ep_robinson.js?v=44"></script>
+<script src="ep_robou.js?v=44"></script>
+<script src="ep_rojin.js?v=44"></script>
+<script src="ep_ryoma.js?v=44"></script>
+<script src="ep_sabu.js?v=44"></script>
+<script src="ep_saiyuki.js?v=44"></script>
+<script src="ep_sakuranosono.js?v=44"></script>
+<script src="ep_sangoku.js?v=44"></script>
+<script src="ep_scaramouche.js?v=44"></script>
+<script src="ep_seibusensen.js?v=44"></script>
+<script src="ep_sekiwan.js?v=44"></script>
+<script src="ep_senso.js?v=44"></script>
+<script src="ep_shakai.js?v=44"></script>
+<script src="ep_sharin.js?v=44"></script>
+<script src="ep_shiki.js?v=44"></script>
+<script src="ep_shimin.js?v=44"></script>
+<script src="ep_shinkyoku.js?v=44"></script>
+<script src="ep_shiroite.js?v=44"></script>
+<script src="ep_shitsurakuen.js?v=44"></script>
+<script src="ep_shizen.js?v=44"></script>
+<script src="ep_shoukoujo.js?v=44"></script>
+<script src="ep_socrates.js?v=44"></script>
+<script src="ep_sokkyou.js?v=44"></script>
+<script src="ep_sora.js?v=44"></script>
+<script src="ep_suikoden.js?v=44"></script>
+<script src="ep_taii.js?v=44"></script>
+<script src="ep_taiyou.js?v=44"></script>
+<script src="ep_taiyounoko.js?v=44"></script>
+<script src="ep_takarajima.js?v=44"></script>
+<script src="ep_takasebune.js?v=44"></script>
+<script src="ep_takekurabe.js?v=44"></script>
+<script src="ep_tanikawa.js?v=44"></script>
+<script src="ep_tell.js?v=44"></script>
+<script src="ep_tezuka.js?v=44"></script>
+<script src="ep_timemachine.js?v=44"></script>
+<script src="ep_tobu.js?v=44"></script>
+<script src="ep_tom.js?v=44"></script>
+<script src="ep_tonkou.js?v=44"></script>
+<script src="ep_toshishun.js?v=44"></script>
+<script src="ep_tsumi.js?v=44"></script>
+<script src="ep_uncletom.js?v=44"></script>
+<script src="ep_usagi.js?v=44"></script>
+<script src="ep_venice.js?v=44"></script>
+<script src="ep_visa.js?v=44"></script>
+<script src="ep_wakakusa.js?v=44"></script>
+<script src="ep_werther.js?v=44"></script>
+<script src="ep_yakan.js?v=44"></script>
+<script src="ep_yoru.js?v=44"></script>
+<script src="ep_yozan.js?v=44"></script>
+<script src="ep_yujo.js?v=44"></script>
+<script src="ep_zhivago.js?v=44"></script>
+<script src="art.js?v=44"></script>
+<script src="engine.js?v=44"></script>
 </body>
 </html>

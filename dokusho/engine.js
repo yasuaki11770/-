@@ -82,6 +82,7 @@ function go(id) {
   PREV = '';
   $('hud').innerHTML = EP.hud ? (EP.hud(S, SC) || '') : '';
   LINES = val(sc.lines, S) || []; LI = 0;
+  if (noChoice()) LINES = cleanLines(LINES);
   $('log').scrollTop = 0;
   step();
 }
@@ -115,7 +116,7 @@ function addLine([who, text]) {
 function after() {
   if (SC.ask === 'mirror') return askMirror();
   if (SC.ask === 'resolve') return askResolve();
-  if (SC.choices) return renderChoices();
+  if (SC.choices) return noChoice() ? autoChoose() : renderChoices();
   if (SC.next) nextButton(val(SC.nextLabel, S) || '次へ ▶', () => go(val(SC.next, S)));
 }
 function nextButton(label, fn) {
@@ -124,6 +125,31 @@ function nextButton(label, fn) {
   b.className = 'btn primary ch'; b.textContent = label; b.onclick = fn;
   box.appendChild(b);
   return b;
+}
+
+/* 読むときの選択肢「なし」（初期値）：原作の主人公の行動を、そのまま見せて先へ進む */
+const noChoice = () => !VIEW.choices;
+const CH_RE = [
+  [/そしてときどき、\*\*詩の言葉\*\*を選んでもらう。/, ''],
+  [/ときどき選択を迫られる。/, ''],
+  [/今夜は、思いきりまちがえてよいぞ。むしろ、まちがえるのが原作どおりじゃ。/, ''],
+  [/今夜は、ちょっとかっこ悪い選択が、原作どおりになることが多いぞ。/, ''],
+  [/[^。]*違う(?:道|言葉|もの)を選ぶと、ページが波打つから、(?:そのときは)?選び直しなされ。/, ''],
+  [/さっき野原で「立ち上がる」を選んだら、ページが波打ったじゃろう。/, 'さっき野原で、メロスは、立ち上がらずに、ねころんでしまったじゃろう。'],
+];
+function cleanLines(lines) {
+  return lines.map(l => {
+    if (!Array.isArray(l) || l[0] !== TEACHER || typeof l[1] !== 'string') return l;
+    let t = l[1]; CH_RE.forEach(([r, w]) => { t = t.replace(r, w); });
+    return [l[0], t.trim()];
+  }).filter(l => !Array.isArray(l) || l[1] !== '');
+}
+function autoChoose() {
+  const ch = val(SC.choices, S) || [];
+  if (ch.length <= 1) return renderChoices();   // 「本の中へ入る」のようなボタンは、そのまま
+  const c = ch.find(x => x.to) || ch[0];
+  addLine(['<', c.t]);
+  nextButton('次へ ▶', () => go(val(c.to, S)));
 }
 
 function renderChoices() {
@@ -235,30 +261,91 @@ function today() { const d = new Date(); return [d.getFullYear(), d.getMonth() +
 function cardText(ep, r) { return r.note || (r.resolve.length ? ep.resolve.items[r.resolve[0]].card : ep.resolve.quote); }
 
 function finish() {
-  const r = rec(EP.id);
+  const r = rec(EP.id), first = !r.date;
+  if (first) r.n = doneCount() + 1;        // 何冊目の栞か（栞のデザインと、節目のごほうびに使う）
   r.date = r.date || today();
   r.mirror = S.mirror; r.resolve = S.resolve; r.note = S.note || '';
   r.reads = (r.reads || 0) + 1;
   save();
-  const lines = cardText(EP, r).split('\n');
+  const ms = first && milestones().includes(r.n);
   $('lessonBox').innerHTML = `
-    <div class="head">あなたの栞</div>
-    <div class="card"><div class="v">${lines.map(x => `<span>${esc(x)}</span>`).join('')}</div><div class="src">『${esc(EP.title)}』を読んで</div></div>
+    ${ms ? `<div class="msbox">${OWL}<p><span class="mst">${r.n >= BOOKS.length ? '全刊読破' : r.n + '冊目の節目'}</span>${msMessage(r.n)}</p></div>` : ''}
+    <div class="head">あなたの栞${r.n ? `<small>（${r.n}枚目）</small>` : ''}</div>
+    ${cardHTML(EP, r)}
     ${r.resolve.length ? `<ul>${r.resolve.map(i => `<li>${fmt(EP.resolve.items[i].t)}</li>`).join('')}</ul>` : ''}
     <p class="quote">${fmt(EP.resolve.quote)}<span>――『${esc(EP.title)}』より</span></p>
+    <div class="ovrec">
+      <div class="lk"><span>この本、好き？</span>${likeHTML(EP.id)}</div>
+      <textarea id="ovMemo" rows="3" placeholder="感想を、自由に（あとから本のページでも書けます）">${esc(r.memo || '')}</textarea>
+    </div>
     <button class="btn primary" id="lessonOk">この栞を、本にはさむ</button>`;
   $('lessonOv').classList.add('on');
+  wireLike($('lessonBox'), EP.id);
+  $('ovMemo').oninput = () => { rec(EP.id).memo = $('ovMemo').value; save(); };
   $('lessonOk').onclick = () => { $('lessonOv').classList.remove('on'); openBook(EP, true); };
 }
+function cardHTML(ep, r, small) {
+  const lines = cardText(ep, r).split('\n'), t = tierOf(r.n);
+  return `<div class="card t${t}${small ? ' sm' : ''}"><div class="v">${lines.map(x => `<span>${esc(x)}</span>`).join('')}</div><div class="src">『${esc(ep.title)}』を読んで</div>${t === 'all' ? `<span class="crest">${OWL}</span>` : ''}</div>`;
+}
+
+/* ---------- 節目のごほうび（10・50・100・150冊、その先は50冊ごと、そして全刊） ---------- */
+function milestones() {
+  const T = BOOKS.length, a = [10, 50, 100, 150].filter(x => x < T);
+  for (let x = 200; x < T; x += 50) a.push(x);
+  a.push(T);
+  return a;
+}
+const doneCount = () => EPS.filter(e => REC[e.id] && REC[e.id].date).length;
+function tierOf(n) {
+  if (!n) return 0;
+  if (n >= BOOKS.length) return 'all';
+  return Math.min(4, milestones().filter(x => x < BOOKS.length && n >= x).length);
+}
+const TIER_NAME = ['', '若葉', '藍', '金', '星空'];
+function msMessage(n) {
+  const T = BOOKS.length;
+  if (n >= T) return `……${T}冊、すべての本に、栞がはさまった。ここまで来た人は、そう多くはおらん。<br>お前さんの栞帳は、もう、お前さんだけの一冊の本じゃ。<b>最後の栞は、金の地に、ふくろうの紋じゃ。</b>`;
+  if (n === 10) return '十冊目の栞じゃ。……十冊読んだ人は、もう「本を読む人」じゃよ。<b>ここからの栞は、若葉の色になる。</b>';
+  if (n === 50) return '五十冊。……このあたりから、本と本が、頭の中でつながりはじめる。ある本の言葉が、別の本の場面を思い出させる。<b>ここからの栞は、藍の色になる。</b>';
+  if (n === 100) return '百冊！……「百選」の百を、ひとつ読みきったのと同じじゃ。胸をはりなされ。<b>ここからの栞は、金の色になる。</b>';
+  if (n === 150) return '百五十冊。……ゴールは、もう見えておる。あわてず、一冊ずつじゃ。<b>ここからの栞は、星空の色になる。</b>';
+  return `${n}冊目の栞じゃ。……よくぞ、ここまで来た。`;
+}
+function nextMilestone() { const d = doneCount(); return milestones().find(x => x > d); }
+
+/* 古い記録に「何枚目の栞か」をつける（読了日の順） */
+(() => {
+  const key = r => r.date ? r.date[0] * 10000 + r.date[1] * 100 + r.date[2] : 0;
+  const need = Object.entries(REC).filter(([, r]) => r && r.date && !r.n);
+  if (!need.length) return;
+  let max = Math.max(0, ...Object.values(REC).map(r => (r && r.n) || 0));
+  need.sort((a, b) => key(a[1]) - key(b[1])).forEach(([, r]) => { r.n = ++max; });
+  save();
+})();
+
+/* ---------- 好き度（5段階）・感想・本で読んだ日 ---------- */
+const likeOf = t => { const e = EPT(t); return (e && REC[e.id] && REC[e.id].like) || 0; };
+const likeHTML = id => { const v = (REC[id] && REC[id].like) || 0; return `<span class="like" role="group" aria-label="好き度">${[1, 2, 3, 4, 5].map(i => `<button type="button" data-v="${i}" class="${i <= v ? 'on' : ''}" aria-label="${i}">♥</button>`).join('')}</span>`; };
+function wireLike(root, id) {
+  root.querySelectorAll('.like button').forEach(b => b.onclick = () => {
+    const r = rec(id), v = +b.dataset.v;
+    r.like = r.like === v ? 0 : v; save();
+    root.querySelectorAll('.like button').forEach(x => x.classList.toggle('on', +x.dataset.v <= r.like));
+  });
+}
+const ymd = s => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || ''); return m ? `${+m[1]}年${+m[2]}月${+m[3]}日` : ''; };
+const todayISO = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
 
 /* ---------- 本棚 ---------- */
 /* ---------- 掲載（中等部・高等部）と、持っている本 ---------- */
 let OWN = {};
 try { OWN = JSON.parse(localStorage.getItem('yrt_own') || '{}') || {}; } catch (e) {}
 const saveOwn = () => { try { localStorage.setItem('yrt_own', JSON.stringify(OWN)); } catch (e) {} };
-let VIEW = {mode: 'rack', filter: 'all', sort: 'aiu'};
+let VIEW = {mode: 'rack', filter: 'all', sort: 'aiu', choices: false};
 try { Object.assign(VIEW, JSON.parse(localStorage.getItem('yrt_view') || '{}')); } catch (e) {}
 if ((VIEW.v || 0) < 2) { VIEW.sort = 'aiu'; VIEW.v = 2; }   // 並びの初期値を「あいうえお順」に切りかえた
+if (VIEW.v < 3) { VIEW.choices = false; VIEW.v = 3; }        // 読むときの選択肢は、初期値「なし」
 const saveView = () => { try { localStorage.setItem('yrt_view', JSON.stringify(VIEW)); } catch (e) {} };
 let QUERY = '';
 
@@ -269,12 +356,16 @@ const badge = (l, long) => `<span class="bd bd-${memb(l)}">${MEMB[memb(l)][long 
 const fmtLists = l => l.split('・').map(x => x.replace(/^中日(\d+)/, '中等部（日本）$1番').replace(/^中海(\d+)/, '中等部（海外）$1番').replace(/^高(\d+)/, '高等部 $1番')).join('／');
 const liveMap = () => Object.fromEntries(EPS.map(e => [e.title, e.id]));
 const EPT = t => EPS.find(e => e.title === t);
-const isRead = t => { const e = EPT(t); return !!(e && REC[e.id] && REC[e.id].date); };
+const recT = t => { const e = EPT(t); return (e && REC[e.id]) || {}; };
+const appDone = t => !!recT(t).date;      // アプリで読了（栞をはさんだ）
+const paperRead = t => !!recT(t).paper;   // 紙の本で読んだ
 function toggleOwn(t) { if (OWN[t]) delete OWN[t]; else OWN[t] = 1; saveOwn(); return !!OWN[t]; }
 const ownLabel = on => on ? '✓　持っている' : '□　この本を持っている';
-/* しおり：持っている本は外枠だけ、読んだ本（栞をはさんだ本）は塗りつぶし */
-const bmState = t => isRead(t) ? 'read' : OWN[t] ? 'own' : '';
-const ribbon = st => st ? `<svg class="rb ${st}" viewBox="0 0 12 22" aria-label="${st === 'read' ? '読んだ' : '持っている'}"><path d="M1.5 1H10.5V20L6 15.5L1.5 20Z"/></svg>` : '';
+/* しおり：持っている本は外枠だけ、本で読んだ本は塗りつぶし。アプリで読了した本は、本そのものを金の外枠で囲む */
+const bmState = t => paperRead(t) ? 'read' : OWN[t] ? 'own' : '';
+const ribbon = st => st ? `<svg class="rb ${st}" viewBox="0 0 12 22" aria-label="${st === 'read' ? '本で読んだ' : '持っている'}"><path d="M1.5 1H10.5V20L6 15.5L1.5 20Z"/></svg>` : '';
+/* 本棚でだけ、古い本ほど使い古した感じを出す（書かれた年で5段階） */
+const wearOf = b => { const y = b ? b[4] : 2000; return y >= 1950 ? 0 : y >= 1900 ? 1 : y >= 1800 ? 2 : y >= 1600 ? 3 : 4; };
 
 /* 評価：[4]年 [5]年の表示 [6]長さ [7]おすすめ [8]読みやすさ [9]有名度 [10]学び度 [11]読後感(1さわやか〜5ずっしり) [12]よみ */
 const MOOD = ['', 'さわやか', 'あたたかい', 'しみじみ', 'ほろ苦い', 'ずっしり'];
@@ -299,6 +390,7 @@ const yomi = b => b[12] || b[0];
 const SORTS = [
   ['aiu', 'あいうえお順', (a, b) => yomi(a).localeCompare(yomi(b), 'ja')],
   ['no', '番号順', null],
+  ['like', '好きな順', (a, b) => likeOf(b[0]) - likeOf(a[0])],
   ['rec', 'おすすめ順', (a, b) => b[7] - a[7]],
   ['easy', '読みやすい順', (a, b) => b[8] - a[8]],
   ['fame', '有名な順', (a, b) => b[9] - a[9]],
@@ -390,34 +482,75 @@ function titleSlip(t) {
   const n = [...t].length, rows = n <= 8 ? n : Math.ceil(n / 2);
   return `<span class="ct${n <= 6 ? '' : n <= 8 ? ' m' : ' l'}" style="--r:${rows}">${esc(t)}</span>`;
 }
-function coverHTML(ep, tag) {
+function coverHTML(ep, tag, onShelf) {
   const bk = BOOK(ep.title), t = ep.title;
-  const photo = usePhoto(t);
-  return `<${tag} class="cover${photo ? ' photo' : ''}" data-ep="${ep.id}" style="background:${ep.cover[0]};color:${ep.cover[1]}">
+  const photo = usePhoto(t), w = onShelf && !photo ? wearOf(bk) : 0;
+  return `<${tag} class="cover${photo ? ' photo' : ''}${appDone(t) ? ' done' : ''}${w ? ' w' + w : ''}" data-ep="${ep.id}" style="background:${ep.cover[0]};color:${ep.cover[1]}">
     ${photo ? `<img class="ph" src="${PH[t]}" alt="">` : (window.coverArt ? coverArt(ep) : '')}
+    ${w ? '<span class="wear"></span>' : ''}
     ${photo ? '' : titleSlip(t)}
     ${ribbon(bmState(t))}
     <span class="cfoot"><span class="ca">${photo ? '' : esc(ep.author)}</span>${bk ? badge(bk[3]) : ''}</span></${tag}>`;
 }
 
+/* ---------- ミネル先生のおすすめ：次の一冊（やさしい順）と、今日の一冊（日がわり） ---------- */
+let NEXTI = 0;
+function nextList() {
+  const L = BOOKS.filter(b => !appDone(b[0]) && EPT(b[0]));
+  const score = b => [(LEN_RANK[b[6]] || 9), -b[8], -b[7]];
+  return L.map((b, i) => [b, i]).sort((x, y) => { const a = score(x[0]), c = score(y[0]); for (let k = 0; k < 3; k++) if (a[k] !== c[k]) return a[k] - c[k]; return x[1] - y[1]; }).map(x => x[0]);
+}
+function todayPick() {
+  const L = BOOKS.filter(b => !appDone(b[0]) && EPT(b[0]));
+  const pool = L.length ? L : BOOKS.filter(b => EPT(b[0]));
+  const d = todayISO().replace(/-/g, ''); let h = 0;
+  for (const c of d) h = (h * 31 + c.charCodeAt(0)) % 100003;
+  return pool[h % pool.length];
+}
+function picksHTML() {
+  const nl = nextList(); if (NEXTI >= nl.length) NEXTI = 0;
+  const nx = nl[NEXTI], td = todayPick();
+  const one = (b, label, why, id) => b ? `<div class="pick" data-t="${esc(b[0])}" id="${id}">
+      ${coverHTML(EPT(b[0]), 'div')}<div class="pi"><small>${label}</small><b>${esc(b[0])}</b><span>${why}</span></div></div>` : '';
+  const len = b => (BOOK_LEN[b[6]] || '').split('・')[0];
+  return `<div class="picks">
+      ${one(nx, '次の一冊', nx ? `${esc(len(nx))}・読みやすさ★${nx[8]}<br><button type="button" class="more" id="pkMore">ほかの本</button>` : '', 'pkNext')}
+      ${one(td, '今日の一冊', '日がわりで、ミネル先生がえらんだ本', 'pkToday')}
+    </div>
+    <button class="btn shbtn" id="toCho">栞帳をひらく<small>（${doneCount()}枚）</small></button>`;
+}
+function wirePicks() {
+  document.querySelectorAll('#picksBox .pick').forEach(p => p.onclick = e => {
+    if (e.target.closest('#pkMore')) { NEXTI++; $('picksBox').innerHTML = picksHTML(); wirePicks(); return; }
+    openBook(EPT(p.dataset.t));
+  });
+  $('toCho').onclick = openCho;
+}
+
 function openShelf() {
   show('shelf');
-  const done = EPS.filter(e => rec(e.id).date).length;
+  const done = doneCount();
   $('cnt').textContent = done;
+  $('papc').textContent = BOOKS.filter(b => paperRead(b[0])).length;
   let msg;
   const all = EPS.length >= BOOKS.length;   // 158冊すべてに入れるようになったか
-  if (done === EPS.length) msg = 'ミネルヴァのふくろうは、黄昏に飛び立つ――という言葉がある。知恵はいつも、事が終わったあとにやってくる、という意味じゃ。<br>だから人は本を読む。<b>他人の人生で、先に一度、学んでおくために。</b><br>' + (all
+  if (done >= EPS.length) msg = 'ミネルヴァのふくろうは、黄昏に飛び立つ――という言葉がある。知恵はいつも、事が終わったあとにやってくる、という意味じゃ。<br>だから人は本を読む。<b>他人の人生で、先に一度、学んでおくために。</b><br>' + (all
     ? '……これで、すべての本に栞がはさまった。じゃが、ほんとうの読書は、ここからじゃ。<b>栞をはさんだ本を、こんどは、紙の本で開いてごらん。</b>'
     : '……残りの本は、まだ書架の奥で眠っておる。また来なさい。');
-  else if (done) msg = 'おかえり。本にはさんだ栞は、いつでも読み返せる。<b>しばらくたってから、同じ問いかけにもう一度答えてみる</b>のもいいものじゃよ。';
-  else msg = 'ようこそ、夜の図書館へ。わしは司書のミネル。<br>本が読めなくても、かまわん。<b>本の中に入って、主人公になってみればいい。</b>まずは、気になる題名の本を一冊、選んでごらん。';
+  else if (done) {
+    const nm = nextMilestone();
+    msg = 'おかえり。本にはさんだ栞は、<b>栞帳</b>で、いつでも読み返せる。' + (nm ? `<br>次の節目（${nm}冊）まで、あと<b>${nm - done}冊</b>じゃ。` : '');
+    const last = localStorage.getItem('yrt_bk');
+    if (done >= 5 && (!last || Date.now() - new Date(last).getTime() > 30 * 864e5)) msg += '<br>そうそう、<b>記録のバックアップ</b>も、ときどき、とっておきなされ（いちばん下の「記録と設定」から）。';
+  } else msg = 'ようこそ、夜の図書館へ。わしは司書のミネル。<br>本が読めなくても、かまわん。<b>本の中に入って、主人公になってみればいい。</b>迷ったら、下の「次の一冊」からはじめてごらん。';
   $('shelfMsg').innerHTML = OWL + `<p>${msg}</p>`;
-  $('rackNote').innerHTML = '中等部・高等部「読書100選」を合わせた158冊。<br>背表紙をタップすると、本の紹介と「持っている」のチェックができます。'
-    + '<br>持っている本は、本のページで、表紙を自分の本の写真にできます。';
+  $('picksBox').innerHTML = picksHTML(); wirePicks();
+  $('rackNote').innerHTML = '中等部・高等部「読書100選」を合わせた158冊。古い時代の本ほど、使いこまれた姿で並んでいます。<br>背表紙をタップすると、本の紹介、「持っている」「本で読んだ」の記録ができます。';
+  renderSettings();
   renderRacks();
 }
 
-const MODES = [['rack', '背表紙'], ['cover', '表紙'], ['list', 'リスト']];
+const MODES = [['rack', '背表紙'], ['cover', '表紙'], ['list', 'リスト'], ['mine', 'わたしの本']];
 function setMode(m, dir) {
   if (m === VIEW.mode) return;
   const i = MODES.findIndex(x => x[0] === VIEW.mode), j = MODES.findIndex(x => x[0] === m);
@@ -451,10 +584,9 @@ function renderRacks() {
     ['both', '両方', b => memb(b[3]) === 'both'],
     ['own', '持っている', b => OWN[b[0]]],
     ['notown', '持っていない', b => !OWN[b[0]]],
-    ['read', '読んだ', b => isRead(b[0])],
-    ['live', '遊べる', b => live[b[0]]],
+    ['done', 'アプリで読了', b => appDone(b[0])],
+    ['paper', '本で読んだ', b => paperRead(b[0])],
   ];
-  if (EPS.length >= BOOKS.length) FILTERS.pop();   // 全冊に入れるようになったら「遊べる」の絞りこみは不要
   if (!FILTERS.some(f => f[0] === VIEW.filter)) VIEW.filter = 'all';
   if (!MODES.some(m => m[0] === VIEW.mode)) VIEW.mode = 'rack';
   $('tabs').innerHTML = MODES.map(([k, t]) => `<button data-v="${k}" class="${VIEW.mode === k ? 'on' : ''}">${t}</button>`).join('');
@@ -464,26 +596,32 @@ function renderRacks() {
   if (!SORTS.some(x => x[0] === VIEW.sort)) VIEW.sort = 'aiu';
   $('sort').innerHTML = SORTS.map(([k, t]) => `<option value="${k}"${VIEW.sort === k ? ' selected' : ''}>${t}</option>`).join('');
   $('sort').onchange = () => { VIEW.sort = $('sort').value; saveView(); renderRacks(); };
-  const list = BOOKS.filter(FILTERS.find(f => f[0] === VIEW.filter)[2]).filter(b => matchQ(b, QUERY));
+  const mine = VIEW.mode === 'mine';
+  const list = BOOKS.filter(FILTERS.find(f => f[0] === VIEW.filter)[2]).filter(b => matchQ(b, QUERY)).filter(b => !mine || OWN[b[0]]);
   const cmp = SORTS.find(x => x[0] === VIEW.sort)[2];
   if (cmp) list.sort(cmp);   // 同じ評価のときは、もとの番号順のまま
-  if (!list.length) { $('racks').innerHTML = `<p class="small" style="opacity:.6;text-align:center;padding:20px 0">${QUERY ? 'その言葉にあてはまる本は、見つかりませんでした。' : 'あてはまる本は、まだありません。'}</p>`; return; }
+  if (!list.length) {
+    $('racks').innerHTML = `<p class="small" style="opacity:.6;text-align:center;padding:20px 0">${QUERY ? 'その言葉にあてはまる本は、見つかりませんでした。' : mine ? '「持っている」にした本が、ここに並びます。<br>背表紙をタップして、持っている本にチェックしてください。' : 'あてはまる本は、まだありません。'}</p>`;
+    return;
+  }
   const head = (g, l) => g ? `<h3>${esc(g)}<small>（${l.length}冊）</small></h3>` : '';
   const groups = groupsOf(list);
-  if (VIEW.mode === 'cover') {
-    $('racks').innerHTML = groups.map(([g, l]) => head(g, l) + `<div class="feat">${l.map(b => live[b[0]] ? coverHTML(EPS.find(e => e.id === live[b[0]]), 'button') : '').join('')}</div>`).join('');
+  if (VIEW.mode === 'cover' || mine) {
+    const nph = list.filter(b => PH[b[0]]).length;
+    $('racks').innerHTML = (mine ? `<p class="mineh">わたしの本　${list.length}冊<small>（写真の表紙 ${nph}冊）</small>${list.length > nph ? '<br><span>表紙をタップして、本のページから、自分の本の写真を撮れます。</span>' : ''}</p>` : '')
+      + groups.map(([g, l]) => head(g, l) + `<div class="feat">${l.map(b => live[b[0]] ? coverHTML(EPS.find(e => e.id === live[b[0]]), 'button', true) : '').join('')}</div>`).join('');
     $('racks').querySelectorAll('.cover').forEach(b => b.onclick = () => openBook(EPS.find(e => e.id === b.dataset.ep)));
   } else if (VIEW.mode === 'rack') {
     $('racks').innerHTML = groups.map(([g, l]) => head(g, l) + `<div class="rack">${l.map(b => {
-      const e = EPT(b[0]), st = bmState(b[0]);
-      return `<button class="spine" data-t="${esc(b[0])}" title="${esc(b[0])}／${esc(b[1] || '')}" style="${e ? `background:${e.cover[0]};color:${e.cover[1]}` : ''}">${ribbon(st)}<span class="st">${esc(b[0])}</span>${badge(b[3])}</button>`;
+      const e = EPT(b[0]), w = wearOf(b);
+      return `<button class="spine${appDone(b[0]) ? ' done' : ''}${w ? ' w' + w : ''}" data-t="${esc(b[0])}" title="${esc(b[0])}／${esc(b[1] || '')}" style="${e ? `background:${e.cover[0]};color:${e.cover[1]}` : ''}">${w ? '<span class="wear"></span>' : ''}${ribbon(bmState(b[0]))}<span class="st">${esc(b[0])}</span>${badge(b[3])}</button>`;
     }).join('')}</div>`).join('');
     $('racks').querySelectorAll('.spine').forEach(s => s.onclick = () => openSheet(s.dataset.t));
   } else {
     $('racks').innerHTML = groups.map(([g, l]) => head(g, l) + `<div class="llist">${l.map(b => `
       <div class="lrow${OWN[b[0]] ? ' own' : ''}" data-t="${esc(b[0])}" role="button" aria-pressed="${OWN[b[0]] ? 'true' : 'false'}">
         <span class="ck">${OWN[b[0]] ? '✓' : ''}</span>
-        <span class="lt"><b>${esc(b[0])}${isRead(b[0]) ? ribbon('read') : ''}</b><small>${esc(b[1] || '―')}　${esc(fmtLists(b[3]))}</small>${ratesMini(b)}</span>
+        <span class="lt"><b>${esc(b[0])}${paperRead(b[0]) ? ribbon('read') : ''}${appDone(b[0]) ? '<i class="appd">アプリ読了</i>' : ''}${likeOf(b[0]) ? `<i class="lkm">${'♥'.repeat(likeOf(b[0]))}</i>` : ''}</b><small>${esc(b[1] || '―')}　${esc(fmtLists(b[3]))}</small>${ratesMini(b)}</span>
         ${badge(b[3])}${live[b[0]] ? `<button class="go" data-ep="${live[b[0]]}">ひらく</button>` : ''}
       </div>`).join('')}</div>`).join('');
     $('racks').querySelectorAll('.lrow').forEach(r => r.onclick = e => {
@@ -496,6 +634,21 @@ function renderRacks() {
   }
 }
 
+/* 本で読んだ日の記録（本のページと、背表紙のカードで使う） */
+function paperHTML(id) {
+  const v = (REC[id] && REC[id].paper) || '';
+  return `<div class="paper"><span class="pl">📖 本で読んだ日</span>
+    <input type="date" value="${v}" max="${todayISO()}" aria-label="本で読んだ日">
+    <button type="button" class="pt">${v ? '消す' : '今日読んだ'}</button></div>`;
+}
+function wirePaper(root, id, onChange) {
+  const box = root.querySelector('.paper'); if (!box) return;
+  const inp = box.querySelector('input'), bt = box.querySelector('.pt');
+  const set = v => { const r = rec(id); if (v) r.paper = v; else delete r.paper; save(); inp.value = v || ''; bt.textContent = v ? '消す' : '今日読んだ'; if (onChange) onChange(); };
+  inp.onchange = () => set(inp.value);
+  bt.onclick = () => set(inp.value ? '' : todayISO());
+}
+
 /* 背表紙をタップしたときの小さなカード */
 function openSheet(title) {
   const b = BOOK(title), id = liveMap()[title], ep = EPT(title);
@@ -505,14 +658,16 @@ function openSheet(title) {
         <span class="small mute">${esc(b[2])}</span>
         <h3>${esc(b[0])}</h3>
         <p>${esc(b[1] || '著者不詳')}</p>
-        <p>${badge(b[3], true)}</p>
+        <p>${badge(b[3], true)}${appDone(title) ? ' <i class="appd">アプリで読了</i>' : ''}</p>
         <p class="small">${esc(fmtLists(b[3]))}</p></div></div>
       ${ratesHTML(b)}
       <button class="btn owntg${OWN[title] ? ' on' : ''}" id="shOwn">${ownLabel(OWN[title])}</button>
+      ${id ? paperHTML(id) : ''}
       ${OWN[title] ? `<button class="btn" id="shPh" style="text-align:center">📷　${PH[title] ? '表紙の写真を撮りなおす' : '表紙を、自分の本の写真にする'}</button>` : ''}
       ${id ? '<button class="btn primary" id="shGo">この本の扉をひらく</button>' : '<p class="small mute">この本の物語は、まだ書架の奥で準備中です。</p>'}
       <button class="btn ghost" id="shClose">とじる</button>`;
     $('shOwn').onclick = () => { toggleOwn(title); draw(); };
+    if (id) wirePaper($('sheet'), id, draw);
     if ($('shPh')) $('shPh').onclick = () => pickPhoto(title, draw);
     $('shClose').onclick = closeSheet;
     if (id) $('shGo').onclick = () => { closeSheet(); openBook(EPS.find(e => e.id === id)); };
@@ -520,7 +675,9 @@ function openSheet(title) {
   draw();
   $('sheetOv').classList.add('on');
 }
-function closeSheet() { $('sheetOv').classList.remove('on'); if ($('shelf').classList.contains('on')) renderRacks(); }
+function closeSheet() { $('sheetOv').classList.remove('on'); if ($('shelf').classList.contains('on')) openShelfKeep(); }
+/* 本棚の表示を、スクロール位置を保ったまま描きなおす */
+function openShelfKeep() { const y = window.scrollY; openShelf(); window.scrollTo(0, y); }
 
 /* 本のページの「表紙」：絵か、自分の本の写真か */
 function covSelHTML(ep) {
@@ -530,7 +687,7 @@ function covSelHTML(ep) {
   return `<div class="seg"><button data-c="art" class="${cur === 'art' ? 'on' : ''}">絵の表紙</button><button data-c="photo" class="${cur === 'photo' ? 'on' : ''}"${ph ? '' : ' disabled'}>写真の表紙</button></div>
     <button class="btn" id="phTake" style="text-align:center">📷　${ph ? '写真を撮りなおす・選びなおす' : '自分の本の写真を撮る・選ぶ'}</button>
     ${ph ? '<button class="btn ghost" id="phDel">写真を消す</button>' : ''}
-    <p class="small mute" style="margin:0">写真は、この端末の中だけにしまわれます。</p>`;
+    <p class="small mute" style="margin:0">写真は、この端末の中だけにしまわれます（「記録と設定」で書き出せます）。</p>`;
 }
 function wireCovSel(ep) {
   const t = ep.title, box = $('covsel'); if (!box) return;
@@ -552,13 +709,18 @@ function openBook(ep, justDone) {
         <h2>${esc(ep.title)}</h2>
         <span>${esc(ep.author)}（${esc(ep.year)}）</span>
         <span class="small">${esc(ep.blurb)}</span>
-        <div class="done">読了日　${d ? `<b>${d[0]}</b> 年 <b>${d[1]}</b> 月 <b>${d[2]}</b> 日` : '　　 年　　 月　　 日'}</div>
+        <div class="done">アプリで読了　${d ? `<b>${d[0]}</b> 年 <b>${d[1]}</b> 月 <b>${d[2]}</b> 日${r.n ? `<small>（${r.n}枚目の栞）</small>` : ''}` : '<span class="mute">まだ</span>'}</div>
       </div>
+    </div>
+    <div class="sec myrec"><h3>わたしの記録</h3>
+      ${paperHTML(ep.id)}
+      <div class="lk"><span>この本、好き？</span>${likeHTML(ep.id)}</div>
+      <textarea id="bkMemo" rows="4" placeholder="感想を、自由に。読書感想文の下書きにもなります。">${esc(r.memo || '')}</textarea>
     </div>
     <div class="sec"><h3>表紙</h3><div id="covsel" class="covsel">${covSelHTML(ep)}</div></div>
     ${bk ? `<div class="sec">${ratesHTML(bk)}</div>` : ''}
     ${d ? `
-    <div class="sec mine"><h3>あなたの栞</h3><p class="note">${fmt(cardText(ep, r))}</p>
+    <div class="sec mine"><h3>あなたの栞</h3>${cardHTML(ep, r, true)}
       ${r.resolve.length ? `<p class="small">改めたいこと</p><ul>${r.resolve.map(i => `<li>${fmt(ep.resolve.items[i].t)}</li>`).join('')}</ul>` : ''}
       <p class="small">読んだときの自分</p>${r.mirror.length ? `<ul>${r.mirror.map(i => `<li>${fmt(ep.mirror.items[i].t)}</li>`).join('')}</ul>` : '<p class="small mute">どれも当てはまらない、と答えた</p>'}
     </div>
@@ -574,6 +736,9 @@ function openBook(ep, justDone) {
     </div>`;
   show('book');
   wireCovSel(ep);
+  wirePaper(el, ep.id, () => { $('bkCover').innerHTML = coverHTML(ep, 'div'); });
+  wireLike(el.querySelector('.myrec'), ep.id);
+  $('bkMemo').oninput = () => { rec(ep.id).memo = $('bkMemo').value; save(); };
   $('bkStart').onclick = () => startEp(ep);
   if ($('bkAsk')) $('bkAsk').onclick = () => startEp(ep, 'mirror');
   $('bkBack').onclick = openShelf;
@@ -581,6 +746,92 @@ function openBook(ep, justDone) {
     const on = toggleOwn(ep.title); $('bkOwn').classList.toggle('on', on); $('bkOwn').textContent = ownLabel(on);
     $('covsel').innerHTML = covSelHTML(ep); $('bkCover').innerHTML = coverHTML(ep, 'div'); wireCovSel(ep);
   };
+}
+
+/* ---------- 栞帳：これまでにはさんだ栞の一覧 ---------- */
+function openCho() {
+  const list = EPS.filter(e => REC[e.id] && REC[e.id].date).sort((a, b) => (REC[a.id].n || 0) - (REC[b.id].n || 0));
+  const nm = nextMilestone();
+  const el = $('cho');
+  el.innerHTML = `
+    <div class="shead"><h2>栞帳</h2><div class="count">栞 <b>${list.length}</b> 枚<br><small>${nm ? `次の節目 ${nm}冊まで あと${nm - list.length}冊` : '全刊読破'}</small></div></div>
+    <p class="small" style="opacity:.75;margin:0;line-height:1.8">これまでに本にはさんだ栞です。読んだときの自分と、感想を見返せます。10冊・50冊・100冊・150冊…と節目をこえるごとに、栞の色が変わります。</p>
+    ${list.length ? list.map(ep => {
+      const r = REC[ep.id], d = r.date;
+      return `<div class="choRow" data-ep="${ep.id}">${cardHTML(ep, r, true)}
+        <div class="choI"><small>${r.n || ''}枚目${r.n && tierOf(r.n) ? `・${tierOf(r.n) === 'all' ? '全刊' : TIER_NAME[tierOf(r.n)]}の栞` : ''}</small>
+          <b>${esc(ep.title)}</b><span>${esc(ep.author)}</span>
+          <span>アプリ　${d[0]}年${d[1]}月${d[2]}日${r.paper ? `<br>本で読んだ　${ymd(r.paper)}` : ''}</span>
+          ${r.like ? `<span class="lkm">${'♥'.repeat(r.like)}</span>` : ''}
+          ${r.memo ? `<p class="memo">${esc(r.memo).replace(/\n/g, '<br>')}</p>` : ''}
+        </div></div>`;
+    }).join('') : '<p class="small" style="opacity:.6;text-align:center;padding:30px 0">まだ、栞はありません。<br>本を一冊読みおえると、ここに栞がたまっていきます。</p>'}
+    <button class="btn ghost" id="choBack">本棚へもどる</button>`;
+  show('cho');
+  el.querySelectorAll('.choRow').forEach(x => x.onclick = () => openBook(EPS.find(e => e.id === x.dataset.ep)));
+  $('choBack').onclick = openShelf;
+}
+
+/* ---------- 記録と設定：読むときの選択肢、バックアップ ---------- */
+function renderSettings() {
+  const last = localStorage.getItem('yrt_bk');
+  $('settings').innerHTML = `
+    <h3>記録と設定</h3>
+    <div class="setrow"><span>読むときの選択肢</span><div class="seg dark"><button data-ch="0" class="${VIEW.choices ? '' : 'on'}">なし</button><button data-ch="1" class="${VIEW.choices ? 'on' : ''}">あり</button></div></div>
+    <p class="small">なし：原作の流れのまま読み進め、選ぶのは、読みおえたあとのミネル先生との対話だけ。<br>あり：本の中でも、主人公の行動を自分で選ぶ（原作とちがうと、ページが波打つ）。</p>
+    <div class="setrow"><button class="btn" id="bkExport">記録を書き出す</button><button class="btn" id="bkImport">記録を読みこむ</button></div>
+    <p class="small">読了・栞・感想・好き度・本で読んだ日・持っている本・表紙の写真を、ひとつのファイルにまとめて書き出します。機種変更のときや、別の端末で続けるときは、そのファイルを読みこんでください。<br>最後に書き出した日：${last ? ymd(last.slice(0, 10)) : 'まだ書き出していません'}</p>`;
+  $('settings').querySelectorAll('[data-ch]').forEach(b => b.onclick = () => { VIEW.choices = b.dataset.ch === '1'; saveView(); renderSettings(); toast(VIEW.choices ? '本の中でも、選びながら読みます' : '原作の流れのまま、読み進めます'); });
+  $('bkExport').onclick = exportData;
+  $('bkImport').onclick = importData;
+}
+const blobToURL = b => new Promise((res, rej) => { const f = new FileReader(); f.onload = () => res(f.result); f.onerror = rej; f.readAsDataURL(b); });
+async function exportData() {
+  const photos = {};
+  try {
+    const db = await idb();
+    const all = await new Promise(res => { const out = []; const c = db.transaction('photos').objectStore('photos').openCursor(); c.onsuccess = () => { const cur = c.result; if (!cur) return res(out); out.push([cur.key, cur.value]); cur.continue(); }; c.onerror = () => res(out); });
+    for (const [k, v] of all) photos[k] = await blobToURL(v);
+  } catch (e) {}
+  const data = {app: 'meisaku-no-nakae', v: 1, at: new Date().toISOString(), rec: REC, own: OWN, cover: CPREF, view: VIEW, photos};
+  const d = todayISO().replace(/-/g, ''), name = `meisaku-kiroku-${d}.json`;
+  const blob = new Blob([JSON.stringify(data)], {type: 'application/json'});
+  const mark = () => { try { localStorage.setItem('yrt_bk', new Date().toISOString().slice(0, 10)); } catch (e) {} renderSettings(); };
+  try {
+    const file = new File([blob], name, {type: 'application/json'});
+    if (navigator.canShare && navigator.canShare({files: [file]})) {
+      await navigator.share({files: [file], title: '名作のなかへ　記録'});
+      mark(); toast('記録を書き出しました'); return;
+    }
+  } catch (e) { if (e && e.name === 'AbortError') return; }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+  mark(); toast('記録を書き出しました（' + name + '）');
+}
+function importData() {
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = '.json,application/json';
+  inp.onchange = async () => {
+    const f = inp.files && inp.files[0]; if (!f) return;
+    let data;
+    try { data = JSON.parse(await f.text()); } catch (e) { toast('ファイルを読みこめませんでした'); return; }
+    if (!data || data.app !== 'meisaku-no-nakae' || typeof data.rec !== 'object') { toast('「名作のなかへ」の記録ファイルではないようです'); return; }
+    const nd = Object.values(data.rec).filter(r => r && r.date).length, no = Object.keys(data.own || {}).length, np = Object.keys(data.photos || {}).length;
+    if (!confirm(`${ymd(String(data.at || '').slice(0, 10)) || '日付不明'}に書き出した記録です。\nアプリで読了 ${nd}冊・持っている ${no}冊・写真 ${np}枚\n\nこの端末のいまの記録は、この記録に置きかわります。よろしいですか？`)) return;
+    REC = data.rec || {}; save();
+    OWN = data.own || {}; saveOwn();
+    CPREF = data.cover || {}; saveCpref();
+    if (data.view) { Object.assign(VIEW, data.view); saveView(); }
+    try {
+      const db = await idb();
+      await new Promise(res => { const tx = db.transaction('photos', 'readwrite'); tx.objectStore('photos').clear(); tx.oncomplete = res; tx.onerror = res; });
+      Object.keys(PH).forEach(k => { URL.revokeObjectURL(PH[k]); delete PH[k]; });
+      for (const [k, u] of Object.entries(data.photos || {})) { const b = await (await fetch(u)).blob(); await phPut(k, b); }
+    } catch (e) {}
+    toast('記録を読みこみました'); openShelf();
+  };
+  inp.click();
 }
 
 /* ---------- wiring ---------- */
