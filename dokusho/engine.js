@@ -321,13 +321,34 @@ function openShelf() {
   else if (done) msg = 'おかえり。本にはさんだ栞は、いつでも読み返せる。<b>しばらくたってから、同じ問いかけにもう一度答えてみる</b>のもいいものじゃよ。';
   else msg = 'ようこそ、夜の図書館へ。わしは司書のミネル。<br>本が読めなくても、かまわん。<b>本の中に入って、主人公になってみればいい。</b>まずは光っている本を一冊、選んでごらん。';
   $('shelfMsg').innerHTML = OWL + `<p>${msg}</p>`;
-  $('featn').textContent = all ? `${EPS.length}冊` : `${EPS.length}冊（158冊のうち）`;
   $('rackNote').innerHTML = (all ? '中等部・高等部「読書100選」を合わせた158冊。' : '中等部・高等部「読書100選」を合わせた158冊。光っている本に入れます。')
-    + '<br>背表紙をタップすると、持っている本にチェックできます。<br>表紙から選びたいときは、この下へ。';
-  $('feat').innerHTML = EPS.map(e => coverHTML(e, 'button')).join('');
-  $('feat').querySelectorAll('.cover').forEach(b => b.onclick = () => openBook(EPS.find(e => e.id === b.dataset.ep)));
+    + '<br>背表紙をタップすると、持っている本にチェックできます。';
   renderRacks();
 }
+
+const MODES = [['rack', '背表紙'], ['cover', '表紙'], ['list', 'リスト']];
+function setMode(m, dir) {
+  if (m === VIEW.mode) return;
+  const i = MODES.findIndex(x => x[0] === VIEW.mode), j = MODES.findIndex(x => x[0] === m);
+  VIEW.mode = m; saveView(); renderRacks();
+  const el = $('racks'); el.classList.remove('sw-l', 'sw-r'); void el.offsetWidth;
+  el.classList.add((dir || (j > i ? 'l' : 'r')) === 'l' ? 'sw-l' : 'sw-r');
+}
+// 本棚の上を左右にスワイプすると、背表紙・表紙・リストを切り替える
+(() => {
+  let x0 = 0, y0 = 0, t0 = 0, on = false;
+  const el = $('racks');
+  el.addEventListener('animationend', () => el.classList.remove('sw-l', 'sw-r'));
+  el.addEventListener('touchstart', e => { if (e.touches.length !== 1) { on = false; return; } on = true; x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; t0 = Date.now(); }, {passive: true});
+  el.addEventListener('touchend', e => {
+    if (!on) return; on = false;
+    const t = e.changedTouches[0], dx = t.clientX - x0, dy = t.clientY - y0;
+    if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.8 || Date.now() - t0 > 800) return;
+    const i = MODES.findIndex(x => x[0] === VIEW.mode), j = i + (dx < 0 ? 1 : -1);
+    if (j < 0 || j >= MODES.length) return;
+    setMode(MODES[j][0], dx < 0 ? 'l' : 'r');
+  }, {passive: true});
+})();
 
 function renderRacks() {
   const live = liveMap();
@@ -343,9 +364,10 @@ function renderRacks() {
   ];
   if (EPS.length >= BOOKS.length) FILTERS.pop();   // 全冊に入れるようになったら「遊べる」の絞りこみは不要
   if (!FILTERS.some(f => f[0] === VIEW.filter)) VIEW.filter = 'all';
-  $('tabs').innerHTML = [['rack', '背表紙で見る'], ['list', 'リストでチェック']].map(([k, t]) => `<button data-v="${k}" class="${VIEW.mode === k ? 'on' : ''}">${t}</button>`).join('');
+  if (!MODES.some(m => m[0] === VIEW.mode)) VIEW.mode = 'rack';
+  $('tabs').innerHTML = MODES.map(([k, t]) => `<button data-v="${k}" class="${VIEW.mode === k ? 'on' : ''}">${t}</button>`).join('');
   $('chips').innerHTML = FILTERS.map(([k, t, f]) => `<button data-f="${k}" class="${VIEW.filter === k ? 'on' : ''}">${t} ${BOOKS.filter(f).length}</button>`).join('');
-  $('tabs').querySelectorAll('button').forEach(b => b.onclick = () => { VIEW.mode = b.dataset.v; saveView(); renderRacks(); });
+  $('tabs').querySelectorAll('button').forEach(b => b.onclick = () => setMode(b.dataset.v));
   $('chips').querySelectorAll('button').forEach(b => b.onclick = () => { VIEW.filter = b.dataset.f; saveView(); renderRacks(); });
   if (!SORTS.some(x => x[0] === VIEW.sort)) VIEW.sort = 'no';
   $('sort').innerHTML = SORTS.map(([k, t]) => `<option value="${k}"${VIEW.sort === k ? ' selected' : ''}>${t}</option>`).join('');
@@ -354,7 +376,13 @@ function renderRacks() {
   const cmp = SORTS.find(x => x[0] === VIEW.sort)[2];
   if (cmp) list.sort(cmp);   // 同じ評価のときは、もとの番号順のまま
   if (!list.length) { $('racks').innerHTML = '<p class="small" style="opacity:.6;text-align:center;padding:20px 0">あてはまる本は、まだありません。</p>'; return; }
-  if (VIEW.mode === 'rack') {
+  if (VIEW.mode === 'cover') {
+    const eps = list.filter(b => live[b[0]]).map(b => EPS.find(e => e.id === live[b[0]]));
+    const rest = list.length - eps.length;
+    $('racks').innerHTML = (eps.length ? `<div class="feat">${eps.map(e => coverHTML(e, 'button')).join('')}</div>` : '')
+      + (rest ? `<p class="small" style="opacity:.6;text-align:center;padding:14px 0 0">まだ入れない本が ${rest}冊 あります。背表紙やリストで見られます。</p>` : '');
+    $('racks').querySelectorAll('.cover').forEach(b => b.onclick = () => openBook(EPS.find(e => e.id === b.dataset.ep)));
+  } else if (VIEW.mode === 'rack') {
     const groups = {};
     list.forEach(b => (groups[b[2]] = groups[b[2]] || []).push(b));
     $('racks').innerHTML = Object.entries(groups).map(([g, l]) =>
@@ -396,7 +424,7 @@ function openSheet(title) {
   $('shClose').onclick = closeSheet;
   if (id) $('shGo').onclick = () => { closeSheet(); openBook(EPS.find(e => e.id === id)); };
 }
-function closeSheet() { $('sheetOv').classList.remove('on'); if ($('shelf').classList.contains('on')) { renderRacks(); $('feat').innerHTML = EPS.map(e => coverHTML(e, 'button')).join(''); $('feat').querySelectorAll('.cover').forEach(b => b.onclick = () => openBook(EPS.find(e => e.id === b.dataset.ep))); } }
+function closeSheet() { $('sheetOv').classList.remove('on'); if ($('shelf').classList.contains('on')) renderRacks(); }
 
 function openBook(ep, justDone) {
   const r = rec(ep.id), d = r.date, bk = BOOK(ep.title);
