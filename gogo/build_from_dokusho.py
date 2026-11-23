@@ -220,3 +220,9 @@ wr('art.js', a)
 for f in ('orgel.mp3', 'orgel2.mp3'):
     shutil.copyfile(os.path.join(D, f), os.path.join(G, f))
 print('gogo: engine.js, index.html, art.js, orgel*.mp3 を作りました')
+
+# 川村さんへの贈り物（okurimono/）も、gogo と同じ仕組みなので、続けて作りなおす
+OK = os.path.join(ROOT, 'okurimono', 'build_from_gogo.py')
+if os.path.exists(OK):
+    import subprocess, sys
+    subprocess.run([sys.executable, OK], check=True)
