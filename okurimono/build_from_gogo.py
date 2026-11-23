@@ -79,7 +79,7 @@ h = sub(h, '持っている <b id="ownc">0</b> / 15</div>', f'持っている <b
 h = sub(h, '<h3 class="shelfh">人生の午後の15作</h3>', f'<h3 class="shelfh">これからの人生に贈る、{N}作</h3>')
 h = sub(h, '<span><span class="bd bd-j">本</span> 本・小説・古典</span><span><span class="bd bd-h">映</span> 映画</span><span><span class="bd bd-both">漫</span> 漫画・詩集</span>',
         '<span><span class="bd bd-j">本</span> 本・小説・古典</span><span><span class="bd bd-h">映</span> 映画</span><span><span class="bd bd-both">漫</span> 漫画</span>')
-h = sub(h, "/* 午後の書斎：映画は、ディスクのケースの姿で */", "/* 映画は、ディスクのケースの姿で */")
+h = sub(h, "/* 午後の書斎：映画は、ケースの姿で。", "/* 映画は、ケースの姿で。")
 h = sub(h, ".shead h2{font-family:var(--mincho);font-size:26px;letter-spacing:.06em}",
         ".shead h2{font-family:var(--mincho);font-size:min(22px,5.6vw);letter-spacing:.02em;white-space:nowrap}\n.count{white-space:nowrap}")   # 題が長いので1行に
 # 作品の script：books.js のあとに、gogo と共通の作品（../gogo/）と、okurimono の作品

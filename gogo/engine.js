@@ -468,6 +468,7 @@ const lum = hex => { const n = parseInt(hex.slice(1), 16), r = n >> 16, g = (n >
 /* 文字と地のコントラスト（WCAG の比）。読みにくい組みあわせなら、生成りか濃い茶のうち、くっきり見えるほうに替える */
 const wLum = hex => { const n = parseInt(String(hex).slice(1, 7), 16), f = v => (v /= 255) <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; return .2126 * f(n >> 16) + .7152 * f((n >> 8) & 255) + .0722 * f(n & 255); };
 const cRatio = (a, b) => { const x = wLum(a), y = wLum(b); return (Math.max(x, y) + .05) / (Math.min(x, y) + .05); };
+const shade = (hex, k = .42) => '#' + [16, 8, 0].map(s => Math.round(((parseInt(String(hex).slice(1, 7), 16) >> s) & 255) * k).toString(16).padStart(2, '0')).join('');
 const readable = (tc, bg) => !/^#[0-9a-fA-F]{6}/.test(tc) || cRatio(tc, bg) >= 4.5 ? tc : cRatio('#fbf6ea', bg) >= cRatio('#1e1408', bg) ? '#fbf6ea' : '#1e1408';
 /* 背表紙の色・文字色・高さ・厚み */
 function spineVars(b, e) {
@@ -475,15 +476,20 @@ function spineVars(b, e) {
   const light = lum(c) > .58;
   const lbl = ['#5a1a14', '#1e1a16', '#2a3a24', '#3a1a2a'][h % 4];
   const tc0 = m === 'pb' || m === 'film' ? (e ? e.cover[1] : '#fff') : light ? '#3a2412' : '#e9c869';
-  const tc = readable(tc0, m === 'film' ? '#1c1c22' : m === 'lt' ? lbl : c);
-  const base = {pb: 154, cl: 162, lt: 168, film: 150}[m] + (h % 13);
+  const fk = m === 'film' ? (b[4] < 1990 ? 'vhs' : b[4] >= 2006 ? 'bd' : 'dvd') : '';
+  let fl = '';
+  if (m === 'film') { fl = ['plain', 'panel', 'band', 'black'][(h >> 2) % 4]; if (fk === 'vhs' && fl === 'black') fl = 'band'; }
+  else if (m === 'pb') fl = ['plain', 'plain', 'panel', 'band'][(h >> 2) % 4];
+  const bg = fl === 'panel' ? '#f2ecdf' : fl === 'band' ? shade(c) : fl === 'black' ? '#1c1c22' : m === 'lt' ? lbl : c;
+  const tc = readable(fl === 'panel' ? '#1e1408' : tc0, bg);
+  const base = {pb: 154, cl: 162, lt: 168, film: 150}[m] + (h % 13) + (fk === 'vhs' ? 6 : fk === 'bd' ? -14 : 0);
   const thick = .78 + ((LEN_RANK[b[6]] || 4) - 1) * .09 + (h % 7) * .012;
   /* 題名の文字：1列で11px以上にできなければ、2列に分けて大きく見せる */
-  const n = [...b[0]].length, avail = base - (m === 'lt' ? 64 : 52);
+  const n = [...b[0]].length, avail = base - (m === 'lt' ? 64 : 52) - (fk === 'vhs' || fk === 'bd' ? 10 : 0) - (fl === 'panel' || fl === 'band' ? 14 : 0);
   let r = n, fs = Math.min(14, avail / (n * 1.06)), c2 = null;
   if (fs < 11) { c2 = twoCols(b[0]); r = c2.r; fs = Math.min(12.5, avail / (r * 1.06)); }
-  const tk = c2 ? Math.max(thick, 1.22) : thick;
-  return {m, c2, style: `--c:${c};--tc:${tc};--lbl:${lbl};--fs:${fs.toFixed(1)}px;--r:${r};height:${base}px;flex-grow:${tk.toFixed(3)}`};
+  const tk = (c2 ? Math.max(thick, 1.22) : thick) * (fk === 'vhs' ? 1.25 : fk === 'bd' ? .92 : 1);
+  return {m, c2, cls: (fk ? ' f-' + fk : '') + (fl ? ' fl-' + fl : ''), style: `--c:${c};--c3:${shade(c)};--tc:${tc};--lbl:${lbl};--fs:${fs.toFixed(1)}px;--r:${r};height:${base}px;flex-grow:${tk.toFixed(3)}`};
 }
 const wearOf = b => { const y = b ? b[4] : 2000; return y >= 1950 ? 0 : y >= 1900 ? 1 : y >= 1800 ? 2 : y >= 1600 ? 3 : 4; };
 
@@ -752,7 +758,7 @@ function renderRacks() {
     const spine = b => {
       const e = EPT(b[0]), w = wearOf(b), v = spineVars(b, e);
       const st = stampOf(b[0]);
-      return `<button class="spine m-${v.m}${v.c2 ? ' c2' : ''}${st ? ' st-' + st : ''}${w ? ' w' + w : ''}" data-t="${esc(b[0])}" title="${esc(b[0])}／${esc(b[1] || '')}" style="${v.style}"><span class="tex"></span>${w ? '<span class="wear"></span>' : ''}${ribbon(bmState(b[0]))}<span class="st">${v.c2 ? v.c2.html : esc(b[0])}</span>${badge(b)}</button>`;
+      return `<button class="spine m-${v.m}${v.cls || ''}${v.c2 ? ' c2' : ''}${st ? ' st-' + st : ''}${w ? ' w' + w : ''}" data-t="${esc(b[0])}" title="${esc(b[0])}／${esc(b[1] || '')}" style="${v.style}"><span class="tex"></span>${w ? '<span class="wear"></span>' : ''}${ribbon(bmState(b[0]))}<span class="st">${v.c2 ? v.c2.html : esc(b[0])}</span>${badge(b)}</button>`;
     };
     const rows = l => { const out = []; for (let k = 0; k < l.length; k += 10) out.push(l.slice(k, k + 10)); return out; };
     $('racks').innerHTML = groups.map(([g, l]) => head(g, l) + rows(l).map(r => `<div class="shelfrow">${r.map(spine).join('')}${r.length < 10 ? '<span class="bookend"></span>' : ''}</div>`).join('')).join('');

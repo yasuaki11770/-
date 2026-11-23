@@ -412,10 +412,26 @@ details.fold .rates{margin:0}
 .end-slot.no{opacity:.5;background:transparent}
 .row{display:flex;gap:8px}
 .row .btn{text-align:center}
-/* 午後の書斎：映画は、ディスクのケースの姿で */
-.spine.m-film{background:linear-gradient(90deg,#0c0c0e 0,#2a2a30 8%,#141418 20%,#1c1c22 50%,#141418 80%,#2a2a30 92%,#0c0c0e 100%);border-radius:3px 3px 2px 2px;color:var(--tc)}
-.spine.m-film::before{content:'';position:absolute;left:0;right:0;top:12px;height:5px;background:var(--c);opacity:.9}
-.spine.m-film::after{content:'';position:absolute;left:0;right:0;bottom:14px;height:3px;background:var(--c);opacity:.6}
+/* 午後の書斎：映画は、ケースの姿で。f-vhs ビデオの箱（1990年より前）、f-dvd DVD、f-bd ブルーレイ（2006年から）。fl-* は背の刷り方 */
+.spine.m-film{border-radius:2px;color:var(--tc);background:var(--c)}
+.spine.m-film .tex{background:linear-gradient(90deg,#000000a8 0,#0000 9%,#ffffff38 14%,#ffffff12 24%,#0000 45%,#0000 78%,#ffffff22 88%,#000000b0 100%),var(--fine)}
+.spine.m-film::before,.spine.m-film::after{content:'';position:absolute;left:0;right:0;z-index:1;pointer-events:none}
+.spine.f-dvd::before{top:0;height:6px;background:linear-gradient(#0000,#0007),#16161b}
+.spine.f-dvd::after{bottom:0;height:5px;background:#16161b}
+.spine.f-bd::before{top:0;height:17px;background:linear-gradient(90deg,#0b2f6e,#2a6fd0 30%,#1d57b0 70%,#0b2f6e);box-shadow:inset 0 -1px 0 #9cc4ff80}
+.spine.f-bd::after{bottom:0;height:4px;background:#0b2f6e}
+.spine.f-bd .st{margin-top:12px}
+.spine.f-vhs{border-radius:1px}
+.spine.f-vhs .tex{background:linear-gradient(90deg,#00000090 0,#0000 7%,#ffffff26 12%,#0000 30%,#0000 82%,#00000099 100%),var(--fine),var(--noise)}
+.spine.f-vhs::before{top:6px;height:15px;background:linear-gradient(#f4efe2 0 9px,var(--c3) 9px 11px,#f4efe2 11px);opacity:.95}
+.spine.f-vhs::after{bottom:26px;height:6px;background:linear-gradient(var(--c3) 0 2px,#0000 2px 4px,var(--c3) 4px)}
+.spine.f-vhs .st{margin-top:12px}
+.spine.fl-black{background:linear-gradient(90deg,#0c0c0e 0,#2a2a30 8%,#141418 20%,#1c1c22 50%,#141418 80%,#2a2a30 92%,#0c0c0e 100%)}
+.spine.f-dvd.fl-black::before{top:12px;height:5px;background:var(--c);opacity:.9}
+.spine.f-dvd.fl-black::after{bottom:14px;height:3px;background:var(--c);opacity:.6}
+/* 題の刷り方：panel 白い札の上に題、band 題のところだけ濃い帯（帯は影で左右いっぱいにのばす） */
+.spine.fl-panel .st{background:#f2ecdf;color:var(--tc);padding:6px 2px;max-height:calc(var(--r,8)*1.05em + 16px);border-radius:1px;box-shadow:0 1px 2px #0007;text-shadow:none}
+.spine.fl-band .st{background:var(--c3);padding:8px 2px;max-height:calc(var(--r,8)*1.05em + 20px);box-shadow:-30px 0 0 var(--c3),30px 0 0 var(--c3);text-shadow:none}
 </style>
 </head>
 <body data-world="menu">
@@ -470,23 +486,23 @@ details.fold .rates{margin:0}
 
 <script>window.EPS=[]; var TEACHER='マスター';</script>
 <audio id="bgm" loop preload="none"></audio>
-<script src="books.js?v=2611231046"></script>
-<script src="ep_diewithzero.js?v=2611231046"></script>
-<script src="ep_greenbook.js?v=2611231046"></script>
-<script src="ep_ibunka.js?v=2611231046"></script>
-<script src="ep_jinseifruits.js?v=2611231046"></script>
-<script src="ep_kibou.js?v=2611231046"></script>
-<script src="ep_kirawareru.js?v=2611231046"></script>
-<script src="ep_kouhan.js?v=2611231046"></script>
-<script src="ep_nomadland.js?v=2611231046"></script>
-<script src="ep_perfectdays.js?v=2611231046"></script>
-<script src="ep_seneca.js?v=2611231046"></script>
-<script src="ep_stoner.js?v=2611231046"></script>
-<script src="ep_tooitaiko.js?v=2611231046"></script>
-<script src="ep_tsukito6.js?v=2611231046"></script>
-<script src="ep_uchuukyoudai.js?v=2611231046"></script>
-<script src="ep_yorikakarazu.js?v=2611231046"></script>
-<script src="art.js?v=2611231046"></script>
-<script src="engine.js?v=2611231046"></script>
+<script src="books.js?v=2611231113"></script>
+<script src="ep_diewithzero.js?v=2611231113"></script>
+<script src="ep_greenbook.js?v=2611231113"></script>
+<script src="ep_ibunka.js?v=2611231113"></script>
+<script src="ep_jinseifruits.js?v=2611231113"></script>
+<script src="ep_kibou.js?v=2611231113"></script>
+<script src="ep_kirawareru.js?v=2611231113"></script>
+<script src="ep_kouhan.js?v=2611231113"></script>
+<script src="ep_nomadland.js?v=2611231113"></script>
+<script src="ep_perfectdays.js?v=2611231113"></script>
+<script src="ep_seneca.js?v=2611231113"></script>
+<script src="ep_stoner.js?v=2611231113"></script>
+<script src="ep_tooitaiko.js?v=2611231113"></script>
+<script src="ep_tsukito6.js?v=2611231113"></script>
+<script src="ep_uchuukyoudai.js?v=2611231113"></script>
+<script src="ep_yorikakarazu.js?v=2611231113"></script>
+<script src="art.js?v=2611231113"></script>
+<script src="engine.js?v=2611231113"></script>
 </body>
 </html>

@@ -73,6 +73,20 @@ e = sub(e, "const matOf = b => { const y = b ? b[4] : 2000; return y >= 1950 ? '
         "const matOf = b => { if (b && /映画/.test(b[2])) return 'film'; const y = b ? b[4] : 2000; return y >= 1950 ? 'pb' : y >= 1900 ? 'cl' : 'lt'; };")
 e = sub(e, "const tc0 = m === 'pb' ?", "const tc0 = m === 'pb' || m === 'film' ?")
 e = sub(e, "const base = {pb: 154, cl: 162, lt: 168}[m]", "const base = {pb: 154, cl: 162, lt: 168, film: 150}[m]")
+# 背の姿を作品ごとに変える（同じ姿ばかり並ばないように）。映画は、年代でビデオの箱・DVD・ブルーレイに分け、背の刷り方も数通り。紙の本も、題の刷り方を数通りに
+e = sub(e, "const readable = (tc, bg) =>", "const shade = (hex, k = .42) => '#' + [16, 8, 0].map(s => Math.round(((parseInt(String(hex).slice(1, 7), 16) >> s) & 255) * k).toString(16).padStart(2, '0')).join('');\nconst readable = (tc, bg) =>")
+e = sub(e, "  const tc = readable(tc0, m === 'film' ? '#1c1c22' : m === 'lt' ? lbl : c);\n",
+        "  const fk = m === 'film' ? (b[4] < 1990 ? 'vhs' : b[4] >= 2006 ? 'bd' : 'dvd') : '';\n"
+        "  let fl = '';\n"
+        "  if (m === 'film') { fl = ['plain', 'panel', 'band', 'black'][(h >> 2) % 4]; if (fk === 'vhs' && fl === 'black') fl = 'band'; }\n"
+        "  else if (m === 'pb') fl = ['plain', 'plain', 'panel', 'band'][(h >> 2) % 4];\n"
+        "  const bg = fl === 'panel' ? '#f2ecdf' : fl === 'band' ? shade(c) : fl === 'black' ? '#1c1c22' : m === 'lt' ? lbl : c;\n"
+        "  const tc = readable(fl === 'panel' ? '#1e1408' : tc0, bg);\n")
+e = sub(e, "film: 150}[m] + (h % 13);", "film: 150}[m] + (h % 13) + (fk === 'vhs' ? 6 : fk === 'bd' ? -14 : 0);")
+e = sub(e, "avail = base - (m === 'lt' ? 64 : 52);", "avail = base - (m === 'lt' ? 64 : 52) - (fk === 'vhs' || fk === 'bd' ? 10 : 0) - (fl === 'panel' || fl === 'band' ? 14 : 0);")
+e = sub(e, "const tk = c2 ? Math.max(thick, 1.22) : thick;", "const tk = (c2 ? Math.max(thick, 1.22) : thick) * (fk === 'vhs' ? 1.25 : fk === 'bd' ? .92 : 1);")
+e = sub(e, "return {m, c2, style: `--c:${c};", "return {m, c2, cls: (fk ? ' f-' + fk : '') + (fl ? ' fl-' + fl : ''), style: `--c:${c};--c3:${shade(c)};")
+e = sub(e, '<button class="spine m-${v.m}${v.c2 ?', '<button class="spine m-${v.m}${v.cls || \'\'}${v.c2 ?')
 e = sub(e, "const LEN_RANK = {S: 1, D: 2, M: 2, N: 3, P: 3, E: 3, L: 4, L2: 5, XL: 6};", "const LEN_RANK = {K: 1, P: 2, F: 2, D: 2, B: 3, E: 3, N: 4, C: 6};")
 e = sub(e, "<div class=\"rt\"><span>読みやすさ</span>", "<div class=\"rt\"><span>入りやすさ</span>")
 e = sub(e, "<div class=\"rt\"><span>書かれた年</span>", "<div class=\"rt\"><span>発表された年</span>")
@@ -185,10 +199,26 @@ h = sub(h, '<i class="lgst st-both"></i>アプリと本</span><span><i class="lg
 h = sub(h, r'<script src="ep_[^"]*"></script>\n', '', regex=True)     # 作品の script は regtags で入れる
 h = sub(h, r'<script src="adult\.js\?v=\d+"></script>\n', '', regex=True)
 # 映画のケース（背表紙の素材 m-film）
-h = sub(h, "</style>", """/* 午後の書斎：映画は、ディスクのケースの姿で */
-.spine.m-film{background:linear-gradient(90deg,#0c0c0e 0,#2a2a30 8%,#141418 20%,#1c1c22 50%,#141418 80%,#2a2a30 92%,#0c0c0e 100%);border-radius:3px 3px 2px 2px;color:var(--tc)}
-.spine.m-film::before{content:'';position:absolute;left:0;right:0;top:12px;height:5px;background:var(--c);opacity:.9}
-.spine.m-film::after{content:'';position:absolute;left:0;right:0;bottom:14px;height:3px;background:var(--c);opacity:.6}
+h = sub(h, "</style>", """/* 午後の書斎：映画は、ケースの姿で。f-vhs ビデオの箱（1990年より前）、f-dvd DVD、f-bd ブルーレイ（2006年から）。fl-* は背の刷り方 */
+.spine.m-film{border-radius:2px;color:var(--tc);background:var(--c)}
+.spine.m-film .tex{background:linear-gradient(90deg,#000000a8 0,#0000 9%,#ffffff38 14%,#ffffff12 24%,#0000 45%,#0000 78%,#ffffff22 88%,#000000b0 100%),var(--fine)}
+.spine.m-film::before,.spine.m-film::after{content:'';position:absolute;left:0;right:0;z-index:1;pointer-events:none}
+.spine.f-dvd::before{top:0;height:6px;background:linear-gradient(#0000,#0007),#16161b}
+.spine.f-dvd::after{bottom:0;height:5px;background:#16161b}
+.spine.f-bd::before{top:0;height:17px;background:linear-gradient(90deg,#0b2f6e,#2a6fd0 30%,#1d57b0 70%,#0b2f6e);box-shadow:inset 0 -1px 0 #9cc4ff80}
+.spine.f-bd::after{bottom:0;height:4px;background:#0b2f6e}
+.spine.f-bd .st{margin-top:12px}
+.spine.f-vhs{border-radius:1px}
+.spine.f-vhs .tex{background:linear-gradient(90deg,#00000090 0,#0000 7%,#ffffff26 12%,#0000 30%,#0000 82%,#00000099 100%),var(--fine),var(--noise)}
+.spine.f-vhs::before{top:6px;height:15px;background:linear-gradient(#f4efe2 0 9px,var(--c3) 9px 11px,#f4efe2 11px);opacity:.95}
+.spine.f-vhs::after{bottom:26px;height:6px;background:linear-gradient(var(--c3) 0 2px,#0000 2px 4px,var(--c3) 4px)}
+.spine.f-vhs .st{margin-top:12px}
+.spine.fl-black{background:linear-gradient(90deg,#0c0c0e 0,#2a2a30 8%,#141418 20%,#1c1c22 50%,#141418 80%,#2a2a30 92%,#0c0c0e 100%)}
+.spine.f-dvd.fl-black::before{top:12px;height:5px;background:var(--c);opacity:.9}
+.spine.f-dvd.fl-black::after{bottom:14px;height:3px;background:var(--c);opacity:.6}
+/* 題の刷り方：panel 白い札の上に題、band 題のところだけ濃い帯（帯は影で左右いっぱいにのばす） */
+.spine.fl-panel .st{background:#f2ecdf;color:var(--tc);padding:6px 2px;max-height:calc(var(--r,8)*1.05em + 16px);border-radius:1px;box-shadow:0 1px 2px #0007;text-shadow:none}
+.spine.fl-band .st{background:var(--c3);padding:8px 2px;max-height:calc(var(--r,8)*1.05em + 20px);box-shadow:-30px 0 0 var(--c3),30px 0 0 var(--c3);text-shadow:none}
 </style>""", n=1)
 # 作品の script を、gogo の ep_*.js から入れる（版番号は、作るたびに変えてキャッシュを避ける）
 import glob, time
