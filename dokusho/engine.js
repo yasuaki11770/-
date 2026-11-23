@@ -260,10 +260,6 @@ function finish() {
     ${cardHTML(EP, r)}
     ${r.resolve.length ? `<ul>${r.resolve.map(i => `<li>${fmt(A(EP.resolve.items[i].t))}</li>`).join('')}</ul>` : ''}
     <p class="quote">${fmt(EP.resolve.quote)}<span>――『${esc(EP.title)}』より</span></p>
-    <div class="ovrec">
-      <div class="lk"><span>この本、好き？</span>${likeHTML(EP.id)}</div>
-      <textarea id="ovMemo" rows="3" placeholder="感想を、自由に（あとから本のページでも書けます）">${esc(r.memo || '')}</textarea>
-    </div>
     <button class="btn primary" id="lessonOk">この栞を、本に挟む</button>`;
   const ov = $('lessonOv');
   if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
@@ -853,7 +849,7 @@ function openBook(ep, justDone) {
         <span>${esc(ep.author)}（${esc(ep.year)}）</span>
         <span class="small">${esc(ep.blurb)}</span>
         <span class="small mute">アプリで　約${ep.minutes}分</span>
-        <div class="done">アプリで読了　${d ? `<b>${d[0]}</b> 年 <b>${d[1]}</b> 月 <b>${d[2]}</b> 日${r.n ? `<small>（${r.n}枚目の栞）</small>` : ''}` : '<span class="mute">まだ</span>'}</div>
+        ${d ? `<div class="done">アプリで読了　<b>${d[0]}</b> 年 <b>${d[1]}</b> 月 <b>${d[2]}</b> 日${r.n ? `<small>（${r.n}枚目の栞）</small>` : ''}</div>` : ''}
       </div>
     </div>`;
   /* 操作は上に。読了したばかりのときは出さない（下の「本棚へ戻る」だけ）。「持っている」は、背表紙のカードとリストで */
@@ -868,9 +864,7 @@ function openBook(ep, justDone) {
       <button class="btn owntg${own ? ' on' : ''}" id="bkOwn">${ownLabel(own)}</button>
       ${paperHTML(ep.id)}
       <div class="lk"><span>この本、好き？</span>${likeHTML(ep.id)}</div>
-      <textarea id="bkMemo" rows="4" placeholder="感想を、自由に。読書感想文の下書きにもなります。">${esc(r.memo || '')}</textarea>
-      <button class="btn" id="bkDraft" style="text-align:center">📝　感想文の下書きを作る</button>
-      <div id="draftBox"></div>
+      <textarea id="bkMemo" rows="4" placeholder="感想を、自由に。">${esc(r.memo || '')}</textarea>
     </div>`, justDone);
   const mine = d ? `
     <div class="sec mine"><h3>あなたの栞</h3>${cardHTML(ep, r, true)}
@@ -922,7 +916,6 @@ function openCho() {
   el.innerHTML = `
     <div class="shead"><h2>栞帳</h2><div class="count">栞 <b>${list.length}</b> 枚<br><small>${nm ? `次の節目 ${nm}冊まで あと${nm - list.length}冊` : '全刊読破'}</small></div></div>
     <p class="small" style="opacity:.75;margin:0;line-height:1.8">これまでに本に挟んだ栞です。栞の言葉と、感想を見返せます。10冊・50冊・100冊・150冊…と節目をこえるごとに、栞の色が変わります。</p>
-    <button class="btn shbtn" id="choPrint">🖨　学校の読書記録用に、一覧を印刷する</button>
     ${list.length ? list.map(ep => {
       const r = REC[ep.id], d = r.date;
       return `<div class="choRow" data-ep="${ep.id}">${cardHTML(ep, r, true)}
@@ -937,7 +930,6 @@ function openCho() {
   show('cho');
   el.querySelectorAll('.choRow').forEach(x => x.onclick = () => openBook(EPS.find(e => e.id === x.dataset.ep)));
   $('choBack').onclick = openShelf;
-  $('choPrint').onclick = () => openPrint();
 }
 
 /* ---------- 記録と設定：読むときの選択肢、バックアップ ---------- */
@@ -953,15 +945,13 @@ function renderSettings() {
     <div class="songs">${[...Object.entries(SONGS), ['alt', {title: '交互に', note: '2曲を、かわるがわる'}]].map(([k, x]) => `<button data-song="${k}" class="${VIEW.song === k ? 'on' : ''}"><b>♪ ${x.title}</b><small>${x.note}</small></button>`).join('')}</div>
     <p class="small">図書館に、オリジナルのオルゴール曲が静かに流れます。本の中でも流れ続け、ほかのアプリに切りかえると止まります。音量は端末の音量ボタンで。</p>
     <div class="setrow"><button class="btn" id="bkExport">記録を書き出す</button><button class="btn" id="bkImport">記録を読みこむ</button></div>
-    <p class="small">読了・栞・感想・好き度・本で読んだ日・持っている本・表紙の写真を、一つのファイルにまとめて書き出します。機種変更のときや、別の端末で続けるときは、そのファイルを読みこんでください。<br>最後に書き出した日：${last ? ymd(last.slice(0, 10)) : 'まだ書き出していません'}</p>
-    <button class="btn" id="toPrint" style="text-align:center">🖨　学校の読書記録用に、一覧を印刷する</button>`;
+    <p class="small">読了・栞・感想・好き度・本で読んだ日・持っている本・表紙の写真を、一つのファイルにまとめて書き出します。機種変更のときや、別の端末で続けるときは、そのファイルを読みこんでください。<br>最後に書き出した日：${last ? ymd(last.slice(0, 10)) : 'まだ書き出していません'}</p>`;
   $('settings').querySelectorAll('[data-ch]').forEach(b => b.onclick = () => { VIEW.choices = b.dataset.ch === '1'; saveView(); renderSettings(); toast(VIEW.choices ? '本の中でも、選びながら読みます' : '原作の流れのまま、読み進めます'); });
   $('settings').querySelectorAll('[data-fz]').forEach(b => b.onclick = () => { VIEW.fsz = b.dataset.fz; saveView(); applyFsz(); renderSettings(); });
   $('settings').querySelectorAll('[data-bgm]').forEach(b => b.onclick = () => setBgm(b.dataset.bgm === '1'));
   $('settings').querySelectorAll('[data-song]').forEach(b => b.onclick = () => { setSong(b.dataset.song); if (VIEW.bgm) toast(`♪ ${SONGS[bgmKey()].title}`); });
   $('bkExport').onclick = exportData;
   $('bkImport').onclick = importData;
-  $('toPrint').onclick = () => openPrint();
 }
 const blobToURL = b => new Promise((res, rej) => { const f = new FileReader(); f.onload = () => res(f.result); f.onerror = rej; f.readAsDataURL(b); });
 async function exportData() {

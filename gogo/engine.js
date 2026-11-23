@@ -843,7 +843,7 @@ function openBook(ep, justDone) {
         <span>${esc(ep.author)}（${esc(ep.year)}）</span>
         <span class="small">${esc(ep.blurb)}</span>
         <span class="small mute">アプリで　約${ep.minutes}分</span>
-        <div class="done">アプリで読了　${d ? `<b>${d[0]}</b> 年 <b>${d[1]}</b> 月 <b>${d[2]}</b> 日${r.n ? `<small>（${r.n}枚目の栞）</small>` : ''}` : '<span class="mute">まだ</span>'}</div>
+        ${d ? `<div class="done">アプリで読了　<b>${d[0]}</b> 年 <b>${d[1]}</b> 月 <b>${d[2]}</b> 日${r.n ? `<small>（${r.n}枚目の栞）</small>` : ''}</div>` : ''}
       </div>
     </div>`;
   /* 操作は上に。読了したばかりのときは出さない（下の「本棚へ戻る」だけ）。「持っている」は、背表紙のカードとリストで */

@@ -115,10 +115,8 @@ e = sub(e, "'<button class=\"btn primary\" id=\"shGo\">この本の扉を開く<
 e = sub(e, "${OWN[title] ? `<button class=\"btn\" id=\"shPh\" style=\"text-align:center\">📷　${PH[title] ? '表紙の写真を撮りなおす' : '表紙を、自分の本の写真にする'}</button>` : ''}",
         "${OWN[title] ? `<button class=\"btn\" id=\"shPh\" style=\"text-align:center\">📷　${PH[title] ? '表紙の写真を撮りなおす' : '表紙を、自分の持っている本・ディスクの写真にする'}</button>` : ''}")
 e = sub(e, "<span>${esc(ep.author)}（${esc(ep.year)}）</span>", "<span>${esc(ep.author)}（${esc(ep.year)}）</span>")
-e = sub(e, "<div class=\"lk\"><span>この本、好き？</span>${likeHTML(ep.id)}</div>\n      <textarea id=\"bkMemo\" rows=\"4\" placeholder=\"感想を、自由に。読書感想文の下書きにもなります。\">",
+e = sub(e, "<div class=\"lk\"><span>この本、好き？</span>${likeHTML(ep.id)}</div>\n      <textarea id=\"bkMemo\" rows=\"4\" placeholder=\"感想を、自由に。\">",
         "<div class=\"lk\"><span>この作品、好き？</span>${likeHTML(ep.id)}</div>\n      <textarea id=\"bkMemo\" rows=\"4\" placeholder=\"感想を、自由に。\">")
-# 午後の書斎では、感想を一つの文章にまとめる（感想文の下書き）ボタンは出さない
-e = sub(e, "\n      <button class=\"btn\" id=\"bkDraft\" style=\"text-align:center\">📝　感想文の下書きを作る</button>\n      <div id=\"draftBox\"></div>", "")
 e = sub(e, "<p class=\"small\">改めたいこと</p>", "<p class=\"small\">持って帰りたいもの</p>")
 e = sub(e, "fold('fRead', '本物を読んでみるなら', ''", "fold('fRead', '本物にふれるなら', ''")
 e = sub(e, "<div class=\"sec\"><h3>この本のめやす</h3>${ratesHTML(bk)}</div>", "<div class=\"sec\"><h3>この作品のめやす</h3>${ratesHTML(bk)}</div>")
@@ -128,15 +126,12 @@ e = sub(e, "|| '持っている・読んだ日・好き度・感想';", "|| '持
 e = sub(e, "const ownLabel = on => on ? '✓　持っている' : '□　この本を持っている';", "const ownLabel = on => on ? '✓　持っている' : '□　この作品を持っている';")
 e = sub(e, "both: ['#c62a1f', 'アプリ・本', 'アプリと本の両方で読了'], paper: ['#23804a', '本', '本で読了']", "both: ['#c62a1f', 'アプリ・実物', 'アプリと実物の両方で読了'], paper: ['#23804a', '実物', '実物で読んだ・観た']")
 e = sub(e, "${d ? 'もう一度、本の中へ' : 'この本の扉を開く'}", "${d ? 'もう一度、作品の中へ' : 'この作品の扉を開く'}")
-# 午後の書斎では、しおりができた画面に「好き？」と感想は出さない（本のページの「わたしの記録」で）
-e = sub(e, r"\n    <div class=\"ovrec\">.*?\n    </div>", "", regex=True)
 e = sub(e, "<button class=\"btn primary\" id=\"lessonOk\">この栞を、本に挟む</button>", "<button class=\"btn primary\" id=\"lessonOk\">この栞を、作品に挟む</button>")
 e = sub(e, "<div class=\"src\">『${esc(ep.title)}』を読んで</div>", "<div class=\"src\">『${esc(ep.title)}』から</div>")
 # 栞帳
 e = sub(e, "${nm ? `次の節目 ${nm}冊まで あと${nm - list.length}冊` : '全刊読破'}", "${nm ? `次の節目 ${nm}作まで あと${nm - list.length}作` : '全作読了'}")
-e = sub(e, r"<p class=\"small\" style=\"opacity:\.75;margin:0;line-height:1\.8\">これまでに本に挟んだ栞です。.*?</p>\n    <button class=\"btn shbtn\" id=\"choPrint\">🖨　学校の読書記録用に、一覧を印刷する</button>",
+e = sub(e, r"<p class=\"small\" style=\"opacity:\.75;margin:0;line-height:1\.8\">これまでに本に挟んだ栞です。.*?</p>",
         "<p class=\"small\" style=\"opacity:.75;margin:0;line-height:1.8\">これまでに挟んだ栞です。栞の言葉と、感想を見返せます。5作・10作…と節目をこえるごとに、栞の色が変わります。</p>", regex=True)
-e = sub(e, "  $('choPrint').onclick = () => openPrint();\n", "")
 e = sub(e, "${tierOf(r.n) === 'all' ? '全刊' : TIER_NAME[tierOf(r.n)]}の栞", "${tierOf(r.n) === 'all' ? '全作' : TIER_NAME[tierOf(r.n)]}の栞")
 e = sub(e, "${r.paper ? `<br>本で読んだ　${ymd(r.paper)}` : ''}", "${r.paper ? `<br>読んだ・観た　${ymd(r.paper)}` : ''}")
 e = sub(e, "'<p class=\"small\" style=\"opacity:.6;text-align:center;padding:30px 0\">まだ、栞はありません。<br>本を一冊読みおえると、ここに栞がたまっていきます。</p>'",
@@ -145,8 +140,6 @@ e = sub(e, "'<p class=\"small\" style=\"opacity:.6;text-align:center;padding:30p
 e = sub(e, "なし：原作の流れのまま読み進め、選ぶのは、読みおえたあとのミネル先生との対話だけ。", "なし：原作の流れのまま進み、選ぶのは、終わったあとのマスターとの対話だけ。")
 e = sub(e, "あり：本の中でも、主人公の行動を自分で選ぶ（原作と違うと、ページが波打つ）。", "あり：作品の中でも、主人公の行動を自分で選ぶ（原作と違うと、ページが波打つ）。")
 e = sub(e, "図書館に、オリジナルのオルゴール曲が静かに流れます。本の中でも流れ続け、", "書斎に、オリジナルのオルゴール曲が静かに流れます。作品の中でも流れ続け、")
-e = sub(e, r"\n    <button class=\"btn\" id=\"toPrint\" style=\"text-align:center\">🖨　学校の読書記録用に、一覧を印刷する</button>`;", "`;", regex=True)
-e = sub(e, "  $('toPrint').onclick = () => openPrint();\n", "")
 e = sub(e, "読了・栞・感想・好き度・本で読んだ日・持っている本・表紙の写真を、", "読了・栞・感想・好き度・読んだ／観た日・持っている作品・表紙の写真を、")
 e = sub(e, "{app: 'meisaku-no-nakae',", "{app: 'gogo-no-shosai',")
 e = sub(e, "name = `meisaku-kiroku-${d}.json`", "name = `gogo-kiroku-${d}.json`")

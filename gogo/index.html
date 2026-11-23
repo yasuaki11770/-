@@ -14,9 +14,9 @@
   --gothic:'Zen Maru Gothic',system-ui,sans-serif;--mincho:'Shippori Mincho','Hiragino Mincho ProN','Yu Mincho',serif;--udm:'BIZ UDPMincho','Hiragino Mincho ProN','Yu Mincho',serif;--rs:1;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;background:var(--night);color:var(--ink);font-family:var(--gothic);font-size:16px;overscroll-behavior:none}
+html,body{margin:0;overflow-x:clip;background:var(--night);color:var(--ink);font-family:var(--gothic);font-size:16px;overscroll-behavior:none}
 button{font:inherit;color:inherit;cursor:pointer}
-.screen{display:none;min-height:100dvh;flex-direction:column;max-width:720px;margin:0 auto;padding:calc(16px + env(safe-area-inset-top)) 16px calc(20px + env(safe-area-inset-bottom))}
+.screen{display:none;overflow-x:clip;min-height:100dvh;flex-direction:column;max-width:720px;margin:0 auto;padding:calc(16px + env(safe-area-inset-top)) 16px calc(20px + env(safe-area-inset-bottom))}
 .screen.on{display:flex}
 h1,h2,h3{margin:0}
 .btn{display:block;width:100%;background:var(--card);border:2px solid var(--line);border-radius:14px;padding:13px 16px;font-size:15.5px;line-height:1.6;text-align:left;box-shadow:0 3px 0 var(--line)}
@@ -297,7 +297,7 @@ body[data-world=book] .bar{border-bottom-color:#5b3a1e22}
 .spine.done,.cover.done{outline:2.5px solid var(--lamp);outline-offset:-2.5px}
 /* 読了のハンコ（表紙）と、本棚の背表紙の縁どり：アプリだけ＝青、アプリと本＝赤、本だけ＝緑 */
 :root{--st-app:#4d8ef5;--st-both:#ff5b47;--st-paper:#36c26a}
-.cover .stamp{position:absolute;left:5%;top:8%;width:46%;height:auto;z-index:3;transform:rotate(-13deg);opacity:.93;pointer-events:none;filter:drop-shadow(0 1px 1px #0005)}
+.cover .stamp{position:absolute;left:8%;top:9%;width:36%;height:auto;z-index:3;transform:rotate(-13deg);opacity:.93;pointer-events:none;filter:drop-shadow(0 1px 1px #0005)}
 .cover .rb{z-index:4}
 .cover .stamp.st-both{transform:rotate(-8deg)}
 .cover .stamp.st-paper{transform:rotate(-17deg)}
@@ -390,7 +390,7 @@ details.fold .rates{margin:0}
 .card.sm::after{height:30px;transform:translateY(-30px) rotate(10deg)}
 .card.sm .src{font-size:8.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 5px}
 .card.sm .crest{width:24px;bottom:16px}
-.sec.mine .card{margin:4px auto 8px}
+.sec.mine .card{margin:4px auto 8px;width:fit-content}   /* 本のページの栞は、横に広がらず、文字の量に合わせた大きさ */
 #cho{color:#f3ead8;gap:14px;background:var(--night)}
 .choRow{display:flex;gap:14px;align-items:flex-start;padding:14px 0;border-bottom:1px solid #ffffff14;cursor:pointer}
 .choI{display:flex;flex-direction:column;gap:3px;min-width:0;font-size:12.5px;line-height:1.6}
@@ -483,23 +483,23 @@ details.fold .rates{margin:0}
 
 <script>window.EPS=[]; var TEACHER='マスター';</script>
 <audio id="bgm" loop preload="none"></audio>
-<script src="books.js?v=2611230156"></script>
-<script src="ep_diewithzero.js?v=2611230156"></script>
-<script src="ep_greenbook.js?v=2611230156"></script>
-<script src="ep_ibunka.js?v=2611230156"></script>
-<script src="ep_jinseifruits.js?v=2611230156"></script>
-<script src="ep_kibou.js?v=2611230156"></script>
-<script src="ep_kirawareru.js?v=2611230156"></script>
-<script src="ep_kouhan.js?v=2611230156"></script>
-<script src="ep_nomadland.js?v=2611230156"></script>
-<script src="ep_perfectdays.js?v=2611230156"></script>
-<script src="ep_seneca.js?v=2611230156"></script>
-<script src="ep_stoner.js?v=2611230156"></script>
-<script src="ep_tooitaiko.js?v=2611230156"></script>
-<script src="ep_tsukito6.js?v=2611230156"></script>
-<script src="ep_uchuukyoudai.js?v=2611230156"></script>
-<script src="ep_yorikakarazu.js?v=2611230156"></script>
-<script src="art.js?v=2611230156"></script>
-<script src="engine.js?v=2611230156"></script>
+<script src="books.js?v=2611230211"></script>
+<script src="ep_diewithzero.js?v=2611230211"></script>
+<script src="ep_greenbook.js?v=2611230211"></script>
+<script src="ep_ibunka.js?v=2611230211"></script>
+<script src="ep_jinseifruits.js?v=2611230211"></script>
+<script src="ep_kibou.js?v=2611230211"></script>
+<script src="ep_kirawareru.js?v=2611230211"></script>
+<script src="ep_kouhan.js?v=2611230211"></script>
+<script src="ep_nomadland.js?v=2611230211"></script>
+<script src="ep_perfectdays.js?v=2611230211"></script>
+<script src="ep_seneca.js?v=2611230211"></script>
+<script src="ep_stoner.js?v=2611230211"></script>
+<script src="ep_tooitaiko.js?v=2611230211"></script>
+<script src="ep_tsukito6.js?v=2611230211"></script>
+<script src="ep_uchuukyoudai.js?v=2611230211"></script>
+<script src="ep_yorikakarazu.js?v=2611230211"></script>
+<script src="art.js?v=2611230211"></script>
+<script src="engine.js?v=2611230211"></script>
 </body>
 </html>
