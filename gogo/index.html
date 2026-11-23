@@ -286,7 +286,11 @@ body[data-world=book] .bar{border-bottom-color:#5b3a1e22}
 .bk-meta{flex:1;display:flex;flex-direction:column;gap:4px;font-size:13.5px;line-height:1.6}
 .bk-meta h2{font-family:var(--mincho);font-size:26px;line-height:1.3}
 .done{margin-top:auto;font-family:var(--mincho);border-top:1px dashed #b9a47c;padding-top:6px}
-.done b{font-size:17px;color:var(--acc)}
+.done b{font-size:16px;color:var(--acc);margin:0 1px}
+/* アプリで読了日は1行で（せまい画面では、文字を少し小さく） */
+.done .dl{display:block;white-space:nowrap;font-size:min(13.5px,3.45vw)}
+.done .dl b{font-size:min(16px,4.1vw)}
+.done small{display:block;font-size:11.5px;color:#8a6f4a}
 .sec{background:#fffaf0;border:1px solid #e2d3b0;border-radius:14px;padding:12px 14px;font-size:14.5px;line-height:1.95}
 .sec h3{font-family:var(--mincho);font-size:15px;color:#8b5a22;margin-bottom:4px}
 .sec p{margin:0 0 6px}
@@ -483,23 +487,23 @@ details.fold .rates{margin:0}
 
 <script>window.EPS=[]; var TEACHER='マスター';</script>
 <audio id="bgm" loop preload="none"></audio>
-<script src="books.js?v=2611230211"></script>
-<script src="ep_diewithzero.js?v=2611230211"></script>
-<script src="ep_greenbook.js?v=2611230211"></script>
-<script src="ep_ibunka.js?v=2611230211"></script>
-<script src="ep_jinseifruits.js?v=2611230211"></script>
-<script src="ep_kibou.js?v=2611230211"></script>
-<script src="ep_kirawareru.js?v=2611230211"></script>
-<script src="ep_kouhan.js?v=2611230211"></script>
-<script src="ep_nomadland.js?v=2611230211"></script>
-<script src="ep_perfectdays.js?v=2611230211"></script>
-<script src="ep_seneca.js?v=2611230211"></script>
-<script src="ep_stoner.js?v=2611230211"></script>
-<script src="ep_tooitaiko.js?v=2611230211"></script>
-<script src="ep_tsukito6.js?v=2611230211"></script>
-<script src="ep_uchuukyoudai.js?v=2611230211"></script>
-<script src="ep_yorikakarazu.js?v=2611230211"></script>
-<script src="art.js?v=2611230211"></script>
-<script src="engine.js?v=2611230211"></script>
+<script src="books.js?v=2611230218"></script>
+<script src="ep_diewithzero.js?v=2611230218"></script>
+<script src="ep_greenbook.js?v=2611230218"></script>
+<script src="ep_ibunka.js?v=2611230218"></script>
+<script src="ep_jinseifruits.js?v=2611230218"></script>
+<script src="ep_kibou.js?v=2611230218"></script>
+<script src="ep_kirawareru.js?v=2611230218"></script>
+<script src="ep_kouhan.js?v=2611230218"></script>
+<script src="ep_nomadland.js?v=2611230218"></script>
+<script src="ep_perfectdays.js?v=2611230218"></script>
+<script src="ep_seneca.js?v=2611230218"></script>
+<script src="ep_stoner.js?v=2611230218"></script>
+<script src="ep_tooitaiko.js?v=2611230218"></script>
+<script src="ep_tsukito6.js?v=2611230218"></script>
+<script src="ep_uchuukyoudai.js?v=2611230218"></script>
+<script src="ep_yorikakarazu.js?v=2611230218"></script>
+<script src="art.js?v=2611230218"></script>
+<script src="engine.js?v=2611230218"></script>
 </body>
 </html>
