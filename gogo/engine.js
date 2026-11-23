@@ -268,7 +268,9 @@ function finish() {
 }
 function cardHTML(ep, r, small) {
   const lines = cardText(ep, r).split('\n'), t = tierOf(r.n);
-  return `<div class="card t${t}${small ? ' sm' : ''}"><div class="v">${lines.map(x => `<span>${esc(x)}</span>`).join('')}</div><div class="src">『${esc(ep.title)}』から</div>${t === 'all' ? `<span class="crest">${OWL}</span>` : ''}</div>`;
+  // 栞の縦の長さは、一番長い行の文字数で決める（長すぎる行は14字で折り返す）。幅は行の数で決まる
+  const L = Math.max(4, Math.min(14, Math.max(...lines.map(x => [...x].length))));
+  return `<div class="card t${t}${small ? ' sm' : ''}" style="--L:${L}"><div class="v">${lines.map(x => `<span>${esc(x)}</span>`).join('')}</div><div class="src">『${esc(ep.title)}』から</div>${t === 'all' ? `<span class="crest">${OWL}</span>` : ''}</div>`;
 }
 
 /* ---------- 節目のごほうび（10・50・100・150冊、その先は50冊ごと、そして全刊） ---------- */
@@ -872,7 +874,8 @@ function openBook(ep, justDone) {
     : `<button class="btn bkback" id="bkBack">本棚へ戻る</button>`;
   // 並び：表紙と題 → 操作（扉を開く・問いかけにもう一度）→ めやす → 栞 → たたんだ欄 → わたしの記録 → 本棚へ戻る（一番下）
   // 読了したばかりのときは、栞を先に（操作は出さず、下に「本棚へ戻る」）
-  el.innerHTML = top + acts + (justDone ? mine + readF + rates + foldWhy + foldSum : rates + mine + foldWhy + foldSum + readF) + covF + myrec + bottom;
+  // 読了したばかりのときは、名作のわけと3分でわかるは出さない（いま聞いたばかりなので）
+  el.innerHTML = top + acts + (justDone ? mine + readF + rates : rates + mine + foldWhy + foldSum + readF) + covF + myrec + bottom;
   show('book');
   if ($('covsel')) wireCovSel(ep);
   wirePaper(el, ep.id, () => { $('bkCover').innerHTML = coverHTML(ep, 'div'); });

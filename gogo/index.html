@@ -242,13 +242,13 @@ body[data-world=book] .bar{border-bottom-color:#5b3a1e22}
 .k-bad{color:#5d6b8a}.k-miss{color:#c27a14}.k-good{color:#3c8f6a}.k-true{color:var(--acc)}
 .shiori{margin:auto;display:flex;flex-direction:column;align-items:center;gap:14px;color:#f3ead8;text-align:center;max-width:420px}
 .shiori .head{font-size:13px;letter-spacing:.3em;color:var(--lamp);font-weight:700;margin-bottom:22px}
-.card{position:relative;min-width:150px;max-width:92vw;min-height:330px;background:linear-gradient(#fbf4e4,#efe1bf);border-radius:4px;padding:36px 26px 30px;display:flex;justify-content:center;box-shadow:0 12px 30px #0009;animation:drop .7s cubic-bezier(.2,1.4,.4,1)}
+.card{position:relative;min-width:136px;max-width:92vw;min-height:0;background:linear-gradient(#fbf4e4,#efe1bf);border-radius:4px;padding:36px 26px 30px;display:flex;justify-content:center;box-shadow:0 12px 30px #0009;animation:drop .7s cubic-bezier(.2,1.4,.4,1)}
 @keyframes drop{from{transform:translateY(-40px) rotate(-6deg);opacity:0}}
 .card::before{content:'';position:absolute;top:10px;left:50%;width:12px;height:12px;margin-left:-6px;border-radius:50%;background:#3a2b1a;box-shadow:inset 0 2px 2px #0006}
 .card::after{content:'';position:absolute;top:14px;left:50%;width:3px;height:44px;margin-left:-1.5px;background:var(--acc);transform-origin:top;transform:translateY(-44px) rotate(10deg);border-radius:2px}
-.card .v{writing-mode:vertical-rl;font-family:var(--mincho);font-weight:800;font-size:18px;line-height:1.75;letter-spacing:.1em;color:#3b2a18;height:290px}
+.card .v{writing-mode:vertical-rl;font-family:var(--mincho);font-weight:800;font-size:18px;line-height:1.75;letter-spacing:.1em;color:#3b2a18;height:calc(var(--L,12) * 1.1em + .4em)}
 .card .v span{display:block;text-align:start;text-indent:0}
-.card .src{position:absolute;bottom:8px;left:0;right:0;font-size:10px;color:#8a6f4a;font-family:var(--mincho)}
+.card .src{position:absolute;bottom:8px;left:0;right:0;font-size:10px;color:#8a6f4a;font-family:var(--mincho);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 6px}
 .shiori ul{text-align:left;margin:0;padding-left:20px;font-size:14px;line-height:1.85}
 .shiori .btn{max-width:320px}
 .shiori .quote{margin:0;font-family:var(--mincho);font-size:15px;line-height:1.8;opacity:.9}
@@ -384,9 +384,9 @@ details.fold .rates{margin:0}
 .card.t4{background:radial-gradient(circle,#fff 0 .8px,#0000 1.4px) 3px 5px/23px 27px,radial-gradient(circle,#ffe9a0 0 .9px,#0000 1.5px) 11px 14px/31px 23px,linear-gradient(#2a3460,#121834)}.card.t4 .v{color:#f4ecd8}.card.t4 .src{color:#c8b88a}.card.t4::after{background:var(--lamp)}
 .card.tall{background:linear-gradient(#ffe8a0,#d9a441);box-shadow:inset 0 0 0 3px #8a5a12,0 12px 30px #0009}.card.tall::after{background:#7a2a1a}
 .card .crest{position:absolute;right:8px;bottom:20px;width:40px;opacity:.3}
-.card.sm{min-width:92px;min-height:0;padding:24px 14px 22px;animation:none;box-shadow:0 6px 14px #0006;flex:none}
+.card.sm{min-width:76px;min-height:0;padding:24px 14px 22px;animation:none;box-shadow:0 6px 14px #0006;flex:none}
 .card.sm.t3{box-shadow:inset 0 0 0 2px #c8962a,0 6px 14px #0006}.card.sm.tall{box-shadow:inset 0 0 0 3px #8a5a12,0 6px 14px #0006}
-.card.sm .v{height:150px;font-size:14px;line-height:1.7}
+.card.sm .v{height:calc(var(--L,12) * 1.1em + .4em);font-size:14px;line-height:1.7}
 .card.sm::after{height:30px;transform:translateY(-30px) rotate(10deg)}
 .card.sm .src{font-size:8.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 5px}
 .card.sm .crest{width:24px;bottom:16px}
@@ -483,23 +483,23 @@ details.fold .rates{margin:0}
 
 <script>window.EPS=[]; var TEACHER='マスター';</script>
 <audio id="bgm" loop preload="none"></audio>
-<script src="books.js?v=2611230152"></script>
-<script src="ep_diewithzero.js?v=2611230152"></script>
-<script src="ep_greenbook.js?v=2611230152"></script>
-<script src="ep_ibunka.js?v=2611230152"></script>
-<script src="ep_jinseifruits.js?v=2611230152"></script>
-<script src="ep_kibou.js?v=2611230152"></script>
-<script src="ep_kirawareru.js?v=2611230152"></script>
-<script src="ep_kouhan.js?v=2611230152"></script>
-<script src="ep_nomadland.js?v=2611230152"></script>
-<script src="ep_perfectdays.js?v=2611230152"></script>
-<script src="ep_seneca.js?v=2611230152"></script>
-<script src="ep_stoner.js?v=2611230152"></script>
-<script src="ep_tooitaiko.js?v=2611230152"></script>
-<script src="ep_tsukito6.js?v=2611230152"></script>
-<script src="ep_uchuukyoudai.js?v=2611230152"></script>
-<script src="ep_yorikakarazu.js?v=2611230152"></script>
-<script src="art.js?v=2611230152"></script>
-<script src="engine.js?v=2611230152"></script>
+<script src="books.js?v=2611230156"></script>
+<script src="ep_diewithzero.js?v=2611230156"></script>
+<script src="ep_greenbook.js?v=2611230156"></script>
+<script src="ep_ibunka.js?v=2611230156"></script>
+<script src="ep_jinseifruits.js?v=2611230156"></script>
+<script src="ep_kibou.js?v=2611230156"></script>
+<script src="ep_kirawareru.js?v=2611230156"></script>
+<script src="ep_kouhan.js?v=2611230156"></script>
+<script src="ep_nomadland.js?v=2611230156"></script>
+<script src="ep_perfectdays.js?v=2611230156"></script>
+<script src="ep_seneca.js?v=2611230156"></script>
+<script src="ep_stoner.js?v=2611230156"></script>
+<script src="ep_tooitaiko.js?v=2611230156"></script>
+<script src="ep_tsukito6.js?v=2611230156"></script>
+<script src="ep_uchuukyoudai.js?v=2611230156"></script>
+<script src="ep_yorikakarazu.js?v=2611230156"></script>
+<script src="art.js?v=2611230156"></script>
+<script src="engine.js?v=2611230156"></script>
 </body>
 </html>
