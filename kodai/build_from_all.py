@@ -39,7 +39,10 @@ for key, name in dgrp.items():
         if re.match(r'(中日|中海|高)', str(r[3])).group(1) != key: continue
         g.append([r[0], r[1], '詩集' if r[6] == 'P' else '本', '0', r[4], r[5], DLEN.get(r[6], r[6])] + r[7:])
     groups.append([name, g])
-groups.append(['マスターの書斎　人生の午後に', [r[:3] + ['0'] + r[4:] for r in gr if r[0] not in otitles]])
+groups.append(['マスターの書斎　一　人生の午後に', [r[:3] + ['0'] + r[4:] for r in gr if r[0] not in otitles]])
+# 古代図書館だけの作品（kodai/books_kodai.json・物語は kodai/ep_*.js）を、マスターの書斎の続きに
+KB = json.load(open(os.path.join(K, 'books_kodai.json'), encoding='utf-8'))
+for name, g in KB['shelves']: groups.append([name, g])
 oth = jsvar(O, 'THEMES')
 starts = [t[0] for t in oth] + [len(orr) + 1]
 for i, (s0, name) in enumerate(oth):
@@ -51,7 +54,8 @@ for name, g in groups:
         r = list(r); r[3] = str(len(out) + 1); out.append(r)
 assert len({r[0] for r in out}) == len(out), 'title duplicate'
 N = len(out)
-chosen = sorted(set((jsvar(G, 'CHOSEN') or []) + (jsvar(O, 'CHOSEN') or [])))
+SHELVES = kanji(len(themes)) + 'の書庫'   # 書庫の数（棚の数）
+chosen = sorted(set((jsvar(G, 'CHOSEN') or []) + (jsvar(O, 'CHOSEN') or []) + KB['chosen']))
 wr('books.js', f'// 古代図書館 ― 三つのサイトの{N}作（名作のなかへ・午後の書斎・川村さんへの贈り物）。kodai/build_from_all.py で生成（直接は直さない）\n'
    '// [題名, 作者・監督, 種類, 番号, 年(並べ替え用), 年の表示, 長さ, おすすめ, 入りやすさ, 有名度, 学び度, 見終わったあとの感じ(1さわやか〜5ずっしり), よみ]\n'
    f'window.BOOK_LEN={json.dumps(LEN, ensure_ascii=False)};\n'
@@ -122,7 +126,7 @@ e = sub(e, r"function msMessage\(n\) \{.*?\n\}", """function msMessage(n) {
 e = sub(e, r"\} else msg = 'いらっしゃいませ。夜更けの書斎へ、ようこそ。.*?';\n",
         f"}} else msg = 'ようこそ、古代図書館へ。<br>ここには、<b>{N}の物語</b>が眠っています。中高生のころに出会いたい名作は、フクロウの<b>ミネル先生</b>の棚に。人生の午後に味わいたい作品と、川村さんへの贈り物は、書斎の<b>マスター</b>の棚に。<b>読まなくても、観なくてもいい。中に入って、主人公になってみてください。</b>迷ったら、下の「次の一作」からどうぞ。';\n", regex=True)
 e = sub(e, r"\$\('rackNote'\)\.innerHTML = '.*?';\n",
-        f"$('rackNote').innerHTML = '{N}の物語を、八つの書庫に並べました。古い時代の作品ほど、使いこまれた姿で並んでいます。映画は、ケースの姿で。<br>背表紙をタップすると、その作品のページが開きます。「持っている」「読んだ・観た」の記録や、表紙の写真の設定も、そこでできます。';\n", regex=True)
+        f"$('rackNote').innerHTML = '{N}の物語を、{SHELVES}に並べました。古い時代の作品ほど、使いこまれた姿で並んでいます。映画は、ケースの姿で。<br>背表紙をタップすると、その作品のページが開きます。「持っている」「読んだ・観た」の記録や、表紙の写真の設定も、そこでできます。';\n", regex=True)
 e = sub(e, "収録：${EPS.length}作（本・映画・漫画／1作 15〜25分）", "収録：${EPS.length}作（本・映画・漫画・詩集／1作 15〜25分）")
 e = sub(e, "    ['other', '漫画', b => /漫画/.test(b[2])],", "    ['other', '漫画・詩', b => /漫画|詩集/.test(b[2])],")
 e = sub(e, "// はじめは、四つの棚の順で", "// はじめは、書庫の順で")
@@ -143,18 +147,18 @@ h = sub(h, '#title .owl{width:132px;height:132px;filter:drop-shadow(0 0 28px #ff
 h = sub(h, r'<div class="kicker">.*?</div>\n  <h1>川村さんへの<br>贈り物</h1>\n  <div class="tag">.*?</div>',
         '<div class="kicker">ミ ネ ル 先 生 と マ ス タ ー の</div>\n  <h1>古代<br>図書館</h1>\n  <div class="tag">読む前に、観る前に、入ってみる。</div>', regex=True)
 h = sub(h, r'<p class="lead">.*?</p>',
-        f'<p class="lead">{kanji(N)}の物語を、八つの書庫に。<br>本や映画の主人公になって、名場面を生きてみる。<br>幕が下りたら、ミネル先生かマスターが<br>その作品のわけを語り、ひとつだけ問いかける。</p>', regex=True)
+        f'<p class="lead">{kanji(N)}の物語を、{SHELVES}に。<br>本や映画の主人公になって、名場面を生きてみる。<br>幕が下りたら、ミネル先生かマスターが<br>その作品のわけを語り、ひとつだけ問いかける。</p>', regex=True)
 h = sub(h, '<button class="btn primary" id="enter">書斎に入る</button>', '<button class="btn primary" id="enter">図書館に入る</button>')
 h = sub(h, '<div><h2>川村さんへの贈り物</h2>', '<div><h2>古代図書館</h2>')
 h = sub(h, r'持っている <b id="ownc">0</b> / \d+</div>', f'持っている <b id="ownc">0</b> / {N}</div>', regex=True)
-h = sub(h, r'<h3 class="shelfh">.*?</h3>', f'<h3 class="shelfh">{N}の物語、八つの書庫</h3>', regex=True)
+h = sub(h, r'<h3 class="shelfh">.*?</h3>', f'<h3 class="shelfh">{N}の物語、{SHELVES}</h3>', regex=True)
 h = sub(h, '<span><span class="bd bd-both">漫</span> 漫画</span>', '<span><span class="bd bd-both">漫</span> 漫画・詩集</span>')
 # 物語：三つのフォルダから、そのまま読みこむ。読みこむ前後で案内役を決め、同じ作品（同じ id）は、あとから読んだもの（贈り物の版）だけを残す
 v = time.strftime('%y%m%d%H%M')
 h = re.sub(r'<script src="(\.\./gogo/)?ep_[^"]*"></script>\n', '', h)
 def eps(d, rel): return ''.join(f'<script src="{rel}/{os.path.basename(f)}?v={v}"></script>\n' for f in sorted(glob.glob(os.path.join(d, 'ep_*.js'))))
 tags = (f'<script src="../dokusho/adult.js?v={v}"></script>\n<script>TEACHER=\'ミネル\';</script>\n' + eps(D, '../dokusho')
-        + "<script>EPS.forEach(e => { e.guide = e.guide || 'ミネル'; }); TEACHER='マスター';</script>\n" + eps(G, '../gogo') + eps(O, '../okurimono')
+        + "<script>EPS.forEach(e => { e.guide = e.guide || 'ミネル'; }); TEACHER='マスター';</script>\n" + eps(G, '../gogo') + eps(O, '../okurimono') + eps(K, '.')
         + "<script>EPS.forEach(e => { e.guide = e.guide || 'マスター'; }); (() => { const seen = new Set(); for (let i = EPS.length - 1; i >= 0; i--) { if (seen.has(EPS[i].id)) EPS.splice(i, 1); else seen.add(EPS[i].id); } })();</script>\n")
 h = re.sub(r'(<script src="books\.js)[^"]*("></script>\n)', lambda m: m.group(1) + '?v=' + v + m.group(2) + tags, h)
 h = re.sub(r'\?v=\d+"', f'?v={v}"', h)
@@ -164,7 +168,8 @@ wr('index.html', h)
 # ---------------- art.js：三つのサイトの絵を合わせる（同じ id は、贈り物 → 午後の書斎 → 名作のなかへ の順に優先） ----------------
 a = rd(O, 'art.js')
 body = lambda d: re.search(r"const ART = \{\n(.*?)\n\};", rd(d, 'art.js'), re.S).group(1)
-a = sub(a, re.search(r"const ART = \{\n.*?\n\};", a, re.S).group(0), "const ART = {\n" + body(D) + "\n" + body(G) + "\n" + body(O) + "\n};")
+kart = '\n'.join(f"  {k}: '{v}'," for k, v in KB['art'].items())
+a = sub(a, re.search(r"const ART = \{\n.*?\n\};", a, re.S).group(0), "const ART = {\n" + body(D) + "\n" + body(G) + "\n" + body(O) + "\n" + kart + "\n};")
 a = sub(a, "/* 川村さんへの贈り物 ― 表紙の絵", "/* 古代図書館 ― 表紙の絵（三つのサイトの絵を合わせたもの。kodai/build_from_all.py で生成）")
 wr('art.js', a)
 print(f'kodai: books.js, engine.js, index.html, art.js を作りました（{N}作）')
