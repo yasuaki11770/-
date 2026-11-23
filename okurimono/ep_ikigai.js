@@ -3,7 +3,7 @@
 (() => {
 EPS.push({
   id: 'ikigai', title: '生きがいについて', author: '神谷美恵子', year: '1966年', minutes: 15,
-  lists: '16',
+  lists: '14',
   blurb: '瀬戸内海の小さな島の療養所で、病と隔離に人生を奪われた人々と向きあった精神科医。人は、すべてを失ったあとにも、生きがいを見いだせるのか。',
   cover: ['linear-gradient(165deg,#d8e8f0,#8ab0c8 55%,#3a5a7a)', '#f8f8f4'],
   chars: {'叔父':'#6a6a5a','患者':'#7a6a4a','老人':'#5a7a6a'},
