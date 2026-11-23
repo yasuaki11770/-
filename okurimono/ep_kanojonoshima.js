@@ -2,7 +2,7 @@
 (() => {
 EPS.push({
   id: 'kanojonoshima', title: '彼のオートバイ、彼女の島', author: '片岡義男', year: '1977年', minutes: 13,
-  lists: '54',
+  lists: '65',
   blurb: 'オートバイで旅をする青年が、高原で、ひとりの女の子と出会う。彼女のふるさとは、瀬戸内海の小さな島。風と、海と、二台のオートバイの、夏の物語。',
   cover: ['linear-gradient(165deg,#a8e0f0,#4ab0d0 50%,#f0d070)', '#14283a'],
   chars: {'ミーヨ':'#c0607a','島の人':'#8a6a3a'},

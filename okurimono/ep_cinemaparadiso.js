@@ -3,7 +3,7 @@
 (() => {
 EPS.push({
   id: 'cinemaparadiso', title: 'ニュー・シネマ・パラダイス', author: 'ジュゼッペ・トルナトーレ 監督', year: '1988年', minutes: 15,
-  lists: '30',
+  lists: '38',
   blurb: 'シチリアの小さな村の映画館。映写室に入りびたる少年と、彼を見守る年老いた映写技師。村じゅうの人が集まった映画館と、一本のフィルムに託された贈り物。',
   cover: ['linear-gradient(165deg,#2a1e3a,#5a3a5a 50%,#e0a060)', '#fff4e4'],
   chars: {'トト':'#3a7ab0','神父':'#5a5a5a','村人':'#8a6a3a','トトの母':'#a06a7a'},

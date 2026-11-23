@@ -3,7 +3,7 @@
 (() => {
 EPS.push({
   id: 'kinoinochi', title: '木のいのち木のこころ', author: '西岡常一・小川三夫・塩野米松', year: '1993年〜', minutes: 15,
-  lists: '34',
+  lists: '42',
   blurb: '法隆寺の宮大工の最後の棟梁と、その弟子。千年もつ塔を建てる人たちが語る、木の癖を読むこと、道具を研ぐこと、人を育てること。',
   cover: ['linear-gradient(165deg,#d8c8a0,#a08050 55%,#4a3420)', '#fff8e8'],
   chars: {'西岡棟梁':'#6a4a2a','弟子':'#5a7a5a'},

@@ -3,7 +3,7 @@
 (() => {
 EPS.push({
   id: 'intouchables', title: '最強のふたり', author: 'エリック・トレダノ、オリヴィエ・ナカシュ 監督', year: '2011年', minutes: 15,
-  lists: '25',
+  lists: '30',
   blurb: '首から下が動かない大富豪と、介護の経験などまるでない、郊外育ちの青年。同情しない介護人と、同情されたくない男の、実話をもとにした友情。',
   cover: ['linear-gradient(165deg,#d8e0e8,#8a9ab0 55%,#2a3a4a)', '#fffbf4'],
   chars: {'フィリップ':'#6a5a4a','マガリー':'#b0607a','イヴォンヌ':'#7a7a8a','友人':'#5a7a5a'},

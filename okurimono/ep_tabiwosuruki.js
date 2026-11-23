@@ -3,7 +3,7 @@
 (() => {
 EPS.push({
   id: 'tabiwosuruki', title: '旅をする木', author: '星野道夫', year: '1995年', minutes: 14,
-  lists: '62',
+  lists: '74',
   blurb: '十九歳で、写真の中の村に手紙を書いた青年は、やがてアラスカに暮らす写真家になった。オーロラ、カリブーの群れ、一本のトウヒの木の長い旅。遠い北の地から届いた、手紙のようなエッセイ集。',
   cover: ['linear-gradient(165deg,#1a2a4a,#2a5a6a 50%,#a8d8c0)', '#f4f8f4'],
   chars: {'村長':'#7a5a3a','友人':'#5a7a9a','老人':'#6a6a5a'},

@@ -204,6 +204,9 @@ const M = {
   aurora: () => `<path d="M0 30Q25 10 50 26T100 22V44Q75 30 50 46T0 48Z" fill="${C.G}" opacity=".45"/><path d="M0 46Q30 30 55 44T100 40V54Q70 46 50 58T0 60Z" fill="#7be0b0" opacity=".3"/>`,
   dorayaki: () => `<ellipse cx="50" cy="66" rx="38" ry="12" fill="#9a5a22"/><rect x="13" y="54" width="74" height="9" rx="4" fill="#3e1a12"/><ellipse cx="50" cy="50" rx="38" ry="14" fill="#b06a2a"/><ellipse cx="46" cy="45" rx="26" ry="7" fill="#d4945a" opacity=".8"/>`,
   hankies: () => `<rect x="12" y="2" width="3.5" height="96" fill="#6a5a4a"/>` + [10, 34, 58].map(y => `<path d="M15 ${y}Q55 ${y + 10} 98 ${y + 2}" stroke="#d8d0c0" stroke-width="1.2" fill="none"/>` + [0, 1, 2, 3, 4].map(k => { const x = 20 + k * 16, t = (x - 15) / 83, yy = y + 10 * t * (1 - t) * 4 * .5 + t * 2; return `<path d="M${x} ${yy}h12l-1 14h-10Z" fill="#f4d02a"/>`; }).join('')).join(''),
+  euler: i => `<text x="50" y="60" font-size="22" text-anchor="middle" fill="${i}" font-family="Georgia,serif" font-style="italic">e<tspan font-size="13" dy="-10">iπ</tspan><tspan dy="10"> + 1 = 0</tspan></text>`,
+  cat: i => `<path d="M28 94Q22 62 38 50L34 28L48 42Q54 40 60 42L72 28L68 50Q80 64 74 94Z" fill="${i}"/><path d="M74 90Q96 86 90 64" stroke="${i}" stroke-width="5" fill="none" stroke-linecap="round"/><circle cx="44" cy="58" r="2.6" fill="${C.A}"/><circle cx="60" cy="58" r="2.6" fill="${C.A}"/>`,
+  ttower: () => `<path d="M50 2V14" stroke="#e05a3a" stroke-width="2"/><path d="M47 14H53L58 44L66 70L80 98H68L60 78H40L32 98H20L34 70L42 44Z" fill="#e05a3a"/><rect x="40" y="40" width="20" height="6" fill="${C.W}"/><rect x="34" y="66" width="32" height="7" fill="${C.W}"/><path d="M45 22H55M44 32H56M38 56H62M28 86H72" stroke="${C.W}" stroke-width="2.2" opacity=".85"/>`,
   shadow: () => `<path d="M60 98Q58 70 64 54Q60 44 66 36Q74 34 76 44Q80 56 78 70Q80 86 86 98Z" fill="${C.K}" opacity=".75"/>`,
 };
 
@@ -243,6 +246,11 @@ const ART = {
   poppoya: 'snow; train 50 104 66', jiseiroku: 'stars; laurel 50 58 58; candle 50 112 36', koufukuron: 'sun 50 46 50; greenhills; quill 50 112 38',
   pest: 'sun 26 32 26; sea; city; mouse 28 124 20', awakenings: 'sun 50 50 40; window; hands 50 116 40', an: 'petals; sakura 36 80 64; dorayaki 66 118 38',
   hankachi: 'cloud 72 120 26; greenhills; hankies 52 70 86',
+  tasogare: 'sunset 50 62 66; sea; boat 40 112 36; bird 72 42 22', houjouki: 'mount 50 70 90; river; cabin 50 100 42', tsurezure: 'petals; moon 72 30 24; scroll 46 104 56',
+  hakase: 'stars; euler 40 66 64; baseball 50 118 26', okuribito: 'snow; mount 50 70 90; stone 50 116 30', shawshank: 'sun 72 30 26; sea; bird 36 58 34; boat 66 116 28',
+  zorba: 'sea; sun 70 30 28; notes 28 50 30; footprints 50 116 40', missdaisy: 'gtree 22 80 40; road; car 54 110 60', shinyashokudo: 'moon 74 26 22; lantern 30 84 40; ramen 62 118 40',
+  always: 'sunset 50 70 70; ttower 44 84 80; jroofs 60 128 50', kazetachinu: 'cloud 30 40 34; plane 62 52 40; grass; umbrella 30 112 30', harrytonto: 'sunset 50 60 66; road; cat 50 108 40',
+  nebraska: 'wheat 16 104 40; road; truck 50 112 54', paristexas: 'sunset 50 60 70; dunes; road', standbyme: 'fir 16 82 46; fir 84 82 46; train 50 106 56',
 };
 
 function draw(spec, ink) {
