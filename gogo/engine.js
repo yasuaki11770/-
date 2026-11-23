@@ -433,7 +433,7 @@ const recT = t => { const e = EPT(t); return (e && REC[e.id]) || {}; };
 const appDone = t => !!recT(t).date;      // アプリで読了（栞を挟んだ）
 const paperRead = t => !!recT(t).paper;   // 紙の本で読んだ
 function toggleOwn(t) { if (OWN[t]) delete OWN[t]; else OWN[t] = 1; saveOwn(); return !!OWN[t]; }
-const ownLabel = on => on ? '✓　持っている' : '□　この本を持っている';
+const ownLabel = on => on ? '✓　持っている' : '□　この作品を持っている';
 /* 読了のハンコ：アプリで読了だけ＝青、アプリと本の両方＝赤、本で読んだだけ＝緑。表紙に押し、本棚の背表紙は同じ色で縁どる */
 const STAMP = {app: ['#2456b8', 'アプリ', 'アプリで読了'], both: ['#c62a1f', 'アプリ・実物', 'アプリと実物の両方で読了'], paper: ['#23804a', '実物', '実物で読んだ・観た']};
 const stampOf = t => appDone(t) ? (paperRead(t) ? 'both' : 'app') : paperRead(t) ? 'paper' : '';
@@ -832,8 +832,10 @@ function openBook(ep, justDone) {
   const r = rec(ep.id), d = r.date, bk = BOOK(ep.title), own = !!OWN[ep.title];
   const el = $('book');
   /* たたんでおける欄（見出しをタップすると開く） */
+  const covFold = () => fold('fCov', '表紙', '絵か、持っている本・ディスクの写真か', `<div id="covsel" class="covsel">${covSelHTML(ep)}</div>`);
   const fold = (id, title, sub, body, open) => `<details class="fold" id="${id}"${open ? ' open' : ''}><summary>${title}${sub ? `<small>${sub}</small>` : ''}</summary><div class="fb">${body}</div></details>`;
-  const recSub = [r.paper ? `読んだ・観た ${ymd(r.paper)}` : '', r.like ? '♥'.repeat(r.like) : '', r.memo ? '感想あり' : ''].filter(Boolean).join('・') || '読んだ日・好き度・感想';
+  const recSubOf = () => [OWN[ep.title] ? '持っている' : '', r.paper ? `読んだ・観た ${ymd(r.paper)}` : '', r.like ? '♥'.repeat(r.like) : '', r.memo ? '感想あり' : ''].filter(Boolean).join('・') || '持っている・読んだ／観た日・好き度・感想';
+  const recSub = recSubOf();
   const top = `
     <div class="bk-top">
       <div id="bkCover">${coverHTML(ep, 'div')}</div>
@@ -856,6 +858,7 @@ function openBook(ep, justDone) {
   /* この本のめやす：たたまずに、操作のすぐ下に */
   const rates = bk && bk.length >= 12 ? `<div class="sec"><h3>この作品のめやす</h3>${ratesHTML(bk)}</div>` : '';
   const myrec = fold('fRec', 'わたしの記録', recSub, `<div class="myrec">
+      <button class="btn owntg${own ? ' on' : ''}" id="bkOwn">${ownLabel(own)}</button>
       ${paperHTML(ep.id)}
       <div class="lk"><span>この作品、好き？</span>${likeHTML(ep.id)}</div>
       <textarea id="bkMemo" rows="4" placeholder="感想を、自由に。あとで一つの文章にまとめられます。">${esc(r.memo || '')}</textarea>
@@ -871,7 +874,7 @@ function openBook(ep, justDone) {
     fold('fWhy', '名作のわけ', '四つの話', ep.why.map((w, i) => `<p><b>その${NUM[i]}　${esc(w.h)}</b><br>${fmt(A(w.short))}</p>`).join('')),
     fold('fSum', `3分でわかる『${esc(ep.title)}』`, '結末まで書いてあります', ep.summary.map(p => `<p>${fmt(p)}</p>`).join('')),
     fold('fRead', '本物にふれるなら', '', `<p>${fmt(A(ep.read))}</p>`),
-  ] : []).concat(own ? [fold('fCov', '表紙', '絵か、持っている本・ディスクの写真か', `<div id="covsel" class="covsel">${covSelHTML(ep)}</div>`)] : []).join('');
+  ] : []).concat(own ? [covFold()] : []).join('');
   const bottom = justDone ? `<div class="donebar"><button class="btn primary" id="bkBack">本棚へ戻る</button></div>`
     : `<button class="btn bkback" id="bkBack">本棚へ戻る</button>`;
   // 並び：表紙と題 → 操作（扉を開く・問いかけにもう一度）→ めやす → 栞 → たたんだ欄 → わたしの記録 → 本棚へ戻る（一番下）
@@ -892,6 +895,15 @@ function openBook(ep, justDone) {
   if ($('bkStart')) $('bkStart').onclick = () => startEp(ep);
   if ($('bkAsk')) $('bkAsk').onclick = () => startEp(ep, 'resolve');
   $('bkBack').onclick = openShelf;
+  // 「持っている」（わたしの記録の中）：表紙の欄は、持っている本のときだけ出す
+  $('bkOwn').onclick = () => {
+    const on = toggleOwn(ep.title);
+    $('bkOwn').classList.toggle('on', on); $('bkOwn').textContent = ownLabel(on);
+    $('bkCover').innerHTML = coverHTML(ep, 'div');
+    if (on && !$('fCov')) { $('fRec').insertAdjacentHTML('beforebegin', covFold()); wireCovSel(ep); }
+    if (!on && $('fCov')) $('fCov').remove();
+    $('fRec').querySelector('summary small').textContent = recSubOf();
+  };
 }
 
 /* ---------- 栞帳：これまでにはさんだ栞の一覧 ---------- */

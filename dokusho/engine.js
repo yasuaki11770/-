@@ -838,8 +838,10 @@ function openBook(ep, justDone) {
   const r = rec(ep.id), d = r.date, bk = BOOK(ep.title), own = !!OWN[ep.title];
   const el = $('book');
   /* たたんでおける欄（見出しをタップすると開く） */
+  const covFold = () => fold('fCov', '表紙', '絵か、自分の本の写真か', `<div id="covsel" class="covsel">${covSelHTML(ep)}</div>`);
   const fold = (id, title, sub, body, open) => `<details class="fold" id="${id}"${open ? ' open' : ''}><summary>${title}${sub ? `<small>${sub}</small>` : ''}</summary><div class="fb">${body}</div></details>`;
-  const recSub = [r.paper ? `本で読んだ ${ymd(r.paper)}` : '', r.like ? '♥'.repeat(r.like) : '', r.memo ? '感想あり' : ''].filter(Boolean).join('・') || '読んだ日・好き度・感想';
+  const recSubOf = () => [OWN[ep.title] ? '持っている' : '', r.paper ? `本で読んだ ${ymd(r.paper)}` : '', r.like ? '♥'.repeat(r.like) : '', r.memo ? '感想あり' : ''].filter(Boolean).join('・') || '持っている・読んだ日・好き度・感想';
+  const recSub = recSubOf();
   const top = `
     <div class="bk-top">
       <div id="bkCover">${coverHTML(ep, 'div')}</div>
@@ -862,6 +864,7 @@ function openBook(ep, justDone) {
   /* この本のめやす：たたまずに、操作のすぐ下に */
   const rates = bk && bk.length >= 12 ? `<div class="sec"><h3>この本のめやす</h3>${ratesHTML(bk)}</div>` : '';
   const myrec = fold('fRec', 'わたしの記録', recSub, `<div class="myrec">
+      <button class="btn owntg${own ? ' on' : ''}" id="bkOwn">${ownLabel(own)}</button>
       ${paperHTML(ep.id)}
       <div class="lk"><span>この本、好き？</span>${likeHTML(ep.id)}</div>
       <textarea id="bkMemo" rows="4" placeholder="感想を、自由に。読書感想文の下書きにもなります。">${esc(r.memo || '')}</textarea>
@@ -877,7 +880,7 @@ function openBook(ep, justDone) {
     fold('fWhy', '名作のわけ', '四つの話', ep.why.map((w, i) => `<p><b>その${NUM[i]}　${esc(w.h)}</b><br>${fmt(A(w.short))}</p>`).join('')),
     fold('fSum', `3分でわかる『${esc(ep.title)}』`, '結末まで書いてあります', ep.summary.map(p => `<p>${fmt(p)}</p>`).join('')),
     fold('fRead', '本物を読んでみるなら', '', `<p>${fmt(A(ep.read))}</p>`),
-  ] : []).concat(own ? [fold('fCov', '表紙', '絵か、自分の本の写真か', `<div id="covsel" class="covsel">${covSelHTML(ep)}</div>`)] : []).join('');
+  ] : []).concat(own ? [covFold()] : []).join('');
   const bottom = justDone ? `<div class="donebar"><button class="btn primary" id="bkBack">本棚へ戻る</button></div>`
     : `<button class="btn bkback" id="bkBack">本棚へ戻る</button>`;
   // 並び：表紙と題 → 操作（扉を開く・問いかけにもう一度）→ めやす → 栞 → たたんだ欄 → わたしの記録 → 本棚へ戻る（一番下）
@@ -898,6 +901,15 @@ function openBook(ep, justDone) {
   if ($('bkStart')) $('bkStart').onclick = () => startEp(ep);
   if ($('bkAsk')) $('bkAsk').onclick = () => startEp(ep, 'resolve');
   $('bkBack').onclick = openShelf;
+  // 「持っている」（わたしの記録の中）：表紙の欄は、持っている本のときだけ出す
+  $('bkOwn').onclick = () => {
+    const on = toggleOwn(ep.title);
+    $('bkOwn').classList.toggle('on', on); $('bkOwn').textContent = ownLabel(on);
+    $('bkCover').innerHTML = coverHTML(ep, 'div');
+    if (on && !$('fCov')) { $('fRec').insertAdjacentHTML('beforebegin', covFold()); wireCovSel(ep); }
+    if (!on && $('fCov')) $('fCov').remove();
+    $('fRec').querySelector('summary small').textContent = recSubOf();
+  };
 }
 
 /* ---------- 栞帳：これまでにはさんだ栞の一覧 ---------- */
