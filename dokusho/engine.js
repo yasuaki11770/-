@@ -858,7 +858,10 @@ function openBook(ep, justDone) {
       <button class="btn primary" id="bkStart">${d ? 'もう一度、本の中へ' : 'この本の扉を開く'}</button>
       ${d ? `<button class="btn" id="bkAsk" style="text-align:center">問いかけに、もう一度答える</button>` : ''}
       <button class="btn owntg${own ? ' on' : ''}" id="bkOwn">${ownLabel(own)}</button>
+      <button class="btn ghost" id="bkBack">本棚へ戻る</button>
     </div>`;
+  /* この本のめやす：たたまずに、操作のすぐ下に */
+  const rates = bk && bk.length >= 12 ? `<div class="sec"><h3>この本のめやす</h3>${ratesHTML(bk)}</div>` : '';
   const myrec = fold('fRec', 'わたしの記録', recSub, `<div class="myrec">
       ${paperHTML(ep.id)}
       <div class="lk"><span>この本、好き？</span>${likeHTML(ep.id)}</div>
@@ -876,12 +879,11 @@ function openBook(ep, justDone) {
     fold('fWhy', '名作のわけ', '四つの話', ep.why.map((w, i) => `<p><b>その${NUM[i]}　${esc(w.h)}</b><br>${fmt(A(w.short))}</p>`).join('')),
     fold('fSum', `3分でわかる『${esc(ep.title)}』`, '結末まで書いてあります', ep.summary.map(p => `<p>${fmt(p)}</p>`).join('')),
     fold('fRead', '本物を読んでみるなら', '', `<p>${fmt(A(ep.read))}</p>`),
-  ] : []).concat(bk && bk.length >= 12 ? [fold('fRate', 'この本のめやす', 'おすすめ度・読みやすさ・長さ…', ratesHTML(bk))] : [])
-    .concat(own ? [fold('fCov', '表紙', '絵か、自分の本の写真か', `<div id="covsel" class="covsel">${covSelHTML(ep)}</div>`)] : []).join('');
-  const bottom = justDone
-    ? `<div class="donebar"><button class="btn primary" id="bkBack">本棚へ戻る</button></div>`
-    : `<button class="btn ghost" id="bkBack">本棚へ戻る</button>`;
-  el.innerHTML = top + acts + (justDone ? mine + myrec : myrec + mine) + more + bottom;
+  ] : []).concat(own ? [fold('fCov', '表紙', '絵か、自分の本の写真か', `<div id="covsel" class="covsel">${covSelHTML(ep)}</div>`)] : []).join('');
+  const bottom = justDone ? `<div class="donebar"><button class="btn primary" id="bkBack">本棚へ戻る</button></div>` : '';
+  // 並び：表紙と題 → 操作（扉を開く・持っている・本棚へ戻る）→ めやす → 栞 → たたんだ欄 → わたしの記録（最後）
+  // 読了したばかりのときは、栞を先に（操作は出さず、下に「本棚へ戻る」）
+  el.innerHTML = top + acts + (justDone ? mine + rates : rates + mine) + more + myrec + bottom;
   show('book');
   if ($('covsel')) wireCovSel(ep);
   wirePaper(el, ep.id, () => { $('bkCover').innerHTML = coverHTML(ep, 'div'); });

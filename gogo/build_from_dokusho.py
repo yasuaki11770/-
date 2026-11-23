@@ -121,7 +121,7 @@ e = sub(e, "<div class=\"lk\"><span>この本、好き？</span>${likeHTML(ep.id
 e = sub(e, "📝　感想文の下書きを作る", "📝　感想を一つの文章にまとめる")
 e = sub(e, "<p class=\"small\">改めたいこと</p>", "<p class=\"small\">持って帰りたいもの</p>")
 e = sub(e, "fold('fRead', '本物を読んでみるなら', ''", "fold('fRead', '本物にふれるなら', ''")
-e = sub(e, "fold('fRate', 'この本のめやす', 'おすすめ度・読みやすさ・長さ…'", "fold('fRate', 'この作品のめやす', 'おすすめ度・入りやすさ・長さ…'")
+e = sub(e, "<div class=\"sec\"><h3>この本のめやす</h3>${ratesHTML(bk)}</div>", "<div class=\"sec\"><h3>この作品のめやす</h3>${ratesHTML(bk)}</div>")
 e = sub(e, "fold('fCov', '表紙', '絵か、自分の本の写真か'", "fold('fCov', '表紙', '絵か、持っている本・ディスクの写真か'")
 e = sub(e, "r.paper ? `本で読んだ ${ymd(r.paper)}` : ''", "r.paper ? `読んだ・観た ${ymd(r.paper)}` : ''")
 e = sub(e, "both: ['#c62a1f', 'アプリ・本', 'アプリと本の両方で読了'], paper: ['#23804a', '本', '本で読了']", "both: ['#c62a1f', 'アプリ・実物', 'アプリと実物の両方で読了'], paper: ['#23804a', '実物', '実物で読んだ・観た']")
