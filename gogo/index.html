@@ -269,6 +269,9 @@ body[data-world=book] .bar{border-bottom-color:#5b3a1e22}
 
 /* ---------- book page ---------- */
 #book{background:var(--paper);color:#3b2a18;gap:14px;font-family:var(--gothic)}
+/* 読了したばかりの本のページ：「本棚へ戻る」を、画面の下に大きく出しておく */
+#book .donebar{position:sticky;bottom:0;z-index:5;margin:6px -16px calc(-20px - env(safe-area-inset-bottom));padding:18px 16px calc(14px + env(safe-area-inset-bottom));background:linear-gradient(rgba(244,234,212,0),var(--paper) 38%)}
+#book .donebar .btn{font-size:18px;padding:17px 16px;letter-spacing:.12em;box-shadow:0 5px 0 #8d2d18,0 8px 18px #0003}
 .bk-top{display:flex;gap:14px;align-items:stretch}
 #bkCover{width:118px;flex:none}
 .bk-top .cover{cursor:default}
@@ -455,23 +458,23 @@ body[data-world=book] .bar{border-bottom-color:#5b3a1e22}
 
 <script>window.EPS=[]; var TEACHER='マスター';</script>
 <audio id="bgm" loop preload="none"></audio>
-<script src="books.js?v=2611221823"></script>
-<script src="ep_diewithzero.js?v=2611221823"></script>
-<script src="ep_greenbook.js?v=2611221823"></script>
-<script src="ep_ibunka.js?v=2611221823"></script>
-<script src="ep_jinseifruits.js?v=2611221823"></script>
-<script src="ep_kibou.js?v=2611221823"></script>
-<script src="ep_kirawareru.js?v=2611221823"></script>
-<script src="ep_kouhan.js?v=2611221823"></script>
-<script src="ep_nomadland.js?v=2611221823"></script>
-<script src="ep_perfectdays.js?v=2611221823"></script>
-<script src="ep_seneca.js?v=2611221823"></script>
-<script src="ep_stoner.js?v=2611221823"></script>
-<script src="ep_tooitaiko.js?v=2611221823"></script>
-<script src="ep_tsukito6.js?v=2611221823"></script>
-<script src="ep_uchuukyoudai.js?v=2611221823"></script>
-<script src="ep_yorikakarazu.js?v=2611221823"></script>
-<script src="art.js?v=2611221823"></script>
-<script src="engine.js?v=2611221823"></script>
+<script src="books.js?v=2611230103"></script>
+<script src="ep_diewithzero.js?v=2611230103"></script>
+<script src="ep_greenbook.js?v=2611230103"></script>
+<script src="ep_ibunka.js?v=2611230103"></script>
+<script src="ep_jinseifruits.js?v=2611230103"></script>
+<script src="ep_kibou.js?v=2611230103"></script>
+<script src="ep_kirawareru.js?v=2611230103"></script>
+<script src="ep_kouhan.js?v=2611230103"></script>
+<script src="ep_nomadland.js?v=2611230103"></script>
+<script src="ep_perfectdays.js?v=2611230103"></script>
+<script src="ep_seneca.js?v=2611230103"></script>
+<script src="ep_stoner.js?v=2611230103"></script>
+<script src="ep_tooitaiko.js?v=2611230103"></script>
+<script src="ep_tsukito6.js?v=2611230103"></script>
+<script src="ep_uchuukyoudai.js?v=2611230103"></script>
+<script src="ep_yorikakarazu.js?v=2611230103"></script>
+<script src="art.js?v=2611230103"></script>
+<script src="engine.js?v=2611230103"></script>
 </body>
 </html>

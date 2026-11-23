@@ -265,7 +265,12 @@ function finish() {
       <textarea id="ovMemo" rows="3" placeholder="感想を、自由に（あとから本のページでも書けます）">${esc(r.memo || '')}</textarea>
     </div>
     <button class="btn primary" id="lessonOk">この栞を、本に挟む</button>`;
-  $('lessonOv').classList.add('on');
+  const ov = $('lessonOv');
+  if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  ov.classList.add('on');
+  // 栞の画面は、必ず一番上から見せる（iPhone では、直前に押したボタンや入力欄の位置に引っぱられて、下にずれることがある）
+  const top = () => { ov.scrollTop = 0; window.scrollTo(0, 0); };
+  top(); requestAnimationFrame(top); setTimeout(top, 80); setTimeout(top, 350);
   wireLike($('lessonBox'), EP.id);
   $('ovMemo').oninput = () => { rec(EP.id).memo = $('ovMemo').value; save(); };
   $('lessonOk').onclick = () => { $('lessonOv').classList.remove('on'); openBook(EP, true); };
@@ -574,11 +579,11 @@ const BRK = 'のにとをはがへ・　 ）」';
 function split2(t) {
   const ch = [...t], n = ch.length, mid = Math.ceil(n / 2);
   let best = mid, score = 1e9;
-  const kata = c => /[ァ-ヴー]/.test(c), kanji = c => /[一-龥]/.test(c);
+  const kata = c => /[ァ-ヴー]/.test(c), kanji = c => /[一-龥]/.test(c), latin = c => /[A-Za-z]/.test(c);
   for (let i = 2; i <= n - 2; i++) {
     const x = ch[i - 1], y = ch[i];
     const sc = Math.max(i, n - i) + (BRK.includes(x) ? 0 : 1.6) + (/[ー・、）」ァィゥェォャュョッ]/.test(y) ? 3 : 0)
-      + (kata(x) && kata(y) ? 5 : 0) + (kanji(x) && kanji(y) ? 1.2 : 0) + (y === '（' ? -1 : 0);
+      + (kata(x) && kata(y) ? 5 : 0) + (kanji(x) && kanji(y) ? 1.2 : 0) + (latin(x) && latin(y) ? 8 : 0) + (y === '（' ? -1 : 0);   // 英語の単語の途中では分けない
     if (sc < score) { score = sc; best = i; }
   }
   return [ch.slice(0, best).join('').trim(), ch.slice(best).join('').trim()];
@@ -842,12 +847,13 @@ function openBook(ep, justDone) {
     <div class="sec"><h3>3分でわかる『${esc(ep.title)}』</h3>${ep.summary.map(p => `<p>${fmt(p)}</p>`).join('')}</div>
     <div class="sec"><h3>本物を読んでみるなら</h3><p>${fmt(A(ep.read))}</p></div>`
     : `<div class="sec"><h3>この本でできること</h3><p>主人公になって名場面を体験し、ミネル先生から「なぜ名作なのか」を聞く。最後に、先生の問いかけに答えて、自分の栞を選ぶ。</p><p class="small mute">所要時間　約${ep.minutes}分</p></div>`}
+    ${justDone ? `<div class="donebar"><button class="btn primary" id="bkBack">本棚へ戻る</button></div>` : `
     <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
       <button class="btn owntg${OWN[ep.title] ? ' on' : ''}" id="bkOwn">${ownLabel(OWN[ep.title])}</button>
       <button class="btn primary" id="bkStart">${d ? 'もう一度、本の中へ' : 'この本の扉を開く'}</button>
       ${d ? `<button class="btn" id="bkAsk" style="text-align:center">問いかけに、もう一度答える</button>` : ''}
       <button class="btn ghost" id="bkBack">本棚へ戻る</button>
-    </div>`;
+    </div>`}`;
   show('book');
   wireCovSel(ep);
   wirePaper(el, ep.id, () => { $('bkCover').innerHTML = coverHTML(ep, 'div'); });
@@ -860,10 +866,10 @@ function openBook(ep, justDone) {
     $('draftCopy').onclick = () => copyText($('draft').value);
     $('draft').scrollIntoView({block: 'center', behavior: 'smooth'});
   };
-  $('bkStart').onclick = () => startEp(ep);
+  if ($('bkStart')) $('bkStart').onclick = () => startEp(ep);
   if ($('bkAsk')) $('bkAsk').onclick = () => startEp(ep, 'resolve');
   $('bkBack').onclick = openShelf;
-  $('bkOwn').onclick = () => {
+  if ($('bkOwn')) $('bkOwn').onclick = () => {
     const on = toggleOwn(ep.title); $('bkOwn').classList.toggle('on', on); $('bkOwn').textContent = ownLabel(on);
     $('covsel').innerHTML = covSelHTML(ep); $('bkCover').innerHTML = coverHTML(ep, 'div'); wireCovSel(ep);
   };
