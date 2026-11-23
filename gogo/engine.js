@@ -362,10 +362,12 @@ const otherSong = k => SONG_KEYS[(SONG_KEYS.indexOf(k) + 1) % SONG_KEYS.length];
 const bgmKey = () => VIEW.song === 'alt' ? bgmAlt : VIEW.song;
 function bgmFadeTo(v, done) {
   clearInterval(bgmFade);
+  let n = 0;
   bgmFade = setInterval(() => {
-    const d = v - BGM.volume, s = Math.sign(d) * Math.min(Math.abs(d), .06);
-    try { BGM.volume = Math.max(0, Math.min(1, BGM.volume + s)); } catch (e) {}
-    if (Math.abs(v - BGM.volume) < .01) { clearInterval(bgmFade); if (done) done(); }
+    const before = BGM.volume, d = v - before, s = Math.sign(d) * Math.min(Math.abs(d), .06);
+    try { BGM.volume = Math.max(0, Math.min(1, before + s)); } catch (e) {}
+    /* iPhone などでは、ページから音量を変えられない（いつも 1 のまま）。そのときや、時間がかかりすぎたときは、待たずに先へ進む */
+    if (Math.abs(v - BGM.volume) < .01 || (s && BGM.volume === before) || ++n > 30) { clearInterval(bgmFade); if (done) done(); }
   }, 60);
 }
 /* 選んでいる曲を、オーディオに入れる（入れかえたときは true） */
@@ -395,10 +397,11 @@ function bgmTap() {
   ['pointerdown', 'keydown'].forEach(t => document.addEventListener(t, go, true));
 }
 function bgmStop() { if (BGM && !BGM.paused) bgmFadeTo(0, () => BGM.pause()); }
-/* 曲を変えたとき：鳴っていれば、そっと消してから次の曲へ */
+/* 曲を変えたとき：その場で、次の曲へ */
 function bgmSwitch() {
-  if (!VIEW.bgm || BGM.paused || BGM.dataset.k === bgmKey()) { bgmLoad(); return bgmPlay(); }
-  bgmFadeTo(0, () => { BGM.pause(); bgmPlay(); });
+  /* 押したその場で切り替える（スマホでは、押した瞬間でないと、次の曲を鳴らせないことがあるため） */
+  if (BGM.dataset.k !== bgmKey()) { clearInterval(bgmFade); BGM.pause(); }
+  bgmLoad(); bgmPlay();
 }
 function bgmUI() {
   const b = $('bgmBtn'); if (!b) return;
