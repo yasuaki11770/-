@@ -156,7 +156,7 @@ e = sub(e, "'<p class=\"small\" style=\"opacity:.6;text-align:center;padding:30p
 # 設定
 e = sub(e, "なし：原作の流れのまま読み進め、選ぶのは、読みおえたあとのミネル先生との対話だけ。", "なし：原作の流れのまま進み、選ぶのは、終わったあとのマスターとの対話だけ。")
 e = sub(e, "あり：本の中でも、主人公の行動を自分で選ぶ（原作と違うと、ページが波打つ）。", "あり：作品の中でも、主人公の行動を自分で選ぶ（原作と違うと、ページが波打つ）。")
-e = sub(e, "図書館に、オリジナルのオルゴール曲が静かに流れます。本の中でも流れ続け、", "書斎に、オリジナルのオルゴール曲が静かに流れます。作品の中でも流れ続け、")
+e = sub(e, "図書館に、オルゴールの曲が静かに流れます。本の中でも流れ続け、", "書斎に、オルゴールの曲が静かに流れます。作品の中でも流れ続け、")
 e = sub(e, "読了・栞・感想・好き度・本で読んだ日・持っている本・表紙の写真を、", "読了・栞・感想・好き度・読んだ／観た日・持っている作品・表紙の写真を、")
 e = sub(e, "{app: 'meisaku-no-nakae',", "{app: 'gogo-no-shosai',")
 e = sub(e, "name = `meisaku-kiroku-${d}.json`", "name = `gogo-kiroku-${d}.json`")
@@ -250,7 +250,7 @@ a = sub(a, re.search(r"const ART = \{.*?\n\};", a, re.S).group(0), """const ART 
 };""")
 wr('art.js', a)
 
-for f in ('orgel.mp3', 'orgel2.mp3'):
+for f in sorted(os.path.basename(x) for x in glob.glob(os.path.join(D, 'orgel*.mp3'))):   # オルゴールの曲（増やせば、ここも増える）
     shutil.copyfile(os.path.join(D, f), os.path.join(G, f))
 print('gogo: engine.js, index.html, art.js, orgel*.mp3 を作りました')
 

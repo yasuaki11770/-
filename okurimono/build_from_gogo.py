@@ -29,9 +29,11 @@ for a, b in [("'gogo_rec'", "'okuri_rec'"), ("'gogo_own'", "'okuri_own'"), ("'go
              ("{app: 'gogo-no-shosai',", "{app: 'okurimono',"), ("name = `gogo-kiroku-${d}.json`", "name = `okurimono-kiroku-${d}.json`"),
              ("data.app !== 'gogo-no-shosai'", "data.app !== 'okurimono'"), ("「午後の書斎」の記録ファイル", f"「{TITLE}」の記録ファイル"),
              ("artist: '午後の書斎', album: '書斎のオルゴール'", f"artist: '{TITLE}', album: '書斎のオルゴール'"),
-             ("src: 'orgel2.mp3?v=1'", "src: '../dokusho/orgel2.mp3?v=1'"), ("src: 'orgel.mp3?v=1'", "src: '../dokusho/orgel.mp3?v=1'"),
              ("/* 名作のなかへ では adult.js で大人向けに整えていた。午後の書斎は、はじめから大人向けに書いているので使わない */", "/* 大人向けに書いているので、adult.js は使わない */")]:
     e = sub(e, a, b)
+# オルゴールの曲は dokusho/ のものを使う（曲を増やしても、ここはそのまま）
+assert len(re.findall(r"src: 'orgel\d*\.mp3", e)) >= 6
+e = re.sub(r"src: 'orgel(\d*)\.mp3", r"src: '../dokusho/orgel\1.mp3", e)
 # 節目：10作ごと
 e = sub(e, "  for (let x = 5; x < T; x += 5) a.push(x);", "  for (let x = 10; x < T; x += 10) a.push(x);")
 e = sub(e, r"function msMessage\(n\) \{.*?\n\}", """function msMessage(n) {

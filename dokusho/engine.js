@@ -351,15 +351,21 @@ let QUERY = '';
 
 /* ---------- 図書館のオルゴール（オリジナル曲。tools/orgel.py・orgel2.py で楽譜から合成） ----------
    初期値は「なし」。オンにすると、本棚でも本の中でも流れ続ける。ほかのアプリに切りかえると止まる。
-   曲は「遠い日の図書館」「栞のワルツ」「交互に」から選べる。 */
+   曲は、オリジナルの2曲と、保護期間の過ぎた名曲をオルゴールに編曲した4曲（tools/orgel_pd.py）、それに「順番に」から選べる。
+   この SONGS を増やせば、ほかの三つのサイトにも、そのまま増える（mp3 は dokusho/ に置く）。 */
 const SONGS = {
   tooi:   {src: 'orgel2.mp3?v=1', title: '遠い日の図書館', note: '映画音楽のような、なつかしくて切ない曲'},
   shiori: {src: 'orgel.mp3?v=1',  title: '栞のワルツ',     note: '3拍子の、やさしいワルツ'},
+  canon:  {src: 'orgel3.mp3?v=1', title: 'カノン',         note: 'パッヘルベルの名曲を、オルゴールで'},
+  elise:  {src: 'orgel4.mp3?v=1', title: 'エリーゼのために', note: 'ベートーヴェンの、小さなピアノ曲'},
+  green:  {src: 'orgel5.mp3?v=1', title: 'グリーンスリーブス', note: 'イギリスの、古い民謡'},
+  joy:    {src: 'orgel6.mp3?v=1', title: '歓喜の歌',       note: 'ベートーヴェンの「第九」から'},
 };
 const BGM = $('bgm');
 let bgmFade = 0, bgmWait = false, bgmAlt = 'tooi';
 if (!VIEW.song || (VIEW.song !== 'alt' && !SONGS[VIEW.song])) VIEW.song = 'tooi';
-const otherSong = k => k === 'tooi' ? 'shiori' : 'tooi';
+const SONG_KEYS = Object.keys(SONGS);
+const otherSong = k => SONG_KEYS[(SONG_KEYS.indexOf(k) + 1) % SONG_KEYS.length];   // 次の曲
 const bgmKey = () => VIEW.song === 'alt' ? bgmAlt : VIEW.song;
 function bgmFadeTo(v, done) {
   clearInterval(bgmFade);
@@ -413,13 +419,13 @@ function setBgm(on) {
   if ($('settings').innerHTML) renderSettings();
 }
 function setSong(k) {
-  if (k === 'alt') bgmAlt = VIEW.song === 'alt' ? bgmAlt : (VIEW.song === 'shiori' ? 'shiori' : 'tooi');
+  if (k === 'alt') bgmAlt = VIEW.song === 'alt' ? bgmAlt : (SONGS[VIEW.song] ? VIEW.song : 'tooi');
   VIEW.song = k; saveView(); bgmSwitch(); bgmUI();
   if ($('settings').innerHTML) renderSettings();
 }
 if (BGM) {
   $('bgmBtn').onclick = e => { e.stopPropagation(); setBgm(!VIEW.bgm); toast(VIEW.bgm ? `♪ ${SONGS[bgmKey()].title}（音量は、端末の音量ボタンで）` : 'オルゴールを止めました'); };
-  /* 本棚の「曲を変える」：2曲を入れかえる（交互のときは、次の曲へ） */
+  /* 本棚の「曲を変える」：次の曲へ（順番にのときも、次の曲へ） */
   $('bgmSw').onclick = e => {
     e.stopPropagation();
     if (VIEW.song === 'alt') { bgmAlt = otherSong(bgmAlt); bgmSwitch(); bgmUI(); } else setSong(otherSong(VIEW.song));
@@ -951,8 +957,8 @@ function renderSettings() {
     <div class="setrow"><span>本文の文字の大きさ</span><div class="seg dark">${Object.entries(FSZ).map(([k, [t]]) => `<button data-fz="${k}" class="${(VIEW.fsz || 'l') === k ? 'on' : ''}">${t}</button>`).join('')}</div></div>
     <p class="small fzs" style="font-family:var(--udm);font-size:calc(17.5px * var(--rs));line-height:2;opacity:.9">あなたは、本の中に入った。――この大きさで、物語が表示されます。</p>
     <div class="setrow"><span>オルゴールの音楽</span><div class="seg dark"><button data-bgm="0" class="${VIEW.bgm ? '' : 'on'}">なし</button><button data-bgm="1" class="${VIEW.bgm ? 'on' : ''}">あり</button></div></div>
-    <div class="songs">${[...Object.entries(SONGS), ['alt', {title: '交互に', note: '2曲を、かわるがわる'}]].map(([k, x]) => `<button data-song="${k}" class="${VIEW.song === k ? 'on' : ''}"><b>♪ ${x.title}</b><small>${x.note}</small></button>`).join('')}</div>
-    <p class="small">図書館に、オリジナルのオルゴール曲が静かに流れます。本の中でも流れ続け、ほかのアプリに切りかえると止まります。音量は端末の音量ボタンで。</p>
+    <div class="songs">${[...Object.entries(SONGS), ['alt', {title: '順番に', note: 'ぜんぶの曲を、順番に'}]].map(([k, x]) => `<button data-song="${k}" class="${VIEW.song === k ? 'on' : ''}"><b>♪ ${x.title}</b><small>${x.note}</small></button>`).join('')}</div>
+    <p class="small">図書館に、オルゴールの曲が静かに流れます。本の中でも流れ続け、ほかのアプリに切りかえると止まります。音量は端末の音量ボタンで。</p>
     <div class="setrow"><button class="btn" id="bkExport">記録を書き出す</button><button class="btn" id="bkImport">記録を読みこむ</button></div>
     <p class="small">読了・栞・感想・好き度・本で読んだ日・持っている本・表紙の写真を、一つのファイルにまとめて書き出します。機種変更のときや、別の端末で続けるときは、そのファイルを読みこんでください。<br>最後に書き出した日：${last ? ymd(last.slice(0, 10)) : 'まだ書き出していません'}</p>`;
   $('settings').querySelectorAll('[data-ch]').forEach(b => b.onclick = () => { VIEW.choices = b.dataset.ch === '1'; saveView(); renderSettings(); toast(VIEW.choices ? '本の中でも、選びながら読みます' : '原作の流れのまま、読み進めます'); });
