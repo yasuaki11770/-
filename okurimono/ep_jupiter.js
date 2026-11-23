@@ -3,7 +3,7 @@
 (() => {
 EPS.push({
   id: 'jupiter', title: "Jupiter's Travels", author: 'テッド・サイモン', year: '1979年（邦訳なし）', minutes: 15,
-  lists: '31',
+  lists: '41',
   blurb: '四十二歳の新聞記者が、一台のトライアンフで、四年かけて地球を一周した。世界中のオートバイ旅行者が「聖書」と呼ぶ、旅の記録。',
   cover: ['linear-gradient(165deg,#3a4a6a,#6a5a7a 50%,#d0905a)', '#fff4e0'],
   chars: {'編集者':'#5a6a8a','村の男':'#8a6a3a','係官':'#6a6a6a','宿の主人':'#7a5a4a'},

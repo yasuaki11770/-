@@ -41,10 +41,13 @@ function toast(msg) {
 }
 
 /* ---------- 名作のわけ・問いかけのシーンを、エピソードのデータから組み立てる ---------- */
+/* 名作のわけの前置きは、作品の古さに合わせて言い方を変える（百年たっていない作品に「何百年」とは言わない） */
+const ageOf = ep => { const b = (window.BOOKS || []).find(x => x[0] === ep.title); return b && typeof b[4] === 'number' ? new Date().getFullYear() - b[4] : 0; };
+const WHY_SPAN = a => a >= 1000 ? '千年以上も、人の心に残ってきた' : a >= 200 ? '何百年も、人の心に残ってきた' : a >= 100 ? '百年以上も、人の心に残ってきた' : a >= 30 ? '何十年も、人の心に残ってきた' : 'これほど多くの人の心に届いた';
 function buildTalk(ep) {
   const sc = ep.scenes;
   sc.why = { world:'lib', place:`名作のわけ　『${ep.title}』`, lines: [
-    [TEACHER, ep.whyIntro || 'おかえりなさい。……幕を下ろす前に、少しだけ話をさせてください。この作品が、なぜこれほど長く、人の心に残ってきたのか。'],
+    [TEACHER, ep.whyIntro || `おかえりなさい。……幕を下ろす前に、少しだけ話をさせてください。この作品が、なぜ${WHY_SPAN(ageOf(ep))}のか。`],
     ...ep.why.flatMap((w, i) => [['!', `名作のわけ　その${NUM[i]}\n${w.h}`], ...w.lines.map(l => Array.isArray(l) ? l : [TEACHER, l])]),
   ], next:'resolve', nextLabel:'マスターの問いかけ ▶' };
   // 問いかけは、栞の一つだけ。データの導入文「もう一つだけ。…」は、一つめの問いかけがあったころのもの
@@ -293,7 +296,8 @@ function msMessage(n) {
   if (n === 10) return '十作目の栞ですね。……十の人生を通ってきた人の顔に、少しなってきました。<b>ここからの栞は、若葉の色になります。</b>';
   if (n === 20) return '二十作目。……作品と作品が、頭の中でつながりはじめるころです。ある映画の場面が、別の本の一行を思い出させる。<b>ここからの栞は、藍の色になります。</b>';
   if (n === 30) return '三十作目。……ここまで来ると、栞の言葉が、そのまま、あなたの言葉になってきます。<b>ここからの栞は、金の色になります。</b>';
-  if (n === 40) return '四十作目。……あと少しです。どの棚にも、あなたの栞が光っています。<b>ここからの栞は、星空の色になります。</b>';
+  if (n === 40) return '四十作目。……どの棚にも、あなたの栞が光っています。<b>ここからの栞は、星空の色になります。</b>';
+  if (n === 50) return '五十作目。……ここまで来た人は、そう多くありません。最後の棚まで、あと少しです。';
   return `${n}作目の栞です。……よく、ここまで来ましたね。`;
 }
 function nextMilestone() { const d = doneCount(); return milestones().find(x => x > d); }
@@ -670,10 +674,10 @@ function openShelf() {
     msg = 'おかえりなさい。挟んだ栞は、<b>栞帳</b>で、いつでも読み返せます。' + (nm ? `<br>次の節目（${nm}作）まで、あと<b>${nm - done}作</b>です。` : '');
     const last = localStorage.getItem('okuri_bk');
     if (done >= 5 && (!last || Date.now() - new Date(last).getTime() > 30 * 864e5)) msg += '<br>そうそう、<b>記録のバックアップ</b>も、ときどき取っておいてください（一番下の「記録と設定」から）。';
-  } else msg = 'いらっしゃいませ。夜更けの書斎へ、ようこそ。マスターです。<br>ここには、<b>これからの人生に贈りたい43の作品</b>を、四つの棚に置いています。時間とお金のこと、心の持ち方、自分の店をひらくこと、そして、オートバイと旅。<b>読まなくても、観なくてもいい。中に入って、主人公になってみてください。</b>迷ったら、下の「次の一作」からどうぞ。';
+  } else msg = 'いらっしゃいませ。夜更けの書斎へ、ようこそ。マスターです。<br>ここには、<b>これからの人生に贈りたい57の作品</b>を、四つの棚に置いています。時間とお金のこと、心の持ち方、自分の店をひらくこと、そして、オートバイと旅。<b>読まなくても、観なくてもいい。中に入って、主人公になってみてください。</b>迷ったら、下の「次の一作」からどうぞ。';
   $('shelfMsg').innerHTML = OWL + `<p>${msg}</p>`;
   $('picksBox').innerHTML = picksHTML(); wirePicks();
-  $('rackNote').innerHTML = 'これからの人生に贈りたい43作を、四つの棚に並べました。古い時代の作品ほど、使いこまれた姿で並んでいます。映画は、ケースの姿で。<br>背表紙をタップすると、作品の紹介、「持っている」「読んだ・観た」の記録、表紙の写真の設定ができます。';
+  $('rackNote').innerHTML = 'これからの人生に贈りたい57作を、四つの棚に並べました。古い時代の作品ほど、使いこまれた姿で並んでいます。映画は、ケースの姿で。<br>背表紙をタップすると、作品の紹介、「持っている」「読んだ・観た」の記録、表紙の写真の設定ができます。';
   renderSettings();
   renderRacks();
 }
@@ -709,6 +713,7 @@ function renderRacks() {
     ['all', 'すべて', () => true],
     ['book', '本', b => /本|小説|古典/.test(b[2])],
     ['film', '映画', b => /映画/.test(b[2])],
+    ['other', '漫画', b => /漫画/.test(b[2])],
     ['done', 'アプリで読了', b => appDone(b[0])],
     ['own', '持っている', b => OWN[b[0]]],
     ['notown', '持っていない', b => !OWN[b[0]]],
@@ -994,7 +999,7 @@ function importData() {
 /* ---------- wiring ---------- */
 $('titleOwl').innerHTML = OWL.replace('<svg', '<svg class="owl"');
 $('enter').onclick = openShelf;
-$('titleNote').textContent = `収録：${EPS.length}作（本・映画／1作 15〜25分）`;
+$('titleNote').textContent = `収録：${EPS.length}作（本・映画・漫画／1作 15〜25分）`;
 $('sheetOv').onclick = e => { if (e.target.id === 'sheetOv') closeSheet(); };
 $('q').oninput = () => { QUERY = $('q').value.trim(); renderRacks(); };
 phLoadAll().then(() => { if (Object.keys(PH).length && $('shelf').classList.contains('on')) renderRacks(); });

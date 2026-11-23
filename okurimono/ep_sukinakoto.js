@@ -3,7 +3,7 @@
 (() => {
 EPS.push({
   id: 'sukinakoto', title: '好きなことだけで生きていく。', author: '堀江貴文', year: '2019年', minutes: 12,
-  lists: '20',
+  lists: '27',
   blurb: '我慢は、美徳ではない。好きなことに没頭する人が、最後は一番強い。いつか、ではなく、今すぐ、小さく始めよう。背中を強く押す、薄い一冊。',
   cover: ['linear-gradient(165deg,#f8f0e0,#f0c050 50%,#e05a3a)', '#2a0e06'],
   chars: {'同僚':'#5a7a9a','友人':'#8a6a3a','若い客':'#3a9a7a'},

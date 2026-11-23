@@ -3,7 +3,7 @@
 (() => {
 EPS.push({
   id: 'oneweek', title: 'ONE WEEK', author: 'マイケル・マッゴーワン 監督', year: '2008年', minutes: 15,
-  lists: '36',
+  lists: '46',
   blurb: '病を告げられた若い教師が、治療を始める前に、古いノートンを買って、トロントから西へ走りだす。カナダを横断する、一週間の旅。',
   cover: ['linear-gradient(165deg,#bcd4e0,#6a9a8a 50%,#2a4a3a)', '#f4f0e0'],
   chars: {'医者':'#6a6a6a','サマンサ':'#b0607a','老人':'#7a5a3a','旅の女性':'#3a8ab0','男':'#5a6a4a'},

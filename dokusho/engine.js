@@ -41,10 +41,13 @@ function toast(msg) {
 }
 
 /* ---------- 名作のわけ・問いかけのシーンを、エピソードのデータから組み立てる ---------- */
+/* 名作のわけの前置きは、作品の古さに合わせて言い方を変える（百年たっていない作品に「何百年」とは言わない） */
+const ageOf = ep => { const b = (window.BOOKS || []).find(x => x[0] === ep.title); return b && typeof b[4] === 'number' ? new Date().getFullYear() - b[4] : 0; };
+const WHY_SPAN = a => a >= 1000 ? '何百年、何千年と読み継がれてきた' : a >= 200 ? '何百年と読み継がれてきた' : a >= 100 ? '百年以上も読み継がれてきた' : a >= 30 ? '何十年と読み継がれてきた' : 'これほど多くの人に読まれている';
 function buildTalk(ep) {
   const sc = ep.scenes;
   sc.why = { world:'lib', place:`名作のわけ　『${ep.title}』`, lines: [
-    [TEACHER, ep.whyIntro || 'おかえり。……さて、本を閉じる前に、少しだけ話をさせておくれ。この本が、なぜ何十年、何百年と読み継がれてきたのか。'],
+    [TEACHER, ep.whyIntro || `おかえり。……さて、本を閉じる前に、少しだけ話をさせておくれ。この本が、なぜ${WHY_SPAN(ageOf(ep))}のか。`],
     ...ep.why.flatMap((w, i) => [['!', `名作のわけ　その${NUM[i]}\n${w.h}`], ...w.lines.map(l => Array.isArray(l) ? l : [TEACHER, l])]),
   ], next:'resolve', nextLabel:'先生の問いかけ ▶' };
   // 問いかけは、栞の一つだけ。データの導入文「もう一つだけ。…」は、一つめの問いかけがあったころのもの

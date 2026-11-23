@@ -3,7 +3,7 @@
 (() => {
 EPS.push({
   id: 'shiawaseyuuki', title: '幸せになる勇気', author: '岸見一郎・古賀史健', year: '2016年', minutes: 15,
-  lists: '10',
+  lists: '12',
   blurb: '三年ぶりに哲人を訪ねた青年は、教師になっていた。アドラーの教えは、教室では通用しない――。『嫌われる勇気』の続編。愛と自立をめぐる、最後の一夜。',
   cover: ['linear-gradient(165deg,#9ad0b0,#4a9a7a 60%,#1e4a3a)', '#fffbe8'],
   chars: {'哲人':'#6a5a3a','青年':'#3a6aa0','生徒':'#c07a3a'},

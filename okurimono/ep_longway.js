@@ -3,7 +3,7 @@
 (() => {
 EPS.push({
   id: 'longway', title: 'Long Way Round', author: 'ユアン・マクレガー、チャーリー・ブアマン', year: '2004年', minutes: 16,
-  lists: '32',
+  lists: '42',
   blurb: '俳優の親友二人が、オートバイで、ロンドンから東へ、ニューヨークまで地球を一周する。ユーラシアの大草原と、シベリアの「骨の道」を越えて。',
   cover: ['linear-gradient(165deg,#c8d8e0,#7a9aaa 50%,#3a4a3a)', '#f4f0e4'],
   chars: {'チャーリー':'#c0703a','遊牧民の母':'#8a5a6a','子ども':'#d08a3a','運転手':'#5a6a4a','係官':'#6a6a6a'},

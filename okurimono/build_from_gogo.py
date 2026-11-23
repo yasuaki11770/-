@@ -14,7 +14,7 @@ def sub(s, a, b, n=None, regex=False):
     return re.sub(a, lambda m: b, s, flags=re.S) if regex else s.replace(a, b)
 
 # 午後の書斎と同じ作品（gogo の ep を読みこむ）
-REUSE = ['diewithzero', 'jinseifruits', 'kirawareru', 'perfectdays']
+REUSE = ['diewithzero', 'jinseifruits', 'kirawareru', 'perfectdays', 'kouhan', 'seneca', 'tooitaiko', 'greenbook', 'uchuukyoudai', 'nomadland']
 TITLE = '川村さんへの贈り物'
 N = len(re.findall(r'^(?:window\.BOOKS=\[)?\["', open(os.path.join(O, 'books.js'), encoding='utf-8').read(), re.M))   # 作品の数（books.js の行）
 
@@ -38,14 +38,15 @@ e = sub(e, r"function msMessage\(n\) \{.*?\n\}", """function msMessage(n) {
   if (n === 10) return '十作目の栞ですね。……十の人生を通ってきた人の顔に、少しなってきました。<b>ここからの栞は、若葉の色になります。</b>';
   if (n === 20) return '二十作目。……作品と作品が、頭の中でつながりはじめるころです。ある映画の場面が、別の本の一行を思い出させる。<b>ここからの栞は、藍の色になります。</b>';
   if (n === 30) return '三十作目。……ここまで来ると、栞の言葉が、そのまま、あなたの言葉になってきます。<b>ここからの栞は、金の色になります。</b>';
-  if (n === 40) return '四十作目。……あと少しです。どの棚にも、あなたの栞が光っています。<b>ここからの栞は、星空の色になります。</b>';
+  if (n === 40) return '四十作目。……どの棚にも、あなたの栞が光っています。<b>ここからの栞は、星空の色になります。</b>';
+  if (n === 50) return '五十作目。……ここまで来た人は、そう多くありません。最後の棚まで、あと少しです。';
   return `${n}作目の栞です。……よく、ここまで来ましたね。`;
 }""", regex=True)
-# 本棚：四つの棚に分けて並べる（リスト順のとき）。漫画・詩はないので、絞りこみから外す
+# 本棚：四つの棚に分けて並べる（リスト順のとき）。詩集はないので、絞りこみは「漫画」だけにする
 e = sub(e, "  const key = VIEW.sort === 'aiu' ? gyoOf : null;",
         "  const themeOf = b => { let t = null; (window.THEMES || []).forEach(x => { if (+b[3] >= x[0]) t = x[1]; }); return t; };\n"
         "  const key = VIEW.sort === 'aiu' ? gyoOf : VIEW.sort === 'no' ? themeOf : null;")
-e = sub(e, "    ['other', '漫画・詩', b => /漫画|詩集/.test(b[2])],\n", "")
+e = sub(e, "    ['other', '漫画・詩', b => /漫画|詩集/.test(b[2])],", "    ['other', '漫画', b => /漫画/.test(b[2])],")
 e = sub(e, "if ((VIEW.v || 0) < 2) { VIEW.sort = 'aiu'; VIEW.v = 2; }   // 並びの初期値を「あいうえお順」に切りかえた",
         "if ((VIEW.v || 0) < 2) { VIEW.sort = 'no'; VIEW.v = 2; }   // はじめは、四つの棚の順で")
 e = sub(e, "['no', 'リスト順', null],", "['no', '棚の順', null],")
@@ -55,7 +56,7 @@ e = sub(e, r"\} else msg = 'いらっしゃいませ。夜更けの書斎へ、�
 e = sub(e, r"\$\('rackNote'\)\.innerHTML = '人生の午後に.*?';\n",
         f"$('rackNote').innerHTML = 'これからの人生に贈りたい{N}作を、四つの棚に並べました。古い時代の作品ほど、使いこまれた姿で並んでいます。映画は、ケースの姿で。<br>背表紙をタップすると、作品の紹介、「持っている」「読んだ・観た」の記録、表紙の写真の設定ができます。';\n", regex=True)
 e = sub(e, "$('titleNote').textContent = `収録：${EPS.length}作（本・映画・漫画・詩集／1作 15〜25分）`;",
-        "$('titleNote').textContent = `収録：${EPS.length}作（本・映画／1作 15〜25分）`;")
+        "$('titleNote').textContent = `収録：${EPS.length}作（本・映画・漫画／1作 15〜25分）`;")
 chk = e.split('\n', 2)[2]
 assert '午後' not in chk and 'gogo' not in chk, [l for l in chk.split('\n') if '午後' in l or 'gogo' in l][:3]
 wr('engine.js', e)
@@ -75,7 +76,7 @@ h = sub(h, '<div><h2>午後の書斎</h2>', f'<div><h2>{TITLE}</h2>')
 h = sub(h, '持っている <b id="ownc">0</b> / 15</div>', f'持っている <b id="ownc">0</b> / {N}</div>')
 h = sub(h, '<h3 class="shelfh">人生の午後の15作</h3>', f'<h3 class="shelfh">贈りたい{N}作</h3>')
 h = sub(h, '<span><span class="bd bd-j">本</span> 本・小説・古典</span><span><span class="bd bd-h">映</span> 映画</span><span><span class="bd bd-both">漫</span> 漫画・詩集</span>',
-        '<span><span class="bd bd-j">本</span> 本・小説</span><span><span class="bd bd-h">映</span> 映画</span>')
+        '<span><span class="bd bd-j">本</span> 本・小説・古典</span><span><span class="bd bd-h">映</span> 映画</span><span><span class="bd bd-both">漫</span> 漫画</span>')
 h = sub(h, "/* 午後の書斎：映画は、ディスクのケースの姿で */", "/* 映画は、ディスクのケースの姿で */")
 h = sub(h, ".shead h2{font-family:var(--mincho);font-size:26px;letter-spacing:.06em}",
         ".shead h2{font-family:var(--mincho);font-size:min(22px,5.6vw);letter-spacing:.02em;white-space:nowrap}\n.count{white-space:nowrap}")   # 題が長いので1行に
@@ -93,7 +94,8 @@ wr('index.html', h)
 a = rd('art.js')
 a = sub(a, "/* 午後の書斎 ― 表紙の絵（名作のなかへ の絵の仕組みに、モチーフを足したもの）", f"/* {TITLE} ― 表紙の絵（名作のなかへ・午後の書斎 の絵の仕組みに、モチーフを足したもの）")
 a = sub(a, "  /* 午後の書斎で足したモチーフ */", "  /* 午後の書斎・贈り物の書斎で足したモチーフ */")
-a = sub(a, "  shadow: () =>", """  moto: i => `<circle cx="20" cy="70" r="15" fill="none" stroke="${C.K}" stroke-width="6"/><circle cx="80" cy="70" r="15" fill="none" stroke="${C.K}" stroke-width="6"/><circle cx="20" cy="70" r="3" fill="${C.W}"/><circle cx="80" cy="70" r="3" fill="${C.W}"/><path d="M20 70L30 50H64L80 70M68 32L80 70" stroke="${i}" stroke-width="4" fill="none" stroke-linejoin="round"/><path d="M40 50Q42 38 56 38Q64 40 64 50Z" fill="${i}"/><path d="M22 46H42L40 51H24Z" fill="${C.K}"/><rect x="40" y="52" width="18" height="13" rx="3" fill="#9a9a9a"/><path d="M44 65Q30 72 12 66" stroke="#c0c0c0" stroke-width="3.5" fill="none"/><path d="M62 32H74" stroke="${C.K}" stroke-width="3.5" stroke-linecap="round"/><circle cx="72" cy="42" r="3.5" fill="${C.A}"/>`,
+a = sub(a, "  shadow: () =>", """  pagoda: i => `<path d="M50 4V20" stroke="${i}" stroke-width="2.5"/><circle cx="50" cy="8" r="2.5" fill="${C.A}"/><path d="M26 26H74L84 33H16Z" fill="${i}"/><rect x="38" y="33" width="24" height="13" fill="${i}" opacity=".75"/><path d="M22 50H78L88 57H12Z" fill="${i}"/><rect x="35" y="57" width="30" height="14" fill="${i}" opacity=".75"/><path d="M18 75H82L92 82H8Z" fill="${i}"/><rect x="32" y="82" width="36" height="16" fill="${i}" opacity=".75"/><rect x="46" y="86" width="8" height="12" fill="${C.A}" opacity=".8"/>`,
+  moto: i => `<circle cx="20" cy="70" r="15" fill="none" stroke="${C.K}" stroke-width="6"/><circle cx="80" cy="70" r="15" fill="none" stroke="${C.K}" stroke-width="6"/><circle cx="20" cy="70" r="3" fill="${C.W}"/><circle cx="80" cy="70" r="3" fill="${C.W}"/><path d="M20 70L30 50H64L80 70M68 32L80 70" stroke="${i}" stroke-width="4" fill="none" stroke-linejoin="round"/><path d="M40 50Q42 38 56 38Q64 40 64 50Z" fill="${i}"/><path d="M22 46H42L40 51H24Z" fill="${C.K}"/><rect x="40" y="52" width="18" height="13" rx="3" fill="#9a9a9a"/><path d="M44 65Q30 72 12 66" stroke="#c0c0c0" stroke-width="3.5" fill="none"/><path d="M62 32H74" stroke="${C.K}" stroke-width="3.5" stroke-linecap="round"/><circle cx="72" cy="42" r="3.5" fill="${C.A}"/>`,
   truck: i => `<path d="M4 76V34Q4 28 10 28H64V76Z" fill="${C.W}"/><path d="M64 42H80Q86 44 90 54L96 60V76H64Z" fill="${i}"/><path d="M68 46H80Q84 48 86 56H68Z" fill="${C.B}" opacity=".7"/><rect x="12" y="40" width="40" height="18" rx="2" fill="${C.K}" opacity=".75"/><path d="M8 34H58L54 40H12Z" fill="${C.R}"/><path d="M12 58H52V62H12Z" fill="${i}"/><circle cx="22" cy="78" r="9" fill="${C.K}"/><circle cx="78" cy="78" r="9" fill="${C.K}"/><circle cx="22" cy="78" r="3.5" fill="${C.W}"/><circle cx="78" cy="78" r="3.5" fill="${C.W}"/>`,
   bread: () => `<path d="M10 66Q8 40 34 36Q50 30 66 36Q92 40 90 66Q90 76 80 76H20Q10 76 10 66Z" fill="#d89a52"/><path d="M10 62Q10 46 30 42Q50 36 70 42Q90 46 90 62" fill="none" stroke="#b9772f" stroke-width="2"/><path d="M30 46L38 58M46 42L54 56M62 44L70 58" stroke="#f3d29a" stroke-width="4" stroke-linecap="round"/>`,
   bento: i => `<rect x="10" y="30" width="80" height="50" rx="6" fill="${i}"/><rect x="15" y="35" width="70" height="40" rx="3" fill="${C.W}"/><path d="M50 35V75M50 55H85" stroke="${i}" stroke-width="3"/><circle cx="26" cy="50" r="5" fill="${C.R}"/><circle cx="38" cy="58" r="6" fill="${C.Y}"/><circle cx="28" cy="66" r="5" fill="${C.G}"/><path d="M56 42H80M56 48H76" stroke="${C.N}" stroke-width="3"/><rect x="56" y="60" width="24" height="10" rx="3" fill="${C.F}"/><path d="M6 84H94" stroke="${C.K}" stroke-width="3" opacity=".4"/>`,
@@ -109,6 +111,11 @@ a = sub(a, "  shadow: () =>", """  moto: i => `<circle cx="20" cy="70" r="15" fi
   aurora: () => `<path d="M0 30Q25 10 50 26T100 22V44Q75 30 50 46T0 48Z" fill="${C.G}" opacity=".45"/><path d="M0 46Q30 30 55 44T100 40V54Q70 46 50 58T0 60Z" fill="#7be0b0" opacity=".3"/>`,
   shadow: () =>""")
 a = sub(a, re.search(r"const ART = \{.*?\n\};", a, re.S).group(0), """const ART = {
+  kouhan: 'sunset 46 84 72; road; hills', seneca: 'columns 50 70 72; hourglass 50 120 32', tooitaiko: 'sun 74 28 30; sea; taiko 44 96 56',
+  greenbook: 'road; hills; car 48 100 66; notes 74 40 30', uchuukyoudai: 'stars; moon 24 26 28; rocket 50 90 70', nomadland: 'stars; dunes; van 48 100 64',
+  ikigai: 'sun 72 30 26; sea; seedling 50 104 46', care: 'hands 50 100 60; seedling 50 64 30', alchemist: 'dunes; sun 72 30 26; camel 46 104 52; star 24 30 14',
+  nariwai: 'greenhills; house 46 96 54; seedling 78 120 24', kinoinochi: 'mount 50 70 90; pagoda 50 102 64', shokugyou: 'moon 74 28 24; notes 30 46 30; mug 44 112 40; book 70 116 30',
+  coffeeya: 'lamp 74 44 34; mug 46 106 58', charley: 'road; hills; van 48 102 60; dog 80 122 24',
   diewithzero: 'sunset 50 52 60; hourglass 46 106 52', teinengo: 'sunset 50 60 66; road; chair 50 112 40', lifeshift: 'stars; hourglass 30 96 34; road; seedling 70 110 34',
   myintern: 'city; tower 50 92 60', schmidt: 'road; hills; van 48 100 64', lunchbox: 'city; bento 50 98 58; letter 70 54 26',
   bucketlist: 'mount 50 90 90; star 30 30 16; plane 64 40 32', jinseifruits: 'greenhills; gtree 36 86 56; cabin 72 104 34; apple 62 64 18',

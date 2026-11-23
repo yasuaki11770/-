@@ -2,7 +2,7 @@
 (() => {
 EPS.push({
   id: 'bucketlist', title: '最高の人生の見つけ方', author: 'ロブ・ライナー 監督', year: '2007年', minutes: 16,
-  lists: '7',
+  lists: '9',
   blurb: '病院の同じ部屋になった、自動車整備工と大富豪。余命を告げられた二人は、「死ぬまでにやりたいことリスト」を手に、世界へ飛びだす。',
   cover: ['linear-gradient(165deg,#a8d0e8,#e8c890 55%,#c06a3a)', '#2a1a0e'],
   chars: {'エドワード':'#8a5a3a','ヴァージニア':'#b0607a','トーマス':'#5a7a9a','医者':'#6a6a6a'},
