@@ -74,7 +74,6 @@ e = sub(e, "const base = {pb: 154, cl: 162, lt: 168}[m]", "const base = {pb: 154
 e = sub(e, "const LEN_RANK = {S: 1, D: 2, M: 2, N: 3, P: 3, E: 3, L: 4, L2: 5, XL: 6};", "const LEN_RANK = {K: 1, P: 2, F: 2, D: 2, B: 3, E: 3, N: 4, C: 6};")
 e = sub(e, "<div class=\"rt\"><span>読みやすさ</span>", "<div class=\"rt\"><span>入りやすさ</span>")
 e = sub(e, "<div class=\"rt\"><span>書かれた年</span>", "<div class=\"rt\"><span>発表された年</span>")
-e = sub(e, "<p class=\"rnote\">評価は、ミネル先生のめやすです。</p>", "<p class=\"rnote\">評価は、マスターのめやすです。</p>")
 e = sub(e, "・読みやすさ★${b[8]}", "・入りやすさ★${b[8]}")
 e = sub(e, "['no', '番号順', null],", "['no', 'リスト順', null],")
 e = sub(e, "['easy', '読みやすい順', (a, b) => b[8] - a[8]],", "['easy', '入りやすい順', (a, b) => b[8] - a[8]],")

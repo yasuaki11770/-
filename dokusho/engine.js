@@ -496,7 +496,6 @@ function ratesHTML(b) {
     <div class="rt"><span>読後感</span>${moodMeter(b[11])}</div>
     <div class="rt"><span>書かれた年</span><span>${esc(b[5])}</span></div>
     <div class="rt"><span>長さ</span><span>${esc(BOOK_LEN[b[6]] || '')}</span></div>
-    <p class="rnote">評価は、ミネル先生のめやすです。</p>
   </div>`;
 }
 const ratesMini = b => b.length < 12 ? '' : `<small class="rmini">おすすめ★${b[7]}・読みやすさ★${b[8]}・有名★${b[9]}・学び★${b[10]}・${MOOD[b[11]]}・${esc(b[5].replace(/（.*$/, ''))}・${esc((BOOK_LEN[b[6]] || '').split('・')[0])}</small>`;
@@ -876,16 +875,16 @@ function openBook(ep, justDone) {
       ${r.resolve.length ? `<p class="small">改めたいこと</p><ul>${r.resolve.map(i => `<li>${fmt(A(ep.resolve.items[i].t))}</li>`).join('')}</ul>` : ''}
       ${r.mirror && r.mirror.length ? `<p class="small">読んだときの自分</p><ul>${r.mirror.map(i => `<li>${fmt(A(ep.mirror.items[i].t))}</li>`).join('')}</ul>` : ''}
     </div>` : '';
-  const more = (d ? [
-    fold('fWhy', '名作のわけ', '四つの話', ep.why.map((w, i) => `<p><b>その${NUM[i]}　${esc(w.h)}</b><br>${fmt(A(w.short))}</p>`).join('')),
-    fold('fSum', `3分でわかる『${esc(ep.title)}』`, '結末まで書いてあります', ep.summary.map(p => `<p>${fmt(p)}</p>`).join('')),
-    fold('fRead', '本物を読んでみるなら', '', `<p>${fmt(A(ep.read))}</p>`),
-  ] : []).concat(own ? [covFold()] : []).join('');
+  const foldWhy = d ? fold('fWhy', '名作のわけ', '四つの話', ep.why.map((w, i) => `<p><b>その${NUM[i]}　${esc(w.h)}</b><br>${fmt(A(w.short))}</p>`).join('')) : '';
+  const foldSum = d ? fold('fSum', `3分でわかる『${esc(ep.title)}』`, '結末まで書いてあります', ep.summary.map(p => `<p>${fmt(p)}</p>`).join('')) : '';
+  // 「本物を読んでみるなら」：読了したばかりのときは、栞のすぐ下に開いた状態で。ふだんは、たたんだ欄の中に
+  const readF = d ? fold('fRead', '本物を読んでみるなら', '', `<p>${fmt(A(ep.read))}</p>`, justDone) : '';
+  const covF = own ? covFold() : '';
   const bottom = justDone ? `<div class="donebar"><button class="btn primary" id="bkBack">本棚へ戻る</button></div>`
     : `<button class="btn bkback" id="bkBack">本棚へ戻る</button>`;
   // 並び：表紙と題 → 操作（扉を開く・問いかけにもう一度）→ めやす → 栞 → たたんだ欄 → わたしの記録 → 本棚へ戻る（一番下）
   // 読了したばかりのときは、栞を先に（操作は出さず、下に「本棚へ戻る」）
-  el.innerHTML = top + acts + (justDone ? mine + rates : rates + mine) + more + myrec + bottom;
+  el.innerHTML = top + acts + (justDone ? mine + readF + rates + foldWhy + foldSum : rates + mine + foldWhy + foldSum + readF) + covF + myrec + bottom;
   show('book');
   if ($('covsel')) wireCovSel(ep);
   wirePaper(el, ep.id, () => { $('bkCover').innerHTML = coverHTML(ep, 'div'); });
