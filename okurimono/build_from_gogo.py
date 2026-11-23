@@ -159,3 +159,6 @@ a = sub(a, re.search(r"const ART = \{.*?\n\};", a, re.S).group(0), """const ART 
 };""")
 wr('art.js', a)
 print(f'okurimono: engine.js, index.html, art.js を作りました（{N}作・gogo と共通 {len(REUSE)}作・独自 {len(own)}作）')
+# 続けて、古代図書館（三つのサイトをまとめたもの）も作りなおす
+import subprocess, sys
+subprocess.run([sys.executable, os.path.join(ROOT, 'kodai', 'build_from_all.py')], check=True)
