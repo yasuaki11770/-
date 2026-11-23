@@ -550,8 +550,13 @@ const GYO = ['あいうえおゔぁぃぅぇぉ', 'かきくけこがぎぐげ�
 const gyoOf = b => { const c = yomi(b)[0], k = GYO.findIndex(g => g.includes(c)); return k < 0 ? 'その他' : GYO[k][0] + '行'; };
 function groupsOf(list) {
   const themeOf = b => { let t = null; (window.THEMES || []).forEach(x => { if (+b[3] >= x[0]) t = x[1]; }); return t; };
-  const key = VIEW.sort === 'aiu' ? gyoOf : VIEW.sort === 'no' ? themeOf : null;
+  /* 古代図書館の分け方：「オリジナル」タブだけ、もとの三つのサイトの棚（THEMES）。ほかのタブは、図書館の書庫（CATS）ごと */
+  const catIx = b => { const i = (window.CAT || {})[b[0]]; return i == null ? 99 : i; };
+  const catOf = b => (window.CATS || [])[catIx(b)] || 'そのほか';
+  const byCat = VIEW.sort === 'no' && VIEW.filter !== 'orig' && window.CATS;
+  const key = VIEW.sort === 'aiu' ? gyoOf : VIEW.sort === 'no' ? (byCat ? catOf : themeOf) : null;
   if (!key) return [[null, list]];
+  if (byCat) list = list.slice().sort((a, b) => catIx(a) - catIx(b));   // 書庫の順に（書庫の中は、もとの順のまま）
   const g = new Map();
   list.forEach(b => { const k = key(b); if (!g.has(k)) g.set(k, []); g.get(k).push(b); });
   return [...g.entries()];
@@ -708,7 +713,7 @@ function openShelf() {
   } else msg = 'ようこそ、古代図書館へ。<br>ここには、<b>270の物語</b>が眠っています。中高生のころに出会いたい名作は、フクロウの<b>ミネル先生</b>の棚に。人生の午後に味わいたい作品と、川村さんへの贈り物は、書斎の<b>マスター</b>の棚に。<b>読まなくても、観なくてもいい。中に入って、主人公になってみてください。</b>迷ったら、下の「次の一作」からどうぞ。';
   $('shelfMsg').innerHTML = OWL + `<p>${msg}</p>`;
   $('picksBox').innerHTML = picksHTML(); wirePicks();
-  $('rackNote').innerHTML = '270の物語を、八つの書庫に並べました。古い時代の作品ほど、使いこまれた姿で並んでいます。映画は、ケースの姿で。<br>背表紙をタップすると、その作品のページが開きます。「持っている」「読んだ・観た」の記録や、表紙の写真の設定も、そこでできます。';
+  $('rackNote').innerHTML = '270の物語を、十の書庫に分けて並べました。「オリジナル」を選ぶと、もとの三つのサイトの棚のまま並びます。古い時代の作品ほど、使いこまれた姿で並んでいます。映画は、ケースの姿で。<br>背表紙をタップすると、その作品のページが開きます。「持っている」「読んだ・観た」の記録や、表紙の写真の設定も、そこでできます。';
   renderSettings();
   renderRacks();
 }
@@ -742,6 +747,7 @@ function renderRacks() {
   $('ownc').textContent = BOOKS.filter(b => OWN[b[0]]).length;
   const FILTERS = [
     ['all', 'すべて', () => true],
+    ['orig', 'オリジナル', () => true],   // もとの三つのサイトの棚のまま
     ['book', '本', b => /本|小説|古典/.test(b[2])],
     ['film', '映画', b => /映画/.test(b[2])],
     ['other', '漫画・詩', b => /漫画|詩集/.test(b[2])],

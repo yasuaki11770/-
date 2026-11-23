@@ -54,13 +54,20 @@ for name, g in groups:
         r = list(r); r[3] = str(len(out) + 1); out.append(r)
 assert len({r[0] for r in out}) == len(out), 'title duplicate'
 N = len(out)
-SHELVES = kanji(len(themes)) + ('つ' if len(themes) < 10 else '') + 'の書庫'   # 書庫の数（八つの書庫・十一の書庫）
+# 古代図書館の分け方（「すべて」の書庫）：kodai/categories.json。どの題名も、どこか一つの書庫に
+CATS = json.load(open(os.path.join(K, 'categories.json'), encoding='utf-8'))['cats']
+CAT = {t: i for i, (_, g) in enumerate(CATS) for t in g}
+assert set(CAT) == {r[0] for r in out}, ('categories.json と books の題名が合わない', set(CAT) ^ {r[0] for r in out})
+SHELVES = kanji(len(CATS)) + ('つ' if len(CATS) < 10 else '') + 'の書庫'   # 書庫の数（十の書庫）
 chosen = sorted(set((jsvar(G, 'CHOSEN') or []) + (jsvar(O, 'CHOSEN') or []) + KB['chosen']))
 wr('books.js', f'// 古代図書館 ― 三つのサイトの{N}作（名作のなかへ・午後の書斎・川村さんへの贈り物）。kodai/build_from_all.py で生成（直接は直さない）\n'
    '// [題名, 作者・監督, 種類, 番号, 年(並べ替え用), 年の表示, 長さ, おすすめ, 入りやすさ, 有名度, 学び度, 見終わったあとの感じ(1さわやか〜5ずっしり), よみ]\n'
    f'window.BOOK_LEN={json.dumps(LEN, ensure_ascii=False)};\n'
    f'window.THEMES={json.dumps(themes, ensure_ascii=False)};\n'
    f'window.CHOSEN={json.dumps(chosen, ensure_ascii=False)};\n'
+   '// 古代図書館の分け方：「すべて」などのタブでは CATS の書庫ごとに、「オリジナル」タブでは THEMES（もとの三つのサイトの棚）ごとに並ぶ\n'
+   f'window.CATS={json.dumps([c[0] for c in CATS], ensure_ascii=False)};\n'
+   f'window.CAT={json.dumps(CAT, ensure_ascii=False)};\n'
    'window.BOOKS=[' + ',\n'.join(json.dumps(r, ensure_ascii=False, separators=(',', ':')) for r in out) + '];\n')
 
 # ---------------- engine.js ----------------
@@ -126,9 +133,18 @@ e = sub(e, r"function msMessage\(n\) \{.*?\n\}", """function msMessage(n) {
 e = sub(e, r"\} else msg = 'いらっしゃいませ。夜更けの書斎へ、ようこそ。.*?';\n",
         f"}} else msg = 'ようこそ、古代図書館へ。<br>ここには、<b>{N}の物語</b>が眠っています。中高生のころに出会いたい名作は、フクロウの<b>ミネル先生</b>の棚に。人生の午後に味わいたい作品と、川村さんへの贈り物は、書斎の<b>マスター</b>の棚に。<b>読まなくても、観なくてもいい。中に入って、主人公になってみてください。</b>迷ったら、下の「次の一作」からどうぞ。';\n", regex=True)
 e = sub(e, r"\$\('rackNote'\)\.innerHTML = '.*?';\n",
-        f"$('rackNote').innerHTML = '{N}の物語を、{SHELVES}に並べました。古い時代の作品ほど、使いこまれた姿で並んでいます。映画は、ケースの姿で。<br>背表紙をタップすると、その作品のページが開きます。「持っている」「読んだ・観た」の記録や、表紙の写真の設定も、そこでできます。';\n", regex=True)
+        f"$('rackNote').innerHTML = '{N}の物語を、{SHELVES}に分けて並べました。「オリジナル」を選ぶと、もとの三つのサイトの棚のまま並びます。古い時代の作品ほど、使いこまれた姿で並んでいます。映画は、ケースの姿で。<br>背表紙をタップすると、その作品のページが開きます。「持っている」「読んだ・観た」の記録や、表紙の写真の設定も、そこでできます。';\n", regex=True)
 e = sub(e, "収録：${EPS.length}作（本・映画・漫画／1作 15〜25分）", "収録：${EPS.length}作（本・映画・漫画・詩集／1作 15〜25分）")
 e = sub(e, "    ['other', '漫画', b => /漫画/.test(b[2])],", "    ['other', '漫画・詩', b => /漫画|詩集/.test(b[2])],")
+e = sub(e, "    ['all', 'すべて', () => true],\n", "    ['all', 'すべて', () => true],\n    ['orig', 'オリジナル', () => true],   // もとの三つのサイトの棚のまま\n")
+e = sub(e, "  const key = VIEW.sort === 'aiu' ? gyoOf : VIEW.sort === 'no' ? themeOf : null;\n  if (!key) return [[null, list]];\n",
+        "  /* 古代図書館の分け方：「オリジナル」タブだけ、もとの三つのサイトの棚（THEMES）。ほかのタブは、図書館の書庫（CATS）ごと */\n"
+        "  const catIx = b => { const i = (window.CAT || {})[b[0]]; return i == null ? 99 : i; };\n"
+        "  const catOf = b => (window.CATS || [])[catIx(b)] || 'そのほか';\n"
+        "  const byCat = VIEW.sort === 'no' && VIEW.filter !== 'orig' && window.CATS;\n"
+        "  const key = VIEW.sort === 'aiu' ? gyoOf : VIEW.sort === 'no' ? (byCat ? catOf : themeOf) : null;\n"
+        "  if (!key) return [[null, list]];\n"
+        "  if (byCat) list = list.slice().sort((a, b) => catIx(a) - catIx(b));   // 書庫の順に（書庫の中は、もとの順のまま）\n")
 e = sub(e, "// はじめは、四つの棚の順で", "// はじめは、書庫の順で")
 e = sub(e, "const LEN_RANK = {K: 1, P: 2, F: 2, D: 2, B: 3, E: 3, N: 4, C: 6};", "const LEN_RANK = {K: 1, S: 1, P: 2, F: 2, D: 2, M: 2, DR: 2, B: 3, E: 3, E2: 3, NF: 3, N: 4, L: 4, G: 4, L2: 5, C: 6, XL: 6};")
 chk = e.split('\n', 3)[3]
