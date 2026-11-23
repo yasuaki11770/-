@@ -71,7 +71,7 @@ h = sub(h, "body[data-world=lib] #play{background:radial-gradient(ellipse at 50%
 h = sub(h, '<div class="kicker">人 生 の 午 後 に</div>\n  <h1>午後の<br>書斎</h1>\n  <div class="tag">読む前に、観る前に、入ってみる。</div>',
         '<div class="kicker">五 十 七 歳 の 一 年 に</div>\n  <h1>川村さんへの<br>贈り物</h1>\n  <div class="tag">走る人へ。つくる人へ。迎える人へ。</div>')
 h = sub(h, r'<p class="lead">本や映画の主人公になって.*?</p>',
-        '<p class="lead">五十七の物語を、四つの棚に。<br>本や映画の主人公になって、名場面を生きてみる。<br>幕が下りたら、夜更けの書斎のマスターが<br>「なぜ名作なのか」を語り、ひとつだけ問いかける。<br>――次の章を、あなたはどう走りますか。</p>', regex=True)
+        '<p class="lead">五十七の物語を、四つの棚に。<br>本や映画の主人公になって、名場面を生きてみる。<br>幕が下りたら、夜更けの書斎のマスターが<br>その作品を選んだわけを語り、ひとつだけ問いかける。<br>――次の章を、あなたはどう走りますか。</p>', regex=True)
 h = sub(h, '<div><h2>午後の書斎</h2>', f'<div><h2>{TITLE}</h2>')
 h = sub(h, '持っている <b id="ownc">0</b> / 15</div>', f'持っている <b id="ownc">0</b> / {N}</div>')
 h = sub(h, '<h3 class="shelfh">人生の午後の15作</h3>', f'<h3 class="shelfh">五十七歳に贈る、{N}作</h3>')

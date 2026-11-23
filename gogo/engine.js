@@ -44,11 +44,14 @@ function toast(msg) {
 /* 名作のわけの前置きは、作品の古さに合わせて言い方を変える（百年たっていない作品に「何百年」とは言わない） */
 const ageOf = ep => { const b = (window.BOOKS || []).find(x => x[0] === ep.title); return b && typeof b[4] === 'number' ? new Date().getFullYear() - b[4] : 0; };
 const WHY_SPAN = a => a >= 1000 ? '千年以上も、人の心に残ってきた' : a >= 200 ? '何百年も、人の心に残ってきた' : a >= 100 ? '百年以上も、人の心に残ってきた' : a >= 30 ? '何十年も、人の心に残ってきた' : 'これほど多くの人の心に届いた';
+/* 名作と呼ぶには早い作品（books.js の CHOSEN にある題名）は、「名作のわけ」ではなく「選んだわけ」として語る */
+const isChosen = ep => (window.CHOSEN || []).includes(ep.title);
+const whyName = ep => isChosen(ep) ? '選んだわけ' : '名作のわけ';
 function buildTalk(ep) {
   const sc = ep.scenes;
-  sc.why = { world:'lib', place:`名作のわけ　『${ep.title}』`, lines: [
-    [TEACHER, ep.whyIntro || `おかえりなさい。……幕を下ろす前に、少しだけ話をさせてください。この作品が、なぜ${WHY_SPAN(ageOf(ep))}のか。`],
-    ...ep.why.flatMap((w, i) => [['!', `名作のわけ　その${NUM[i]}\n${w.h}`], ...w.lines.map(l => Array.isArray(l) ? l : [TEACHER, l])]),
+  sc.why = { world:'lib', place:`${whyName(ep)}　『${ep.title}』`, lines: [
+    [TEACHER, ep.whyIntro || (isChosen(ep) ? 'おかえりなさい。……幕を下ろす前に、少しだけ話をさせてください。なぜ、今のあなたに、この作品を選んだのか。' : `おかえりなさい。……幕を下ろす前に、少しだけ話をさせてください。この作品が、なぜ${WHY_SPAN(ageOf(ep))}のか。`)],
+    ...ep.why.flatMap((w, i) => [['!', `${whyName(ep)}　その${NUM[i]}\n${w.h}`], ...w.lines.map(l => Array.isArray(l) ? l : [TEACHER, l])]),
   ], next:'resolve', nextLabel:'マスターの問いかけ ▶' };
   // 問いかけは、栞の一つだけ。データの導入文「もう一つだけ。…」は、一つめの問いかけがあったころのもの
   const intro = !ep.resolve.intro || /^もう一つだけ/.test(ep.resolve.intro)
@@ -878,7 +881,7 @@ function openBook(ep, justDone) {
       ${r.resolve.length ? `<p class="small">持って帰りたいもの</p><ul>${r.resolve.map(i => `<li>${fmt(A(ep.resolve.items[i].t))}</li>`).join('')}</ul>` : ''}
       ${r.mirror && r.mirror.length ? `<p class="small">読んだときの自分</p><ul>${r.mirror.map(i => `<li>${fmt(A(ep.mirror.items[i].t))}</li>`).join('')}</ul>` : ''}
     </div>` : '';
-  const foldWhy = d ? fold('fWhy', '名作のわけ', '四つの話', ep.why.map((w, i) => `<p><b>その${NUM[i]}　${esc(w.h)}</b><br>${fmt(A(w.short))}</p>`).join('')) : '';
+  const foldWhy = d ? fold('fWhy', whyName(ep), '四つの話', ep.why.map((w, i) => `<p><b>その${NUM[i]}　${esc(w.h)}</b><br>${fmt(A(w.short))}</p>`).join('')) : '';
   const foldSum = d ? fold('fSum', `3分でわかる『${esc(ep.title)}』`, '結末まで書いてあります', ep.summary.map(p => `<p>${fmt(p)}</p>`).join('')) : '';
   // 「本物を読んでみるなら」：読了したばかりのときは、栞のすぐ下に開いた状態で。ふだんは、たたんだ欄の中に
   const readF = d ? fold('fRead', '本物にふれるなら', '', `<p>${fmt(A(ep.read))}</p>`, justDone) : '';

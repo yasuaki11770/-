@@ -32,8 +32,8 @@ for a, b in [("'yrt_rec2'", "'gogo_rec'"), ("'yrt_own'", "'gogo_own'"), ("'yrt_v
     e = sub(e, a, b)
 e = sub(e, '<span class="who">ミネル先生</span>', '<span class="who">マスター</span>')
 # 名作のわけ・問いかけ
-e = sub(e, "ep.whyIntro || `おかえり。……さて、本を閉じる前に、少しだけ話をさせておくれ。この本が、なぜ${WHY_SPAN(ageOf(ep))}のか。`",
-        "ep.whyIntro || `おかえりなさい。……幕を下ろす前に、少しだけ話をさせてください。この作品が、なぜ${WHY_SPAN(ageOf(ep))}のか。`")
+e = sub(e, "ep.whyIntro || (isChosen(ep) ? 'おかえり。……さて、本を閉じる前に、少しだけ話をさせておくれ。なぜ、今のあなたに、わしがこの本を選んだのか。' : `おかえり。……さて、本を閉じる前に、少しだけ話をさせておくれ。この本が、なぜ${WHY_SPAN(ageOf(ep))}のか。`)",
+        "ep.whyIntro || (isChosen(ep) ? 'おかえりなさい。……幕を下ろす前に、少しだけ話をさせてください。なぜ、今のあなたに、この作品を選んだのか。' : `おかえりなさい。……幕を下ろす前に、少しだけ話をさせてください。この作品が、なぜ${WHY_SPAN(ageOf(ep))}のか。`)")
 e = sub(e, "const WHY_SPAN = a => a >= 1000 ? '何百年、何千年と読み継がれてきた' : a >= 200 ? '何百年と読み継がれてきた' : a >= 100 ? '百年以上も読み継がれてきた' : a >= 30 ? '何十年と読み継がれてきた' : 'これほど多くの人に読まれている';",
         "const WHY_SPAN = a => a >= 1000 ? '千年以上も、人の心に残ってきた' : a >= 200 ? '何百年も、人の心に残ってきた' : a >= 100 ? '百年以上も、人の心に残ってきた' : a >= 30 ? '何十年も、人の心に残ってきた' : 'これほど多くの人の心に届いた';")
 e = sub(e, "next:'resolve', nextLabel:'先生の問いかけ ▶'", "next:'resolve', nextLabel:'マスターの問いかけ ▶'")
@@ -170,7 +170,7 @@ h = sub(h, "#2b3762 0%,var(--nigh", "#4a3424 0%,var(--nigh")
 h = sub(h, "body[data-world=lib] #play{background:radial-gradient(ellipse at 50% 0%,#33406c 0%,var(--night) 75%);", "body[data-world=lib] #play{background:radial-gradient(ellipse at 50% 0%,#4d3727 0%,var(--night) 75%);")
 h = sub(h, '<div class="kicker">読 書 百 選</div>\n  <h1>名作の<br>なかへ</h1>\n  <div class="tag">読めなくても、入ればいい。</div>',
         '<div class="kicker">人 生 の 午 後 に</div>\n  <h1>午後の<br>書斎</h1>\n  <div class="tag">読む前に、観る前に、入ってみる。</div>')
-h = sub(h, r'<p class="lead">名作の主人公になって.*?</p>', '<p class="lead">本や映画の主人公になって、名場面を生きてみる。<br>幕が下りたら、夜更けの書斎のマスターが<br>「なぜ名作なのか」を語り、ひとつだけ問いかける。<br>――人生の午後を、あなたはどう生きますか。</p>', regex=True)
+h = sub(h, r'<p class="lead">名作の主人公になって.*?</p>', '<p class="lead">本や映画の主人公になって、名場面を生きてみる。<br>幕が下りたら、夜更けの書斎のマスターが<br>その作品を選んだわけを語り、ひとつだけ問いかける。<br>――人生の午後を、あなたはどう生きますか。</p>', regex=True)
 h = sub(h, '<button class="btn primary" id="enter">図書館に入る</button>', '<button class="btn primary" id="enter">書斎に入る</button>')
 h = sub(h, '<div><h2>名作のなかへ</h2>', '<div><h2>午後の書斎</h2>')
 h = sub(h, '<div class="count">アプリで読了 <b id="cnt">0</b><br>本で読んだ <b id="papc">0</b><br>持っている <b id="ownc">0</b> / 158</div>',
