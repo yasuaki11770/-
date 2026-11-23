@@ -272,7 +272,7 @@ function finish() {
   const top = () => { ov.scrollTop = 0; window.scrollTo(0, 0); };
   top(); requestAnimationFrame(top); setTimeout(top, 80); setTimeout(top, 350);
   wireLike($('lessonBox'), EP.id);
-  $('ovMemo').oninput = () => { rec(EP.id).memo = $('ovMemo').value; save(); };
+  if ($('ovMemo')) $('ovMemo').oninput = () => { rec(EP.id).memo = $('ovMemo').value; save(); };
   $('lessonOk').onclick = () => { $('lessonOv').classList.remove('on'); openBook(EP, true); };
 }
 function cardHTML(ep, r, small) {
@@ -890,7 +890,7 @@ function openBook(ep, justDone) {
   wirePaper(el, ep.id, () => { $('bkCover').innerHTML = coverHTML(ep, 'div'); });
   wireLike(el.querySelector('.myrec'), ep.id);
   $('bkMemo').oninput = () => { rec(ep.id).memo = $('bkMemo').value; save(); };
-  $('bkDraft').onclick = () => {
+  if ($('bkDraft')) $('bkDraft').onclick = () => {
     $('draftBox').innerHTML = `<p class="small mute" style="margin:0 0 6px">栞の言葉と感想を、一つの文章にまとめました。<b>下書き</b>なので、（　）のところを書きたして、自分の言葉で仕上げてください。</p>
       <textarea id="draft" rows="14">${esc(draftText(ep))}</textarea>
       <button class="btn primary" id="draftCopy" style="margin-top:8px">コピーする</button>`;

@@ -255,10 +255,6 @@ function finish() {
     ${cardHTML(EP, r)}
     ${r.resolve.length ? `<ul>${r.resolve.map(i => `<li>${fmt(A(EP.resolve.items[i].t))}</li>`).join('')}</ul>` : ''}
     <p class="quote">${fmt(EP.resolve.quote)}<span>――『${esc(EP.title)}』より</span></p>
-    <div class="ovrec">
-      <div class="lk"><span>この作品、好き？</span>${likeHTML(EP.id)}</div>
-      <textarea id="ovMemo" rows="3" placeholder="感想を、自由に（あとから本のページでも書けます）">${esc(r.memo || '')}</textarea>
-    </div>
     <button class="btn primary" id="lessonOk">この栞を、作品に挟む</button>`;
   const ov = $('lessonOv');
   if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
@@ -267,7 +263,7 @@ function finish() {
   const top = () => { ov.scrollTop = 0; window.scrollTo(0, 0); };
   top(); requestAnimationFrame(top); setTimeout(top, 80); setTimeout(top, 350);
   wireLike($('lessonBox'), EP.id);
-  $('ovMemo').oninput = () => { rec(EP.id).memo = $('ovMemo').value; save(); };
+  if ($('ovMemo')) $('ovMemo').oninput = () => { rec(EP.id).memo = $('ovMemo').value; save(); };
   $('lessonOk').onclick = () => { $('lessonOv').classList.remove('on'); openBook(EP, true); };
 }
 function cardHTML(ep, r, small) {
@@ -860,9 +856,7 @@ function openBook(ep, justDone) {
       <button class="btn owntg${own ? ' on' : ''}" id="bkOwn">${ownLabel(own)}</button>
       ${paperHTML(ep.id)}
       <div class="lk"><span>この作品、好き？</span>${likeHTML(ep.id)}</div>
-      <textarea id="bkMemo" rows="4" placeholder="感想を、自由に。あとで一つの文章にまとめられます。">${esc(r.memo || '')}</textarea>
-      <button class="btn" id="bkDraft" style="text-align:center">📝　感想を一つの文章にまとめる</button>
-      <div id="draftBox"></div>
+      <textarea id="bkMemo" rows="4" placeholder="感想を、自由に。">${esc(r.memo || '')}</textarea>
     </div>`, justDone);
   const mine = d ? `
     <div class="sec mine"><h3>あなたの栞</h3>${cardHTML(ep, r, true)}
@@ -884,7 +878,7 @@ function openBook(ep, justDone) {
   wirePaper(el, ep.id, () => { $('bkCover').innerHTML = coverHTML(ep, 'div'); });
   wireLike(el.querySelector('.myrec'), ep.id);
   $('bkMemo').oninput = () => { rec(ep.id).memo = $('bkMemo').value; save(); };
-  $('bkDraft').onclick = () => {
+  if ($('bkDraft')) $('bkDraft').onclick = () => {
     $('draftBox').innerHTML = `<p class="small mute" style="margin:0 0 6px">栞の言葉と感想を、一つの文章にまとめました。<b>下書き</b>なので、（　）のところを書きたして、自分の言葉で仕上げてください。</p>
       <textarea id="draft" rows="14">${esc(draftText(ep))}</textarea>
       <button class="btn primary" id="draftCopy" style="margin-top:8px">コピーする</button>`;

@@ -116,8 +116,9 @@ e = sub(e, "${OWN[title] ? `<button class=\"btn\" id=\"shPh\" style=\"text-align
         "${OWN[title] ? `<button class=\"btn\" id=\"shPh\" style=\"text-align:center\">📷　${PH[title] ? '表紙の写真を撮りなおす' : '表紙を、自分の持っている本・ディスクの写真にする'}</button>` : ''}")
 e = sub(e, "<span>${esc(ep.author)}（${esc(ep.year)}）</span>", "<span>${esc(ep.author)}（${esc(ep.year)}）</span>")
 e = sub(e, "<div class=\"lk\"><span>この本、好き？</span>${likeHTML(ep.id)}</div>\n      <textarea id=\"bkMemo\" rows=\"4\" placeholder=\"感想を、自由に。読書感想文の下書きにもなります。\">",
-        "<div class=\"lk\"><span>この作品、好き？</span>${likeHTML(ep.id)}</div>\n      <textarea id=\"bkMemo\" rows=\"4\" placeholder=\"感想を、自由に。あとで一つの文章にまとめられます。\">")
-e = sub(e, "📝　感想文の下書きを作る", "📝　感想を一つの文章にまとめる")
+        "<div class=\"lk\"><span>この作品、好き？</span>${likeHTML(ep.id)}</div>\n      <textarea id=\"bkMemo\" rows=\"4\" placeholder=\"感想を、自由に。\">")
+# 午後の書斎では、感想を一つの文章にまとめる（感想文の下書き）ボタンは出さない
+e = sub(e, "\n      <button class=\"btn\" id=\"bkDraft\" style=\"text-align:center\">📝　感想文の下書きを作る</button>\n      <div id=\"draftBox\"></div>", "")
 e = sub(e, "<p class=\"small\">改めたいこと</p>", "<p class=\"small\">持って帰りたいもの</p>")
 e = sub(e, "fold('fRead', '本物を読んでみるなら', ''", "fold('fRead', '本物にふれるなら', ''")
 e = sub(e, "<div class=\"sec\"><h3>この本のめやす</h3>${ratesHTML(bk)}</div>", "<div class=\"sec\"><h3>この作品のめやす</h3>${ratesHTML(bk)}</div>")
@@ -127,7 +128,8 @@ e = sub(e, "|| '持っている・読んだ日・好き度・感想';", "|| '持
 e = sub(e, "const ownLabel = on => on ? '✓　持っている' : '□　この本を持っている';", "const ownLabel = on => on ? '✓　持っている' : '□　この作品を持っている';")
 e = sub(e, "both: ['#c62a1f', 'アプリ・本', 'アプリと本の両方で読了'], paper: ['#23804a', '本', '本で読了']", "both: ['#c62a1f', 'アプリ・実物', 'アプリと実物の両方で読了'], paper: ['#23804a', '実物', '実物で読んだ・観た']")
 e = sub(e, "${d ? 'もう一度、本の中へ' : 'この本の扉を開く'}", "${d ? 'もう一度、作品の中へ' : 'この作品の扉を開く'}")
-e = sub(e, "<div class=\"lk\"><span>この本、好き？</span>${likeHTML(EP.id)}</div>", "<div class=\"lk\"><span>この作品、好き？</span>${likeHTML(EP.id)}</div>")
+# 午後の書斎では、しおりができた画面に「好き？」と感想は出さない（本のページの「わたしの記録」で）
+e = sub(e, r"\n    <div class=\"ovrec\">.*?\n    </div>", "", regex=True)
 e = sub(e, "<button class=\"btn primary\" id=\"lessonOk\">この栞を、本に挟む</button>", "<button class=\"btn primary\" id=\"lessonOk\">この栞を、作品に挟む</button>")
 e = sub(e, "<div class=\"src\">『${esc(ep.title)}』を読んで</div>", "<div class=\"src\">『${esc(ep.title)}』から</div>")
 # 栞帳
