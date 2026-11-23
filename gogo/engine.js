@@ -327,14 +327,15 @@ const todayISO = () => { const d = new Date(); return `${d.getFullYear()}-${Stri
 let OWN = {};
 try { OWN = JSON.parse(localStorage.getItem('gogo_own') || '{}') || {}; } catch (e) {}
 const saveOwn = () => { try { localStorage.setItem('gogo_own', JSON.stringify(OWN)); } catch (e) {} };
-let VIEW = {mode: 'rack', filter: 'all', sort: 'aiu', choices: false, fsz: 'm'};
+let VIEW = {mode: 'rack', filter: 'all', sort: 'aiu', choices: false, fsz: 'l'};
 try { Object.assign(VIEW, JSON.parse(localStorage.getItem('gogo_view') || '{}')); } catch (e) {}
 if ((VIEW.v || 0) < 2) { VIEW.sort = 'aiu'; VIEW.v = 2; }   // 並びの初期値を「あいうえお順」に切りかえた
 if (VIEW.v < 3) { VIEW.choices = false; VIEW.v = 3; }        // 読むときの選択肢は、初期値「なし」
+if (VIEW.v < 4) { VIEW.fsz = 'l'; VIEW.v = 4; }             // 本文の文字の大きさは、初期値「大」
 const saveView = () => { try { localStorage.setItem('gogo_view', JSON.stringify(VIEW)); } catch (e) {} };
 /* 本文の文字の大きさ（小・中・大） */
 const FSZ = {s: ['小', .9], m: ['中', 1], l: ['大', 1.15], xl: ['特大', 1.3]};
-const applyFsz = () => document.documentElement.style.setProperty('--rs', (FSZ[VIEW.fsz] || FSZ.m)[1]);
+const applyFsz = () => document.documentElement.style.setProperty('--rs', (FSZ[VIEW.fsz] || FSZ.l)[1]);
 applyFsz();
 let QUERY = '';
 
@@ -938,7 +939,7 @@ function renderSettings() {
     <h3>記録と設定</h3>
     <div class="setrow"><span>読むときの選択肢</span><div class="seg dark"><button data-ch="0" class="${VIEW.choices ? '' : 'on'}">なし</button><button data-ch="1" class="${VIEW.choices ? 'on' : ''}">あり</button></div></div>
     <p class="small">なし：原作の流れのまま進み、選ぶのは、終わったあとのマスターとの対話だけ。<br>あり：作品の中でも、主人公の行動を自分で選ぶ（原作と違うと、ページが波打つ）。</p>
-    <div class="setrow"><span>本文の文字の大きさ</span><div class="seg dark">${Object.entries(FSZ).map(([k, [t]]) => `<button data-fz="${k}" class="${(VIEW.fsz || 'm') === k ? 'on' : ''}">${t}</button>`).join('')}</div></div>
+    <div class="setrow"><span>本文の文字の大きさ</span><div class="seg dark">${Object.entries(FSZ).map(([k, [t]]) => `<button data-fz="${k}" class="${(VIEW.fsz || 'l') === k ? 'on' : ''}">${t}</button>`).join('')}</div></div>
     <p class="small fzs" style="font-family:var(--udm);font-size:calc(17.5px * var(--rs));line-height:2;opacity:.9">あなたは、本の中に入った。――この大きさで、物語が表示されます。</p>
     <div class="setrow"><span>オルゴールの音楽</span><div class="seg dark"><button data-bgm="0" class="${VIEW.bgm ? '' : 'on'}">なし</button><button data-bgm="1" class="${VIEW.bgm ? 'on' : ''}">あり</button></div></div>
     <div class="songs">${[...Object.entries(SONGS), ['alt', {title: '交互に', note: '2曲を、かわるがわる'}]].map(([k, x]) => `<button data-song="${k}" class="${VIEW.song === k ? 'on' : ''}"><b>♪ ${x.title}</b><small>${x.note}</small></button>`).join('')}</div>
