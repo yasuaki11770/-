@@ -54,9 +54,9 @@ e = sub(e, "if ((VIEW.v || 0) < 2) { VIEW.sort = 'aiu'; VIEW.v = 2; }   // 並�
 e = sub(e, "['no', 'リスト順', null],", "['no', '棚の順', null],")
 # 本棚のことば
 e = sub(e, r"\} else msg = 'いらっしゃいませ。夜更けの書斎へ、ようこそ。.*?';\n",
-        f"}} else msg = 'いらっしゃいませ。夜更けの書斎へ、ようこそ。マスターです。<br>ここには、<b>五十七歳を迎えるあなたに贈りたい、{N}の作品</b>を、四つの棚に置いています。急がなくていい。五十七歳の一年に始めて、そのあとも、ゆっくりと。時間とお金のこと、心の持ち方、自分の店をひらくこと、そして、オートバイと旅。<b>読まなくても、観なくてもいい。中に入って、主人公になってみてください。</b>迷ったら、下の「次の一作」からどうぞ。';\n", regex=True)
+        f"}} else msg = 'いらっしゃいませ。夜更けの書斎へ、ようこそ。マスターです。<br>ここには、<b>これからのあなたに贈りたい、{N}の作品</b>を、四つの棚に置いています。急がなくていい。一作ずつ、ゆっくりと。時間とお金のこと、心の持ち方、自分の店をひらくこと、そして、オートバイと旅。<b>読まなくても、観なくてもいい。中に入って、主人公になってみてください。</b>迷ったら、下の「次の一作」からどうぞ。';\n", regex=True)
 e = sub(e, r"\$\('rackNote'\)\.innerHTML = '人生の午後に.*?';\n",
-        f"$('rackNote').innerHTML = '五十七歳の一年に贈る{N}作を、四つの棚に並べました。古い時代の作品ほど、使いこまれた姿で並んでいます。映画は、ケースの姿で。<br>背表紙をタップすると、その作品のページが開きます。「持っている」「読んだ・観た」の記録や、表紙の写真の設定も、そこでできます。';\n", regex=True)
+        f"$('rackNote').innerHTML = 'これからの人生に贈る{N}作を、四つの棚に並べました。古い時代の作品ほど、使いこまれた姿で並んでいます。映画は、ケースの姿で。<br>背表紙をタップすると、その作品のページが開きます。「持っている」「読んだ・観た」の記録や、表紙の写真の設定も、そこでできます。';\n", regex=True)
 e = sub(e, "$('titleNote').textContent = `収録：${EPS.length}作（本・映画・漫画・詩集／1作 15〜25分）`;",
         "$('titleNote').textContent = `収録：${EPS.length}作（本・映画・漫画／1作 15〜25分）`;")
 chk = e.split('\n', 2)[2]
@@ -71,12 +71,12 @@ h = sub(h, "#4a3424 0%,var(--nigh", "#27424a 0%,var(--nigh")
 h = sub(h, "body[data-world=lib] #play{background:radial-gradient(ellipse at 50% 0%,#4d3727 0%,var(--night) 75%);",
         "body[data-world=lib] #play{background:radial-gradient(ellipse at 50% 0%,#2a454c 0%,var(--night) 75%);")
 h = sub(h, '<div class="kicker">人 生 の 午 後 に</div>\n  <h1>午後の<br>書斎</h1>\n  <div class="tag">読む前に、観る前に、入ってみる。</div>',
-        '<div class="kicker">五 十 七 歳 の 一 年 に</div>\n  <h1>川村さんへの<br>贈り物</h1>\n  <div class="tag">走る人へ。つくる人へ。迎える人へ。</div>')
+        '<div class="kicker">こ れ か ら の 人 生 に</div>\n  <h1>川村さんへの<br>贈り物</h1>\n  <div class="tag">走る人へ。つくる人へ。迎える人へ。</div>')
 h = sub(h, r'<p class="lead">本や映画の主人公になって.*?</p>',
         '<p class="lead">{KN}の物語を、四つの棚に。<br>本や映画の主人公になって、名場面を生きてみる。<br>幕が下りたら、夜更けの書斎のマスターが<br>その作品を選んだわけを語り、ひとつだけ問いかける。<br>――次の章を、あなたはどう走りますか。</p>'.replace('{KN}', KN), regex=True)
 h = sub(h, '<div><h2>午後の書斎</h2>', f'<div><h2>{TITLE}</h2>')
 h = sub(h, '持っている <b id="ownc">0</b> / 15</div>', f'持っている <b id="ownc">0</b> / {N}</div>')
-h = sub(h, '<h3 class="shelfh">人生の午後の15作</h3>', f'<h3 class="shelfh">五十七歳に贈る、{N}作</h3>')
+h = sub(h, '<h3 class="shelfh">人生の午後の15作</h3>', f'<h3 class="shelfh">これからの人生に贈る、{N}作</h3>')
 h = sub(h, '<span><span class="bd bd-j">本</span> 本・小説・古典</span><span><span class="bd bd-h">映</span> 映画</span><span><span class="bd bd-both">漫</span> 漫画・詩集</span>',
         '<span><span class="bd bd-j">本</span> 本・小説・古典</span><span><span class="bd bd-h">映</span> 映画</span><span><span class="bd bd-both">漫</span> 漫画</span>')
 h = sub(h, "/* 午後の書斎：映画は、ディスクのケースの姿で */", "/* 映画は、ディスクのケースの姿で */")
