@@ -202,6 +202,8 @@ const M = {
   wrench: i => `<path d="M30 80L64 40" stroke="${i}" stroke-width="9" stroke-linecap="round"/><path d="M60 26Q70 16 82 22L72 32L76 38L86 30Q90 42 80 50Q72 54 64 48Z" fill="${i}"/><circle cx="30" cy="80" r="3" fill="${C.K}"/>`,
   chopper: i => `<circle cx="16" cy="72" r="14" fill="none" stroke="${C.K}" stroke-width="5"/><circle cx="88" cy="74" r="12" fill="none" stroke="${C.K}" stroke-width="3"/><path d="M16 72L28 56H56L64 36M16 72H40L56 56" stroke="#c8c8c8" stroke-width="3" fill="none"/><path d="M62 32L88 74" stroke="#e0e0e0" stroke-width="3"/><path d="M60 16L58 34M56 16H68" stroke="#e0e0e0" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M36 48Q40 39 54 41Q61 45 57 54H37Z" fill="${C.B}"/><path d="M37 50H57M37 53H57" stroke="${C.R}" stroke-width="1.8"/><path d="M38 51.5H57" stroke="${C.W}" stroke-width="1.2"/><circle cx="44" cy="45" r="1.4" fill="${C.W}"/><circle cx="49" cy="44" r="1.4" fill="${C.W}"/><circle cx="54" cy="45" r="1.4" fill="${C.W}"/><path d="M22 54L18 28" stroke="#e0e0e0" stroke-width="3"/><path d="M24 54H34" stroke="${C.K}" stroke-width="4"/><rect x="30" y="58" width="16" height="10" rx="2" fill="#9a9a9a"/>`,
   aurora: () => `<path d="M0 30Q25 10 50 26T100 22V44Q75 30 50 46T0 48Z" fill="${C.G}" opacity=".45"/><path d="M0 46Q30 30 55 44T100 40V54Q70 46 50 58T0 60Z" fill="#7be0b0" opacity=".3"/>`,
+  dorayaki: () => `<ellipse cx="50" cy="66" rx="38" ry="12" fill="#9a5a22"/><rect x="13" y="54" width="74" height="9" rx="4" fill="#3e1a12"/><ellipse cx="50" cy="50" rx="38" ry="14" fill="#b06a2a"/><ellipse cx="46" cy="45" rx="26" ry="7" fill="#d4945a" opacity=".8"/>`,
+  hankies: () => `<rect x="12" y="2" width="3.5" height="96" fill="#6a5a4a"/>` + [10, 34, 58].map(y => `<path d="M15 ${y}Q55 ${y + 10} 98 ${y + 2}" stroke="#d8d0c0" stroke-width="1.2" fill="none"/>` + [0, 1, 2, 3, 4].map(k => { const x = 20 + k * 16, t = (x - 15) / 83, yy = y + 10 * t * (1 - t) * 4 * .5 + t * 2; return `<path d="M${x} ${yy}h12l-1 14h-10Z" fill="#f4d02a"/>`; }).join('')).join(''),
   shadow: () => `<path d="M60 98Q58 70 64 54Q60 44 66 36Q74 34 76 44Q80 56 78 70Q80 86 86 98Z" fill="${C.K}" opacity=".75"/>`,
 };
 
@@ -237,6 +239,10 @@ const ART = {
   kanojonoshima: 'sea; sun 70 34 26; moto 46 108 52', oneweek: 'fir 20 84 42; fir 82 84 42; road; moto 50 116 42', greatescape: 'fence; mount 50 60 70; moto 50 112 46',
   shinyatokkyu: 'dunes; sunset 50 56 60; bus 50 106 58', tabiwosuruki: 'stars; aurora; snow; fir 50 100 56', straightstory: 'greenhills; road; mower 50 112 56',
   wildhogs: 'dunes; sun 70 30 26; moto 30 108 36; moto 70 116 36', lastvegas: 'stars; city; star 50 40 26', up: 'cloud 24 40 30; balloons 50 50 80; house 50 108 44',
+  zanjitsuroku: 'moon 30 30 24; pine 42 90 66; scroll 66 120 30', kenkaku: 'river; sakura 24 84 44; sword 60 88 60', rounen: 'columns 50 62 70; seedling 50 116 36',
+  poppoya: 'snow; train 50 104 66', jiseiroku: 'stars; laurel 50 58 58; candle 50 112 36', koufukuron: 'sun 50 46 50; greenhills; quill 50 112 38',
+  pest: 'sun 26 32 26; sea; city; mouse 28 124 20', awakenings: 'sun 50 50 40; window; hands 50 116 40', an: 'petals; sakura 36 80 64; dorayaki 66 118 38',
+  hankachi: 'cloud 72 120 26; greenhills; hankies 52 70 86',
 };
 
 function draw(spec, ink) {

@@ -17,6 +17,7 @@ def sub(s, a, b, n=None, regex=False):
 REUSE = ['diewithzero', 'jinseifruits', 'kirawareru', 'perfectdays', 'kouhan', 'seneca', 'tooitaiko', 'greenbook', 'uchuukyoudai', 'nomadland']
 TITLE = '川村さんへの贈り物'
 N = len(re.findall(r'^(?:window\.BOOKS=\[)?\["', open(os.path.join(O, 'books.js'), encoding='utf-8').read(), re.M))   # 作品の数（books.js の行）
+KN = (lambda n: ('' if n < 20 else '一二三四五六七八九'[n // 10 - 1]) + ('十' if n >= 10 else '') + ('' if n % 10 == 0 else '一二三四五六七八九'[n % 10 - 1]))(N)   # 漢数字（八十二 など）
 
 # ---------------- engine.js ----------------
 e = rd('engine.js')
@@ -34,14 +35,15 @@ for a, b in [("'gogo_rec'", "'okuri_rec'"), ("'gogo_own'", "'okuri_own'"), ("'go
 e = sub(e, "  for (let x = 5; x < T; x += 5) a.push(x);", "  for (let x = 10; x < T; x += 10) a.push(x);")
 e = sub(e, r"function msMessage\(n\) \{.*?\n\}", """function msMessage(n) {
   const T = BOOKS.length;
-  if (n >= T) return `……${T}作、すべてに栞が挟まりました。<br>五十七歳の一年に、五十七の人生を通りぬけてきたことになります。ここに並んでいるのは、もう、誰かからの贈り物ではありません。<b>あなたが自分の手で選び、走りぬけてきた${T}作</b>です。最後の栞は、金の地に、書斎の紋を入れておきました。`;
+  if (n >= T) return `……${T}作、すべてに栞が挟まりました。<br>{KN}の人生を、通りぬけてきたことになります。ここに並んでいるのは、もう、誰かからの贈り物ではありません。<b>あなたが自分の手で選び、走りぬけてきた${T}作</b>です。最後の栞は、金の地に、書斎の紋を入れておきました。`;
   if (n === 10) return '十作目の栞ですね。……十の人生を通ってきた人の顔に、少しなってきました。<b>ここからの栞は、若葉の色になります。</b>';
   if (n === 20) return '二十作目。……作品と作品が、頭の中でつながりはじめるころです。ある映画の場面が、別の本の一行を思い出させる。<b>ここからの栞は、藍の色になります。</b>';
   if (n === 30) return '三十作目。……ここまで来ると、栞の言葉が、そのまま、あなたの言葉になってきます。<b>ここからの栞は、金の色になります。</b>';
   if (n === 40) return '四十作目。……どの棚にも、あなたの栞が光っています。<b>ここからの栞は、星空の色になります。</b>';
-  if (n === 50) return '五十作目。……ここまで来た人は、そう多くありません。最後の棚まで、あと少しです。';
+  if (n === 50) return `五十作目。……ここまで来た人は、そう多くありません。残りは、あと${T - 50}作です。`;
+  if (n === 60) return '六十作目。……もう、どの棚の前に立っても、懐かしい顔ぶれが並んでいるはずです。';
   return `${n}作目の栞です。……よく、ここまで来ましたね。`;
-}""", regex=True)
+}""".replace('{KN}', KN), regex=True)
 # 本棚：四つの棚に分けて並べる（リスト順のとき）。詩集はないので、絞りこみは「漫画」だけにする
 e = sub(e, "  const key = VIEW.sort === 'aiu' ? gyoOf : null;",
         "  const themeOf = b => { let t = null; (window.THEMES || []).forEach(x => { if (+b[3] >= x[0]) t = x[1]; }); return t; };\n"
@@ -52,7 +54,7 @@ e = sub(e, "if ((VIEW.v || 0) < 2) { VIEW.sort = 'aiu'; VIEW.v = 2; }   // 並�
 e = sub(e, "['no', 'リスト順', null],", "['no', '棚の順', null],")
 # 本棚のことば
 e = sub(e, r"\} else msg = 'いらっしゃいませ。夜更けの書斎へ、ようこそ。.*?';\n",
-        f"}} else msg = 'いらっしゃいませ。夜更けの書斎へ、ようこそ。マスターです。<br>ここには、<b>五十七歳を迎えるあなたに贈りたい、{N}の作品</b>を、四つの棚に置いています。週に一作あまりのペースで、ちょうど一年。五十七歳の一年に、五十七の物語を。時間とお金のこと、心の持ち方、自分の店をひらくこと、そして、オートバイと旅。<b>読まなくても、観なくてもいい。中に入って、主人公になってみてください。</b>迷ったら、下の「次の一作」からどうぞ。';\n", regex=True)
+        f"}} else msg = 'いらっしゃいませ。夜更けの書斎へ、ようこそ。マスターです。<br>ここには、<b>五十七歳を迎えるあなたに贈りたい、{N}の作品</b>を、四つの棚に置いています。急がなくていい。五十七歳の一年に始めて、そのあとも、ゆっくりと。時間とお金のこと、心の持ち方、自分の店をひらくこと、そして、オートバイと旅。<b>読まなくても、観なくてもいい。中に入って、主人公になってみてください。</b>迷ったら、下の「次の一作」からどうぞ。';\n", regex=True)
 e = sub(e, r"\$\('rackNote'\)\.innerHTML = '人生の午後に.*?';\n",
         f"$('rackNote').innerHTML = '五十七歳の一年に贈る{N}作を、四つの棚に並べました。古い時代の作品ほど、使いこまれた姿で並んでいます。映画は、ケースの姿で。<br>背表紙をタップすると、その作品のページが開きます。「持っている」「読んだ・観た」の記録や、表紙の写真の設定も、そこでできます。';\n", regex=True)
 e = sub(e, "$('titleNote').textContent = `収録：${EPS.length}作（本・映画・漫画・詩集／1作 15〜25分）`;",
@@ -71,7 +73,7 @@ h = sub(h, "body[data-world=lib] #play{background:radial-gradient(ellipse at 50%
 h = sub(h, '<div class="kicker">人 生 の 午 後 に</div>\n  <h1>午後の<br>書斎</h1>\n  <div class="tag">読む前に、観る前に、入ってみる。</div>',
         '<div class="kicker">五 十 七 歳 の 一 年 に</div>\n  <h1>川村さんへの<br>贈り物</h1>\n  <div class="tag">走る人へ。つくる人へ。迎える人へ。</div>')
 h = sub(h, r'<p class="lead">本や映画の主人公になって.*?</p>',
-        '<p class="lead">五十七の物語を、四つの棚に。<br>本や映画の主人公になって、名場面を生きてみる。<br>幕が下りたら、夜更けの書斎のマスターが<br>その作品を選んだわけを語り、ひとつだけ問いかける。<br>――次の章を、あなたはどう走りますか。</p>', regex=True)
+        '<p class="lead">{KN}の物語を、四つの棚に。<br>本や映画の主人公になって、名場面を生きてみる。<br>幕が下りたら、夜更けの書斎のマスターが<br>その作品を選んだわけを語り、ひとつだけ問いかける。<br>――次の章を、あなたはどう走りますか。</p>'.replace('{KN}', KN), regex=True)
 h = sub(h, '<div><h2>午後の書斎</h2>', f'<div><h2>{TITLE}</h2>')
 h = sub(h, '持っている <b id="ownc">0</b> / 15</div>', f'持っている <b id="ownc">0</b> / {N}</div>')
 h = sub(h, '<h3 class="shelfh">人生の午後の15作</h3>', f'<h3 class="shelfh">五十七歳に贈る、{N}作</h3>')
@@ -113,6 +115,8 @@ a = sub(a, "  shadow: () =>", """  swing: i => `<path d="M14 96L26 14H74L86 96" 
   wrench: i => `<path d="M30 80L64 40" stroke="${i}" stroke-width="9" stroke-linecap="round"/><path d="M60 26Q70 16 82 22L72 32L76 38L86 30Q90 42 80 50Q72 54 64 48Z" fill="${i}"/><circle cx="30" cy="80" r="3" fill="${C.K}"/>`,
   chopper: i => `<circle cx="16" cy="72" r="14" fill="none" stroke="${C.K}" stroke-width="5"/><circle cx="88" cy="74" r="12" fill="none" stroke="${C.K}" stroke-width="3"/><path d="M16 72L28 56H56L64 36M16 72H40L56 56" stroke="#c8c8c8" stroke-width="3" fill="none"/><path d="M62 32L88 74" stroke="#e0e0e0" stroke-width="3"/><path d="M60 16L58 34M56 16H68" stroke="#e0e0e0" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M36 48Q40 39 54 41Q61 45 57 54H37Z" fill="${C.B}"/><path d="M37 50H57M37 53H57" stroke="${C.R}" stroke-width="1.8"/><path d="M38 51.5H57" stroke="${C.W}" stroke-width="1.2"/><circle cx="44" cy="45" r="1.4" fill="${C.W}"/><circle cx="49" cy="44" r="1.4" fill="${C.W}"/><circle cx="54" cy="45" r="1.4" fill="${C.W}"/><path d="M22 54L18 28" stroke="#e0e0e0" stroke-width="3"/><path d="M24 54H34" stroke="${C.K}" stroke-width="4"/><rect x="30" y="58" width="16" height="10" rx="2" fill="#9a9a9a"/>`,
   aurora: () => `<path d="M0 30Q25 10 50 26T100 22V44Q75 30 50 46T0 48Z" fill="${C.G}" opacity=".45"/><path d="M0 46Q30 30 55 44T100 40V54Q70 46 50 58T0 60Z" fill="#7be0b0" opacity=".3"/>`,
+  dorayaki: () => `<ellipse cx="50" cy="66" rx="38" ry="12" fill="#9a5a22"/><rect x="13" y="54" width="74" height="9" rx="4" fill="#3e1a12"/><ellipse cx="50" cy="50" rx="38" ry="14" fill="#b06a2a"/><ellipse cx="46" cy="45" rx="26" ry="7" fill="#d4945a" opacity=".8"/>`,
+  hankies: () => `<rect x="12" y="2" width="3.5" height="96" fill="#6a5a4a"/>` + [10, 34, 58].map(y => `<path d="M15 ${y}Q55 ${y + 10} 98 ${y + 2}" stroke="#d8d0c0" stroke-width="1.2" fill="none"/>` + [0, 1, 2, 3, 4].map(k => { const x = 20 + k * 16, t = (x - 15) / 83, yy = y + 10 * t * (1 - t) * 4 * .5 + t * 2; return `<path d="M${x} ${yy}h12l-1 14h-10Z" fill="#f4d02a"/>`; }).join('')).join(''),
   shadow: () =>""")
 a = sub(a, re.search(r"const ART = \{.*?\n\};", a, re.S).group(0), """const ART = {
   ikiru: 'snow; swing 50 104 60', tokyo: 'sun 74 30 24; sea; boat 40 104 40; house 72 98 28', akahige: 'jroofs 50 90 72; lantern 26 120 26',
@@ -140,6 +144,10 @@ a = sub(a, re.search(r"const ART = \{.*?\n\};", a, re.S).group(0), """const ART 
   kanojonoshima: 'sea; sun 70 34 26; moto 46 108 52', oneweek: 'fir 20 84 42; fir 82 84 42; road; moto 50 116 42', greatescape: 'fence; mount 50 60 70; moto 50 112 46',
   shinyatokkyu: 'dunes; sunset 50 56 60; bus 50 106 58', tabiwosuruki: 'stars; aurora; snow; fir 50 100 56', straightstory: 'greenhills; road; mower 50 112 56',
   wildhogs: 'dunes; sun 70 30 26; moto 30 108 36; moto 70 116 36', lastvegas: 'stars; city; star 50 40 26', up: 'cloud 24 40 30; balloons 50 50 80; house 50 108 44',
+  zanjitsuroku: 'moon 30 30 24; pine 42 90 66; scroll 66 120 30', kenkaku: 'river; sakura 24 84 44; sword 60 88 60', rounen: 'columns 50 62 70; seedling 50 116 36',
+  poppoya: 'snow; train 50 104 66', jiseiroku: 'stars; laurel 50 58 58; candle 50 112 36', koufukuron: 'sun 50 46 50; greenhills; quill 50 112 38',
+  pest: 'sun 26 32 26; sea; city; mouse 28 124 20', awakenings: 'sun 50 50 40; window; hands 50 116 40', an: 'petals; sakura 36 80 64; dorayaki 66 118 38',
+  hankachi: 'cloud 72 120 26; greenhills; hankies 52 70 86',
 };""")
 wr('art.js', a)
 print(f'okurimono: engine.js, index.html, art.js を作りました（{N}作・gogo と共通 {len(REUSE)}作・独自 {len(own)}作）')

@@ -2,7 +2,7 @@
 (() => {
 EPS.push({
   id: 'kazenouta', title: '風の歌を聴け', author: '村上春樹', year: '1979年', minutes: 14,
-  lists: '36',
+  lists: '45',
   blurb: '1970年の夏、海辺の町。大学生の「僕」は、友人の「鼠」と、ジェイの店で、ひたすらビールを飲んでいた。ジャズ喫茶の主人が、店を閉めたあとの台所で書いた、デビュー作。',
   cover: ['linear-gradient(165deg,#a8d0e0,#5a90b0 55%,#1e3a5a)', '#f8f4e8'],
   chars: {'鼠':'#6a8a5a','ジェイ':'#a07a3a','彼女':'#b0607a'},

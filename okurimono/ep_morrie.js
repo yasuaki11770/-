@@ -3,7 +3,7 @@
 (() => {
 EPS.push({
   id: 'morrie', title: 'モリー先生との火曜日', author: 'ミッチ・アルボム', year: '1997年', minutes: 15,
-  lists: '18',
+  lists: '26',
   blurb: '難病で死を間近にした恩師のもとへ、十六年ぶりに通いはじめた元教え子。毎週火曜日の「最後の授業」の主題は、人生の意味だった。',
   cover: ['linear-gradient(165deg,#f0d8c8,#c89a8a 55%,#6a4a5a)', '#2a1a20'],
   chars: {'モリー':'#8a6a4a','コニー':'#6a8a7a','兄':'#5a6a8a'},
