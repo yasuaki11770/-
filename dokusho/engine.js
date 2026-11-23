@@ -684,7 +684,7 @@ function openShelf() {
   } else msg = 'ようこそ、夜の図書館へ。わしは司書のミネル。<br>本が読めなくても、かまわん。<b>本の中に入って、主人公になってみればいい。</b>迷ったら、下の「次の一冊」から初めてごらん。';
   $('shelfMsg').innerHTML = OWL + `<p>${msg}</p>`;
   $('picksBox').innerHTML = picksHTML(); wirePicks();
-  $('rackNote').innerHTML = '中等部・高等部「読書100選」を合わせた158冊。古い時代の本ほど、使いこまれた姿で並んでいます。<br>背表紙をタップすると、本の紹介、「持っている」「本で読んだ」の記録ができます。';
+  $('rackNote').innerHTML = '中等部・高等部「読書100選」を合わせた158冊。古い時代の本ほど、使いこまれた姿で並んでいます。<br>背表紙をタップすると、その本のページが開きます。「持っている」「本で読んだ」の記録も、そこでできます。';
   renderSettings();
   renderRacks();
 }
@@ -740,7 +740,7 @@ function renderRacks() {
   const cmp = SORTS.find(x => x[0] === VIEW.sort)[2];
   if (cmp) list.sort(cmp);   // 同じ評価のときは、もとの番号順のまま
   if (!list.length) {
-    $('racks').innerHTML = `<p class="small" style="opacity:.6;text-align:center;padding:20px 0">${QUERY ? 'その言葉にあてはまる本は、見つかりませんでした。' : mine ? '「持っている」にした本が、ここに並びます。<br>背表紙をタップして、持っている本にチェックしてください。' : 'あてはまる本は、まだありません。'}</p>`;
+    $('racks').innerHTML = `<p class="small" style="opacity:.6;text-align:center;padding:20px 0">${QUERY ? 'その言葉にあてはまる本は、見つかりませんでした。' : mine ? '「持っている」にした本が、ここに並びます。<br>本のページの「わたしの記録」で、持っている本にチェックしてください。' : 'あてはまる本は、まだありません。'}</p>`;
     return;
   }
   const head = (g, l) => g ? `<h3>${esc(g)}<small>（${l.length}冊）</small></h3>` : '';
@@ -758,7 +758,8 @@ function renderRacks() {
     };
     const rows = l => { const out = []; for (let k = 0; k < l.length; k += 10) out.push(l.slice(k, k + 10)); return out; };
     $('racks').innerHTML = groups.map(([g, l]) => head(g, l) + rows(l).map(r => `<div class="shelfrow">${r.map(spine).join('')}${r.length < 10 ? '<span class="bookend"></span>' : ''}</div>`).join('')).join('');
-    $('racks').querySelectorAll('.spine').forEach(s => s.onclick = () => openSheet(s.dataset.t));
+    // 背表紙をタップしても、表紙と同じく本のページを開く（物語がまだない本だけ、小さなカードを出す）
+    $('racks').querySelectorAll('.spine').forEach(s => s.onclick = () => { const e = EPT(s.dataset.t); if (e) openBook(e); else openSheet(s.dataset.t); });
   } else {
     $('racks').innerHTML = groups.map(([g, l]) => head(g, l) + `<div class="llist">${l.map(b => `
       <div class="lrow${OWN[b[0]] ? ' own' : ''}" data-t="${esc(b[0])}" role="button" aria-pressed="${OWN[b[0]] ? 'true' : 'false'}">
@@ -839,7 +840,9 @@ function wireCovSel(ep) {
   if ($('phDel')) $('phDel').onclick = async () => { if (!confirm('この本の表紙の写真を消しますか？')) return; await phDel(t); delete CPREF[t]; saveCpref(); redraw(); };
 }
 
+let SHELF_Y = null;   // 本棚から本のページを開いたときの、本棚のスクロール位置
 function openBook(ep, justDone) {
+  SHELF_Y = !justDone && $('shelf').classList.contains('on') ? window.scrollY : null;
   const r = rec(ep.id), d = r.date, bk = BOOK(ep.title), own = !!OWN[ep.title];
   const el = $('book');
   /* たたんでおける欄（見出しをタップすると開く） */
@@ -897,7 +900,7 @@ function openBook(ep, justDone) {
   $('bkMemo').oninput = () => { rec(ep.id).memo = $('bkMemo').value; save(); };
   if ($('bkStart')) $('bkStart').onclick = () => startEp(ep);
   if ($('bkAsk')) $('bkAsk').onclick = () => startEp(ep, 'resolve');
-  $('bkBack').onclick = openShelf;
+  $('bkBack').onclick = () => { const y = SHELF_Y; openShelf(); if (y != null) window.scrollTo(0, y); };   // 開いたときの本棚の位置に戻る
   // 「持っている」（わたしの記録の中）：表紙の欄は、持っている本のときだけ出す
   $('bkOwn').onclick = () => {
     const on = toggleOwn(ep.title);
