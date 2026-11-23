@@ -125,8 +125,6 @@ e = sub(e, "<div class=\"sec\"><h3>この本のめやす</h3>${ratesHTML(bk)}</d
 e = sub(e, "fold('fCov', '表紙', '絵か、自分の本の写真か'", "fold('fCov', '表紙', '絵か、持っている本・ディスクの写真か'")
 e = sub(e, "r.paper ? `本で読んだ ${ymd(r.paper)}` : ''", "r.paper ? `読んだ・観た ${ymd(r.paper)}` : ''")
 e = sub(e, "both: ['#c62a1f', 'アプリ・本', 'アプリと本の両方で読了'], paper: ['#23804a', '本', '本で読了']", "both: ['#c62a1f', 'アプリ・実物', 'アプリと実物の両方で読了'], paper: ['#23804a', '実物', '実物で読んだ・観た']")
-e = sub(e, "<div class=\"sec\"><h3>この本でできること</h3><p>主人公になって名場面を体験し、ミネル先生から「なぜ名作なのか」を聞く。最後に、先生の問いかけに答えて、自分の栞を選ぶ。</p>",
-        "<div class=\"sec\"><h3>この作品でできること</h3><p>主人公になって名場面を体験し、書斎のマスターから「なぜ名作なのか」を聞く。最後に、マスターの問いかけに答えて、自分の栞を選ぶ。</p>")
 e = sub(e, "${d ? 'もう一度、本の中へ' : 'この本の扉を開く'}", "${d ? 'もう一度、作品の中へ' : 'この作品の扉を開く'}")
 e = sub(e, "<div class=\"lk\"><span>この本、好き？</span>${likeHTML(EP.id)}</div>", "<div class=\"lk\"><span>この作品、好き？</span>${likeHTML(EP.id)}</div>")
 e = sub(e, "<button class=\"btn primary\" id=\"lessonOk\">この栞を、本に挟む</button>", "<button class=\"btn primary\" id=\"lessonOk\">この栞を、作品に挟む</button>")

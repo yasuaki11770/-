@@ -843,16 +843,15 @@ function openBook(ep, justDone) {
         <h2>${esc(ep.title)}</h2>
         <span>${esc(ep.author)}（${esc(ep.year)}）</span>
         <span class="small">${esc(ep.blurb)}</span>
+        <span class="small mute">アプリで　約${ep.minutes}分</span>
         <div class="done">アプリで読了　${d ? `<b>${d[0]}</b> 年 <b>${d[1]}</b> 月 <b>${d[2]}</b> 日${r.n ? `<small>（${r.n}枚目の栞）</small>` : ''}` : '<span class="mute">まだ</span>'}</div>
       </div>
     </div>`;
-  /* 操作は上に。読了したばかりのときは出さない（下の「本棚へ戻る」だけ） */
+  /* 操作は上に。読了したばかりのときは出さない（下の「本棚へ戻る」だけ）。「持っている」は、背表紙のカードとリストで */
   const acts = justDone ? '' : `
     <div class="bk-act">
       <button class="btn primary" id="bkStart">${d ? 'もう一度、作品の中へ' : 'この作品の扉を開く'}</button>
       ${d ? `<button class="btn" id="bkAsk" style="text-align:center">問いかけに、もう一度答える</button>` : ''}
-      <button class="btn owntg${own ? ' on' : ''}" id="bkOwn">${ownLabel(own)}</button>
-      <button class="btn ghost" id="bkBack">本棚へ戻る</button>
     </div>`;
   /* この本のめやす：たたまずに、操作のすぐ下に */
   const rates = bk && bk.length >= 12 ? `<div class="sec"><h3>この作品のめやす</h3>${ratesHTML(bk)}</div>` : '';
@@ -867,15 +866,15 @@ function openBook(ep, justDone) {
     <div class="sec mine"><h3>あなたの栞</h3>${cardHTML(ep, r, true)}
       ${r.resolve.length ? `<p class="small">持って帰りたいもの</p><ul>${r.resolve.map(i => `<li>${fmt(A(ep.resolve.items[i].t))}</li>`).join('')}</ul>` : ''}
       ${r.mirror && r.mirror.length ? `<p class="small">読んだときの自分</p><ul>${r.mirror.map(i => `<li>${fmt(A(ep.mirror.items[i].t))}</li>`).join('')}</ul>` : ''}
-    </div>` : `
-    <div class="sec"><h3>この作品でできること</h3><p>主人公になって名場面を体験し、書斎のマスターから「なぜ名作なのか」を聞く。最後に、マスターの問いかけに答えて、自分の栞を選ぶ。</p><p class="small mute">所要時間　約${ep.minutes}分</p></div>`;
+    </div>` : '';
   const more = (d ? [
     fold('fWhy', '名作のわけ', '四つの話', ep.why.map((w, i) => `<p><b>その${NUM[i]}　${esc(w.h)}</b><br>${fmt(A(w.short))}</p>`).join('')),
     fold('fSum', `3分でわかる『${esc(ep.title)}』`, '結末まで書いてあります', ep.summary.map(p => `<p>${fmt(p)}</p>`).join('')),
     fold('fRead', '本物にふれるなら', '', `<p>${fmt(A(ep.read))}</p>`),
   ] : []).concat(own ? [fold('fCov', '表紙', '絵か、持っている本・ディスクの写真か', `<div id="covsel" class="covsel">${covSelHTML(ep)}</div>`)] : []).join('');
-  const bottom = justDone ? `<div class="donebar"><button class="btn primary" id="bkBack">本棚へ戻る</button></div>` : '';
-  // 並び：表紙と題 → 操作（扉を開く・持っている・本棚へ戻る）→ めやす → 栞 → たたんだ欄 → わたしの記録（最後）
+  const bottom = justDone ? `<div class="donebar"><button class="btn primary" id="bkBack">本棚へ戻る</button></div>`
+    : `<button class="btn bkback" id="bkBack">本棚へ戻る</button>`;
+  // 並び：表紙と題 → 操作（扉を開く・問いかけにもう一度）→ めやす → 栞 → たたんだ欄 → わたしの記録 → 本棚へ戻る（一番下）
   // 読了したばかりのときは、栞を先に（操作は出さず、下に「本棚へ戻る」）
   el.innerHTML = top + acts + (justDone ? mine + rates : rates + mine) + more + myrec + bottom;
   show('book');
@@ -893,8 +892,6 @@ function openBook(ep, justDone) {
   if ($('bkStart')) $('bkStart').onclick = () => startEp(ep);
   if ($('bkAsk')) $('bkAsk').onclick = () => startEp(ep, 'resolve');
   $('bkBack').onclick = openShelf;
-  // 「持っている」を切りかえたら、表紙の欄も出したり消したりするので、ページを描き直す
-  if ($('bkOwn')) $('bkOwn').onclick = () => { toggleOwn(ep.title); const y = window.scrollY; openBook(ep); window.scrollTo(0, y); };
 }
 
 /* ---------- 栞帳：これまでにはさんだ栞の一覧 ---------- */
