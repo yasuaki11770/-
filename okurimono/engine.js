@@ -417,7 +417,9 @@ function setBgm(on) {
 }
 function setSong(k) {
   if (k === 'alt') bgmAlt = VIEW.song === 'alt' ? bgmAlt : (SONGS[VIEW.song] ? VIEW.song : 'tooi');
-  VIEW.song = k; saveView(); bgmSwitch(); bgmUI();
+  VIEW.song = k;
+  if (!VIEW.bgm) VIEW.bgm = true;   // 曲を押したら、その曲が流れる（音楽が「なし」のときも、「あり」にする）
+  saveView(); bgmSwitch(); bgmUI();
   if ($('settings').innerHTML) renderSettings();
 }
 if (BGM) {
@@ -969,7 +971,7 @@ function renderSettings() {
   $('settings').querySelectorAll('[data-ch]').forEach(b => b.onclick = () => { VIEW.choices = b.dataset.ch === '1'; saveView(); renderSettings(); toast(VIEW.choices ? '本の中でも、選びながら読みます' : '原作の流れのまま、読み進めます'); });
   $('settings').querySelectorAll('[data-fz]').forEach(b => b.onclick = () => { VIEW.fsz = b.dataset.fz; saveView(); applyFsz(); renderSettings(); });
   $('settings').querySelectorAll('[data-bgm]').forEach(b => b.onclick = () => setBgm(b.dataset.bgm === '1'));
-  $('settings').querySelectorAll('[data-song]').forEach(b => b.onclick = () => { setSong(b.dataset.song); if (VIEW.bgm) toast(`♪ ${SONGS[bgmKey()].title}`); });
+  $('settings').querySelectorAll('[data-song]').forEach(b => b.onclick = () => { setSong(b.dataset.song); toast(`♪ ${SONGS[bgmKey()].title}`); });
   $('bkExport').onclick = exportData;
   $('bkImport').onclick = importData;
 }
