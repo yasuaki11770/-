@@ -761,9 +761,10 @@ function renderRacks() {
     // 背表紙をタップしても、表紙と同じく本のページを開く（物語がまだない本だけ、小さなカードを出す）
     $('racks').querySelectorAll('.spine').forEach(s => s.onclick = () => { const e = EPT(s.dataset.t); if (e) openBook(e); else openSheet(s.dataset.t); });
   } else {
-    $('racks').innerHTML = groups.map(([g, l]) => head(g, l) + `<div class="llist">${l.map(b => `
+    // 左の□は「持っている」の印。何の印か分かるように、□の下に小さく書き、リストの上にも一行で案内する
+    $('racks').innerHTML = '<p class="lhint">左の□をタップすると、「持っている」の印がつきます（もう一度タップで外れます）。</p>' + groups.map(([g, l]) => head(g, l) + `<div class="llist">${l.map(b => `
       <div class="lrow${OWN[b[0]] ? ' own' : ''}" data-t="${esc(b[0])}" role="button" aria-pressed="${OWN[b[0]] ? 'true' : 'false'}">
-        <span class="ck">${OWN[b[0]] ? '✓' : ''}</span>
+        <span class="ckw"><span class="ck">${OWN[b[0]] ? '✓' : ''}</span><small>持って<br>いる</small></span>
         <span class="lt"><b>${esc(b[0])}${stampMini(b[0])}${likeOf(b[0]) ? `<i class="lkm">${'♥'.repeat(likeOf(b[0]))}</i>` : ''}</b><small>${esc(b[1] || '―')}　${esc(fmtLists(b[3]))}</small>${ratesMini(b)}</span>
         ${badge(b[3])}${live[b[0]] ? `<button class="go" data-ep="${live[b[0]]}">ひらく</button>` : ''}
       </div>`).join('')}</div>`).join('');
