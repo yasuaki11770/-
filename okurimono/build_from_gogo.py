@@ -115,7 +115,7 @@ a = sub(a, re.search(r"const ART = \{.*?\n\};", a, re.S).group(0), """const ART 
   kirawareru: 'hills; bird 44 64 54; cloud 70 36 40', shiawaseyuuki: 'sun 70 30 26; greenhills; hands 50 98 52', yumezou: 'stars; elephant 50 96 64',
   cheese: 'ground; cheese 50 100 60', kimitachi: 'city; stars; star 72 30 18; book 46 106 44', morrie: 'window; flower 50 104 46',
   wonderfullife: 'snow; house 50 96 66; bell 76 38 22', perfectdays: 'komorebi; gtree 50 74 72; camera 46 118 36', grantorino: 'house 34 86 44; car 56 112 62',
-  marigold: 'sun 50 40 30; dome 50 92 70; redflower 22 120 22; redflower 80 120 22', jibunnoshigoto: 'ground; hands 50 96 60; seedling 50 64 30',
+  marigold: 'sun 50 40 30; onion 50 92 70; redflower 22 120 22; redflower 80 120 22', jibunnoshigoto: 'ground; hands 50 96 60; seedling 50 64 30',
   sukinakoto: 'sun 76 28 26; rocket 46 96 60', chef: 'sun 24 30 22; road; truck 50 118 60', shiawasepan: 'sea; greenhills; cabin 36 90 38; bread 62 116 44',
   kamome: 'sea; bird 72 36 26; onigiri 46 104 54', mallory: 'hills; house 50 86 54; flower 24 120 20; flower 78 120 20', bagdadcafe: 'sunset 50 60 66; dunes; mug 50 108 44',
   kazenouta: 'sea; moon 74 28 24; bottle 46 104 54', stationagent: 'gtree 22 76 48; train 50 106 60', localhero: 'stars; aurora; sea; boat 50 112 40',
