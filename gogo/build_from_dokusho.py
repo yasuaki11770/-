@@ -147,21 +147,6 @@ e = sub(e, "data.app !== 'meisaku-no-nakae'", "data.app !== 'gogo-no-shosai'")
 e = sub(e, "「名作のなかへ」の記録ファイル", "「午後の書斎」の記録ファイル")
 # オルゴール
 e = sub(e, "artist: '名作のなかへ', album: '図書館のオルゴール'", "artist: '午後の書斎', album: '書斎のオルゴール'")
-# 感想を一つの文章に
-e = sub(e, r"function draftText\(ep\) \{.*?\n  return P\.join\('\\n'\);\n\}", r"""function draftText(ep) {
-  const r = REC[ep.id] || {}, P = [], b = BOOK(ep.title), v = b && isFilm(b) ? '観' : '読';
-  P.push(`『${ep.title}』（${ep.author}）を${v}んで`, '');
-  const when = r.paper ? `${ymd(r.paper)}に、この作品を${v}みました。`.replace('観み', '観') : r.date ? `${r.date[0]}年${r.date[1]}月${r.date[2]}日に、この作品の中に入りました。` : `この作品を${v}みました。`.replace('観み', '観');
-  const like = r.like >= 4 ? 'わたしにとって、大切な一作になりました。' : r.like && r.like <= 2 ? '正直に言えば、すぐに好きになれる作品ではありませんでした。それでも、考えさせられることがありました。' : '';
-  P.push('　' + when + like);
-  if (r.date) P.push(`　この作品から持って帰りたいと思ったのは、「${plain(cardText(ep, r)).replace(/\n/g, '').replace(/。$/, '')}」ということです。（なぜそう思ったのか）`);
-  const memo = String(r.memo || '').split(/\n+/).map(x => x.trim()).filter(Boolean);
-  if (memo.length) memo.forEach(m => P.push('　' + m));
-  else P.push('　（一番心に残った場面と、そのとき感じたこと）');
-  P.push('　（これからの暮らしの中で、どう生かしていきたいか）');
-  return P.join('\n');
-}""", regex=True)
-e = sub(e, "栞の言葉と感想を、一つの文章にまとめました。<b>下書き</b>なので", "栞の言葉と感想を、一つの文章にまとめました。<b>下書き</b>なので")
 # 起動
 e = sub(e, r"\$\('titleNote'\)\.textContent = EPS\.length >= BOOKS\.length\n  \? `.*?`\n  : `.*?`;", "$('titleNote').textContent = `収録：${EPS.length}作（本・映画・漫画・詩集／1作 15〜25分）`;", regex=True)
 e = sub(e, "confirm('本棚へ戻りますか？（この本は最初からになります）')", "confirm('本棚へ戻りますか？（この作品は最初からになります）')")
@@ -171,7 +156,6 @@ e = sub(e, "/* ミネル先生の言葉・問いかけの項目を、大人の�
 e = sub(e, "/* ---------- 掲載（中等部・高等部）と、持っている本 ---------- */", "/* ---------- 作品の種類と、持っている作品 ---------- */")
 e = sub(e, "/* ---------- ミネル先生のおすすめ：次の一冊（やさしい順）と、今日の一冊（日がわり） ---------- */", "/* ---------- マスターのおすすめ：次の一作（入りやすい順）と、今夜の一作（日がわり） ---------- */")
 e = sub(e, "   // 158冊すべてに入れるようになったか", "")
-e = sub(e, "/* ---------- 学校の読書記録用の一覧（印刷） ---------- */", "/* ---------- （名作のなかへ の、学校の読書記録用の印刷。午後の書斎では使わない） ---------- */")
 e = sub(e, "/* ---------- 図書館のオルゴール（オリジナル曲。tools/orgel.py・orgel2.py で楽譜から合成） ----------", "/* ---------- 書斎のオルゴール（オリジナル曲。dokusho/tools/orgel.py・orgel2.py で楽譜から合成） ----------")
 wr('engine.js', e)
 

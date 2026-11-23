@@ -849,7 +849,7 @@ function openBook(ep, justDone) {
         <span>${esc(ep.author)}（${esc(ep.year)}）</span>
         <span class="small">${esc(ep.blurb)}</span>
         <span class="small mute">アプリで　約${ep.minutes}分</span>
-        ${d ? `<div class="done"><span class="dl">アプリで読了　<b>${d[0]}</b>年<b>${d[1]}</b>月<b>${d[2]}</b>日</span>${r.n ? `<small>${r.n}枚目の栞</small>` : ''}</div>` : ''}
+        ${d ? `<div class="done"><span class="dl">アプリで読了　<b>${d[0]}</b>年<b>${d[1]}</b>月<b>${d[2]}</b>日</span></div>` : ''}
       </div>
     </div>`;
   /* 操作は上に。読了したばかりのときは出さない（下の「本棚へ戻る」だけ）。「持っている」は、背表紙のカードとリストで */
@@ -867,7 +867,7 @@ function openBook(ep, justDone) {
       <textarea id="bkMemo" rows="4" placeholder="感想を、自由に。">${esc(r.memo || '')}</textarea>
     </div>`, justDone);
   const mine = d ? `
-    <div class="sec mine"><h3>あなたの栞</h3>${cardHTML(ep, r, true)}
+    <div class="sec mine"><h3>あなたの栞${r.n ? `<small>${r.n}枚目</small>` : ''}</h3>${cardHTML(ep, r, true)}
       ${r.resolve.length ? `<p class="small">改めたいこと</p><ul>${r.resolve.map(i => `<li>${fmt(A(ep.resolve.items[i].t))}</li>`).join('')}</ul>` : ''}
       ${r.mirror && r.mirror.length ? `<p class="small">読んだときの自分</p><ul>${r.mirror.map(i => `<li>${fmt(A(ep.mirror.items[i].t))}</li>`).join('')}</ul>` : ''}
     </div>` : '';
@@ -887,13 +887,6 @@ function openBook(ep, justDone) {
   wirePaper(el, ep.id, () => { $('bkCover').innerHTML = coverHTML(ep, 'div'); });
   wireLike(el.querySelector('.myrec'), ep.id);
   $('bkMemo').oninput = () => { rec(ep.id).memo = $('bkMemo').value; save(); };
-  if ($('bkDraft')) $('bkDraft').onclick = () => {
-    $('draftBox').innerHTML = `<p class="small mute" style="margin:0 0 6px">栞の言葉と感想を、一つの文章にまとめました。<b>下書き</b>なので、（　）のところを書きたして、自分の言葉で仕上げてください。</p>
-      <textarea id="draft" rows="14">${esc(draftText(ep))}</textarea>
-      <button class="btn primary" id="draftCopy" style="margin-top:8px">コピーする</button>`;
-    $('draftCopy').onclick = () => copyText($('draft').value);
-    $('draft').scrollIntoView({block: 'center', behavior: 'smooth'});
-  };
   if ($('bkStart')) $('bkStart').onclick = () => startEp(ep);
   if ($('bkAsk')) $('bkAsk').onclick = () => startEp(ep, 'resolve');
   $('bkBack').onclick = openShelf;
@@ -1000,63 +993,6 @@ function importData() {
     toast('記録を読みこみました'); openShelf();
   };
   inp.click();
-}
-
-/* ---------- 感想文の下書き：自分の記録（栞・読んだときの自分・感想）を、ひとつの文章にまとめる ---------- */
-const plain = s => String(s || '').replace(/\*\*/g, '');
-function draftText(ep) {
-  const r = REC[ep.id] || {}, P = [];
-  P.push(`『${ep.title}』（${ep.author}）を読んで`, '');
-  const when = r.paper ? `${ymd(r.paper)}に、この本を読みました。` : r.date ? `${r.date[0]}年${r.date[1]}月${r.date[2]}日に、この本の世界に入りました。` : 'この本を読みました。';
-  const like = r.like >= 4 ? 'この本は、わたしにとって、大切な一冊になりました。' : r.like && r.like <= 2 ? '正直に言うと、すぐに好きになれる本ではありませんでした。けれど、考えさせられることがありました。' : '';
-  P.push('　わたしは、' + when + like);
-  if (r.mirror && r.mirror.length) P.push('　読みながら、今の自分に重なるところがありました。' + r.mirror.map(i => `「${plain(A(ep.mirror.items[i].t)).replace(/。$/, '')}」`).join('、') + 'というところです。（そう思った出来事を、一つ書こう）');
-  else if (r.date) P.push('　読みながら、登場人物と自分を比べてみました。（比べて気づいたことを書こう）');
-  if (r.date) P.push(`　この本から、わたしが心にとめておきたいと思ったのは、「${plain(cardText(ep, r)).replace(/\n/g, '').replace(/。$/, '')}」ということです。（なぜそう思ったのかを書こう）`);
-  const memo = String(r.memo || '').split(/\n+/).map(x => x.trim()).filter(Boolean);
-  if (memo.length) memo.forEach(m => P.push('　' + m));
-  else P.push('　（一番心に残った場面と、そのとき感じたことを書こう）');
-  P.push('　（これから、この本から学んだことを、どんなふうに生かしていきたいかを書こう）');
-  return P.join('\n');
-}
-async function copyText(t) {
-  try { await navigator.clipboard.writeText(t); toast('コピーしました'); return; } catch (e) {}
-  const ta = document.createElement('textarea'); ta.value = t; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select();
-  try { document.execCommand('copy'); toast('コピーしました'); } catch (e) { toast('コピーできませんでした。文章を長押しして、コピーしてください'); }
-  ta.remove();
-}
-
-/* ---------- 学校の読書記録用の一覧（印刷） ---------- */
-let PRINT = {list: 'j', only: true};
-function openPrint() {
-  const rowsOf = (key, n) => Array.from({length: n}, (_, k) => {
-    const no = k + 1, b = BOOKS.find(x => x[3].split('・').includes(key + no));
-    return {no, b};
-  });
-  const secs = PRINT.list === 'j' ? [['中等部　日本の本', rowsOf('中日', 50)], ['中等部　海外の本', rowsOf('中海', 50)]] : [['高等部', rowsOf('高', 100)]];
-  const dt = b => { const r = recT(b[0]); return r.paper ? ymd(r.paper) : ''; };
-  const total = secs.reduce((a, [, rs]) => a + rs.length, 0), read = secs.reduce((a, [, rs]) => a + rs.filter(x => x.b && recT(x.b[0]).paper).length, 0);
-  const t = new Date();
-  $('print').innerHTML = `
-    <div class="noprint pctl">
-      <div class="seg"><button data-l="j" class="${PRINT.list === 'j' ? 'on' : ''}">中等部</button><button data-l="h" class="${PRINT.list === 'h' ? 'on' : ''}">高等部</button></div>
-      <div class="seg"><button data-o="1" class="${PRINT.only ? 'on' : ''}">読んだ本だけ</button><button data-o="0" class="${PRINT.only ? '' : 'on'}">${total}冊すべて</button></div>
-      <button class="btn primary" id="prGo">印刷する</button>
-      <p class="small mute" style="margin:0">「本で読んだ日」を記録した本が、番号順に並びます。iPhoneでは、印刷の画面から、PDFとして保存することもできます。</p>
-    </div>
-    <div class="ptitle"><h2>読書百選　読書記録（${PRINT.list === 'j' ? '中等部' : '高等部'}）</h2>
-      <p>読んだ本　${read}冊 ／ ${total}冊　　${t.getFullYear()}年${t.getMonth() + 1}月${t.getDate()}日 現在</p>
-      <p class="pname">名前　＿＿＿＿＿＿＿＿＿＿＿＿</p></div>
-    ${secs.map(([h, rs]) => {
-      const list = PRINT.only ? rs.filter(x => x.b && recT(x.b[0]).paper) : rs;
-      return `<h3>${h}</h3>${list.length ? `<table class="ptab"><thead><tr><th>番号</th><th>書名</th><th>作者</th><th>読んだ日</th></tr></thead><tbody>${list.map(({no, b}) => `<tr class="${b && recT(b[0]).paper ? 'rd' : ''}"><td>${no}</td><td>${b ? esc(b[0]) : ''}</td><td>${b ? esc(b[1] || '') : ''}</td><td>${b ? dt(b) : ''}</td></tr>`).join('')}</tbody></table>` : '<p class="small mute">まだ、本で読んだ日を記録した本はありません。</p>'}`;
-    }).join('')}
-    <button class="btn ghost noprint" id="prBack">戻る</button>`;
-  show('print');
-  $('print').querySelectorAll('[data-l]').forEach(b => b.onclick = () => { PRINT.list = b.dataset.l; openPrint(); });
-  $('print').querySelectorAll('[data-o]').forEach(b => b.onclick = () => { PRINT.only = b.dataset.o === '1'; openPrint(); });
-  $('prGo').onclick = () => window.print();
-  $('prBack').onclick = openShelf;
 }
 
 /* ---------- wiring ---------- */
