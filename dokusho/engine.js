@@ -438,7 +438,24 @@ const appDone = t => !!recT(t).date;      // アプリで読了（栞を挟ん�
 const paperRead = t => !!recT(t).paper;   // 紙の本で読んだ
 function toggleOwn(t) { if (OWN[t]) delete OWN[t]; else OWN[t] = 1; saveOwn(); return !!OWN[t]; }
 const ownLabel = on => on ? '✓　持っている' : '□　この本を持っている';
-/* しおり：持っている本は外枠だけ、本で読んだ本は塗りつぶし。アプリで読了した本は、本そのものを金の外枠で囲む */
+/* 読了のハンコ：アプリで読了だけ＝青、アプリと本の両方＝赤、本で読んだだけ＝緑。表紙に押し、本棚の背表紙は同じ色で縁どる */
+const STAMP = {app: ['#2456b8', 'アプリ', 'アプリで読了'], both: ['#c62a1f', 'アプリ・本', 'アプリと本の両方で読了'], paper: ['#23804a', '本', '本で読了']};
+const stampOf = t => appDone(t) ? (paperRead(t) ? 'both' : 'app') : paperRead(t) ? 'paper' : '';
+const p2 = n => String(n).padStart(2, '0');
+function stampDate(t) {
+  const r = recT(t);
+  if (r.paper) { const m = /^\d\d(\d\d)-(\d\d)-(\d\d)$/.exec(r.paper); if (m) return `${m[1]}.${m[2]}.${m[3]}`; }
+  return r.date ? `${String(r.date[0]).slice(2)}.${p2(r.date[1])}.${p2(r.date[2])}` : '';
+}
+function stampSVG(t) {
+  const k = stampOf(t); if (!k) return '';
+  const [c, lab, alt] = STAMP[k], small = [...lab].length > 3;
+  return `<svg class="stamp st-${k}" viewBox="0 0 100 100" role="img" aria-label="${alt}"><circle cx="50" cy="50" r="47" fill="#fffaf0" fill-opacity=".72"/>`
+    + `<g filter="url(#inkf)"><g fill="none" stroke="${c}"><circle cx="50" cy="50" r="44" stroke-width="5"/><circle cx="50" cy="50" r="37.5" stroke-width="1.6"/><path d="M13 37.5H87M13 62.5H87" stroke-width="2"/></g>`
+    + `<g fill="${c}" text-anchor="middle" font-weight="900" style="font-family:var(--mincho)"><text x="50" y="32" font-size="22" letter-spacing="1">読了</text><text x="50" y="55.5" font-size="13.5" style="font-family:var(--gothic)">${stampDate(t)}</text><text x="50" y="80" font-size="${small ? 10.5 : 14}">${lab}</text></g></g></svg>`;
+}
+const stampMini = t => { const k = stampOf(t); return k ? `<i class="smini st-${k}">${STAMP[k][2]}</i>` : ''; };
+/* しおり：持っている本は外枠だけ、本で読んだ本は塗りつぶし */
 const bmState = t => paperRead(t) ? 'read' : OWN[t] ? 'own' : '';
 const ribbon = st => st ? `<svg class="rb ${st}" viewBox="0 0 12 22" aria-label="${st === 'read' ? '本で読んだ' : '持っている'}"><path d="M1.5 1H10.5V20L6 15.5L1.5 20Z"/></svg>` : '';
 /* 本棚でだけ、古い本ほど使い古した感じを出す（書かれた年で5段階） */
@@ -599,12 +616,14 @@ function titleSlip(t) {
 function coverHTML(ep, tag, onShelf) {
   const bk = BOOK(ep.title), t = ep.title;
   const photo = usePhoto(t), w = onShelf && !photo ? wearOf(bk) : 0;
-  return `<${tag} class="cover m-${matOf(bk)}${photo ? ' photo' : ''}${appDone(t) ? ' done' : ''}${w ? ' w' + w : ''}" data-ep="${ep.id}" style="background:${ep.cover[0]};color:${ep.cover[1]}">
+  const st = stampOf(t);
+  return `<${tag} class="cover m-${matOf(bk)}${photo ? ' photo' : ''}${st ? ' st-' + st : ''}${w ? ' w' + w : ''}" data-ep="${ep.id}" style="background:${ep.cover[0]};color:${ep.cover[1]}">
     ${photo ? `<img class="ph" src="${PH[t]}" alt="">` : (window.coverArt ? coverArt(ep) : '')}
     <span class="tex"></span>
     ${w ? '<span class="wear"></span>' : ''}
     ${photo ? '' : titleSlip(t)}
     ${ribbon(bmState(t))}
+    ${stampSVG(t)}
     <span class="cfoot"><span class="ca">${photo ? '' : esc(ep.author)}</span>${bk ? badge(bk[3]) : ''}</span></${tag}>`;
 }
 
@@ -729,7 +748,8 @@ function renderRacks() {
   } else if (VIEW.mode === 'rack') {
     const spine = b => {
       const e = EPT(b[0]), w = wearOf(b), v = spineVars(b, e);
-      return `<button class="spine m-${v.m}${v.c2 ? ' c2' : ''}${appDone(b[0]) ? ' done' : ''}${w ? ' w' + w : ''}" data-t="${esc(b[0])}" title="${esc(b[0])}／${esc(b[1] || '')}" style="${v.style}"><span class="tex"></span>${w ? '<span class="wear"></span>' : ''}${ribbon(bmState(b[0]))}<span class="st">${v.c2 ? v.c2.html : esc(b[0])}</span>${badge(b[3])}</button>`;
+      const st = stampOf(b[0]);
+      return `<button class="spine m-${v.m}${v.c2 ? ' c2' : ''}${st ? ' st-' + st : ''}${w ? ' w' + w : ''}" data-t="${esc(b[0])}" title="${esc(b[0])}／${esc(b[1] || '')}" style="${v.style}"><span class="tex"></span>${w ? '<span class="wear"></span>' : ''}${ribbon(bmState(b[0]))}<span class="st">${v.c2 ? v.c2.html : esc(b[0])}</span>${badge(b[3])}</button>`;
     };
     const rows = l => { const out = []; for (let k = 0; k < l.length; k += 10) out.push(l.slice(k, k + 10)); return out; };
     $('racks').innerHTML = groups.map(([g, l]) => head(g, l) + rows(l).map(r => `<div class="shelfrow">${r.map(spine).join('')}${r.length < 10 ? '<span class="bookend"></span>' : ''}</div>`).join('')).join('');
@@ -738,7 +758,7 @@ function renderRacks() {
     $('racks').innerHTML = groups.map(([g, l]) => head(g, l) + `<div class="llist">${l.map(b => `
       <div class="lrow${OWN[b[0]] ? ' own' : ''}" data-t="${esc(b[0])}" role="button" aria-pressed="${OWN[b[0]] ? 'true' : 'false'}">
         <span class="ck">${OWN[b[0]] ? '✓' : ''}</span>
-        <span class="lt"><b>${esc(b[0])}${paperRead(b[0]) ? ribbon('read') : ''}${appDone(b[0]) ? '<i class="appd">アプリ読了</i>' : ''}${likeOf(b[0]) ? `<i class="lkm">${'♥'.repeat(likeOf(b[0]))}</i>` : ''}</b><small>${esc(b[1] || '―')}　${esc(fmtLists(b[3]))}</small>${ratesMini(b)}</span>
+        <span class="lt"><b>${esc(b[0])}${stampMini(b[0])}${likeOf(b[0]) ? `<i class="lkm">${'♥'.repeat(likeOf(b[0]))}</i>` : ''}</b><small>${esc(b[1] || '―')}　${esc(fmtLists(b[3]))}</small>${ratesMini(b)}</span>
         ${badge(b[3])}${live[b[0]] ? `<button class="go" data-ep="${live[b[0]]}">ひらく</button>` : ''}
       </div>`).join('')}</div>`).join('');
     $('racks').querySelectorAll('.lrow').forEach(r => r.onclick = e => {
@@ -775,7 +795,7 @@ function openSheet(title) {
         <span class="small mute">${esc(b[2])}</span>
         <h3>${esc(b[0])}</h3>
         <p>${esc(b[1] || '著者不詳')}</p>
-        <p>${badge(b[3], true)}${appDone(title) ? ' <i class="appd">アプリで読了</i>' : ''}</p>
+        <p>${badge(b[3], true)} ${stampMini(title)}</p>
         <p class="small">${esc(fmtLists(b[3]))}</p></div></div>
       ${ratesHTML(b)}
       <button class="btn owntg${OWN[title] ? ' on' : ''}" id="shOwn">${ownLabel(OWN[title])}</button>
@@ -815,9 +835,12 @@ function wireCovSel(ep) {
 }
 
 function openBook(ep, justDone) {
-  const r = rec(ep.id), d = r.date, bk = BOOK(ep.title);
+  const r = rec(ep.id), d = r.date, bk = BOOK(ep.title), own = !!OWN[ep.title];
   const el = $('book');
-  el.innerHTML = `
+  /* たたんでおける欄（見出しをタップすると開く） */
+  const fold = (id, title, sub, body, open) => `<details class="fold" id="${id}"${open ? ' open' : ''}><summary>${title}${sub ? `<small>${sub}</small>` : ''}</summary><div class="fb">${body}</div></details>`;
+  const recSub = [r.paper ? `本で読んだ ${ymd(r.paper)}` : '', r.like ? '♥'.repeat(r.like) : '', r.memo ? '感想あり' : ''].filter(Boolean).join('・') || '読んだ日・好き度・感想';
+  const top = `
     <div class="bk-top">
       <div id="bkCover">${coverHTML(ep, 'div')}</div>
       <div class="bk-meta">
@@ -828,34 +851,39 @@ function openBook(ep, justDone) {
         <span class="small">${esc(ep.blurb)}</span>
         <div class="done">アプリで読了　${d ? `<b>${d[0]}</b> 年 <b>${d[1]}</b> 月 <b>${d[2]}</b> 日${r.n ? `<small>（${r.n}枚目の栞）</small>` : ''}` : '<span class="mute">まだ</span>'}</div>
       </div>
-    </div>
-    <div class="sec myrec"><h3>わたしの記録</h3>
+    </div>`;
+  /* 操作は上に。読了したばかりのときは出さない（下の「本棚へ戻る」だけ） */
+  const acts = justDone ? '' : `
+    <div class="bk-act">
+      <button class="btn primary" id="bkStart">${d ? 'もう一度、本の中へ' : 'この本の扉を開く'}</button>
+      ${d ? `<button class="btn" id="bkAsk" style="text-align:center">問いかけに、もう一度答える</button>` : ''}
+      <button class="btn owntg${own ? ' on' : ''}" id="bkOwn">${ownLabel(own)}</button>
+    </div>`;
+  const myrec = fold('fRec', 'わたしの記録', recSub, `<div class="myrec">
       ${paperHTML(ep.id)}
       <div class="lk"><span>この本、好き？</span>${likeHTML(ep.id)}</div>
       <textarea id="bkMemo" rows="4" placeholder="感想を、自由に。読書感想文の下書きにもなります。">${esc(r.memo || '')}</textarea>
       <button class="btn" id="bkDraft" style="text-align:center">📝　感想文の下書きを作る</button>
       <div id="draftBox"></div>
-    </div>
-    <div class="sec"><h3>表紙</h3><div id="covsel" class="covsel">${covSelHTML(ep)}</div></div>
-    ${bk ? `<div class="sec">${ratesHTML(bk)}</div>` : ''}
-    ${d ? `
+    </div>`, justDone);
+  const mine = d ? `
     <div class="sec mine"><h3>あなたの栞</h3>${cardHTML(ep, r, true)}
       ${r.resolve.length ? `<p class="small">改めたいこと</p><ul>${r.resolve.map(i => `<li>${fmt(A(ep.resolve.items[i].t))}</li>`).join('')}</ul>` : ''}
       ${r.mirror && r.mirror.length ? `<p class="small">読んだときの自分</p><ul>${r.mirror.map(i => `<li>${fmt(A(ep.mirror.items[i].t))}</li>`).join('')}</ul>` : ''}
-    </div>
-    <div class="sec"><h3>名作のわけ</h3>${ep.why.map((w, i) => `<p><b>その${NUM[i]}　${esc(w.h)}</b><br>${fmt(A(w.short))}</p>`).join('')}</div>
-    <div class="sec"><h3>3分でわかる『${esc(ep.title)}』</h3>${ep.summary.map(p => `<p>${fmt(p)}</p>`).join('')}</div>
-    <div class="sec"><h3>本物を読んでみるなら</h3><p>${fmt(A(ep.read))}</p></div>`
-    : `<div class="sec"><h3>この本でできること</h3><p>主人公になって名場面を体験し、ミネル先生から「なぜ名作なのか」を聞く。最後に、先生の問いかけに答えて、自分の栞を選ぶ。</p><p class="small mute">所要時間　約${ep.minutes}分</p></div>`}
-    ${justDone ? `<div class="donebar"><button class="btn primary" id="bkBack">本棚へ戻る</button></div>` : `
-    <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
-      <button class="btn owntg${OWN[ep.title] ? ' on' : ''}" id="bkOwn">${ownLabel(OWN[ep.title])}</button>
-      <button class="btn primary" id="bkStart">${d ? 'もう一度、本の中へ' : 'この本の扉を開く'}</button>
-      ${d ? `<button class="btn" id="bkAsk" style="text-align:center">問いかけに、もう一度答える</button>` : ''}
-      <button class="btn ghost" id="bkBack">本棚へ戻る</button>
-    </div>`}`;
+    </div>` : `
+    <div class="sec"><h3>この本でできること</h3><p>主人公になって名場面を体験し、ミネル先生から「なぜ名作なのか」を聞く。最後に、先生の問いかけに答えて、自分の栞を選ぶ。</p><p class="small mute">所要時間　約${ep.minutes}分</p></div>`;
+  const more = (d ? [
+    fold('fWhy', '名作のわけ', '四つの話', ep.why.map((w, i) => `<p><b>その${NUM[i]}　${esc(w.h)}</b><br>${fmt(A(w.short))}</p>`).join('')),
+    fold('fSum', `3分でわかる『${esc(ep.title)}』`, '結末まで書いてあります', ep.summary.map(p => `<p>${fmt(p)}</p>`).join('')),
+    fold('fRead', '本物を読んでみるなら', '', `<p>${fmt(A(ep.read))}</p>`),
+  ] : []).concat(bk && bk.length >= 12 ? [fold('fRate', 'この本のめやす', 'おすすめ度・読みやすさ・長さ…', ratesHTML(bk))] : [])
+    .concat(own ? [fold('fCov', '表紙', '絵か、自分の本の写真か', `<div id="covsel" class="covsel">${covSelHTML(ep)}</div>`)] : []).join('');
+  const bottom = justDone
+    ? `<div class="donebar"><button class="btn primary" id="bkBack">本棚へ戻る</button></div>`
+    : `<button class="btn ghost" id="bkBack">本棚へ戻る</button>`;
+  el.innerHTML = top + acts + (justDone ? mine + myrec : myrec + mine) + more + bottom;
   show('book');
-  wireCovSel(ep);
+  if ($('covsel')) wireCovSel(ep);
   wirePaper(el, ep.id, () => { $('bkCover').innerHTML = coverHTML(ep, 'div'); });
   wireLike(el.querySelector('.myrec'), ep.id);
   $('bkMemo').oninput = () => { rec(ep.id).memo = $('bkMemo').value; save(); };
@@ -869,10 +897,8 @@ function openBook(ep, justDone) {
   if ($('bkStart')) $('bkStart').onclick = () => startEp(ep);
   if ($('bkAsk')) $('bkAsk').onclick = () => startEp(ep, 'resolve');
   $('bkBack').onclick = openShelf;
-  if ($('bkOwn')) $('bkOwn').onclick = () => {
-    const on = toggleOwn(ep.title); $('bkOwn').classList.toggle('on', on); $('bkOwn').textContent = ownLabel(on);
-    $('covsel').innerHTML = covSelHTML(ep); $('bkCover').innerHTML = coverHTML(ep, 'div'); wireCovSel(ep);
-  };
+  // 「持っている」を切りかえたら、表紙の欄も出したり消したりするので、ページを描き直す
+  if ($('bkOwn')) $('bkOwn').onclick = () => { toggleOwn(ep.title); const y = window.scrollY; openBook(ep); window.scrollTo(0, y); };
 }
 
 /* ---------- 栞帳：これまでにはさんだ栞の一覧 ---------- */

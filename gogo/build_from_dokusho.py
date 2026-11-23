@@ -120,7 +120,11 @@ e = sub(e, "<div class=\"lk\"><span>この本、好き？</span>${likeHTML(ep.id
         "<div class=\"lk\"><span>この作品、好き？</span>${likeHTML(ep.id)}</div>\n      <textarea id=\"bkMemo\" rows=\"4\" placeholder=\"感想を、自由に。あとで一つの文章にまとめられます。\">")
 e = sub(e, "📝　感想文の下書きを作る", "📝　感想を一つの文章にまとめる")
 e = sub(e, "<p class=\"small\">改めたいこと</p>", "<p class=\"small\">持って帰りたいもの</p>")
-e = sub(e, "<div class=\"sec\"><h3>本物を読んでみるなら</h3>", "<div class=\"sec\"><h3>本物にふれるなら</h3>")
+e = sub(e, "fold('fRead', '本物を読んでみるなら', ''", "fold('fRead', '本物にふれるなら', ''")
+e = sub(e, "fold('fRate', 'この本のめやす', 'おすすめ度・読みやすさ・長さ…'", "fold('fRate', 'この作品のめやす', 'おすすめ度・入りやすさ・長さ…'")
+e = sub(e, "fold('fCov', '表紙', '絵か、自分の本の写真か'", "fold('fCov', '表紙', '絵か、持っている本・ディスクの写真か'")
+e = sub(e, "r.paper ? `本で読んだ ${ymd(r.paper)}` : ''", "r.paper ? `読んだ・観た ${ymd(r.paper)}` : ''")
+e = sub(e, "both: ['#c62a1f', 'アプリ・本', 'アプリと本の両方で読了'], paper: ['#23804a', '本', '本で読了']", "both: ['#c62a1f', 'アプリ・実物', 'アプリと実物の両方で読了'], paper: ['#23804a', '実物', '実物で読んだ・観た']")
 e = sub(e, "<div class=\"sec\"><h3>この本でできること</h3><p>主人公になって名場面を体験し、ミネル先生から「なぜ名作なのか」を聞く。最後に、先生の問いかけに答えて、自分の栞を選ぶ。</p>",
         "<div class=\"sec\"><h3>この作品でできること</h3><p>主人公になって名場面を体験し、書斎のマスターから「なぜ名作なのか」を聞く。最後に、マスターの問いかけに答えて、自分の栞を選ぶ。</p>")
 e = sub(e, "${d ? 'もう一度、本の中へ' : 'この本の扉を開く'}", "${d ? 'もう一度、作品の中へ' : 'この作品の扉を開く'}")
@@ -196,6 +200,7 @@ h = sub(h, r'<div class="legend"><span><span class="bd bd-j">中</span> 中等�
         '<div class="legend"><span><span class="bd bd-j">本</span> 本・小説・古典</span><span><span class="bd bd-h">映</span> 映画</span><span><span class="bd bd-both">漫</span> 漫画・詩集</span>', regex=True)
 h = sub(h, '<svg class="rb read" viewBox="0 0 12 22"><path d="M1.5 1H10.5V20L6 15.5L1.5 20Z"/></svg>本で読んだ</span>', '<svg class="rb read" viewBox="0 0 12 22"><path d="M1.5 1H10.5V20L6 15.5L1.5 20Z"/></svg>読んだ・観た</span>')
 h = sub(h, "var TEACHER='ミネル';", "var TEACHER='マスター';")
+h = sub(h, '<i class="lgst st-both"></i>アプリと本</span><span><i class="lgst st-paper"></i>本だけ</span>', '<i class="lgst st-both"></i>アプリと実物</span><span><i class="lgst st-paper"></i>実物だけ</span>')
 h = sub(h, r'<script src="ep_[^"]*"></script>\n', '', regex=True)     # 作品の script は regtags で入れる
 h = sub(h, r'<script src="adult\.js\?v=\d+"></script>\n', '', regex=True)
 # 映画のケース（背表紙の素材 m-film）
