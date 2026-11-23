@@ -2,7 +2,7 @@
 (() => {
 EPS.push({
   id: 'houjouki', title: '方丈記', author: '鴨長明', year: '1212年', minutes: 13,
-  lists: '7',
+  lists: '10',
   blurb: '大火、竜巻、飢饉、大地震。災いの続いた時代を生きた男は、五十代で世を離れ、山の中に、たった四畳半ほどの庵を結んだ。八百年前の、人生後半の住まい方の記録。',
   cover: ['linear-gradient(165deg,#e8ecd8,#a8b890 50%,#4a5a48)', '#1a2018'],
   chars: {'少年':'#8a6a3a','旅の僧':'#6a6a6a'},

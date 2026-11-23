@@ -2,7 +2,7 @@
 (() => {
 EPS.push({
   id: 'akahige', title: '赤ひげ', author: '黒澤明 監督', year: '1965年', minutes: 16,
-  lists: '27',
+  lists: '40',
   blurb: '江戸の貧しい人々のための診療所。出世を夢見る若い医者は、「赤ひげ」と呼ばれる無骨な所長のもとで、病だけでなく、人を診ることを学んでいく。',
   cover: ['linear-gradient(165deg,#e0d8c8,#9a8a6a 55%,#3a2e1e)', '#fff8e8'],
   chars: {'赤ひげ':'#8a3a2a','患者':'#6a6a5a','おとよ':'#c08a8a','女中':'#8a6a7a','老人':'#7a6a4a'},

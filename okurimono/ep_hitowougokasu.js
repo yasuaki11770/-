@@ -3,7 +3,7 @@
 (() => {
 EPS.push({
   id: 'hitowougokasu', title: '人を動かす', author: 'デール・カーネギー', year: '1936年', minutes: 13,
-  lists: '',
+  lists: '59',
   blurb: '人を動かす、いちばんの方法は何か。批判せず、心からほめ、相手の立場に立つ。八十年以上前に書かれ、世界中で読みつがれてきた、人づきあいの教科書。',
   cover: ['linear-gradient(165deg,#f0e8d8,#c0a070 50%,#5a3a2a)', '#1e140a'],
   chars: {'若い店員':'#5a8a6a','常連':'#8a6a4a','業者':'#6a6a7a','近所の人':'#7a5a6a'},

@@ -39,9 +39,9 @@ for key, name in dgrp.items():
         if re.match(r'(中日|中海|高)', str(r[3])).group(1) != key: continue
         g.append([r[0], r[1], '詩集' if r[6] == 'P' else '本', '0', r[4], r[5], DLEN.get(r[6], r[6])] + r[7:])
     groups.append([name, g])
-groups.append(['マスターの書斎　一　人生の午後に', [r[:3] + ['0'] + r[4:] for r in gr if r[0] not in otitles]])
 # 古代図書館だけの作品（kodai/books_kodai.json・物語は kodai/ep_*.js）を、マスターの書斎の続きに
 KB = json.load(open(os.path.join(K, 'books_kodai.json'), encoding='utf-8'))
+groups.append(['マスターの書斎　' + ('一　' if KB['shelves'] else '') + '人生の午後に', [r[:3] + ['0'] + r[4:] for r in gr if r[0] not in otitles]])
 for name, g in KB['shelves']: groups.append([name, g])
 oth = jsvar(O, 'THEMES')
 starts = [t[0] for t in oth] + [len(orr) + 1]
@@ -54,7 +54,7 @@ for name, g in groups:
         r = list(r); r[3] = str(len(out) + 1); out.append(r)
 assert len({r[0] for r in out}) == len(out), 'title duplicate'
 N = len(out)
-SHELVES = kanji(len(themes)) + 'の書庫'   # 書庫の数（棚の数）
+SHELVES = kanji(len(themes)) + ('つ' if len(themes) < 10 else '') + 'の書庫'   # 書庫の数（八つの書庫・十一の書庫）
 chosen = sorted(set((jsvar(G, 'CHOSEN') or []) + (jsvar(O, 'CHOSEN') or []) + KB['chosen']))
 wr('books.js', f'// 古代図書館 ― 三つのサイトの{N}作（名作のなかへ・午後の書斎・川村さんへの贈り物）。kodai/build_from_all.py で生成（直接は直さない）\n'
    '// [題名, 作者・監督, 種類, 番号, 年(並べ替え用), 年の表示, 長さ, おすすめ, 入りやすさ, 有名度, 学び度, 見終わったあとの感じ(1さわやか〜5ずっしり), よみ]\n'

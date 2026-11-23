@@ -3,7 +3,7 @@
 (() => {
 EPS.push({
   id: 'shinyatokkyu', title: '深夜特急', author: '沢木耕太郎', year: '1986〜1992年', minutes: 16,
-  lists: '73',
+  lists: '98',
   blurb: '二十六歳の「私」は、インドのデリーからイギリスのロンドンまで、乗り合いバスだけで行けるかどうか、友人と賭けをした。香港から始まる、一年以上にわたるユーラシアの旅。',
   cover: ['linear-gradient(165deg,#f0c880,#d0803a 50%,#5a2a3a)', '#fff4e4'],
   chars: {'宿の主人':'#8a6a3a','旅人':'#4a7ab0','老人':'#7a5a4a','少年':'#c08a3a'},

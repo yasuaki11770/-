@@ -2,7 +2,7 @@
 (() => {
 EPS.push({
   id: 'koukotsu', title: '恍惚の人', author: '有吉佐和子', year: '1972年', minutes: 14,
-  lists: '',
+  lists: '21',
   blurb: '姑が急死した夜から、八十四歳の舅の様子が、おかしくなった。息子の顔もわからない。夜中に家を出ていく。仕事を持つ嫁の昭子は、たった一人で、その介護を背負うことになる。',
   cover: ['linear-gradient(165deg,#ecece4,#b0b0a0 50%,#5a5a4a)', '#1a1a14'],
   chars: {'茂造':'#7a6a5a','信利':'#5a6a7a','敏':'#5a8a6a','門谷さん':'#8a6a7a','医者':'#6a6a6a'},

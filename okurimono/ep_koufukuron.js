@@ -2,7 +2,7 @@
 (() => {
 EPS.push({
   id: 'koufukuron', title: '幸福論', author: 'アラン', year: '1925年', minutes: 13,
-  lists: '21',
+  lists: '30',
   blurb: '悲観は気分から生まれ、楽観は意志から生まれる。フランスの哲学の教師が、新聞に毎日書きつづけた短い文章から生まれた、世界でいちばん実用的な幸福の本。',
   cover: ['linear-gradient(165deg,#fff0c8,#f0c860 55%,#a07a30)', '#2a1e08'],
   chars: {'友人':'#5a7a9a','給仕':'#8a6a4a','生徒':'#6a8a5a'},

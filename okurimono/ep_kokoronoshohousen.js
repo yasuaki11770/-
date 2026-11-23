@@ -3,7 +3,7 @@
 (() => {
 EPS.push({
   id: 'kokoronoshohousen', title: 'こころの処方箋', author: '河合隼雄', year: '1992年', minutes: 13,
-  lists: '',
+  lists: '27',
   blurb: '人の心など、わかるはずがない。いいことが二つ、そろってやってくることは、めったにない。日本を代表する心理療法家が、心の扱い方を、短い文章で、やさしく語った、一冊の常備薬。',
   cover: ['linear-gradient(165deg,#f0ece0,#c8b890 50%,#6a5a3a)', '#1e1a0e'],
   chars: {'若い人':'#5a8a6a','友人':'#8a6a4a','相談に来た人':'#7a6a8a'},

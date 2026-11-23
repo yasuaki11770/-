@@ -2,7 +2,7 @@
 (() => {
 EPS.push({
   id: 'rounen', title: '老年について', author: 'キケロ', year: '紀元前44年', minutes: 14,
-  lists: '6',
+  lists: '9',
   blurb: '年をとるのは、本当に不幸なことなのか。二千年前のローマで、八十四歳の老政治家が、若者たちに語って聞かせた、老いを楽しむための四つの答え。',
   cover: ['linear-gradient(165deg,#e8e0c8,#b0a078 55%,#5a4a30)', '#2a2010'],
   chars: {'スキピオ':'#4a7ab0','ラエリウス':'#6a8a5a'},

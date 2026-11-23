@@ -3,7 +3,7 @@
 (() => {
 EPS.push({
   id: 'chichinowabijou', title: '父の詫び状', author: '向田邦子', year: '1978年', minutes: 13,
-  lists: '',
+  lists: '53',
   blurb: '怒鳴る父。威張る父。けれど、陰で、不器用なやさしさを見せる父。テレビドラマの名脚本家が、昭和の家族と、亡き父の思い出を描いた、はじめてのエッセイ集。',
   cover: ['linear-gradient(165deg,#f4ece0,#d0b090 50%,#6a4a3a)', '#1e140e'],
   chars: {'父':'#5a4a3a','母':'#8a6a6a','弟':'#5a7a8a','妹':'#c07a8a','客':'#7a6a5a'},

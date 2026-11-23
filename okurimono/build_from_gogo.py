@@ -17,7 +17,8 @@ def sub(s, a, b, n=None, regex=False):
 REUSE = ['diewithzero', 'jinseifruits', 'kirawareru', 'perfectdays', 'kouhan', 'seneca', 'tooitaiko', 'greenbook', 'uchuukyoudai', 'nomadland']
 TITLE = '川村さんへの贈り物'
 N = len(re.findall(r'^(?:window\.BOOKS=\[)?\["', open(os.path.join(O, 'books.js'), encoding='utf-8').read(), re.M))   # 作品の数（books.js の行）
-KN = (lambda n: ('' if n < 20 else '一二三四五六七八九'[n // 10 - 1]) + ('十' if n >= 10 else '') + ('' if n % 10 == 0 else '一二三四五六七八九'[n % 10 - 1]))(N)   # 漢数字（八十二 など）
+_k2 = lambda n: ('' if n < 20 else '一二三四五六七八九'[n // 10 - 1]) + ('十' if n >= 10 else '') + ('' if n % 10 == 0 else '一二三四五六七八九'[n % 10 - 1])
+KN = (('' if N < 200 else '一二三四五六七八九'[N // 100 - 1]) + ('百' if N >= 100 else '') + _k2(N % 100))   # 漢数字（八十二・百八 など）
 
 # ---------------- engine.js ----------------
 e = rd('engine.js')
@@ -156,6 +157,15 @@ a = sub(a, re.search(r"const ART = \{.*?\n\};", a, re.S).group(0), """const ART 
   zorba: 'sea; sun 70 30 28; notes 28 50 30; footprints 50 116 40', missdaisy: 'gtree 22 80 40; road; car 54 110 60', shinyashokudo: 'moon 74 26 22; lantern 30 84 40; ramen 62 118 40',
   always: 'sunset 50 70 70; ttower 44 84 80; jroofs 60 128 50', kazetachinu: 'cloud 30 40 34; plane 62 52 40; grass; umbrella 30 112 30', harrytonto: 'sunset 50 60 66; road; cat 50 108 40',
   nebraska: 'wheat 16 104 40; road; truck 50 112 54', paristexas: 'sunset 50 60 70; dunes; road', standbyme: 'fir 16 82 46; fir 84 82 46; train 50 106 56',
+  ivan: 'stars; candle 50 96 50', lear: 'rain; crown 50 96 50', carol: 'snow; candles 50 104 50; star 72 30 16',
+  siddhartha: 'river; lotus 50 100 50; sun 72 30 24', n1984: 'city; eye 50 70 60', mockingbird: 'gtree 40 86 60; bird 72 46 24',
+  odyssey: 'sea; ship 50 104 56; sun 74 30 24', chanohon: 'bamboo 20 90 44; flower 60 102 40', neverletmego: 'cloud 30 36 30; greenhills; tree 66 94 44',
+  koukotsu: 'petals; sakura 50 86 70', ningennotochi: 'dunes; stars; plane 50 60 44', walden: 'fir 18 84 44; fir 82 84 44; cabin 50 100 46',
+  hitowougokasu: 'sun 72 30 24; hands 50 96 60', sapiens: 'stars; fire 50 104 50', factfulness: 'globe 50 90 66',
+  lastlecture: 'bricks; balloons 50 64 60', kokoronoshohousen: 'moon 72 30 24; lamp 40 100 50', senseofwonder: 'sea; moon 70 30 24; crab 46 112 34',
+  wasurerareta: 'mount 50 74 90; road; footprints 50 120 30', chichinowabijou: 'snow; letter 50 100 50', shichinin: 'rain; flag 72 40 30; swords 46 104 50',
+  twelve: 'window; clock 50 112 34', hinotori: 'fire 50 112 46; eagle 50 56 60', buddha: 'sun 50 40 30; gtree 50 92 76; lotus 50 128 30',
+  lifeisbeautiful: 'sun 70 30 26; greenhills; notes 30 50 30; flower 50 112 30', deadpoets: 'stars; fir 20 84 44; fir 80 84 44; candle 50 110 36',
 };""")
 wr('art.js', a)
 print(f'okurimono: engine.js, index.html, art.js を作りました（{N}作・gogo と共通 {len(REUSE)}作・独自 {len(own)}作）')
