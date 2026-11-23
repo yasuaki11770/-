@@ -292,7 +292,7 @@ function tierOf(n) {
 const TIER_NAME = ['', '若葉', '藍', '金', '星空'];
 function msMessage(n) {
   const T = BOOKS.length;
-  if (n >= T) return `……${T}作、すべてに栞が挟まりました。<br>ここに並んでいるのは、もう、誰かからの贈り物ではありません。<b>あなたが自分の手で選び、走りぬけてきた${T}作</b>です。最後の栞は、金の地に、書斎の紋を入れておきました。`;
+  if (n >= T) return `……${T}作、すべてに栞が挟まりました。<br>五十七歳の一年に、五十七の人生を通りぬけてきたことになります。ここに並んでいるのは、もう、誰かからの贈り物ではありません。<b>あなたが自分の手で選び、走りぬけてきた${T}作</b>です。最後の栞は、金の地に、書斎の紋を入れておきました。`;
   if (n === 10) return '十作目の栞ですね。……十の人生を通ってきた人の顔に、少しなってきました。<b>ここからの栞は、若葉の色になります。</b>';
   if (n === 20) return '二十作目。……作品と作品が、頭の中でつながりはじめるころです。ある映画の場面が、別の本の一行を思い出させる。<b>ここからの栞は、藍の色になります。</b>';
   if (n === 30) return '三十作目。……ここまで来ると、栞の言葉が、そのまま、あなたの言葉になってきます。<b>ここからの栞は、金の色になります。</b>';
@@ -464,14 +464,19 @@ const matOf = b => { if (b && /映画/.test(b[2])) return 'film'; const y = b ? 
 const hashN = s => { let h = 7; for (const c of String(s)) h = (h * 31 + c.charCodeAt(0)) % 1000003; return h; };
 const hexes = ep => (ep && ep.cover[0].match(/#[0-9a-fA-F]{6}/g)) || ['#3a3f55'];
 const lum = hex => { const n = parseInt(hex.slice(1), 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255; return (r * 299 + g * 587 + b * 114) / 255000; };
+/* 文字と地のコントラスト（WCAG の比）。読みにくい組みあわせなら、生成りか濃い茶のうち、くっきり見えるほうに替える */
+const wLum = hex => { const n = parseInt(String(hex).slice(1, 7), 16), f = v => (v /= 255) <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; return .2126 * f(n >> 16) + .7152 * f((n >> 8) & 255) + .0722 * f(n & 255); };
+const cRatio = (a, b) => { const x = wLum(a), y = wLum(b); return (Math.max(x, y) + .05) / (Math.min(x, y) + .05); };
+const readable = (tc, bg) => !/^#[0-9a-fA-F]{6}/.test(tc) || cRatio(tc, bg) >= 4.5 ? tc : cRatio('#fbf6ea', bg) >= cRatio('#1e1408', bg) ? '#fbf6ea' : '#1e1408';
 /* 背表紙の色・文字色・高さ・厚み */
 function spineVars(b, e) {
   const m = matOf(b), hx = hexes(e), c = hx[1] || hx[0], h = hashN(b[0]);
   const light = lum(c) > .58;
-  const tc = m === 'pb' || m === 'film' ? (e ? e.cover[1] : '#fff') : light ? '#3a2412' : '#e9c869';
+  const lbl = ['#5a1a14', '#1e1a16', '#2a3a24', '#3a1a2a'][h % 4];
+  const tc0 = m === 'pb' || m === 'film' ? (e ? e.cover[1] : '#fff') : light ? '#3a2412' : '#e9c869';
+  const tc = readable(tc0, m === 'film' ? '#1c1c22' : m === 'lt' ? lbl : c);
   const base = {pb: 154, cl: 162, lt: 168, film: 150}[m] + (h % 13);
   const thick = .78 + ((LEN_RANK[b[6]] || 4) - 1) * .09 + (h % 7) * .012;
-  const lbl = ['#5a1a14', '#1e1a16', '#2a3a24', '#3a1a2a'][h % 4];
   /* 題名の文字：1列で11px以上にできなければ、2列に分けて大きく見せる */
   const n = [...b[0]].length, avail = base - (m === 'lt' ? 64 : 52);
   let r = n, fs = Math.min(14, avail / (n * 1.06)), c2 = null;
@@ -674,10 +679,10 @@ function openShelf() {
     msg = 'おかえりなさい。挟んだ栞は、<b>栞帳</b>で、いつでも読み返せます。' + (nm ? `<br>次の節目（${nm}作）まで、あと<b>${nm - done}作</b>です。` : '');
     const last = localStorage.getItem('okuri_bk');
     if (done >= 5 && (!last || Date.now() - new Date(last).getTime() > 30 * 864e5)) msg += '<br>そうそう、<b>記録のバックアップ</b>も、ときどき取っておいてください（一番下の「記録と設定」から）。';
-  } else msg = 'いらっしゃいませ。夜更けの書斎へ、ようこそ。マスターです。<br>ここには、<b>これからの人生に贈りたい57の作品</b>を、四つの棚に置いています。時間とお金のこと、心の持ち方、自分の店をひらくこと、そして、オートバイと旅。<b>読まなくても、観なくてもいい。中に入って、主人公になってみてください。</b>迷ったら、下の「次の一作」からどうぞ。';
+  } else msg = 'いらっしゃいませ。夜更けの書斎へ、ようこそ。マスターです。<br>ここには、<b>五十七歳を迎えるあなたに贈りたい、57の作品</b>を、四つの棚に置いています。週に一作あまりのペースで、ちょうど一年。五十七歳の一年に、五十七の物語を。時間とお金のこと、心の持ち方、自分の店をひらくこと、そして、オートバイと旅。<b>読まなくても、観なくてもいい。中に入って、主人公になってみてください。</b>迷ったら、下の「次の一作」からどうぞ。';
   $('shelfMsg').innerHTML = OWL + `<p>${msg}</p>`;
   $('picksBox').innerHTML = picksHTML(); wirePicks();
-  $('rackNote').innerHTML = 'これからの人生に贈りたい57作を、四つの棚に並べました。古い時代の作品ほど、使いこまれた姿で並んでいます。映画は、ケースの姿で。<br>背表紙をタップすると、作品の紹介、「持っている」「読んだ・観た」の記録、表紙の写真の設定ができます。';
+  $('rackNote').innerHTML = '五十七歳の一年に贈る57作を、四つの棚に並べました。古い時代の作品ほど、使いこまれた姿で並んでいます。映画は、ケースの姿で。<br>背表紙をタップすると、作品の紹介、「持っている」「読んだ・観た」の記録、表紙の写真の設定ができます。';
   renderSettings();
   renderRacks();
 }

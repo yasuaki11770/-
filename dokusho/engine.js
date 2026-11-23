@@ -465,14 +465,19 @@ const matOf = b => { const y = b ? b[4] : 2000; return y >= 1950 ? 'pb' : y >= 1
 const hashN = s => { let h = 7; for (const c of String(s)) h = (h * 31 + c.charCodeAt(0)) % 1000003; return h; };
 const hexes = ep => (ep && ep.cover[0].match(/#[0-9a-fA-F]{6}/g)) || ['#3a3f55'];
 const lum = hex => { const n = parseInt(hex.slice(1), 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255; return (r * 299 + g * 587 + b * 114) / 255000; };
+/* 文字と地のコントラスト（WCAG の比）。読みにくい組みあわせなら、生成りか濃い茶のうち、くっきり見えるほうに替える */
+const wLum = hex => { const n = parseInt(String(hex).slice(1, 7), 16), f = v => (v /= 255) <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; return .2126 * f(n >> 16) + .7152 * f((n >> 8) & 255) + .0722 * f(n & 255); };
+const cRatio = (a, b) => { const x = wLum(a), y = wLum(b); return (Math.max(x, y) + .05) / (Math.min(x, y) + .05); };
+const readable = (tc, bg) => !/^#[0-9a-fA-F]{6}/.test(tc) || cRatio(tc, bg) >= 4.5 ? tc : cRatio('#fbf6ea', bg) >= cRatio('#1e1408', bg) ? '#fbf6ea' : '#1e1408';
 /* 背表紙の色・文字色・高さ・厚み */
 function spineVars(b, e) {
   const m = matOf(b), hx = hexes(e), c = hx[1] || hx[0], h = hashN(b[0]);
   const light = lum(c) > .58;
-  const tc = m === 'pb' ? (e ? e.cover[1] : '#fff') : light ? '#3a2412' : '#e9c869';
+  const lbl = ['#5a1a14', '#1e1a16', '#2a3a24', '#3a1a2a'][h % 4];
+  const tc0 = m === 'pb' ? (e ? e.cover[1] : '#fff') : light ? '#3a2412' : '#e9c869';
+  const tc = readable(tc0, m === 'film' ? '#1c1c22' : m === 'lt' ? lbl : c);
   const base = {pb: 154, cl: 162, lt: 168}[m] + (h % 13);
   const thick = .78 + ((LEN_RANK[b[6]] || 4) - 1) * .09 + (h % 7) * .012;
-  const lbl = ['#5a1a14', '#1e1a16', '#2a3a24', '#3a1a2a'][h % 4];
   /* 題名の文字：1列で11px以上にできなければ、2列に分けて大きく見せる */
   const n = [...b[0]].length, avail = base - (m === 'lt' ? 64 : 52);
   let r = n, fs = Math.min(14, avail / (n * 1.06)), c2 = null;

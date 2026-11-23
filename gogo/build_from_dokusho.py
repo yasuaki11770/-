@@ -71,7 +71,7 @@ e = sub(e, "badge(bk[3])", "badge(bk)")
 e = sub(e, r"badge\(b\[3\]\)", "badge(b)", regex=True) if "badge(b[3])" in e else e
 e = sub(e, "const matOf = b => { const y = b ? b[4] : 2000; return y >= 1950 ? 'pb' : y >= 1900 ? 'cl' : 'lt'; };",
         "const matOf = b => { if (b && /映画/.test(b[2])) return 'film'; const y = b ? b[4] : 2000; return y >= 1950 ? 'pb' : y >= 1900 ? 'cl' : 'lt'; };")
-e = sub(e, "const tc = m === 'pb' ?", "const tc = m === 'pb' || m === 'film' ?")
+e = sub(e, "const tc0 = m === 'pb' ?", "const tc0 = m === 'pb' || m === 'film' ?")
 e = sub(e, "const base = {pb: 154, cl: 162, lt: 168}[m]", "const base = {pb: 154, cl: 162, lt: 168, film: 150}[m]")
 e = sub(e, "const LEN_RANK = {S: 1, D: 2, M: 2, N: 3, P: 3, E: 3, L: 4, L2: 5, XL: 6};", "const LEN_RANK = {K: 1, P: 2, F: 2, D: 2, B: 3, E: 3, N: 4, C: 6};")
 e = sub(e, "<div class=\"rt\"><span>読みやすさ</span>", "<div class=\"rt\"><span>入りやすさ</span>")

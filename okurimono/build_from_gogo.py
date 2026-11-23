@@ -34,7 +34,7 @@ for a, b in [("'gogo_rec'", "'okuri_rec'"), ("'gogo_own'", "'okuri_own'"), ("'go
 e = sub(e, "  for (let x = 5; x < T; x += 5) a.push(x);", "  for (let x = 10; x < T; x += 10) a.push(x);")
 e = sub(e, r"function msMessage\(n\) \{.*?\n\}", """function msMessage(n) {
   const T = BOOKS.length;
-  if (n >= T) return `……${T}作、すべてに栞が挟まりました。<br>ここに並んでいるのは、もう、誰かからの贈り物ではありません。<b>あなたが自分の手で選び、走りぬけてきた${T}作</b>です。最後の栞は、金の地に、書斎の紋を入れておきました。`;
+  if (n >= T) return `……${T}作、すべてに栞が挟まりました。<br>五十七歳の一年に、五十七の人生を通りぬけてきたことになります。ここに並んでいるのは、もう、誰かからの贈り物ではありません。<b>あなたが自分の手で選び、走りぬけてきた${T}作</b>です。最後の栞は、金の地に、書斎の紋を入れておきました。`;
   if (n === 10) return '十作目の栞ですね。……十の人生を通ってきた人の顔に、少しなってきました。<b>ここからの栞は、若葉の色になります。</b>';
   if (n === 20) return '二十作目。……作品と作品が、頭の中でつながりはじめるころです。ある映画の場面が、別の本の一行を思い出させる。<b>ここからの栞は、藍の色になります。</b>';
   if (n === 30) return '三十作目。……ここまで来ると、栞の言葉が、そのまま、あなたの言葉になってきます。<b>ここからの栞は、金の色になります。</b>';
@@ -52,9 +52,9 @@ e = sub(e, "if ((VIEW.v || 0) < 2) { VIEW.sort = 'aiu'; VIEW.v = 2; }   // 並�
 e = sub(e, "['no', 'リスト順', null],", "['no', '棚の順', null],")
 # 本棚のことば
 e = sub(e, r"\} else msg = 'いらっしゃいませ。夜更けの書斎へ、ようこそ。.*?';\n",
-        f"}} else msg = 'いらっしゃいませ。夜更けの書斎へ、ようこそ。マスターです。<br>ここには、<b>これからの人生に贈りたい{N}の作品</b>を、四つの棚に置いています。時間とお金のこと、心の持ち方、自分の店をひらくこと、そして、オートバイと旅。<b>読まなくても、観なくてもいい。中に入って、主人公になってみてください。</b>迷ったら、下の「次の一作」からどうぞ。';\n", regex=True)
+        f"}} else msg = 'いらっしゃいませ。夜更けの書斎へ、ようこそ。マスターです。<br>ここには、<b>五十七歳を迎えるあなたに贈りたい、{N}の作品</b>を、四つの棚に置いています。週に一作あまりのペースで、ちょうど一年。五十七歳の一年に、五十七の物語を。時間とお金のこと、心の持ち方、自分の店をひらくこと、そして、オートバイと旅。<b>読まなくても、観なくてもいい。中に入って、主人公になってみてください。</b>迷ったら、下の「次の一作」からどうぞ。';\n", regex=True)
 e = sub(e, r"\$\('rackNote'\)\.innerHTML = '人生の午後に.*?';\n",
-        f"$('rackNote').innerHTML = 'これからの人生に贈りたい{N}作を、四つの棚に並べました。古い時代の作品ほど、使いこまれた姿で並んでいます。映画は、ケースの姿で。<br>背表紙をタップすると、作品の紹介、「持っている」「読んだ・観た」の記録、表紙の写真の設定ができます。';\n", regex=True)
+        f"$('rackNote').innerHTML = '五十七歳の一年に贈る{N}作を、四つの棚に並べました。古い時代の作品ほど、使いこまれた姿で並んでいます。映画は、ケースの姿で。<br>背表紙をタップすると、作品の紹介、「持っている」「読んだ・観た」の記録、表紙の写真の設定ができます。';\n", regex=True)
 e = sub(e, "$('titleNote').textContent = `収録：${EPS.length}作（本・映画・漫画・詩集／1作 15〜25分）`;",
         "$('titleNote').textContent = `収録：${EPS.length}作（本・映画・漫画／1作 15〜25分）`;")
 chk = e.split('\n', 2)[2]
@@ -69,12 +69,12 @@ h = sub(h, "#4a3424 0%,var(--nigh", "#27424a 0%,var(--nigh")
 h = sub(h, "body[data-world=lib] #play{background:radial-gradient(ellipse at 50% 0%,#4d3727 0%,var(--night) 75%);",
         "body[data-world=lib] #play{background:radial-gradient(ellipse at 50% 0%,#2a454c 0%,var(--night) 75%);")
 h = sub(h, '<div class="kicker">人 生 の 午 後 に</div>\n  <h1>午後の<br>書斎</h1>\n  <div class="tag">読む前に、観る前に、入ってみる。</div>',
-        '<div class="kicker">次 の 章 へ</div>\n  <h1>川村さんへの<br>贈り物</h1>\n  <div class="tag">走る人へ。つくる人へ。迎える人へ。</div>')
+        '<div class="kicker">五 十 七 歳 の 一 年 に</div>\n  <h1>川村さんへの<br>贈り物</h1>\n  <div class="tag">走る人へ。つくる人へ。迎える人へ。</div>')
 h = sub(h, r'<p class="lead">本や映画の主人公になって.*?</p>',
-        '<p class="lead">本や映画の主人公になって、名場面を生きてみる。<br>幕が下りたら、夜更けの書斎のマスターが<br>「なぜ名作なのか」を語り、ひとつだけ問いかける。<br>――次の章を、あなたはどう走りますか。</p>', regex=True)
+        '<p class="lead">五十七の物語を、四つの棚に。<br>本や映画の主人公になって、名場面を生きてみる。<br>幕が下りたら、夜更けの書斎のマスターが<br>「なぜ名作なのか」を語り、ひとつだけ問いかける。<br>――次の章を、あなたはどう走りますか。</p>', regex=True)
 h = sub(h, '<div><h2>午後の書斎</h2>', f'<div><h2>{TITLE}</h2>')
 h = sub(h, '持っている <b id="ownc">0</b> / 15</div>', f'持っている <b id="ownc">0</b> / {N}</div>')
-h = sub(h, '<h3 class="shelfh">人生の午後の15作</h3>', f'<h3 class="shelfh">贈りたい{N}作</h3>')
+h = sub(h, '<h3 class="shelfh">人生の午後の15作</h3>', f'<h3 class="shelfh">五十七歳に贈る、{N}作</h3>')
 h = sub(h, '<span><span class="bd bd-j">本</span> 本・小説・古典</span><span><span class="bd bd-h">映</span> 映画</span><span><span class="bd bd-both">漫</span> 漫画・詩集</span>',
         '<span><span class="bd bd-j">本</span> 本・小説・古典</span><span><span class="bd bd-h">映</span> 映画</span><span><span class="bd bd-both">漫</span> 漫画</span>')
 h = sub(h, "/* 午後の書斎：映画は、ディスクのケースの姿で */", "/* 映画は、ディスクのケースの姿で */")
@@ -94,7 +94,8 @@ wr('index.html', h)
 a = rd('art.js')
 a = sub(a, "/* 午後の書斎 ― 表紙の絵（名作のなかへ の絵の仕組みに、モチーフを足したもの）", f"/* {TITLE} ― 表紙の絵（名作のなかへ・午後の書斎 の絵の仕組みに、モチーフを足したもの）")
 a = sub(a, "  /* 午後の書斎で足したモチーフ */", "  /* 午後の書斎・贈り物の書斎で足したモチーフ */")
-a = sub(a, "  shadow: () =>", """  pagoda: i => `<path d="M50 4V20" stroke="${i}" stroke-width="2.5"/><circle cx="50" cy="8" r="2.5" fill="${C.A}"/><path d="M26 26H74L84 33H16Z" fill="${i}"/><rect x="38" y="33" width="24" height="13" fill="${i}" opacity=".75"/><path d="M22 50H78L88 57H12Z" fill="${i}"/><rect x="35" y="57" width="30" height="14" fill="${i}" opacity=".75"/><path d="M18 75H82L92 82H8Z" fill="${i}"/><rect x="32" y="82" width="36" height="16" fill="${i}" opacity=".75"/><rect x="46" y="86" width="8" height="12" fill="${C.A}" opacity=".8"/>`,
+a = sub(a, "  shadow: () =>", """  palace: i => `<rect x="10" y="50" width="80" height="44" fill="${i}"/><path d="M24 50Q24 37 32 31Q40 37 40 50Z" fill="${i}"/><path d="M60 50Q60 37 68 31Q76 37 76 50Z" fill="${i}"/><path d="M37 50Q37 27 50 18Q63 27 63 50Z" fill="${i}"/><circle cx="50" cy="15" r="2.2" fill="${C.A}"/><circle cx="32" cy="28" r="1.6" fill="${C.A}"/><circle cx="68" cy="28" r="1.6" fill="${C.A}"/><path d="M20 94V75Q20 65 28 63Q36 65 36 75V94Z" fill="${C.A}" opacity=".85"/><path d="M42 94V71Q42 61 50 59Q58 61 58 71V94Z" fill="${C.A}" opacity=".85"/><path d="M64 94V75Q64 65 72 63Q80 65 80 75V94Z" fill="${C.A}" opacity=".85"/>`,
+  pagoda: i => `<path d="M50 4V20" stroke="${i}" stroke-width="2.5"/><circle cx="50" cy="8" r="2.5" fill="${C.A}"/><path d="M26 26H74L84 33H16Z" fill="${i}"/><rect x="38" y="33" width="24" height="13" fill="${i}" opacity=".75"/><path d="M22 50H78L88 57H12Z" fill="${i}"/><rect x="35" y="57" width="30" height="14" fill="${i}" opacity=".75"/><path d="M18 75H82L92 82H8Z" fill="${i}"/><rect x="32" y="82" width="36" height="16" fill="${i}" opacity=".75"/><rect x="46" y="86" width="8" height="12" fill="${C.A}" opacity=".8"/>`,
   moto: i => `<circle cx="20" cy="70" r="15" fill="none" stroke="${C.K}" stroke-width="6"/><circle cx="80" cy="70" r="15" fill="none" stroke="${C.K}" stroke-width="6"/><circle cx="20" cy="70" r="3" fill="${C.W}"/><circle cx="80" cy="70" r="3" fill="${C.W}"/><path d="M20 70L30 50H64L80 70M68 32L80 70" stroke="${i}" stroke-width="4" fill="none" stroke-linejoin="round"/><path d="M40 50Q42 38 56 38Q64 40 64 50Z" fill="${i}"/><path d="M22 46H42L40 51H24Z" fill="${C.K}"/><rect x="40" y="52" width="18" height="13" rx="3" fill="#9a9a9a"/><path d="M44 65Q30 72 12 66" stroke="#c0c0c0" stroke-width="3.5" fill="none"/><path d="M62 32H74" stroke="${C.K}" stroke-width="3.5" stroke-linecap="round"/><circle cx="72" cy="42" r="3.5" fill="${C.A}"/>`,
   truck: i => `<path d="M4 76V34Q4 28 10 28H64V76Z" fill="${C.W}"/><path d="M64 42H80Q86 44 90 54L96 60V76H64Z" fill="${i}"/><path d="M68 46H80Q84 48 86 56H68Z" fill="${C.B}" opacity=".7"/><rect x="12" y="40" width="40" height="18" rx="2" fill="${C.K}" opacity=".75"/><path d="M8 34H58L54 40H12Z" fill="${C.R}"/><path d="M12 58H52V62H12Z" fill="${i}"/><circle cx="22" cy="78" r="9" fill="${C.K}"/><circle cx="78" cy="78" r="9" fill="${C.K}"/><circle cx="22" cy="78" r="3.5" fill="${C.W}"/><circle cx="78" cy="78" r="3.5" fill="${C.W}"/>`,
   bread: () => `<path d="M10 66Q8 40 34 36Q50 30 66 36Q92 40 90 66Q90 76 80 76H20Q10 76 10 66Z" fill="#d89a52"/><path d="M10 62Q10 46 30 42Q50 36 70 42Q90 46 90 62" fill="none" stroke="#b9772f" stroke-width="2"/><path d="M30 46L38 58M46 42L54 56M62 44L70 58" stroke="#f3d29a" stroke-width="4" stroke-linecap="round"/>`,
@@ -122,7 +123,7 @@ a = sub(a, re.search(r"const ART = \{.*?\n\};", a, re.S).group(0), """const ART 
   kirawareru: 'hills; bird 44 64 54; cloud 70 36 40', shiawaseyuuki: 'sun 70 30 26; greenhills; hands 50 98 52', yumezou: 'stars; elephant 50 96 64',
   cheese: 'ground; cheese 50 100 60', kimitachi: 'city; stars; star 72 30 18; book 46 106 44', morrie: 'window; flower 50 104 46',
   wonderfullife: 'snow; house 50 96 66; bell 76 38 22', perfectdays: 'komorebi; gtree 50 74 72; camera 46 118 36', grantorino: 'house 34 86 44; car 56 112 62',
-  marigold: 'sun 50 40 30; onion 50 92 70; redflower 22 120 22; redflower 80 120 22', jibunnoshigoto: 'ground; hands 50 96 60; seedling 50 64 30',
+  marigold: 'sun 50 40 30; palace 50 94 70; redflower 22 120 22; redflower 80 120 22', jibunnoshigoto: 'ground; hands 50 96 60; seedling 50 64 30',
   sukinakoto: 'sun 76 28 26; rocket 46 96 60', chef: 'sun 24 30 22; road; truck 50 118 60', shiawasepan: 'sea; greenhills; cabin 36 90 38; bread 62 116 44',
   kamome: 'sea; bird 72 36 26; onigiri 46 104 54', mallory: 'hills; house 50 86 54; flower 24 120 20; flower 78 120 20', bagdadcafe: 'sunset 50 60 66; dunes; mug 50 108 44',
   kazenouta: 'sea; moon 74 28 24; bottle 46 104 54', stationagent: 'gtree 22 76 48; train 50 106 60', localhero: 'stars; aurora; sea; boat 50 112 40',
